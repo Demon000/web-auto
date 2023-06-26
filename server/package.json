@@ -1,0 +1,20 @@
+{
+    "name": "web-auto",
+    "version": "1.0.0",
+    "description": "",
+    "scripts": {
+        "start:dev": "npx nodemon"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/node": "^20.3.2",
+        "@typescript-eslint/eslint-plugin": "^5.60.1",
+        "@typescript-eslint/parser": "^5.60.1",
+        "eslint": "^8.43.0",
+        "nodemon": "^2.0.22",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.1.3"
+    }
+}
