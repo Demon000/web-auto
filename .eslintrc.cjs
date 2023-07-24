@@ -68,5 +68,7 @@ module.exports = {
                 checkLoops: false,
             },
         ],
+
+        '@typescript-eslint/explicit-member-accessibility': 'error',
     },
 };
