@@ -55,6 +55,10 @@ async function initUsbDevice(device: Device): Promise<void> {
     const cryptor = new Cryptor(certificateString, privateKeyString);
     cryptor.init();
 
+    transport.onReceiveData((data) => {
+        console.log(data);
+    });
+
     usbDeviceMap.set(device, {
         device,
         transport,
