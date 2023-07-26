@@ -13,8 +13,6 @@ export class UsbTransport implements ITransport {
 
         iface.claim();
 
-        console.log('Interface: ', iface);
-
         let inEndpoint: InEndpoint | undefined;
         let outEndpoint: OutEndpoint | undefined;
         for (const endpoint of iface.endpoints) {
@@ -37,8 +35,6 @@ export class UsbTransport implements ITransport {
 
         this.inEndpoint = inEndpoint;
         this.outEndpoint = outEndpoint;
-
-        console.log('Endpoints: ', this.inEndpoint, this.outEndpoint);
     }
 
     private async sendOrReceive(
