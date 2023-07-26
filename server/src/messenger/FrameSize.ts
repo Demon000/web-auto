@@ -46,6 +46,10 @@ export class FrameSize {
     }
 
     public getSizeOf(): number {
-        return this.frameSizeType === FrameSizeType.SHORT ? 2 : 6;
+        return FrameSize.getSizeOf(this.frameSizeType);
+    }
+
+    public static getSizeOf(frameSizeType: FrameSizeType): number {
+        return frameSizeType === FrameSizeType.SHORT ? 2 : 6;
     }
 }
