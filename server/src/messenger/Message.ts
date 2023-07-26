@@ -1,6 +1,7 @@
 import { DataBuffer } from '../utils/DataBuffer';
 import { ChannelId } from './ChannelId';
 import { EncryptionType } from './EncryptionType';
+import { FrameHeader } from './FrameHeader';
 import { MessageType } from './MessageType';
 
 export class Message {
@@ -11,6 +12,14 @@ export class Message {
         public readonly encryptionType: EncryptionType,
         public readonly type: MessageType,
     ) {}
+
+    public static fromFrameHeader(frameHeader: FrameHeader): Message {
+        return new Message(
+            frameHeader.channelId,
+            frameHeader.encryptionType,
+            frameHeader.messageType,
+        );
+    }
 
     public get payload(): Buffer {
         return this._payload.data;
