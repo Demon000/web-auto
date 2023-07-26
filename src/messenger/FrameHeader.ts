@@ -29,7 +29,7 @@ export class FrameHeader {
     }
 
     public toBuffer(): Buffer {
-        const buffer = Buffer.allocUnsafe(this.getSizeOf());
+        const buffer = Buffer.allocUnsafe(FrameHeader.getSizeOf());
 
         const firstByte = this.channelId;
         const secondByte =
