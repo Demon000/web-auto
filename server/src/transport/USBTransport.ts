@@ -1,12 +1,12 @@
 import { ITransport } from './ITransport';
-import { Device, Endpoint } from 'usb';
+import { Device, Endpoint, InEndpoint, OutEndpoint } from 'usb';
 
 const USB_TRANSPORT_RECEIVE_TIMEOUT = 0;
 const USB_TRANSPORT_SEND_TIMEOUT = 10000;
 
 export class UsbTransport implements ITransport {
-    private inEndpoint: Endpoint;
-    private outEndpoint: Endpoint;
+    private inEndpoint: InEndpoint;
+    private outEndpoint: OutEndpoint;
 
     public constructor(device: Device) {
         const iface = device.interface(0);
@@ -15,15 +15,15 @@ export class UsbTransport implements ITransport {
 
         console.log('Interface: ', iface);
 
-        let inEndpoint: Endpoint | undefined;
-        let outEndpoint: Endpoint | undefined;
+        let inEndpoint: InEndpoint | undefined;
+        let outEndpoint: OutEndpoint | undefined;
         for (const endpoint of iface.endpoints) {
             if (endpoint.direction == 'in') {
-                inEndpoint = endpoint;
+                inEndpoint = endpoint as InEndpoint;
             }
 
             if (endpoint.direction == 'out') {
-                outEndpoint = endpoint;
+                outEndpoint = endpoint as OutEndpoint;
             }
 
             if (inEndpoint && outEndpoint) {
