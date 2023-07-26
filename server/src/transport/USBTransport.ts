@@ -72,6 +72,18 @@ export class UsbTransport implements ITransport {
         return this.sendOrReceive(this.inEndpoint, buffer, size, timeout);
     }
 
+    public startReceivePoll(): void {
+        this.inEndpoint.startPoll();
+    }
+
+    public onReceiveData(callback: (data: Buffer) => void): void {
+        this.inEndpoint.addListener('data', callback);
+    }
+
+    public stopReceivePoll(): void {
+        this.inEndpoint.stopPoll();
+    }
+
     public async send(buffer: Buffer): Promise<Buffer> {
         const timeout = USB_TRANSPORT_SEND_TIMEOUT;
         const size = buffer.length;
