@@ -41,7 +41,7 @@ export class FrameHeader {
         return buffer;
     }
 
-    public getSizeOf(): number {
+    public static getSizeOf(): number {
         return 2;
     }
 }
