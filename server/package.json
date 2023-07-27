@@ -21,6 +21,7 @@
     },
     "dependencies": {
         "koffi": "^2.5.7",
+        "protobufjs": "^7.2.4",
         "usb": "^2.9.0"
     }
 }

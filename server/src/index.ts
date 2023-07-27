@@ -11,6 +11,7 @@ import { Cryptor } from './ssl/Cryptor';
 import fs from 'fs';
 import path from 'path';
 import { getStringDescriptor } from './usb/descriptors';
+import { loadProtos } from './proto/proto';
 
 const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
 const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
@@ -88,6 +89,11 @@ async function waitForUsbDevices(): Promise<void> {
     }
 }
 
+async function init(): Promise<void> {
+    await loadProtos();
+    waitForUsbDevices();
+}
+
 process.on('SIGINT', () => {
     for (const device of usbDeviceMap.keys()) {
         deinitUsbDevice(device);
@@ -96,4 +102,4 @@ process.on('SIGINT', () => {
     process.exit();
 });
 
-waitForUsbDevices();
+init();
