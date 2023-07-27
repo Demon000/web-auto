@@ -142,7 +142,7 @@ export class Cryptor implements ICryptor {
     }
 
     public read(buffer: DataBuffer): number {
-        const pendingSize = sslBioCtrlPending(this.rbio);
+        const pendingSize = sslBioCtrlPending(this.wbio);
 
         const beginOffset = buffer.size;
         buffer.resize(beginOffset + pendingSize);
@@ -154,7 +154,7 @@ export class Cryptor implements ICryptor {
             );
 
             const transferredSize = sslBioRead(
-                this.rbio,
+                this.wbio,
                 currentBuffer,
                 currentBuffer.length,
             );
@@ -175,7 +175,7 @@ export class Cryptor implements ICryptor {
             const currentBuffer = buffer.subarray(totalTransferredSize);
 
             const transferredSize = sslBioWrite(
-                this.wbio,
+                this.rbio,
                 currentBuffer,
                 currentBuffer.length,
             );
