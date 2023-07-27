@@ -16,9 +16,9 @@ export class FrameHeader {
         const secondByte = buffer.readUint8(1);
 
         const channelId = firstByte;
-        const frameType = secondByte & FrameType.BULK;
-        const encryptionType = secondByte & EncryptionType.ENCRYPTED;
-        const messageType = secondByte & MessageType.CONTROL;
+        const frameType = secondByte & FrameType.MASK;
+        const encryptionType = secondByte & EncryptionType.MASK;
+        const messageType = secondByte & MessageType.MASK;
 
         return new FrameHeader(
             channelId,

@@ -30,15 +30,13 @@ export class MessageOutStream {
         }
         remainingSize -= size;
 
-        let frameType;
+        let frameType = 0;
         if (offset === 0 && remainingSize === 0) {
             frameType = FrameType.BULK;
         } else if (offset === 0) {
             frameType = FrameType.FIRST;
         } else if (remainingSize === 0) {
             frameType = FrameType.LAST;
-        } else {
-            frameType = FrameType.MIDDLE;
         }
 
         const data = this.composeFrame(

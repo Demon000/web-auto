@@ -1,4 +1,7 @@
+import { bit } from '../utils/bits';
+
 export enum EncryptionType {
-    PLAIN,
-    ENCRYPTED = 1 << 3,
+    PLAIN = 0,
+    ENCRYPTED = bit(3),
+    MASK = bit(3),
 }
