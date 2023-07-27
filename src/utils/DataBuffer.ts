@@ -1,12 +1,28 @@
 import assert from 'assert';
 
 export class DataBuffer {
-    private appendOffset = 0;
-    private readOffset = 0;
+    private appendOffset;
+    private readOffset;
 
     public data;
 
-    private constructor(size: number | undefined, buffer: Buffer | undefined) {
+    private constructor(
+        size: number | undefined,
+        buffer: Buffer | undefined,
+        appendOffset?: number,
+        readOffset?: number,
+    ) {
+        if (appendOffset === undefined) {
+            appendOffset = 0;
+        }
+
+        if (readOffset === undefined) {
+            readOffset = 0;
+        }
+
+        this.appendOffset = appendOffset;
+        this.readOffset = readOffset;
+
         if (size !== undefined) {
             this.data = Buffer.allocUnsafe(size);
         } else if (buffer !== undefined) {
@@ -16,8 +32,22 @@ export class DataBuffer {
         }
     }
 
-    public static fromBuffer(buffer: Buffer): DataBuffer {
-        return new DataBuffer(undefined, buffer);
+    public static fromBuffer(
+        buffer: Buffer,
+        start?: number,
+        end?: number,
+    ): DataBuffer {
+        if (start === undefined) {
+            start = 0;
+        }
+        if (end === undefined) {
+            end = buffer.length;
+        }
+
+        buffer = buffer.subarray(start, end);
+
+        /* Buffer should already contain data, seek buffer append to end. */
+        return new DataBuffer(undefined, buffer, end - start);
     }
 
     public static fromSize(size: number): DataBuffer {
@@ -86,15 +116,7 @@ export class DataBuffer {
         return this;
     }
 
-    public appendBuffer(
-        buffer: Buffer | DataBuffer,
-        start?: number,
-        end?: number,
-    ): this {
-        if (buffer instanceof DataBuffer) {
-            buffer = buffer.data;
-        }
-
+    public appendBuffer(buffer: Buffer, start?: number, end?: number): this {
         if (start === undefined) {
             start = 0;
         }
