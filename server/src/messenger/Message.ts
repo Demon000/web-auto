@@ -4,30 +4,56 @@ import { EncryptionType } from './EncryptionType';
 import { FrameHeader } from './FrameHeader';
 import { MessageType } from './MessageType';
 
-export class Message {
-    private _payload = DataBuffer.fromSize(0);
+export type MessageOptions = {
+    channelId: ChannelId;
+    encryptionType: EncryptionType;
+    type: MessageType;
+    payload?: DataBuffer;
+    messageId?: number;
+};
 
-    public constructor(
-        public readonly channelId: ChannelId,
-        public readonly encryptionType: EncryptionType,
-        public readonly type: MessageType,
-    ) {}
+export class Message {
+    public readonly channelId: ChannelId;
+    public readonly encryptionType: EncryptionType;
+    public readonly type: MessageType;
+    public readonly payload: DataBuffer;
+    public readonly messageId?: number;
+
+    public constructor(options: MessageOptions) {
+        this.channelId = options.channelId;
+        this.encryptionType = options.encryptionType;
+        this.type = options.type;
+        this.messageId = options.messageId;
+
+        if (options.payload !== undefined && options.messageId === undefined) {
+            this.payload = options.payload;
+        } else {
+            let size = 0;
+
+            if (options.messageId !== undefined) {
+                size += 2;
+            }
+            if (options.payload !== undefined) {
+                size += options.payload.size;
+            }
+
+            this.payload = DataBuffer.fromSize(size);
+
+            if (options.messageId !== undefined) {
+                this.payload.appendUint16BE(options.messageId);
+            }
+
+            if (options.payload !== undefined) {
+                this.payload.appendBuffer(options.payload);
+            }
+        }
+    }
 
     public static fromFrameHeader(frameHeader: FrameHeader): Message {
-        return new Message(
-            frameHeader.channelId,
-            frameHeader.encryptionType,
-            frameHeader.messageType,
-        );
-    }
-
-    public get payload(): Buffer {
-        return this._payload.data;
-    }
-
-    public insertPayload(buffer: Buffer): void {
-        const offset = this._payload.size();
-        this._payload.resize(offset + buffer.length);
-        buffer.copy(this.payload, offset);
+        return new Message({
+            channelId: frameHeader.channelId,
+            encryptionType: frameHeader.encryptionType,
+            type: frameHeader.messageType,
+        });
     }
 }

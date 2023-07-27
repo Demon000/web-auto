@@ -107,7 +107,7 @@ export class Cryptor implements ICryptor {
     public decrypt(output: DataBuffer, input: Buffer): number {
         this.write(input);
 
-        const beginOffset = output.size();
+        const beginOffset = output.size;
         output.resize(beginOffset + 1);
 
         let availableBytes = 1;
@@ -130,7 +130,7 @@ export class Cryptor implements ICryptor {
 
             totalReadSize += transferredSize;
             availableBytes = sslGetAvailableBytes(this.ssl);
-            output.resize(output.size() + availableBytes);
+            output.resize(output.size + availableBytes);
         }
 
         return totalReadSize;
@@ -139,7 +139,7 @@ export class Cryptor implements ICryptor {
     public read(buffer: DataBuffer): number {
         const pendingSize = sslBioCtrlPending(this.rbio);
 
-        const beginOffset = buffer.size();
+        const beginOffset = buffer.size;
         buffer.resize(beginOffset + pendingSize);
         let totalTransferredSize = 0;
 

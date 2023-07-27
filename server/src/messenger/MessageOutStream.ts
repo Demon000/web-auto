@@ -23,7 +23,7 @@ export class MessageOutStream {
         message: Message,
         offset: number,
     ): Promise<void> {
-        let remainingSize = message.payload.length - offset;
+        let remainingSize = message.payload.size - offset;
         let size = remainingSize;
         if (size > MAX_FRAME_PAYLOAD_SIZE) {
             size = MAX_FRAME_PAYLOAD_SIZE;
@@ -42,7 +42,7 @@ export class MessageOutStream {
         const data = this.composeFrame(
             message,
             frameType,
-            message.payload.subarray(offset, offset + size),
+            message.payload.data.subarray(offset, offset + size),
         );
         await this.transport.send(data);
 
@@ -81,13 +81,14 @@ export class MessageOutStream {
 
         const frameSize = new FrameSize(
             payloadSize,
-            frameType === FrameType.FIRST ? message.payload.length : 0,
+            frameType === FrameType.FIRST ? message.payload.size : 0,
         );
         const frameSizeSize = frameSize.getSizeOf();
 
         const buffer = Buffer.allocUnsafe(
             frameHeaderSize + frameSizeSize + payloadSize,
         );
+
         frameHeader.toBuffer().copy(buffer, 0);
         frameSize.toBuffer().copy(buffer, 0 + frameHeaderSize);
         payloadBuffer.copy(buffer, 0 + frameHeaderSize + frameSizeSize);
