@@ -141,6 +141,9 @@ export const SSL_set_verify = lib.func(
     'void SSL_set_verify(SSL *s, int mode, SSL_verify_cb *callback)',
 );
 
+export const SSL_ERROR_WANT_READ = 2;
+export const SSL_ERROR_NONE = 0;
+
 export const SSL_do_handshake = lib.func('int SSL_do_handshake(SSL *s)');
 
 export const SSL_get_error = lib.func(

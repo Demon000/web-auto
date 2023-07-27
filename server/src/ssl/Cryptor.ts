@@ -23,6 +23,7 @@ import {
 } from './ssl';
 import { ICryptor } from './ICryptor';
 import { DataBuffer } from '../utils/DataBuffer';
+import { SSL_ERROR_NONE, SSL_ERROR_WANT_READ } from './openssl_bindings';
 
 export class Cryptor implements ICryptor {
     private maxBufferSize = 1024 * 20;
@@ -63,10 +64,14 @@ export class Cryptor implements ICryptor {
         sslFreeCertificate(this.certificate);
     }
 
-    public doHandshake(): void {
+    public doHandshake(): boolean {
         const result = sslDoHandshake(this.ssl);
-        if (result) {
-            throw new Error(`Failed to do handshake: ${result}`);
+        if (result === SSL_ERROR_WANT_READ) {
+            return false;
+        } else if (result === SSL_ERROR_NONE) {
+            return true;
+        } else {
+            throw new Error(`SSL handshake failed: ${result}`);
         }
     }
 
