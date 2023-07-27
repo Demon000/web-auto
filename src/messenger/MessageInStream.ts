@@ -56,7 +56,7 @@ export class MessageInStream {
             payload = buffer.data;
         }
 
-        message.insertPayload(payload);
+        message.payload.appendBuffer(payload);
 
         if (
             frameHeader.frameType !== FrameType.BULK &&
