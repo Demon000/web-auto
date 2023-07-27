@@ -45,10 +45,10 @@ export class DataBuffer {
     public handleAppend(
         data: number,
         size: number,
-        fn: (value: number) => void,
+        fn: (value: number, offset?: number) => void,
     ): this {
         this.appendResizeToFit(size);
-        fn.call(this.data, data);
+        fn.call(this.data, data, this.appendOffset);
         this.appendOffset += size;
         return this;
     }
@@ -58,11 +58,11 @@ export class DataBuffer {
     }
 
     public appendUint16BE(data: number): this {
-        return this.handleAppend(data, 1, this.data.writeUint16BE);
+        return this.handleAppend(data, 2, this.data.writeUint16BE);
     }
 
     public appendUint32BE(data: number): this {
-        return this.handleAppend(data, 1, this.data.writeUint32BE);
+        return this.handleAppend(data, 4, this.data.writeUint32BE);
     }
 
     public appendSeek(offset: number): this {
