@@ -47,6 +47,7 @@ export class UsbTransport implements ITransport {
             const transfer = endpoint.makeTransfer(
                 timeout,
                 (error, buffer, length) => {
+                    console.log('Send', buffer);
                     if (length != size) {
                         console.log(
                             `Expected to read ${size} but read ${length}`,

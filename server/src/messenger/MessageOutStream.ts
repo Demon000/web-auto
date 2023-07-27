@@ -3,9 +3,9 @@ import { ITransport } from '../transport/ITransport';
 import { DataBuffer } from '../utils/DataBuffer';
 import { EncryptionType } from './EncryptionType';
 import { FrameHeader } from './FrameHeader';
-import { FrameSize } from './FrameSize';
 import { FrameType } from './FrameType';
 import { Message } from './Message';
+import { MessageFrameOptions } from './MessageFrameOptions';
 
 const MAX_FRAME_PAYLOAD_SIZE = 0x4000;
 
@@ -15,12 +15,16 @@ export class MessageOutStream {
         private cryptor: ICryptor,
     ) {}
 
-    public async send(message: Message): Promise<void> {
-        return this.sendSplitMessage(message, 0);
+    public async send(
+        message: Message,
+        options: MessageFrameOptions,
+    ): Promise<void> {
+        return this.sendSplitMessage(message, options, 0);
     }
 
     private async sendSplitMessage(
         message: Message,
+        options: MessageFrameOptions,
         offset: number,
     ): Promise<void> {
         let remainingSize = message.payload.size - offset;
@@ -31,18 +35,16 @@ export class MessageOutStream {
         remainingSize -= size;
 
         let frameType = 0;
-        if (offset === 0 && remainingSize === 0) {
-            frameType = FrameType.BULK;
-        } else if (offset === 0) {
-            frameType = FrameType.FIRST;
-        } else if (remainingSize === 0) {
-            frameType = FrameType.LAST;
-        } else {
-            frameType = FrameType.MIDDLE;
+        if (offset === 0) {
+            frameType |= FrameType.FIRST;
+        }
+        if (remainingSize === 0) {
+            frameType |= FrameType.LAST;
         }
 
         const data = this.composeFrame(
             message,
+            options,
             frameType,
             message.payload.data.subarray(offset, offset + size),
         );
@@ -51,18 +53,19 @@ export class MessageOutStream {
         offset += size;
 
         if (remainingSize !== 0) {
-            await this.sendSplitMessage(message, offset);
+            await this.sendSplitMessage(message, options, offset);
         }
     }
 
     private composeFrame(
         message: Message,
+        options: MessageFrameOptions,
         frameType: FrameType,
         payloadBuffer: Buffer,
     ): Buffer {
         let payloadSize = 0;
 
-        if (message.encryptionType == EncryptionType.ENCRYPTED) {
+        if (options.encryptionType == EncryptionType.ENCRYPTED) {
             const encryptedPayloadBuffer = DataBuffer.fromSize(0);
             payloadSize = this.cryptor.encrypt(
                 encryptedPayloadBuffer,
@@ -73,27 +76,20 @@ export class MessageOutStream {
             payloadSize = payloadBuffer.length;
         }
 
-        const frameHeader = new FrameHeader(
-            message.channelId,
+        const frameHeader = new FrameHeader({
+            channelId: options.channelId,
+            encryptionType: options.encryptionType,
+            messageType: options.messageType,
+            totalSize: message.payload.size,
             frameType,
-            message.encryptionType,
-            message.type,
-        );
-        const frameHeaderSize = FrameHeader.getSizeOf();
-
-        const frameSize = new FrameSize(
             payloadSize,
-            frameType === FrameType.FIRST ? message.payload.size : 0,
-        );
-        const frameSizeSize = frameSize.getSizeOf();
+        });
+        const frameHeaderSize = frameHeader.getSizeOf();
 
-        const buffer = Buffer.allocUnsafe(
-            frameHeaderSize + frameSizeSize + payloadSize,
-        );
+        const buffer = Buffer.allocUnsafe(frameHeaderSize + payloadSize);
 
         frameHeader.toBuffer().copy(buffer, 0);
-        frameSize.toBuffer().copy(buffer, 0 + frameHeaderSize);
-        payloadBuffer.copy(buffer, 0 + frameHeaderSize + frameSizeSize);
+        payloadBuffer.copy(buffer, 0 + frameHeaderSize);
 
         return buffer;
     }

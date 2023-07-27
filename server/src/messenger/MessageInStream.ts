@@ -1,69 +1,96 @@
+import assert from 'assert';
 import { ICryptor } from '../ssl/ICryptor';
-import { ITransport } from '../transport/ITransport';
 import { DataBuffer } from '../utils/DataBuffer';
+import { ChannelId } from './ChannelId';
 import { EncryptionType } from './EncryptionType';
 import { FrameHeader } from './FrameHeader';
-import { FrameSize } from './FrameSize';
-import { FrameSizeType } from './FrameSizeType';
 import { FrameType } from './FrameType';
 import { Message } from './Message';
 
+type MessageData = {
+    message: Message;
+    currentSize: number;
+    totalSize?: number;
+};
+
 export class MessageInStream {
-    public constructor(
-        private transport: ITransport,
-        private cryptor: ICryptor,
-    ) {}
+    private messageMap = new Map<ChannelId, MessageData>();
 
-    public async receive(): Promise<Message> {
-        const frameHeader = await this.receiveFrameHeader();
-        const message = Message.fromFrameHeader(frameHeader);
-        await this.receiveIntoMessage(frameHeader, message);
-        return message;
-    }
+    public constructor(private cryptor: ICryptor) {}
 
-    private async receiveFrameHeader(): Promise<FrameHeader> {
-        const frameHeaderSize = FrameHeader.getSizeOf();
-        const frameHeaderBuffer = await this.transport.receive(frameHeaderSize);
-        return FrameHeader.fromBuffer(frameHeaderBuffer);
-    }
+    public parseBuffer(buffer: Buffer): Message | undefined {
+        const frameHeader = FrameHeader.fromBuffer(buffer);
+        const frameHeaderSize = frameHeader.getSizeOf();
+        const frameType = frameHeader.frameType;
+        const channelId = frameHeader.channelId;
+        const isBulk =
+            frameType & FrameType.FIRST && frameType & FrameType.LAST;
+        let messageData;
+        let message;
 
-    private async receiveIntoMessage(
-        frameHeader: FrameHeader,
-        message: Message,
-    ): Promise<void> {
-        if (
-            frameHeader.channelId !== message.channelId ||
-            frameHeader.encryptionType !== message.encryptionType ||
-            frameHeader.messageType !== message.type
-        ) {
-            throw new Error('Messages received out of order, implement map.');
+        if (isBulk) {
+            message = new Message();
+        } else if (frameType === FrameType.FIRST) {
+            message = new Message();
+
+            if (this.messageMap.has(channelId)) {
+                throw new Error(
+                    `Received new first frame for channel ${channelId} ` +
+                        'but last frame was not received for previous message',
+                );
+            }
+
+            if (frameType === FrameType.FIRST) {
+                messageData = {
+                    message,
+                    currentSize: 0,
+                    totalSize: frameHeader.totalSize,
+                };
+
+                this.messageMap.set(channelId, messageData);
+            }
+        } else {
+            messageData = this.messageMap.get(channelId);
+            if (messageData === undefined) {
+                throw new Error(
+                    `Received new frame for channel ${channelId} ` +
+                        'but first frame was not received',
+                );
+            }
+            message = messageData.message;
         }
 
-        const frameSizeSize = FrameSize.getSizeOf(
-            frameHeader.frameType == FrameType.FIRST
-                ? FrameSizeType.EXTENDED
-                : FrameSizeType.SHORT,
-        );
-        const frameSizeBuffer = await this.transport.receive(frameSizeSize);
-        const frameSize = FrameSize.fromBuffer(frameSizeBuffer);
-
-        const payloadSize = frameSize.frameSize;
-        let payload = await this.transport.receive(payloadSize);
-
-        if (message.encryptionType == EncryptionType.ENCRYPTED) {
-            const buffer = DataBuffer.fromSize(0);
-            this.cryptor.decrypt(buffer, payload);
-            payload = buffer.data;
+        let payload = buffer.subarray(frameHeaderSize);
+        if (frameHeader.encryptionType == EncryptionType.ENCRYPTED) {
+            const decryptedBuffer = DataBuffer.empty();
+            this.cryptor.decrypt(decryptedBuffer, payload);
+            payload = decryptedBuffer.data;
         }
 
-        message.payload.appendBuffer(payload);
-
-        if (
-            frameHeader.frameType !== FrameType.BULK &&
-            frameHeader.frameType !== FrameType.LAST
-        ) {
-            const frameHeader = await this.receiveFrameHeader();
-            await this.receiveIntoMessage(frameHeader, message);
+        if (!isBulk) {
+            assert(messageData);
+            messageData.currentSize += payload.length;
         }
+
+        message.appendBuffer(payload);
+
+        if (frameType === FrameType.LAST) {
+            assert(messageData);
+            if (messageData.currentSize !== messageData.totalSize) {
+                throw new Error(
+                    `Received last frame for channel ${channelId} ` +
+                        `but current size ${messageData.currentSize} does not ` +
+                        `match total size ${messageData.totalSize}`,
+                );
+            }
+
+            this.messageMap.delete(channelId);
+        }
+
+        if (frameType & FrameType.LAST) {
+            return message;
+        }
+
+        return undefined;
     }
 }
