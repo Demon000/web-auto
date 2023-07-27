@@ -37,19 +37,19 @@ export class FrameHeader {
         }
     }
 
-    public static fromBuffer(buffer: Buffer): FrameHeader {
-        const firstByte = buffer.readUint8(0);
-        const secondByte = buffer.readUint8(1);
+    public static fromBuffer(buffer: DataBuffer): FrameHeader {
+        const firstByte = buffer.readUint8();
+        const secondByte = buffer.readUint8();
 
         const channelId = firstByte;
         const frameType = secondByte & (FrameType.FIRST | FrameType.LAST);
-        const encryptionType = secondByte & EncryptionType.MASK;
-        const messageType = secondByte & MessageType.MASK;
+        const encryptionType = secondByte & EncryptionType.ENCRYPTED;
+        const messageType = secondByte & MessageType.CONTROL;
 
-        const payloadSize = buffer.readUInt16BE(2);
+        const payloadSize = buffer.readUint16BE();
         let totalSize = 0;
         if (frameType === FrameType.FIRST) {
-            totalSize = buffer.readUint16BE(4);
+            totalSize = buffer.readUint16BE();
         }
 
         return new FrameHeader({

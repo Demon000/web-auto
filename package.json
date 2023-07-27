@@ -20,6 +20,7 @@
         "typescript": "^5.1.3"
     },
     "dependencies": {
+        "eventemitter3": "^5.0.1",
         "koffi": "^2.5.7",
         "protobufjs": "^7.2.4",
         "usb": "^2.9.0"

@@ -1,56 +1,43 @@
 import { DataBuffer } from '../utils/DataBuffer';
 
-export type MessageOptions = {
-    payload?: DataBuffer;
-    messageId?: number;
-};
+export type MessageOptions =
+    | {
+          dataPayload?: DataBuffer;
+          messageId: number;
+      }
+    | {
+          rawPayload: DataBuffer;
+      };
 
 export class Message {
-    public readonly payload: DataBuffer;
-    public messageId?: number;
+    public messageId: number;
+    public payload: DataBuffer;
 
-    public constructor(options?: MessageOptions) {
-        if (options === undefined) {
-            options = {};
-        }
-
-        this.messageId = options.messageId;
-
-        if (options.payload !== undefined && options.messageId === undefined) {
-            this.payload = options.payload;
+    public constructor(options: MessageOptions) {
+        if ('rawPayload' in options) {
+            this.payload = options.rawPayload;
+            this.messageId = this.payload.readUint16BE();
         } else {
-            let size = 0;
+            this.messageId = options.messageId;
+            let size = 2;
 
-            if (options.messageId !== undefined) {
-                size += 2;
-            }
-            if (options.payload !== undefined) {
-                size += options.payload.size;
+            if (options.dataPayload !== undefined) {
+                size += options.dataPayload.size;
             }
 
             this.payload = DataBuffer.fromSize(size);
-
-            if (options.messageId !== undefined) {
-                this.payload.appendUint16BE(options.messageId);
-            }
-
-            if (options.payload !== undefined) {
-                this.payload.appendBuffer(options.payload);
+            this.payload.appendUint16BE(options.messageId);
+            if (options.dataPayload !== undefined) {
+                this.payload.appendBuffer(options.dataPayload);
             }
         }
     }
 
-    public appendBuffer(buffer: Buffer): void {
-        if (this.payload.size === 0 && this.messageId === undefined) {
-            const messageIdSize = 2;
-            if (buffer.length < messageIdSize) {
-                throw new Error('Buffer size too small to retrieve message id');
-            }
+    public getPayload(): DataBuffer {
+        return this.payload.subarray(2);
+    }
 
-            this.messageId = buffer.readUint16BE();
-            buffer = buffer.subarray(messageIdSize);
-        }
-
-        this.payload.appendBuffer(buffer);
+    public getRawPayload(): DataBuffer {
+        return this.payload;
     }
 }
