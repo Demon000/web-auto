@@ -15,6 +15,7 @@ import { MessageInStream } from './messenger/MessageInStream';
 import { MessageOutStream } from './messenger/MessageOutStream';
 import { loadProtos } from './proto/proto';
 import { ControlService } from './services/ControlService';
+import { DataBuffer } from './utils/DataBuffer';
 
 const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
 const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
@@ -62,15 +63,15 @@ async function initUsbDevice(device: Device): Promise<void> {
     const messageOutStream = new MessageOutStream(transport, cryptor);
 
     const controlService = new ControlService(
+        cryptor,
         messageInStream,
         messageOutStream,
     );
 
     transport.startReceivePoll();
     transport.onReceiveData((data) => {
-        console.log('Receive', data);
-        const message = messageInStream.parseBuffer(data);
-        console.log(message);
+        const buffer = DataBuffer.fromBuffer(data);
+        messageInStream.parseBuffer(buffer);
     });
 
     usbDeviceMap.set(device, {
@@ -79,7 +80,7 @@ async function initUsbDevice(device: Device): Promise<void> {
         cryptor,
     });
 
-    await controlService.sendVersionRequest();
+    await controlService.start();
 }
 
 async function deinitUsbDevice(device: Device): Promise<void> {

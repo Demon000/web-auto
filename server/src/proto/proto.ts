@@ -1,6 +1,7 @@
-import { Enum, ReflectionObject, Root, load } from 'protobufjs';
+import { Enum, Message, ReflectionObject, Root, Type, load } from 'protobufjs';
 import path from 'path';
 import { readdir } from 'node:fs/promises';
+import { DataBuffer } from '../utils/DataBuffer';
 
 export const protos = new Root();
 
@@ -26,6 +27,22 @@ export function lookupProto(name: string): ReflectionObject {
     return proto;
 }
 
+export function lookupType(name: string): Type {
+    return protos.lookupType(name);
+}
+
 export function lookupEnum(name: string): Enum {
-    return protos.lookupEnum(name);
+    return protos.lookupEnum(name + '.Enum');
+}
+
+export function encodeType(type: Type, message: Message): DataBuffer {
+    return DataBuffer.fromBuffer(Buffer.from(type.encode(message).finish()));
+}
+
+export function createEncodedType(
+    type: Type,
+    properties?: { [k: string]: any },
+): DataBuffer {
+    const message = type.create(properties);
+    return encodeType(type, message);
 }

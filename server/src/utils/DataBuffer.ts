@@ -107,8 +107,21 @@ export class DataBuffer {
         return this;
     }
 
+    public readUint8(): number {
+        return this.handleRead(1, this.data.readUint8);
+    }
+
     public readUint16BE(): number {
         return this.handleRead(2, this.data.readUint16BE);
+    }
+
+    public subarray(start?: number, end?: number): DataBuffer {
+        const buffer = this.data.subarray(start, end);
+        return DataBuffer.fromBuffer(buffer);
+    }
+
+    public unreadSubarray(): DataBuffer {
+        return this.subarray(this.readOffset);
     }
 
     public readSeek(offset: number): this {
@@ -116,18 +129,22 @@ export class DataBuffer {
         return this;
     }
 
-    public appendBuffer(buffer: Buffer, start?: number, end?: number): this {
+    public appendBuffer(
+        buffer: DataBuffer,
+        start?: number,
+        end?: number,
+    ): this {
         if (start === undefined) {
             start = 0;
         }
 
         if (end === undefined) {
-            end = buffer.length;
+            end = buffer.size;
         }
 
         const size = end - start;
         this.appendResizeToFit(size);
-        buffer.copy(this.data, this.appendOffset, start, end);
+        buffer.data.copy(this.data, this.appendOffset, start, end);
         this.appendOffset += size;
 
         return this;

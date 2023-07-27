@@ -5,6 +5,6 @@ export interface ICryptor {
     readHandshakeBuffer(): Buffer;
     writeHandshakeBuffer(buffer: Buffer): void;
 
-    encrypt(output: DataBuffer, input: Buffer): number;
-    decrypt(output: DataBuffer, input: Buffer): number;
+    encrypt(output: DataBuffer, input: DataBuffer): number;
+    decrypt(output: DataBuffer, input: DataBuffer): number;
 }

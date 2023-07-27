@@ -42,12 +42,10 @@ export class MessageOutStream {
             frameType |= FrameType.LAST;
         }
 
-        const data = this.composeFrame(
-            message,
-            options,
-            frameType,
-            message.payload.data.subarray(offset, offset + size),
-        );
+        const rawPayload = message
+            .getRawPayload()
+            .subarray(offset, offset + size);
+        const data = this.composeFrame(message, options, frameType, rawPayload);
         await this.transport.send(data);
 
         offset += size;
@@ -61,7 +59,7 @@ export class MessageOutStream {
         message: Message,
         options: MessageFrameOptions,
         frameType: FrameType,
-        payloadBuffer: Buffer,
+        payloadBuffer: DataBuffer,
     ): Buffer {
         let payloadSize = 0;
 
@@ -71,9 +69,9 @@ export class MessageOutStream {
                 encryptedPayloadBuffer,
                 payloadBuffer,
             );
-            payloadBuffer = encryptedPayloadBuffer.data;
+            payloadBuffer = encryptedPayloadBuffer;
         } else {
-            payloadSize = payloadBuffer.length;
+            payloadSize = payloadBuffer.size;
         }
 
         const frameHeader = new FrameHeader({
@@ -89,7 +87,7 @@ export class MessageOutStream {
         const buffer = Buffer.allocUnsafe(frameHeaderSize + payloadSize);
 
         frameHeader.toBuffer().copy(buffer, 0);
-        payloadBuffer.copy(buffer, 0 + frameHeaderSize);
+        payloadBuffer.data.copy(buffer, 0 + frameHeaderSize);
 
         return buffer;
     }

@@ -84,19 +84,19 @@ export class Cryptor implements ICryptor {
         this.write(buffer);
     }
 
-    public encrypt(output: DataBuffer, input: Buffer): number {
+    public encrypt(output: DataBuffer, input: DataBuffer): number {
         let totalTransferredBytes = 0;
 
-        while (totalTransferredBytes < input.length) {
+        while (totalTransferredBytes < input.size) {
             const currentBuffer = input.subarray(
                 totalTransferredBytes,
-                input.length,
+                input.size,
             );
 
             const writeSize = sslWrite(
                 this.ssl,
-                currentBuffer,
-                currentBuffer.length,
+                currentBuffer.data,
+                currentBuffer.size,
             );
 
             if (writeSize <= 0) {
@@ -109,8 +109,8 @@ export class Cryptor implements ICryptor {
         return this.read(output);
     }
 
-    public decrypt(output: DataBuffer, input: Buffer): number {
-        this.write(input);
+    public decrypt(output: DataBuffer, input: DataBuffer): number {
+        this.write(input.data);
 
         const beginOffset = output.size;
         output.resize(beginOffset + 1);
