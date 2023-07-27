@@ -37,6 +37,8 @@ export class MessageOutStream {
             frameType = FrameType.FIRST;
         } else if (remainingSize === 0) {
             frameType = FrameType.LAST;
+        } else {
+            frameType = FrameType.MIDDLE;
         }
 
         const data = this.composeFrame(
