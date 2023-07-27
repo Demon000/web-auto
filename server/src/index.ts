@@ -10,7 +10,6 @@ import { UsbTransport } from './transport/USBTransport';
 import { Cryptor } from './ssl/Cryptor';
 import fs from 'fs';
 import path from 'path';
-import { ITransport } from './transport/ITransport';
 import { getStringDescriptor } from './usb/descriptors';
 
 const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
@@ -18,7 +17,7 @@ const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
 
 type DeviceData = {
     device: Device;
-    transport: ITransport;
+    transport: UsbTransport;
     cryptor: Cryptor;
 };
 
