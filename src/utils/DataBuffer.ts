@@ -55,9 +55,8 @@ export class DataBuffer {
     }
 
     public handleRead(size: number, fn: (offset?: number) => number): number {
-        this.appendResizeToFit(size);
         const data = fn.call(this.data, this.readOffset);
-        this.appendOffset += size;
+        this.readOffset += size;
         return data;
     }
 
