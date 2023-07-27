@@ -84,6 +84,7 @@ async function waitForUsbDevices(): Promise<void> {
             await initUsbDevice(device);
             break;
         } catch (e) {
+            console.log(e);
             device.close();
         }
     }
