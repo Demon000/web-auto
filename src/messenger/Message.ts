@@ -1,28 +1,19 @@
 import { DataBuffer } from '../utils/DataBuffer';
-import { ChannelId } from './ChannelId';
-import { EncryptionType } from './EncryptionType';
-import { FrameHeader } from './FrameHeader';
-import { MessageType } from './MessageType';
 
 export type MessageOptions = {
-    channelId: ChannelId;
-    encryptionType: EncryptionType;
-    type: MessageType;
     payload?: DataBuffer;
     messageId?: number;
 };
 
 export class Message {
-    public readonly channelId: ChannelId;
-    public readonly encryptionType: EncryptionType;
-    public readonly type: MessageType;
     public readonly payload: DataBuffer;
-    public readonly messageId?: number;
+    public messageId?: number;
 
-    public constructor(options: MessageOptions) {
-        this.channelId = options.channelId;
-        this.encryptionType = options.encryptionType;
-        this.type = options.type;
+    public constructor(options?: MessageOptions) {
+        if (options === undefined) {
+            options = {};
+        }
+
         this.messageId = options.messageId;
 
         if (options.payload !== undefined && options.messageId === undefined) {
@@ -49,11 +40,17 @@ export class Message {
         }
     }
 
-    public static fromFrameHeader(frameHeader: FrameHeader): Message {
-        return new Message({
-            channelId: frameHeader.channelId,
-            encryptionType: frameHeader.encryptionType,
-            type: frameHeader.messageType,
-        });
+    public appendBuffer(buffer: Buffer): void {
+        if (this.payload.size === 0 && this.messageId === undefined) {
+            const messageIdSize = 2;
+            if (buffer.length < messageIdSize) {
+                throw new Error('Buffer size too small to retrieve message id');
+            }
+
+            this.messageId = buffer.readUint16BE();
+            buffer = buffer.subarray(messageIdSize);
+        }
+
+        this.payload.appendBuffer(buffer);
     }
 }

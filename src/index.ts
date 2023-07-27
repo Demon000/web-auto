@@ -11,7 +11,10 @@ import { Cryptor } from './ssl/Cryptor';
 import fs from 'fs';
 import path from 'path';
 import { getStringDescriptor } from './usb/descriptors';
+import { MessageInStream } from './messenger/MessageInStream';
+import { MessageOutStream } from './messenger/MessageOutStream';
 import { loadProtos } from './proto/proto';
+import { ControlService } from './services/ControlService';
 
 const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
 const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
@@ -55,8 +58,19 @@ async function initUsbDevice(device: Device): Promise<void> {
     const cryptor = new Cryptor(certificateString, privateKeyString);
     cryptor.init();
 
+    const messageInStream = new MessageInStream(cryptor);
+    const messageOutStream = new MessageOutStream(transport, cryptor);
+
+    const controlService = new ControlService(
+        messageInStream,
+        messageOutStream,
+    );
+
+    transport.startReceivePoll();
     transport.onReceiveData((data) => {
-        console.log(data);
+        console.log('Receive', data);
+        const message = messageInStream.parseBuffer(data);
+        console.log(message);
     });
 
     usbDeviceMap.set(device, {
@@ -64,6 +78,8 @@ async function initUsbDevice(device: Device): Promise<void> {
         transport,
         cryptor,
     });
+
+    await controlService.sendVersionRequest();
 }
 
 async function deinitUsbDevice(device: Device): Promise<void> {
@@ -72,6 +88,7 @@ async function deinitUsbDevice(device: Device): Promise<void> {
         return;
     }
 
+    deviceData.transport.stopReceivePoll();
     deviceData.cryptor.deinit();
     deviceData.device.close();
 }
