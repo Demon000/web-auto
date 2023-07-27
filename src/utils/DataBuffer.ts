@@ -2,6 +2,7 @@ import assert from 'assert';
 
 export class DataBuffer {
     private appendOffset = 0;
+    private readOffset = 0;
 
     public data;
 
@@ -53,6 +54,13 @@ export class DataBuffer {
         return this;
     }
 
+    public handleRead(size: number, fn: (offset?: number) => number): number {
+        this.appendResizeToFit(size);
+        const data = fn.call(this.data, this.readOffset);
+        this.appendOffset += size;
+        return data;
+    }
+
     public appendUint8(data: number): this {
         return this.handleAppend(data, 1, this.data.writeUint8);
     }
@@ -67,6 +75,15 @@ export class DataBuffer {
 
     public appendSeek(offset: number): this {
         this.appendOffset = offset;
+        return this;
+    }
+
+    public readUint16BE(): number {
+        return this.handleRead(2, this.data.readUint16BE);
+    }
+
+    public readSeek(offset: number): this {
+        this.readOffset = offset;
         return this;
     }
 
