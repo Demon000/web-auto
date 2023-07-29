@@ -62,7 +62,7 @@ export class FrameHeader {
         });
     }
 
-    public toBuffer(): Buffer {
+    public toBuffer(): DataBuffer {
         const buffer = DataBuffer.fromSize(this.getSizeOf());
 
         const firstByte = this.channelId;
@@ -76,7 +76,7 @@ export class FrameHeader {
             buffer.appendUint32BE(this.totalSize);
         }
 
-        return buffer.data;
+        return buffer;
     }
 
     public getSizeOf(): number {

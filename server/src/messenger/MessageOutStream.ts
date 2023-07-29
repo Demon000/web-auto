@@ -60,7 +60,7 @@ export class MessageOutStream {
         options: MessageFrameOptions,
         frameType: FrameType,
         payloadBuffer: DataBuffer,
-    ): Buffer {
+    ): DataBuffer {
         let payloadSize = 0;
 
         if (options.encryptionType == EncryptionType.ENCRYPTED) {
@@ -82,12 +82,11 @@ export class MessageOutStream {
             frameType,
             payloadSize,
         });
-        const frameHeaderSize = frameHeader.getSizeOf();
 
-        const buffer = Buffer.allocUnsafe(frameHeaderSize + payloadSize);
+        const buffer = DataBuffer.empty();
 
-        frameHeader.toBuffer().copy(buffer, 0);
-        payloadBuffer.data.copy(buffer, 0 + frameHeaderSize);
+        buffer.appendBuffer(frameHeader.toBuffer());
+        buffer.appendBuffer(payloadBuffer);
 
         return buffer;
     }
