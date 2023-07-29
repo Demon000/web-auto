@@ -5,9 +5,14 @@ import { MessageInStream } from '../messenger/MessageInStream';
 import { MessageOutStream } from '../messenger/MessageOutStream';
 import { MessageType } from '../messenger/MessageType';
 import { Service } from './Service';
-import { createEncodedType, lookupEnum, lookupType } from '../proto/proto';
-import { DataBuffer } from '../utils/DataBuffer';
+import {
+    createDecodedType,
+    createEncodedType,
+    lookupEnum,
+    lookupType,
+} from '../proto/proto';
 import { Cryptor } from '../ssl/Cryptor';
+import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
 
 export class ControlService extends Service {
     public constructor(
@@ -50,7 +55,17 @@ export class ControlService extends Service {
         }
     }
 
-    protected onMessage(message: Message): void {
+    private async onServiceDiscoveryRequest(message: Message): Promise<void> {
+        const ServiceDiscoveryRequest = lookupType('ServiceDiscoveryRequest');
+
+        const data = createDecodedType(
+            ServiceDiscoveryRequest,
+            message.getPayload(),
+        );
+        console.log(JSON.stringify(data));
+    }
+
+    protected onMessage(message: Message, options: MessageFrameOptions): void {
         const ControlMessage = lookupEnum('ControlMessage');
 
         switch (message.messageId) {
@@ -60,8 +75,15 @@ export class ControlService extends Service {
             case ControlMessage.values.SSL_HANDSHAKE:
                 this.onHandshake(message);
                 break;
+            case ControlMessage.values.SERVICE_DISCOVERY_REQUEST:
+                this.onServiceDiscoveryRequest(message);
+                break;
             default:
-                console.log('Unhandled message', message);
+                console.log(
+                    `Unhandled message with id ${message.messageId}`,
+                    message.getPayload(),
+                    options,
+                );
         }
     }
 

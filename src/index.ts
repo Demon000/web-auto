@@ -1,63 +1,44 @@
-import { Device } from 'usb';
-import { enumerateDevices } from './usb/enumerate';
-import {
-    StringType,
-    startProtocolQuery,
-    startSendStringQuery,
-    startStartQuery,
-} from './usb/query';
-import { UsbTransport } from './transport/USBTransport';
+import { UsbTransport } from './usb/USBTransport';
 import { Cryptor } from './ssl/Cryptor';
 import fs from 'fs';
 import path from 'path';
-import { getStringDescriptor } from './usb/descriptors';
 import { MessageInStream } from './messenger/MessageInStream';
 import { MessageOutStream } from './messenger/MessageOutStream';
 import { loadProtos } from './proto/proto';
 import { ControlService } from './services/ControlService';
-import { DataBuffer } from './utils/DataBuffer';
+import { ITransport, TransportEvent } from './transport/ITransport';
+import {
+    UsbDeviceHandler,
+    UsbDeviceHandlerEvent,
+} from './usb/UsbDeviceHandler';
+import { Device } from 'usb';
 
 const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
 const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
 
+type DeviceCookie = any;
+
 type DeviceData = {
-    device: Device;
-    transport: UsbTransport;
+    device: DeviceCookie;
+    transport: ITransport;
     cryptor: Cryptor;
 };
 
-const usbDeviceMap = new Map<Device, DeviceData>();
+const deviceMap = new Map<Device, DeviceData>();
 
-async function initUsbDevice(device: Device): Promise<void> {
-    const protocolVersion = await startProtocolQuery(device);
-    if (protocolVersion !== 1 && protocolVersion !== 2) {
-        return;
-    }
-
-    const deviceDescriptor = device.deviceDescriptor;
-    const manufacturer = await getStringDescriptor(
-        device,
-        deviceDescriptor.iManufacturer,
-    );
-    const deviceName = await getStringDescriptor(
-        device,
-        deviceDescriptor.iProduct,
-    );
-
-    console.log(`Connected to device ${manufacturer} ${deviceName}`);
-    console.log(`Protocol version: ${protocolVersion}`);
-
-    await startSendStringQuery(device, StringType.MANUFACTURER, 'Android');
-    await startSendStringQuery(device, StringType.MODEL, 'Android Auto');
-    await startSendStringQuery(device, StringType.DESCRIPTION, 'Android Auto');
-    await startSendStringQuery(device, StringType.VERSION, '2.0.1');
-    // await startSendStringQuery(device, StringType.URI, "https://f1xstudio.com");
-    // await startSendStringQuery(device, StringType.SERIAL, "HU-AAAAAA001");
-    await startStartQuery(device);
-
-    const transport = new UsbTransport(device);
+async function initDevice(
+    device: DeviceCookie,
+    transport: ITransport,
+): Promise<void> {
     const cryptor = new Cryptor(certificateString, privateKeyString);
+
     cryptor.init();
+
+    deviceMap.set(device, {
+        device,
+        transport,
+        cryptor,
+    });
 
     const messageInStream = new MessageInStream(cryptor);
     const messageOutStream = new MessageOutStream(transport, cryptor);
@@ -68,57 +49,58 @@ async function initUsbDevice(device: Device): Promise<void> {
         messageOutStream,
     );
 
-    transport.startReceivePoll();
-    transport.onReceiveData((data) => {
-        const buffer = DataBuffer.fromBuffer(data);
+    transport.emitter.on(TransportEvent.DATA, (buffer) => {
         messageInStream.parseBuffer(buffer);
     });
-
-    usbDeviceMap.set(device, {
-        device,
-        transport,
-        cryptor,
+    transport.emitter.on(TransportEvent.ERROR, (err) => {
+        console.log(err);
     });
+    transport.init();
 
     await controlService.start();
 }
 
-async function deinitUsbDevice(device: Device): Promise<void> {
-    const deviceData = usbDeviceMap.get(device);
+function deinitDevice(device: DeviceCookie): void {
+    const deviceData = deviceMap.get(device);
     if (deviceData === undefined) {
         return;
     }
 
-    deviceData.transport.stopReceivePoll();
+    deviceData.transport.deinit();
     deviceData.cryptor.deinit();
-    deviceData.device.close();
-}
-
-async function waitForUsbDevices(): Promise<void> {
-    const devices = enumerateDevices();
-    for (const device of devices) {
-        device.open();
-        try {
-            await initUsbDevice(device);
-            break;
-        } catch (e) {
-            console.log(e);
-            device.close();
-        }
-    }
 }
 
 async function init(): Promise<void> {
     await loadProtos();
-    waitForUsbDevices();
+
+    const usbDeviceHandler = new UsbDeviceHandler();
+
+    usbDeviceHandler.emitter.on(
+        UsbDeviceHandlerEvent.CONNECTED,
+        async (device: Device) => {
+            const transport = new UsbTransport(device);
+
+            await initDevice(device, transport);
+        },
+    );
+
+    usbDeviceHandler.emitter.on(
+        UsbDeviceHandlerEvent.DISCONNECTED,
+        async (device: Device) => {
+            deinitDevice(device);
+        },
+    );
+
+    const handleEnd = async () => {
+        console.log('end');
+        usbDeviceHandler.stopWaitingForDevices();
+        await usbDeviceHandler.disconnectDevices();
+        process.exit();
+    };
+
+    process.on('SIGINT', () => handleEnd);
+
+    await usbDeviceHandler.waitForDevices();
 }
-
-process.on('SIGINT', () => {
-    for (const device of usbDeviceMap.keys()) {
-        deinitUsbDevice(device);
-    }
-
-    process.exit();
-});
 
 init();
