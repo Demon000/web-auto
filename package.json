@@ -4,6 +4,7 @@
     "description": "",
     "scripts": {
         "start:dev": "npx nodemon",
+        "start": "npx ts-node ./src/index.ts",
         "lint": "eslint --fix ."
     },
     "keywords": [],
