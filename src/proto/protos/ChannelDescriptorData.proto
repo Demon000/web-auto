@@ -1,0 +1,34 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+option optimize_for = SPEED;
+
+import "SensorChannelData.proto";
+import "AVChannelData.proto";
+import "InputChannelData.proto";
+import "AVInputChannelData.proto";
+import "BluetoothChannelData.proto";
+import "NavigationChannelData.proto";
+import "VendorExtensionChannelData.proto";
+import "MediaInfoChannelData.proto";
+import "WifiChannelData.proto";
+
+package aasdk.proto.data;
+
+message ChannelDescriptor {
+  required uint32 channel_id = 1;
+  optional SensorChannel sensor_channel = 2;
+  optional AVChannel av_channel = 3;
+  optional InputChannel input_channel = 4;
+  optional AVInputChannel av_input_channel = 5;
+  optional BluetoothChannel bluetooth_channel = 6;
+  optional NavigationChannel navigation_channel = 8;
+  optional MediaInfoChannel media_infoChannel = 9;
+  optional VendorExtensionChannel vendor_extension_channel = 12;
+  optional WifiChannel wifi_channel = 16;
+}

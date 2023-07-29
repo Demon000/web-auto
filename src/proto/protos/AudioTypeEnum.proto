@@ -1,0 +1,19 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+package aasdk.proto.enums;
+
+message AudioType {
+  enum Enum {
+    NONE = 0;
+    SPEECH = 1;
+    SYSTEM = 2;
+    MEDIA = 3;
+    ALARM = 4;
+  }
+}
