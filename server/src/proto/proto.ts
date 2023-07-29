@@ -1,4 +1,4 @@
-import { Enum, Message, ReflectionObject, Root, Type, load } from 'protobufjs';
+import { Enum, Message, Root, Type, load } from 'protobufjs';
 import path from 'path';
 import { readdir } from 'node:fs/promises';
 import { DataBuffer } from '../utils/DataBuffer';
@@ -15,16 +15,6 @@ export async function loadProtos(): Promise<void> {
 
         load(protoPath, protos);
     }
-}
-
-export function toFullPath(name: string): string {
-    return `aasdk.proto.${name}`;
-}
-
-export function lookupProto(name: string): ReflectionObject {
-    const proto = protos.lookup(toFullPath(name));
-    if (proto === null) throw new Error(`Invalid proto ${name}`);
-    return proto;
 }
 
 export function lookupType(name: string): Type {
