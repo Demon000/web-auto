@@ -1,3 +1,4 @@
+import { channelIdString } from '../messenger/ChannelId';
 import { Message } from '../messenger/Message';
 import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
 import {
@@ -18,14 +19,32 @@ export abstract class Service {
             .channelEmitter(this.channelId)
             .on(
                 MessageInStreamEvent.MESSAGE_RECEIVED,
-                this.onMessage.bind(this),
+                this.onMessageInner.bind(this),
             );
+    }
+
+    private onMessageInner(
+        message: Message,
+        options?: MessageFrameOptions,
+    ): void {
+        const found = this.onMessage(message, options);
+        if (found) {
+            return;
+        }
+
+        console.log(
+            `Unhandled message with id ${
+                message.messageId
+            } on channel ${channelIdString(this.channelId)}`,
+            message.getPayload(),
+            options,
+        );
     }
 
     protected abstract onMessage(
         message: Message,
         options?: MessageFrameOptions,
-    ): void;
+    ): boolean;
 
     public async sendMessage(
         message: Message,

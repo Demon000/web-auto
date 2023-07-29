@@ -6,7 +6,6 @@ import { MessageOutStream } from '../messenger/MessageOutStream';
 import { MessageType } from '../messenger/MessageType';
 import { Service } from './Service';
 import { Cryptor } from '../ssl/Cryptor';
-import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
 import { VersionResponseStatus_Enum } from '../proto/types/VersionResponseStatusEnum';
 import { ServiceDiscoveryRequest } from '../proto/types/ServiceDiscoveryRequestMessage';
 import { ControlMessage_Enum } from '../proto/types/ControlMessageIdsEnum';
@@ -62,8 +61,8 @@ export class ControlService extends Service {
         );
     }
 
-    protected onMessage(message: Message, options: MessageFrameOptions): void {
-        switch (message.messageId) {
+    protected onMessage(message: Message): boolean {
+        switch (message.messageId as ControlMessage_Enum) {
             case ControlMessage_Enum.VERSION_RESPONSE:
                 this.onVersionReponse(message);
                 break;
@@ -74,12 +73,10 @@ export class ControlService extends Service {
                 this.onServiceDiscoveryRequest(message);
                 break;
             default:
-                console.log(
-                    `Unhandled message with id ${message.messageId}`,
-                    message.getPayload(),
-                    options,
-                );
+                return false;
         }
+
+        return true;
     }
 
     private async sendVersionRequest(): Promise<void> {
