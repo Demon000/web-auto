@@ -1,0 +1,22 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+package aasdk.proto.enums;
+
+message VideoResolution {
+  enum Enum {
+    NONE = 0;
+    _480p = 1;
+    _720p = 2;
+    _1080p = 3;
+    _1440p = 4;
+    _720p_p = 5;
+    _1080pp = 6;
+    _108s0p_p = 7;
+  }
+}

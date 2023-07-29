@@ -1,0 +1,36 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+package aasdk.proto.enums;
+
+message SensorType {
+  enum Enum {
+    NONE = 0;
+    LOCATION = 1;
+    COMPASS = 2;
+    CAR_SPEED = 3;
+    RPM = 4;
+    ODOMETER = 5;
+    FUEL_LEVEL = 6;
+    PARKING_BRAKE = 7;
+    GEAR = 8;
+    DIAGNOSTICS = 9;
+    NIGHT_DATA = 10;
+    ENVIRONMENT = 11;
+    HVAC = 12;
+    DRIVING_STATUS = 13;
+    DEAD_RECONING = 14;
+    PASSENGER = 15;
+    DOOR = 16;
+    LIGHT = 17;
+    TIRE = 18;
+    ACCEL = 19;
+    GYRO = 20;
+    GPS = 21;
+  }
+}
