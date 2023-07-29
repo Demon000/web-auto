@@ -36,3 +36,7 @@ export function createEncodedType(
     const message = type.create(properties);
     return encodeType(type, message);
 }
+
+export function createDecodedType(type: Type, buffer: DataBuffer): Message {
+    return type.decode(buffer.data);
+}
