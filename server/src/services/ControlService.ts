@@ -5,14 +5,14 @@ import { MessageInStream } from '../messenger/MessageInStream';
 import { MessageOutStream } from '../messenger/MessageOutStream';
 import { MessageType } from '../messenger/MessageType';
 import { Service } from './Service';
-import {
-    createDecodedType,
-    createEncodedType,
-    lookupEnum,
-    lookupType,
-} from '../proto/proto';
 import { Cryptor } from '../ssl/Cryptor';
 import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
+import { VersionResponseStatus_Enum } from '../proto/types/VersionResponseStatusEnum';
+import { ServiceDiscoveryRequest } from '../proto/types/ServiceDiscoveryRequestMessage';
+import { ControlMessage_Enum } from '../proto/types/ControlMessageIdsEnum';
+import { AuthCompleteIndication } from '../proto/types/AuthCompleteIndicationMessage';
+import { Status_Enum } from '../proto/types/StatusEnum';
+import { DataBuffer } from '../utils/DataBuffer';
 
 export class ControlService extends Service {
     public constructor(
@@ -24,11 +24,10 @@ export class ControlService extends Service {
     }
 
     private async onVersionReponse(message: Message): Promise<void> {
-        const VersionResponseStatus = lookupEnum('VersionResponseStatus');
         const majorCode = message.payload.readUint16BE();
         const mainorCode = message.payload.readUint16BE();
         const status = message.payload.readUint16BE();
-        if (status === VersionResponseStatus.values.MISMATCH) {
+        if (status === VersionResponseStatus_Enum.MISMATCH) {
             throw new Error('Mismatched verion');
         }
 
@@ -56,26 +55,22 @@ export class ControlService extends Service {
     }
 
     private async onServiceDiscoveryRequest(message: Message): Promise<void> {
-        const ServiceDiscoveryRequest = lookupType('ServiceDiscoveryRequest');
+        const data = ServiceDiscoveryRequest.decode(message.getBufferPayload());
 
-        const data = createDecodedType(
-            ServiceDiscoveryRequest,
-            message.getPayload(),
+        console.log(
+            `Discovery request, brand: ${data.deviceBrand}, device name ${data.deviceName}`,
         );
-        console.log(JSON.stringify(data));
     }
 
     protected onMessage(message: Message, options: MessageFrameOptions): void {
-        const ControlMessage = lookupEnum('ControlMessage');
-
         switch (message.messageId) {
-            case ControlMessage.values.VERSION_RESPONSE:
+            case ControlMessage_Enum.VERSION_RESPONSE:
                 this.onVersionReponse(message);
                 break;
-            case ControlMessage.values.SSL_HANDSHAKE:
+            case ControlMessage_Enum.SSL_HANDSHAKE:
                 this.onHandshake(message);
                 break;
-            case ControlMessage.values.SERVICE_DISCOVERY_REQUEST:
+            case ControlMessage_Enum.SERVICE_DISCOVERY_REQUEST:
                 this.onServiceDiscoveryRequest(message);
                 break;
             default:
@@ -88,10 +83,8 @@ export class ControlService extends Service {
     }
 
     private async sendVersionRequest(): Promise<void> {
-        const ControlMessage = lookupEnum('ControlMessage');
-
         const message = new Message({
-            messageId: ControlMessage.values.VERSION_REQUEST,
+            messageId: ControlMessage_Enum.VERSION_REQUEST,
         });
 
         message.payload.appendUint16BE(1).appendUint16BE(1);
@@ -103,11 +96,9 @@ export class ControlService extends Service {
     }
 
     private async sendHandshake(): Promise<void> {
-        const ControlMessage = lookupEnum('ControlMessage');
-
         const payload = this.cryptor.readHandshakeBuffer();
         const message = new Message({
-            messageId: ControlMessage.values.SSL_HANDSHAKE,
+            messageId: ControlMessage_Enum.SSL_HANDSHAKE,
             dataPayload: payload,
         });
 
@@ -118,16 +109,16 @@ export class ControlService extends Service {
     }
 
     public async sendAuthComplete(): Promise<void> {
-        const AuthCompleteIndication = lookupType('AuthCompleteIndication');
-        const ControlMessage = lookupEnum('ControlMessage');
-        const Status = lookupEnum('Status');
-
-        const payload = createEncodedType(AuthCompleteIndication, {
-            status: Status.values.OK,
+        const data = AuthCompleteIndication.create({
+            status: Status_Enum.OK,
         });
 
+        const payload = DataBuffer.fromBuffer(
+            AuthCompleteIndication.encode(data).finish(),
+        );
+
         const message = new Message({
-            messageId: ControlMessage.values.AUTH_COMPLETE,
+            messageId: ControlMessage_Enum.AUTH_COMPLETE,
             dataPayload: payload,
         });
 

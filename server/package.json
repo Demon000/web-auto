@@ -5,7 +5,8 @@
     "scripts": {
         "start:dev": "npx nodemon",
         "start": "npx ts-node ./src/index.ts",
-        "lint": "eslint --fix ."
+        "lint": "eslint --fix .",
+        "build-protos": "protoc --proto_path='./src/proto/protos' --plugin='./node_modules/.bin/protoc-gen-ts_proto' --ts_proto_opt=esModuleInterop=true --ts_proto_out='./src/proto/types' ./src/proto/protos/*"
     },
     "keywords": [],
     "author": "",
@@ -23,7 +24,7 @@
     "dependencies": {
         "eventemitter3": "^5.0.1",
         "koffi": "^2.5.7",
-        "protobufjs": "^7.2.4",
+        "ts-proto": "^1.156.2",
         "usb": "^2.9.0"
     }
 }

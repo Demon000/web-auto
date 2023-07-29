@@ -37,6 +37,10 @@ export class Message {
         return this.payload.subarray(2);
     }
 
+    public getBufferPayload(): Buffer {
+        return this.getPayload().data;
+    }
+
     public getRawPayload(): DataBuffer {
         return this.payload;
     }

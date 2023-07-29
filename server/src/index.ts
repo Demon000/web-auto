@@ -4,7 +4,6 @@ import fs from 'fs';
 import path from 'path';
 import { MessageInStream } from './messenger/MessageInStream';
 import { MessageOutStream } from './messenger/MessageOutStream';
-import { loadProtos } from './proto/proto';
 import { ControlService } from './services/ControlService';
 import { ITransport, TransportEvent } from './transport/ITransport';
 import {
@@ -71,8 +70,6 @@ function deinitDevice(device: DeviceCookie): void {
 }
 
 async function init(): Promise<void> {
-    await loadProtos();
-
     const usbDeviceHandler = new UsbDeviceHandler();
 
     usbDeviceHandler.emitter.on(
@@ -92,7 +89,6 @@ async function init(): Promise<void> {
     );
 
     const handleEnd = async () => {
-        console.log('end');
         usbDeviceHandler.stopWaitingForDevices();
         await usbDeviceHandler.disconnectDevices();
         process.exit();
