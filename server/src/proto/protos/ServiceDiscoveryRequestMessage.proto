@@ -6,8 +6,9 @@
 
 syntax = "proto2";
 
-import "StatusEnum.proto";
-
 package aasdk.proto.messages;
 
-message AuthCompleteIndication { required enums.Status.Enum status = 1; }
+message ServiceDiscoveryRequest {
+  required string device_name = 4;
+  required string device_brand = 5;
+}

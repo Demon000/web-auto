@@ -22,7 +22,10 @@ export abstract class Service {
             );
     }
 
-    protected abstract onMessage(message: Message): void;
+    protected abstract onMessage(
+        message: Message,
+        options?: MessageFrameOptions,
+    ): void;
 
     public async sendMessage(
         message: Message,
