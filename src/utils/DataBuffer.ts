@@ -1,5 +1,7 @@
 import assert from 'assert';
 
+export type DataBufferInputType = Buffer | Uint8Array;
+
 export class DataBuffer {
     private appendOffset;
     private readOffset;
@@ -33,10 +35,18 @@ export class DataBuffer {
     }
 
     public static fromBuffer(
-        buffer: Buffer,
+        buffer: Buffer | Uint8Array,
         start?: number,
         end?: number,
     ): DataBuffer {
+        let actualBuffer;
+
+        if (buffer instanceof Uint8Array) {
+            actualBuffer = Buffer.from(buffer);
+        } else {
+            actualBuffer = buffer;
+        }
+
         if (start === undefined) {
             start = 0;
         }
@@ -47,7 +57,7 @@ export class DataBuffer {
         buffer = buffer.subarray(start, end);
 
         /* Buffer should already contain data, seek buffer append to end. */
-        return new DataBuffer(undefined, buffer, end - start);
+        return new DataBuffer(undefined, actualBuffer, end - start);
     }
 
     public static fromSize(size: number): DataBuffer {
