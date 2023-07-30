@@ -1,9 +1,7 @@
 import { ChannelId } from '../messenger/ChannelId';
-import { EncryptionType } from '../messenger/EncryptionType';
 import { Message } from '../messenger/Message';
 import { MessageInStream } from '../messenger/MessageInStream';
 import { MessageOutStream } from '../messenger/MessageOutStream';
-import { MessageType } from '../messenger/MessageType';
 import { Service } from './Service';
 import { Cryptor } from '../ssl/Cryptor';
 import { VersionResponseStatus_Enum } from '../proto/types/VersionResponseStatusEnum';
@@ -12,10 +10,14 @@ import { ControlMessage_Enum } from '../proto/types/ControlMessageIdsEnum';
 import { AuthCompleteIndication } from '../proto/types/AuthCompleteIndicationMessage';
 import { Status_Enum } from '../proto/types/StatusEnum';
 import { DataBuffer } from '../utils/DataBuffer';
+import { ChannelDescriptor } from '../proto/types/ChannelDescriptorData';
+import { ChannelOpenRequest } from '../proto/types/ChannelOpenRequestMessage';
+import { ServiceDiscoveryResponse } from '../proto/types/ServiceDiscoveryResponseMessage';
 
 export class ControlService extends Service {
     public constructor(
         private cryptor: Cryptor,
+        private services: Service[],
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,
     ) {
@@ -59,6 +61,8 @@ export class ControlService extends Service {
         console.log(
             `Discovery request, brand: ${data.deviceBrand}, device name ${data.deviceName}`,
         );
+
+        return this.sendDiscoveryResponse(this.services);
     }
 
     protected onMessage(message: Message): boolean {
@@ -80,29 +84,23 @@ export class ControlService extends Service {
     }
 
     private async sendVersionRequest(): Promise<void> {
-        const message = new Message({
-            messageId: ControlMessage_Enum.VERSION_REQUEST,
-        });
+        const payload = DataBuffer.fromSize(4)
+            .appendUint16BE(1)
+            .appendUint16BE(1);
 
-        message.payload.appendUint16BE(1).appendUint16BE(1);
-
-        return this.sendMessage(message, {
-            encryptionType: EncryptionType.PLAIN,
-            messageType: MessageType.SPECIFIC,
-        });
+        return this.sendPlainSpecificMessage(
+            ControlMessage_Enum.VERSION_REQUEST,
+            payload,
+        );
     }
 
     private async sendHandshake(): Promise<void> {
         const payload = this.cryptor.readHandshakeBuffer();
-        const message = new Message({
-            messageId: ControlMessage_Enum.SSL_HANDSHAKE,
-            dataPayload: payload,
-        });
 
-        return this.sendMessage(message, {
-            encryptionType: EncryptionType.PLAIN,
-            messageType: MessageType.SPECIFIC,
-        });
+        return this.sendPlainSpecificMessage(
+            ControlMessage_Enum.SSL_HANDSHAKE,
+            payload,
+        );
     }
 
     public async sendAuthComplete(): Promise<void> {
@@ -114,18 +112,42 @@ export class ControlService extends Service {
             AuthCompleteIndication.encode(data).finish(),
         );
 
-        const message = new Message({
-            messageId: ControlMessage_Enum.AUTH_COMPLETE,
-            dataPayload: payload,
-        });
+        return this.sendPlainSpecificMessage(
+            ControlMessage_Enum.AUTH_COMPLETE,
+            payload,
+        );
+    }
 
-        return this.sendMessage(message, {
-            encryptionType: EncryptionType.PLAIN,
-            messageType: MessageType.SPECIFIC,
-        });
+    public async sendDiscoveryResponse(services: Service[]): Promise<void> {
+        const data = ServiceDiscoveryResponse.create();
+
+        for (const service of services) {
+            service.fillFeatures(data);
+        }
+
+        console.log(ServiceDiscoveryResponse.toJSON(data));
+
+        const payload = DataBuffer.fromBuffer(
+            ServiceDiscoveryResponse.encode(data).finish(),
+        );
+
+        return this.sendEncryptedSpecificMessage(
+            ControlMessage_Enum.SERVICE_DISCOVERY_RESPONSE,
+            payload,
+        );
     }
 
     public async start(): Promise<void> {
         return this.sendVersionRequest();
+    }
+
+    protected fillChannelDescriptor(
+        _channelDescriptor: ChannelDescriptor,
+    ): void {
+        throw new Error('Control service does not support discovery');
+    }
+
+    protected openChannel(_data: ChannelOpenRequest): Promise<void> {
+        throw new Error('Control service does not support openning channel');
     }
 }
