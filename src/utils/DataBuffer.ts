@@ -41,10 +41,10 @@ export class DataBuffer {
     ): DataBuffer {
         let actualBuffer;
 
-        if (buffer instanceof Uint8Array) {
-            actualBuffer = Buffer.from(buffer);
-        } else {
+        if (buffer instanceof Buffer) {
             actualBuffer = buffer;
+        } else {
+            actualBuffer = Buffer.from(buffer);
         }
 
         if (start === undefined) {
