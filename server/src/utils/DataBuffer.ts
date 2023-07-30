@@ -35,7 +35,7 @@ export class DataBuffer {
     }
 
     public static fromBuffer(
-        buffer: Buffer | Uint8Array,
+        buffer: DataBufferInputType,
         start?: number,
         end?: number,
     ): DataBuffer {
@@ -123,6 +123,12 @@ export class DataBuffer {
 
     public readUint16BE(): number {
         return this.handleRead(2, this.data.readUint16BE);
+    }
+
+    public readUint64BE(): bigint {
+        const data = this.data.readBigUInt64BE(this.appendOffset);
+        this.appendOffset += 4;
+        return data;
     }
 
     public subarray(start?: number, end?: number): DataBuffer {

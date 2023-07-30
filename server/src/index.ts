@@ -11,6 +11,7 @@ import {
     UsbDeviceHandlerEvent,
 } from './usb/UsbDeviceHandler';
 import { Device } from 'usb';
+import { DummyVideoService } from './services/DummyVideoService';
 
 const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
 const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
@@ -42,8 +43,11 @@ async function initDevice(
     const messageInStream = new MessageInStream(cryptor);
     const messageOutStream = new MessageOutStream(transport, cryptor);
 
+    const services = [new DummyVideoService(messageInStream, messageOutStream)];
+
     const controlService = new ControlService(
         cryptor,
+        services,
         messageInStream,
         messageOutStream,
     );
