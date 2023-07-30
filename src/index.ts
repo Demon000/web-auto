@@ -98,7 +98,7 @@ async function init(): Promise<void> {
         process.exit();
     };
 
-    process.on('SIGINT', () => handleEnd);
+    process.on('SIGINT', handleEnd);
 
     await usbDeviceHandler.waitForDevices();
 }
