@@ -75,12 +75,12 @@ export class Cryptor implements ICryptor {
         }
     }
 
-    public readHandshakeBuffer(): Buffer {
+    public readHandshakeBuffer(): DataBuffer {
         const buffer = DataBuffer.empty();
         this.read(buffer);
-        return buffer.data;
+        return buffer;
     }
-    public writeHandshakeBuffer(buffer: Buffer): void {
+    public writeHandshakeBuffer(buffer: DataBuffer): void {
         this.write(buffer);
     }
 
@@ -110,7 +110,7 @@ export class Cryptor implements ICryptor {
     }
 
     public decrypt(output: DataBuffer, input: DataBuffer): number {
-        this.write(input.data);
+        this.write(input);
 
         const beginOffset = output.size;
         output.resize(beginOffset + 1);
@@ -149,14 +149,14 @@ export class Cryptor implements ICryptor {
         let totalTransferredSize = 0;
 
         while (totalTransferredSize < pendingSize) {
-            const currentBuffer = buffer.data.subarray(
+            const currentBuffer = buffer.subarray(
                 totalTransferredSize + beginOffset,
             );
 
             const transferredSize = sslBioRead(
                 this.wbio,
-                currentBuffer,
-                currentBuffer.length,
+                currentBuffer.data,
+                currentBuffer.size,
             );
 
             if (transferredSize <= 0) {
@@ -168,16 +168,16 @@ export class Cryptor implements ICryptor {
 
         return totalTransferredSize;
     }
-    public write(buffer: Buffer): void {
+    public write(buffer: DataBuffer): void {
         let totalTransferredSize = 0;
 
-        while (totalTransferredSize < buffer.length) {
+        while (totalTransferredSize < buffer.size) {
             const currentBuffer = buffer.subarray(totalTransferredSize);
 
             const transferredSize = sslBioWrite(
                 this.rbio,
-                currentBuffer,
-                currentBuffer.length,
+                currentBuffer.data,
+                currentBuffer.size,
             );
 
             if (transferredSize <= 0) {

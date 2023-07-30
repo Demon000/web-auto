@@ -42,7 +42,7 @@ export class ControlService extends Service {
     }
 
     private async onHandshake(message: Message): Promise<void> {
-        this.cryptor.writeHandshakeBuffer(message.getPayload().data);
+        this.cryptor.writeHandshakeBuffer(message.getPayload());
 
         if (this.cryptor.doHandshake()) {
             console.log('Auth completed');
@@ -95,8 +95,7 @@ export class ControlService extends Service {
     }
 
     private async sendHandshake(): Promise<void> {
-        const buffer = this.cryptor.readHandshakeBuffer();
-        const payload = DataBuffer.fromBuffer(buffer);
+        const payload = this.cryptor.readHandshakeBuffer();
 
         return this.sendPlainSpecificMessage(
             ControlMessage_Enum.SSL_HANDSHAKE,
