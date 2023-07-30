@@ -87,14 +87,14 @@ async function init(): Promise<void> {
 
     usbDeviceHandler.emitter.on(
         UsbDeviceHandlerEvent.DISCONNECTED,
-        async (device: Device) => {
+        (device: Device) => {
             deinitDevice(device);
         },
     );
 
-    const handleEnd = async () => {
+    const handleEnd = () => {
         usbDeviceHandler.stopWaitingForDevices();
-        await usbDeviceHandler.disconnectDevices();
+        usbDeviceHandler.disconnectDevices();
         process.exit();
     };
 

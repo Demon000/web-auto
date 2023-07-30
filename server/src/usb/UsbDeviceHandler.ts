@@ -23,6 +23,11 @@ export interface UsbDeviceHandlerEvents {
 export class UsbDeviceHandler {
     public emitter = new EventEmitter<UsbDeviceHandlerEvents>();
     private androidAutoDevices: Device[] = [];
+    public constructor() {
+        this.handleConnectedDevice = this.handleConnectedDevice.bind(this);
+        this.handleDisconnectedDevice =
+            this.handleDisconnectedDevice.bind(this);
+    }
 
     private async controlTransfer(
         device: Device,
@@ -190,16 +195,15 @@ export class UsbDeviceHandler {
         }
     }
 
-    private async handleDisconnectedDevice(device: Device): Promise<void> {
+    private handleDisconnectedDevice(device: Device): void {
         this.emitter.emit(UsbDeviceHandlerEvent.DISCONNECTED, device);
-        device.close();
     }
 
     public async waitForDevices(): Promise<void> {
         const devices = usb.getDeviceList();
 
-        usb.on('attach', this.handleConnectedDevice.bind(this));
-        usb.on('detach', this.handleDisconnectedDevice.bind(this));
+        usb.on('attach', this.handleConnectedDevice);
+        usb.on('detach', this.handleDisconnectedDevice);
 
         for (const device of devices) {
             await this.handleConnectedDevice(device);
@@ -207,13 +211,14 @@ export class UsbDeviceHandler {
     }
 
     public stopWaitingForDevices(): void {
-        usb.removeAllListeners();
-        usb.unrefHotplugEvents();
+        usb.removeListener('attach', this.handleConnectedDevice);
+        usb.removeListener('detach', this.handleDisconnectedDevice);
     }
 
-    public async disconnectDevices(): Promise<void> {
+    public disconnectDevices(): void {
         for (const device of this.androidAutoDevices) {
-            await this.handleDisconnectedDevice(device);
+            this.handleDisconnectedDevice(device);
+            device.close();
         }
     }
 }
