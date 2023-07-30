@@ -1,6 +1,2 @@
-protoc --proto_path='./src/proto/protos' \
-       --plugin='./node_modules/.bin/protoc-gen-ts_proto' \
-       --ts_proto_opt=esModuleInterop=true \
-       --ts_proto_opt=forceLong=bigint \
-       --ts_proto_out='./src/proto/types' \
-       ./src/proto/protos/*
+npx pbjs -t static-module -w commonjs -o src/proto/types/index.js src/proto/protos/*
+npx pbts -o src/proto/types/index.d.ts src/proto/types/index.js
