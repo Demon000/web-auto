@@ -4,7 +4,7 @@
     "description": "",
     "scripts": {
         "start:dev": "npx nodemon",
-        "start": "npx ts-node ./src/index.ts",
+        "start": "node --inspect -r ts-node/register ./src/index.ts",
         "lint": "eslint --fix .",
         "build-protos": "protoc --proto_path='./src/proto/protos' --plugin='./node_modules/.bin/protoc-gen-ts_proto' --ts_proto_opt=esModuleInterop=true --ts_proto_out='./src/proto/types' ./src/proto/protos/*"
     },
