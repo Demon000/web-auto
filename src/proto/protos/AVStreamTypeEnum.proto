@@ -6,8 +6,6 @@
 
 syntax = "proto2";
 
-package aasdk.proto.enums;
-
 message AVStreamType {
   enum Enum {
     NONE = 0;

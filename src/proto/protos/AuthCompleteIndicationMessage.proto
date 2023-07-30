@@ -8,6 +8,4 @@ syntax = "proto2";
 
 import "StatusEnum.proto";
 
-package aasdk.proto.messages;
-
-message AuthCompleteIndication { required enums.Status.Enum status = 1; }
+message AuthCompleteIndication { required Status.Enum status = 1; }

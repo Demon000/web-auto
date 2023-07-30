@@ -6,8 +6,6 @@
 
 syntax = "proto2";
 
-package aasdk.proto.messages;
-
 message ServiceDiscoveryRequest {
   required string device_name = 4;
   required string device_brand = 5;

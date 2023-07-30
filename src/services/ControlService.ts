@@ -4,17 +4,26 @@ import { MessageInStream } from '../messenger/MessageInStream';
 import { MessageOutStream } from '../messenger/MessageOutStream';
 import { Service } from './Service';
 import { Cryptor } from '../ssl/Cryptor';
-import { VersionResponseStatus_Enum } from '../proto/types/VersionResponseStatusEnum';
-import { ServiceDiscoveryRequest } from '../proto/types/ServiceDiscoveryRequestMessage';
-import { ControlMessage_Enum } from '../proto/types/ControlMessageIdsEnum';
-import { AuthCompleteIndication } from '../proto/types/AuthCompleteIndicationMessage';
-import { Status_Enum } from '../proto/types/StatusEnum';
 import { DataBuffer } from '../utils/DataBuffer';
-import { ChannelDescriptor } from '../proto/types/ChannelDescriptorData';
-import { ChannelOpenRequest } from '../proto/types/ChannelOpenRequestMessage';
-import { ServiceDiscoveryResponse } from '../proto/types/ServiceDiscoveryResponseMessage';
+import { microsecondsTime } from '../utils/time';
+import {
+    AuthCompleteIndication,
+    ChannelDescriptor,
+    ChannelOpenRequest,
+    ControlMessage,
+    PingRequest,
+    PingResponse,
+    ServiceDiscoveryRequest,
+    ServiceDiscoveryResponse,
+    Status,
+    VersionResponseStatus,
+} from '../proto/types';
+import Long from 'long';
+import assert from 'assert';
 
 export class ControlService extends Service {
+    private pingTimeout?: NodeJS.Timeout;
+
     public constructor(
         private cryptor: Cryptor,
         private services: Service[],
@@ -22,13 +31,40 @@ export class ControlService extends Service {
         messageOutStream: MessageOutStream,
     ) {
         super(ChannelId.CONTROL, messageInStream, messageOutStream);
+
+        this.onPingTimeout = this.onPingTimeout.bind(this);
+    }
+
+    public schedulePing(): void {
+        this.pingTimeout = setTimeout(this.onPingTimeout, 5000);
+    }
+
+    public cancelPing(): void {
+        clearTimeout(this.pingTimeout);
+    }
+
+    public async onPingTimeout(): Promise<void> {
+        console.log('Send ping request');
+        await this.sendPingRequest();
+        this.schedulePing();
+    }
+
+    public async onPingRequest(message: Message): Promise<void> {
+        const data = PingRequest.decode(message.getBufferPayload());
+        assert(data.timestamp instanceof Long);
+        console.log('Receive ping request');
+        await this.sendPingResponse(data.timestamp);
+    }
+
+    public async onPingResponse(_message: Message): Promise<void> {
+        console.log('Receive ping response');
     }
 
     private async onVersionReponse(message: Message): Promise<void> {
         const majorCode = message.payload.readUint16BE();
         const mainorCode = message.payload.readUint16BE();
         const status = message.payload.readUint16BE();
-        if (status === VersionResponseStatus_Enum.MISMATCH) {
+        if (status === VersionResponseStatus.Enum.MISMATCH) {
             throw new Error('Mismatched verion');
         }
 
@@ -66,15 +102,21 @@ export class ControlService extends Service {
     }
 
     protected onMessage(message: Message): boolean {
-        switch (message.messageId as ControlMessage_Enum) {
-            case ControlMessage_Enum.VERSION_RESPONSE:
+        switch (message.messageId as ControlMessage.Enum) {
+            case ControlMessage.Enum.VERSION_RESPONSE:
                 this.onVersionReponse(message);
                 break;
-            case ControlMessage_Enum.SSL_HANDSHAKE:
+            case ControlMessage.Enum.SSL_HANDSHAKE:
                 this.onHandshake(message);
                 break;
-            case ControlMessage_Enum.SERVICE_DISCOVERY_REQUEST:
+            case ControlMessage.Enum.SERVICE_DISCOVERY_REQUEST:
                 this.onServiceDiscoveryRequest(message);
+                break;
+            case ControlMessage.Enum.PING_REQUEST:
+                this.onPingRequest(message);
+                break;
+            case ControlMessage.Enum.PING_RESPONSE:
+                this.onPingResponse(message);
                 break;
             default:
                 return false;
@@ -89,7 +131,7 @@ export class ControlService extends Service {
             .appendUint16BE(1);
 
         return this.sendPlainSpecificMessage(
-            ControlMessage_Enum.VERSION_REQUEST,
+            ControlMessage.Enum.VERSION_REQUEST,
             payload,
         );
     }
@@ -98,14 +140,14 @@ export class ControlService extends Service {
         const payload = this.cryptor.readHandshakeBuffer();
 
         return this.sendPlainSpecificMessage(
-            ControlMessage_Enum.SSL_HANDSHAKE,
+            ControlMessage.Enum.SSL_HANDSHAKE,
             payload,
         );
     }
 
     public async sendAuthComplete(): Promise<void> {
         const data = AuthCompleteIndication.create({
-            status: Status_Enum.OK,
+            status: Status.Enum.OK,
         });
 
         const payload = DataBuffer.fromBuffer(
@@ -113,7 +155,37 @@ export class ControlService extends Service {
         );
 
         return this.sendPlainSpecificMessage(
-            ControlMessage_Enum.AUTH_COMPLETE,
+            ControlMessage.Enum.AUTH_COMPLETE,
+            payload,
+        );
+    }
+
+    private async sendPingRequest(): Promise<void> {
+        const data = PingRequest.create({
+            timestamp: microsecondsTime(),
+        });
+
+        const payload = DataBuffer.fromBuffer(
+            PingRequest.encode(data).finish(),
+        );
+
+        return this.sendPlainSpecificMessage(
+            ControlMessage.Enum.PING_REQUEST,
+            payload,
+        );
+    }
+
+    private async sendPingResponse(timestamp: Long): Promise<void> {
+        const data = PingResponse.create({
+            timestamp,
+        });
+
+        const payload = DataBuffer.fromBuffer(
+            PingResponse.encode(data).finish(),
+        );
+
+        return this.sendPlainSpecificMessage(
+            ControlMessage.Enum.PING_RESPONSE,
             payload,
         );
     }
@@ -125,19 +197,20 @@ export class ControlService extends Service {
             service.fillFeatures(data);
         }
 
-        console.log(ServiceDiscoveryResponse.toJSON(data));
+        console.log(ServiceDiscoveryResponse.toObject(data));
 
         const payload = DataBuffer.fromBuffer(
             ServiceDiscoveryResponse.encode(data).finish(),
         );
 
         return this.sendEncryptedSpecificMessage(
-            ControlMessage_Enum.SERVICE_DISCOVERY_RESPONSE,
+            ControlMessage.Enum.SERVICE_DISCOVERY_RESPONSE,
             payload,
         );
     }
 
     public async start(): Promise<void> {
+        this.schedulePing();
         return this.sendVersionRequest();
     }
 

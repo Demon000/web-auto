@@ -6,8 +6,6 @@
 
 syntax = "proto2";
 
-package aasdk.proto.data;
-
 message VendorExtensionChannel {
   required string name = 1;
   repeated string package_white_list = 2;

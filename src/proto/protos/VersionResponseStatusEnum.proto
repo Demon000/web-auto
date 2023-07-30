@@ -6,8 +6,6 @@
 
 syntax = "proto2";
 
-package aasdk.proto.enums;
-
 message VersionResponseStatus {
   enum Enum {
     MATCH = 0;

@@ -6,8 +6,6 @@
 
 syntax = "proto2";
 
-package aasdk.proto.ids;
-
 message ControlMessage {
   enum Enum {
     NONE = 0x0000;

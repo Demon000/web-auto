@@ -6,8 +6,6 @@
 
 syntax = "proto2";
 
-package aasdk.proto.data;
-
 message AudioConfig {
   required uint32 sample_rate = 1;
   required uint32 bit_depth = 2;

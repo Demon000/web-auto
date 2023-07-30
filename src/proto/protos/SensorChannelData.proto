@@ -8,6 +8,4 @@ syntax = "proto2";
 
 import "SensorData.proto";
 
-package aasdk.proto.data;
-
 message SensorChannel { repeated Sensor sensors = 1; }

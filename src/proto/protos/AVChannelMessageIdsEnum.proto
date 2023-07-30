@@ -6,8 +6,6 @@
 
 syntax = "proto2";
 
-package aasdk.proto.ids;
-
 message AVChannelMessage {
   enum Enum {
     AV_MEDIA_WITH_TIMESTAMP_INDICATION = 0x0000;
