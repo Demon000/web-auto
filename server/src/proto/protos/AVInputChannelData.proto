@@ -9,10 +9,8 @@ syntax = "proto2";
 import "AVStreamTypeEnum.proto";
 import "AudioConfigData.proto";
 
-package aasdk.proto.data;
-
 message AVInputChannel {
-  required enums.AVStreamType.Enum stream_type = 1;
+  required AVStreamType.Enum stream_type = 1;
   required AudioConfig audio_config = 2;
   optional bool available_while_in_call = 3;
 }

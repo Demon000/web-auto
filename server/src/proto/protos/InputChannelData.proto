@@ -8,8 +8,6 @@ syntax = "proto2";
 
 import "TouchConfigData.proto";
 
-package aasdk.proto.data;
-
 message InputChannel {
   repeated uint32 supported_keycodes = 1;
   optional TouchConfig touch_screen_config = 2;

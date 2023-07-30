@@ -6,12 +6,4 @@
 
 syntax = "proto2";
 
-message AudioType {
-  enum Enum {
-    NONE = 0;
-    SPEECH = 1;
-    SYSTEM = 2;
-    MEDIA = 3;
-    ALARM = 4;
-  }
-}
+message PingResponse { required int64 timestamp = 1; }

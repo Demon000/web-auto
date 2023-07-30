@@ -9,10 +9,8 @@ syntax = "proto2";
 import "NavigationTurnTypeEnum.proto";
 import "NavigationImageOptionsData.proto";
 
-package aasdk.proto.data;
-
 message NavigationChannel {
   required uint32 minimum_interval_ms = 1;
-  required enums.NavigationTurnType.Enum type = 2;
+  required NavigationTurnType.Enum type = 2;
   required NavigationImageOptions image_options = 3;
 }

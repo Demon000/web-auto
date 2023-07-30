@@ -6,6 +6,4 @@
 
 syntax = "proto2";
 
-package aasdk.proto.data;
-
 message MediaInfoChannel {}

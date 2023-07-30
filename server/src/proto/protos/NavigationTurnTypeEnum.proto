@@ -6,8 +6,6 @@
 
 syntax = "proto2";
 
-package aasdk.proto.enums;
-
 message NavigationTurnType {
   enum Enum {
     UNKNOWN = 0;

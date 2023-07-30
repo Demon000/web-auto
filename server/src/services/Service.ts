@@ -8,12 +8,14 @@ import {
 } from '../messenger/MessageInStream';
 import { MessageOutStream } from '../messenger/MessageOutStream';
 import { MessageType } from '../messenger/MessageType';
-import { ChannelDescriptor } from '../proto/types/ChannelDescriptorData';
-import { ChannelOpenRequest } from '../proto/types/ChannelOpenRequestMessage';
-import { ChannelOpenResponse } from '../proto/types/ChannelOpenResponseMessage';
-import { ControlMessage_Enum } from '../proto/types/ControlMessageIdsEnum';
-import { ServiceDiscoveryResponse } from '../proto/types/ServiceDiscoveryResponseMessage';
-import { Status_Enum } from '../proto/types/StatusEnum';
+import {
+    ChannelDescriptor,
+    ChannelOpenRequest,
+    ChannelOpenResponse,
+    ControlMessage,
+    ServiceDiscoveryResponse,
+    Status,
+} from '../proto/types';
 import { DataBuffer } from '../utils/DataBuffer';
 
 export type ServiceSendMessageOptions = Omit<MessageFrameOptions, 'channelId'>;
@@ -37,7 +39,7 @@ export abstract class Service {
         options?: MessageFrameOptions,
     ): Promise<void> {
         switch (message.messageId) {
-            case ControlMessage_Enum.CHANNEL_OPEN_REQUEST:
+            case ControlMessage.Enum.CHANNEL_OPEN_REQUEST:
                 return this.onChannelOpenRequest(message);
         }
 
@@ -73,7 +75,7 @@ export abstract class Service {
 
     protected async sendChannelOpenResponse(status: boolean): Promise<void> {
         const data = ChannelOpenResponse.create({
-            status: status ? Status_Enum.OK : Status_Enum.FAIL,
+            status: status ? Status.Enum.OK : Status.Enum.FAIL,
         });
 
         const payload = DataBuffer.fromBuffer(
@@ -81,7 +83,7 @@ export abstract class Service {
         );
 
         return this.sendEncryptedControlMessage(
-            ControlMessage_Enum.CHANNEL_OPEN_RESPONSE,
+            ControlMessage.Enum.CHANNEL_OPEN_RESPONSE,
             payload,
         );
     }
@@ -110,6 +112,8 @@ export abstract class Service {
             messageId,
             dataPayload,
         });
+
+        console.log('Send', messageId, dataPayload, message, options);
 
         return this.sendMessage(message, options);
     }

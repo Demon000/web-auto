@@ -8,10 +8,8 @@ syntax = "proto2";
 
 import "ChannelDescriptorData.proto";
 
-package aasdk.proto.messages;
-
 message ServiceDiscoveryResponse {
-  repeated data.ChannelDescriptor channels = 1;
+  repeated ChannelDescriptor channels = 1;
   required string head_unit_name = 2;
   required string car_model = 3;
   required string car_year = 4;

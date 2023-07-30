@@ -2,21 +2,23 @@ import { ChannelId } from '../messenger/ChannelId';
 import { Message } from '../messenger/Message';
 import { MessageInStream } from '../messenger/MessageInStream';
 import { MessageOutStream } from '../messenger/MessageOutStream';
-import { AVChannel } from '../proto/types/AVChannelData';
-import { AVChannelMessage_Enum } from '../proto/types/AVChannelMessageIdsEnum';
-import { AVChannelSetupRequest } from '../proto/types/AVChannelSetupRequestMessage';
-import { AVChannelSetupResponse } from '../proto/types/AVChannelSetupResponseMessage';
-import { AVChannelSetupStatus_Enum } from '../proto/types/AVChannelSetupStatusEnum';
-import { AVChannelStartIndication } from '../proto/types/AVChannelStartIndicationMessage';
-import { AVChannelStopIndication } from '../proto/types/AVChannelStopIndicationMessage';
-import { AVMediaAckIndication } from '../proto/types/AVMediaAckIndicationMessage';
-import { AVStreamType_Enum } from '../proto/types/AVStreamTypeEnum';
-import { ChannelDescriptor } from '../proto/types/ChannelDescriptorData';
-import { VideoFPS_Enum } from '../proto/types/VideoFPSEnum';
-import { VideoFocusIndication } from '../proto/types/VideoFocusIndicationMessage';
-import { VideoFocusMode_Enum } from '../proto/types/VideoFocusModeEnum';
-import { VideoFocusRequest } from '../proto/types/VideoFocusRequestMessage';
-import { VideoResolution_Enum } from '../proto/types/VideoResolutionEnum';
+import {
+    AVChannel,
+    AVChannelMessage,
+    AVChannelSetupRequest,
+    AVChannelSetupResponse,
+    AVChannelSetupStatus,
+    AVChannelStartIndication,
+    AVChannelStopIndication,
+    AVMediaAckIndication,
+    AVStreamType,
+    ChannelDescriptor,
+    VideoFPS,
+    VideoFocusIndication,
+    VideoFocusMode,
+    VideoFocusRequest,
+    VideoResolution,
+} from '../proto/types';
 import { DataBuffer } from '../utils/DataBuffer';
 import { Service } from './Service';
 
@@ -32,22 +34,22 @@ export abstract class VideoService extends Service {
 
     protected onMessage(message: Message): boolean {
         switch (message.messageId) {
-            case AVChannelMessage_Enum.AV_MEDIA_WITH_TIMESTAMP_INDICATION:
+            case AVChannelMessage.Enum.AV_MEDIA_WITH_TIMESTAMP_INDICATION:
                 this.onAvMediaWithTimestampIndication(message);
                 break;
-            case AVChannelMessage_Enum.AV_MEDIA_INDICATION:
+            case AVChannelMessage.Enum.AV_MEDIA_INDICATION:
                 this.onAvMediaIndication(message);
                 break;
-            case AVChannelMessage_Enum.SETUP_REQUEST:
+            case AVChannelMessage.Enum.SETUP_REQUEST:
                 this.onSetupRequest(message);
                 break;
-            case AVChannelMessage_Enum.START_INDICATION:
+            case AVChannelMessage.Enum.START_INDICATION:
                 this.onStartIndication(message);
                 break;
-            case AVChannelMessage_Enum.STOP_INDICATION:
+            case AVChannelMessage.Enum.STOP_INDICATION:
                 this.onStopIndication(message);
                 break;
-            case AVChannelMessage_Enum.VIDEO_FOCUS_REQUEST:
+            case AVChannelMessage.Enum.VIDEO_FOCUS_REQUEST:
                 this.onVideoFocusRequest(message);
                 break;
             default:
@@ -61,12 +63,12 @@ export abstract class VideoService extends Service {
         channelDescriptor: ChannelDescriptor,
     ): void {
         channelDescriptor.avChannel = AVChannel.create({
-            streamType: AVStreamType_Enum.VIDEO,
+            streamType: AVStreamType.Enum.VIDEO,
             availableWhileInCall: true,
             videoConfigs: [
                 {
-                    videoResolution: VideoResolution_Enum._1080p,
-                    videoFps: VideoFPS_Enum._60,
+                    videoResolution: VideoResolution.Enum._1080p,
+                    videoFps: VideoFPS.Enum._60,
                     marginHeight: 0,
                     marginWidth: 0,
                     dpi: 320,
@@ -127,7 +129,7 @@ export abstract class VideoService extends Service {
         );
 
         return this.sendEncryptedSpecificMessage(
-            AVChannelMessage_Enum.AV_MEDIA_ACK_INDICATION,
+            AVChannelMessage.Enum.AV_MEDIA_ACK_INDICATION,
             payload,
         );
     }
@@ -146,7 +148,7 @@ export abstract class VideoService extends Service {
 
     protected async sendVideoFocusIndication(): Promise<void> {
         const data = VideoFocusIndication.create({
-            focusMode: VideoFocusMode_Enum.FOCUSED,
+            focusMode: VideoFocusMode.Enum.FOCUSED,
             unrequested: false,
         });
 
@@ -155,7 +157,7 @@ export abstract class VideoService extends Service {
         );
 
         return this.sendEncryptedSpecificMessage(
-            AVChannelMessage_Enum.VIDEO_FOCUS_INDICATION,
+            AVChannelMessage.Enum.VIDEO_FOCUS_INDICATION,
             payload,
         );
     }
@@ -198,9 +200,10 @@ export abstract class VideoService extends Service {
 
     protected async sendSetupResponse(status: boolean): Promise<void> {
         const data = AVChannelSetupResponse.create({
+            maxUnacked: 1,
             mediaStatus: status
-                ? AVChannelSetupStatus_Enum.OK
-                : AVChannelSetupStatus_Enum.FAIL,
+                ? AVChannelSetupStatus.Enum.OK
+                : AVChannelSetupStatus.Enum.FAIL,
         });
 
         const payload = DataBuffer.fromBuffer(
@@ -208,7 +211,7 @@ export abstract class VideoService extends Service {
         );
 
         return this.sendEncryptedSpecificMessage(
-            AVChannelMessage_Enum.SETUP_RESPONSE,
+            AVChannelMessage.Enum.SETUP_RESPONSE,
             payload,
         );
     }

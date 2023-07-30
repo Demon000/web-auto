@@ -8,6 +8,4 @@ syntax = "proto2";
 
 import "SensorTypeEnum.proto";
 
-package aasdk.proto.data;
-
-message Sensor { required enums.SensorType.Enum type = 1; }
+message Sensor { required SensorType.Enum type = 1; }

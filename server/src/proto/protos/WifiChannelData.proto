@@ -8,6 +8,4 @@ syntax = "proto2";
 
 option optimize_for = SPEED;
 
-package aasdk.proto.data;
-
 message WifiChannel { required string ssid = 1; }

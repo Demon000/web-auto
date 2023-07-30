@@ -1,8 +1,10 @@
-import { AVChannelSetupRequest } from '../proto/types/AVChannelSetupRequestMessage';
-import { AVChannelStartIndication } from '../proto/types/AVChannelStartIndicationMessage';
-import { AVChannelStopIndication } from '../proto/types/AVChannelStopIndicationMessage';
-import { ChannelOpenRequest } from '../proto/types/ChannelOpenRequestMessage';
-import { VideoFocusRequest } from '../proto/types/VideoFocusRequestMessage';
+import {
+    AVChannelStartIndication,
+    AVChannelSetupRequest,
+    VideoFocusRequest,
+    AVChannelStopIndication,
+    ChannelOpenRequest,
+} from '../proto/types';
 import { DataBuffer } from '../utils/DataBuffer';
 import { VideoService } from './VideoService';
 
