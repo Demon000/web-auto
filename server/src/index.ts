@@ -12,6 +12,10 @@ import {
 } from './usb/UsbDeviceHandler';
 import { Device } from 'usb';
 import { DummyVideoService } from './services/DummyVideoService';
+import { AudioService } from './services/AudioService';
+import { ChannelId } from './messenger/ChannelId';
+import { AudioInputService } from './services/AudioInputService';
+import { InputService } from './services/InputService';
 
 const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
 const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
@@ -43,7 +47,26 @@ async function initDevice(
     const messageInStream = new MessageInStream(cryptor);
     const messageOutStream = new MessageOutStream(transport, cryptor);
 
-    const services = [new DummyVideoService(messageInStream, messageOutStream)];
+    const services = [
+        new DummyVideoService(messageInStream, messageOutStream),
+        new AudioService(
+            ChannelId.MEDIA_AUDIO,
+            messageInStream,
+            messageOutStream,
+        ),
+        new AudioService(
+            ChannelId.SYSTEM_AUDIO,
+            messageInStream,
+            messageOutStream,
+        ),
+        new AudioService(
+            ChannelId.SPEECH_AUDIO,
+            messageInStream,
+            messageOutStream,
+        ),
+        new AudioInputService(messageInStream, messageOutStream),
+        new InputService(messageInStream, messageOutStream),
+    ];
 
     const controlService = new ControlService(
         cryptor,
