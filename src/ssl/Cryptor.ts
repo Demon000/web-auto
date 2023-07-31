@@ -88,15 +88,17 @@ export class Cryptor implements ICryptor {
         let totalTransferredBytes = 0;
 
         while (totalTransferredBytes < input.size) {
-            const currentBuffer = input.subarray(
+            const currentBuffer = input.data.subarray(
                 totalTransferredBytes,
                 input.size,
             );
 
+            console.log('ssl write', currentBuffer.toString('hex'));
+
             const writeSize = sslWrite(
                 this.ssl,
-                currentBuffer.data,
-                currentBuffer.size,
+                currentBuffer,
+                currentBuffer.length,
             );
 
             if (writeSize <= 0) {
@@ -123,6 +125,13 @@ export class Cryptor implements ICryptor {
                 totalReadSize + beginOffset,
             );
 
+            console.log(
+                availableBytes,
+                totalReadSize,
+                currentBuffer.toString('hex'),
+                currentBuffer.length,
+            );
+
             const transferredSize = sslRead(
                 this.ssl,
                 currentBuffer,
@@ -144,27 +153,51 @@ export class Cryptor implements ICryptor {
     public read(buffer: DataBuffer): number {
         const pendingSize = sslBioCtrlPending(this.wbio);
 
+        console.log('before resize', buffer, buffer.size);
+
         const beginOffset = buffer.size;
         buffer.resize(beginOffset + pendingSize);
+
+        console.log('after resize', buffer, buffer.size);
         let totalTransferredSize = 0;
 
         while (totalTransferredSize < pendingSize) {
-            const currentBuffer = buffer.subarray(
+            console.log('total, pending', totalTransferredSize, pendingSize);
+
+            const currentBuffer = buffer.data.subarray(
                 totalTransferredSize + beginOffset,
             );
 
+            console.log(currentBuffer, currentBuffer.length);
+
             const transferredSize = sslBioRead(
                 this.wbio,
-                currentBuffer.data,
-                currentBuffer.size,
+                currentBuffer,
+                currentBuffer.length,
             );
 
             if (transferredSize <= 0) {
                 throw new Error(`Failed to read from BIO: ${transferredSize}`);
             }
 
+            console.log(
+                'ssl bio read',
+                transferredSize,
+                currentBuffer.toString('hex'),
+                currentBuffer.length,
+                transferredSize,
+                transferredSize + totalTransferredSize,
+            );
+
             totalTransferredSize += transferredSize;
         }
+
+        console.log(
+            'after read',
+            totalTransferredSize,
+            buffer.data.toString('hex'),
+            buffer.data.length,
+        );
 
         return totalTransferredSize;
     }
@@ -172,17 +205,26 @@ export class Cryptor implements ICryptor {
         let totalTransferredSize = 0;
 
         while (totalTransferredSize < buffer.size) {
-            const currentBuffer = buffer.subarray(totalTransferredSize);
+            const currentBuffer = buffer.data.subarray(totalTransferredSize);
 
             const transferredSize = sslBioWrite(
                 this.rbio,
-                currentBuffer.data,
-                currentBuffer.size,
+                currentBuffer,
+                currentBuffer.length,
             );
 
             if (transferredSize <= 0) {
                 throw new Error(`Failed to write BIO: ${transferredSize}`);
             }
+
+            console.log(
+                'ssl bio write',
+                currentBuffer.toString('hex'),
+                currentBuffer.length,
+                transferredSize,
+                totalTransferredSize + transferredSize,
+                buffer.size,
+            );
 
             totalTransferredSize += transferredSize;
         }

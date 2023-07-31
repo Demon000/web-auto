@@ -209,7 +209,9 @@ export class ControlService extends Service {
             service.fillFeatures(data);
         }
 
-        console.log(ServiceDiscoveryResponse.toObject(data));
+        console.log(
+            JSON.stringify(ServiceDiscoveryResponse.toObject(data), null, 4),
+        );
 
         const payload = DataBuffer.fromBuffer(
             ServiceDiscoveryResponse.encode(data).finish(),
@@ -222,7 +224,7 @@ export class ControlService extends Service {
     }
 
     public async start(): Promise<void> {
-        this.schedulePing();
+        // this.schedulePing();
         return this.sendVersionRequest();
     }
 
