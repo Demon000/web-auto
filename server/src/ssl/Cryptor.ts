@@ -113,14 +113,10 @@ export class Cryptor implements ICryptor {
 
         const beginOffset = output.size;
 
+        let availableBytes = 1;
         let totalTransferredSize = 0;
 
-        while (true) {
-            const availableBytes = sslGetAvailableBytes(this.ssl);
-            if (availableBytes === 0) {
-                break;
-            }
-
+        while (availableBytes > 0) {
             output.resize(output.size + availableBytes);
 
             const currentBuffer = output.subarray(
@@ -138,6 +134,7 @@ export class Cryptor implements ICryptor {
                 throw new Error(`Failed to read from SSL: ${error}`);
             }
 
+            availableBytes = sslGetAvailableBytes(this.ssl);
             totalTransferredSize += transferredSize;
         }
 
