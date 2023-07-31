@@ -191,7 +191,19 @@ export class ControlService extends Service {
     }
 
     public async sendDiscoveryResponse(services: Service[]): Promise<void> {
-        const data = ServiceDiscoveryResponse.create();
+        const data = ServiceDiscoveryResponse.create({
+            headUnitName: 'WebAuto',
+            carModel: 'Universal',
+            carYear: '2023',
+            carSerial: '20230731',
+            leftHandDriveVehicle: false,
+            headunitManufacturer: 'WebAuto',
+            headunitModel: 'WebAuto',
+            swBuild: '1',
+            swVersion: '1.0',
+            canPlayNativeMediaDuringVr: false,
+            hideClock: false,
+        });
 
         for (const service of services) {
             service.fillFeatures(data);
