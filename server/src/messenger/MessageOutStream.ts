@@ -63,16 +63,33 @@ export class MessageOutStream {
     ): DataBuffer {
         let payloadSize = 0;
 
+        console.log('Send payload', payloadBuffer.data.toString('hex'));
+
         if (options.encryptionType == EncryptionType.ENCRYPTED) {
             const encryptedPayloadBuffer = DataBuffer.fromSize(0);
             payloadSize = this.cryptor.encrypt(
                 encryptedPayloadBuffer,
                 payloadBuffer,
             );
+            const decryptedPayloadBuffer = DataBuffer.fromSize(0);
+            const decryptedPayloadSize = this.cryptor.decrypt(
+                decryptedPayloadBuffer,
+                encryptedPayloadBuffer,
+            );
+            console.log(
+                'Decrypted payload buffer',
+                decryptedPayloadSize,
+                decryptedPayloadBuffer.data.toString('hex'),
+            );
             payloadBuffer = encryptedPayloadBuffer;
         } else {
             payloadSize = payloadBuffer.size;
         }
+
+        console.log(
+            'Send after encrypt payload',
+            payloadBuffer.data.toString('hex'),
+        );
 
         const frameHeader = new FrameHeader({
             channelId: options.channelId,
@@ -85,10 +102,13 @@ export class MessageOutStream {
 
         const buffer = DataBuffer.empty();
 
+        console.log('Send', frameHeader);
+        console.log();
+
         buffer.appendBuffer(frameHeader.toBuffer());
         buffer.appendBuffer(payloadBuffer);
 
-        console.log('Send buffer', buffer);
+        console.log('Send', buffer);
 
         return buffer;
     }

@@ -67,11 +67,11 @@ export abstract class VideoService extends Service {
             availableWhileInCall: true,
             videoConfigs: [
                 {
-                    videoResolution: VideoResolution.Enum._1080p,
+                    videoResolution: VideoResolution.Enum._480p,
                     videoFps: VideoFPS.Enum._60,
                     marginHeight: 0,
                     marginWidth: 0,
-                    dpi: 320,
+                    dpi: 140,
                 },
             ],
         });

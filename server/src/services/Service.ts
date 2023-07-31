@@ -40,6 +40,7 @@ export abstract class Service {
     ): Promise<void> {
         switch (message.messageId) {
             case ControlMessage.Enum.CHANNEL_OPEN_REQUEST:
+                console.trace(message);
                 return this.onChannelOpenRequest(message);
         }
 
@@ -112,8 +113,6 @@ export abstract class Service {
             messageId,
             dataPayload,
         });
-
-        console.log('Send', messageId, dataPayload, message, options);
 
         return this.sendMessage(message, options);
     }
