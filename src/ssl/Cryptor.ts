@@ -86,6 +86,7 @@ export class Cryptor implements ICryptor {
     }
 
     public encrypt(output: DataBuffer, input: DataBuffer): number {
+        console.trace('encrypt', input.data.toString('hex'));
         let totalTransferredSize = 0;
 
         while (totalTransferredSize < input.size) {
@@ -105,10 +106,17 @@ export class Cryptor implements ICryptor {
             totalTransferredSize += transferredSize;
         }
 
-        return this.read(output);
+        const encryptedSize = this.read(output);
+
+        console.log('encrypted', output.data.toString('hex'));
+        console.log();
+
+        return encryptedSize;
     }
 
     public decrypt(output: DataBuffer, input: DataBuffer): number {
+        console.trace('decrypt', input.data.toString('hex'));
+
         this.write(input);
 
         const beginOffset = output.size;
@@ -117,6 +125,8 @@ export class Cryptor implements ICryptor {
 
         while (true) {
             const availableBytes = sslGetAvailableBytes(this.ssl);
+            console.log('availableBytes', availableBytes);
+            console.log(sslGetError(this.ssl, availableBytes));
             if (availableBytes === 0) {
                 break;
             }
@@ -127,18 +137,27 @@ export class Cryptor implements ICryptor {
                 totalTransferredSize + beginOffset,
             );
 
+            console.log('calling sslRead', currentBuffer.size);
+
             const transferredSize = sslRead(
                 this.ssl,
                 currentBuffer.data,
                 currentBuffer.size,
             );
 
+            console.log('decrypt transferredSize', transferredSize);
             if (transferredSize <= 0) {
                 const error = sslGetError(this.ssl, transferredSize);
                 throw new Error(`Failed to read from SSL: ${error}`);
             }
 
             totalTransferredSize += transferredSize;
+        }
+
+        if (output.size) {
+            console.log(output.size);
+            console.log('decrypted', output.data.toString('hex'));
+            console.log();
         }
 
         return totalTransferredSize;
@@ -173,6 +192,7 @@ export class Cryptor implements ICryptor {
         return totalTransferredSize;
     }
     public write(buffer: DataBuffer): void {
+        console.log('write', buffer);
         let totalTransferredSize = 0;
 
         while (totalTransferredSize < buffer.size) {
