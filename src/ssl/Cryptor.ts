@@ -13,6 +13,7 @@ import {
     sslFreeInstance,
     sslFreePrivateKey,
     sslGetAvailableBytes,
+    sslGetError,
     sslGetMethod,
     sslRead,
     sslReadCertificate,
@@ -85,25 +86,23 @@ export class Cryptor implements ICryptor {
     }
 
     public encrypt(output: DataBuffer, input: DataBuffer): number {
-        let totalTransferredBytes = 0;
+        let totalTransferredSize = 0;
 
-        while (totalTransferredBytes < input.size) {
-            const currentBuffer = input.subarray(
-                totalTransferredBytes,
-                input.size,
-            );
+        while (totalTransferredSize < input.size) {
+            const currentBuffer = input.subarray(totalTransferredSize);
 
-            const writeSize = sslWrite(
+            const transferredSize = sslWrite(
                 this.ssl,
                 currentBuffer.data,
                 currentBuffer.size,
             );
 
-            if (writeSize <= 0) {
-                throw new Error(`Failed to write to SSL: ${writeSize}`);
+            if (transferredSize <= 0) {
+                const error = sslGetError(this.ssl, transferredSize);
+                throw new Error(`Failed to write to SSL: ${error}`);
             }
 
-            totalTransferredBytes += writeSize;
+            totalTransferredSize += transferredSize;
         }
 
         return this.read(output);
@@ -113,32 +112,36 @@ export class Cryptor implements ICryptor {
         this.write(input);
 
         const beginOffset = output.size;
-        output.resize(beginOffset + 1);
 
-        let availableBytes = 1;
-        let totalReadSize = 0;
+        let totalTransferredSize = 0;
 
-        while (availableBytes > 0) {
-            const currentBuffer = output.data.subarray(
-                totalReadSize + beginOffset,
+        while (true) {
+            const availableBytes = sslGetAvailableBytes(this.ssl);
+            if (availableBytes === 0) {
+                break;
+            }
+
+            output.resize(output.size + availableBytes);
+
+            const currentBuffer = output.subarray(
+                totalTransferredSize + beginOffset,
             );
 
             const transferredSize = sslRead(
                 this.ssl,
-                currentBuffer,
-                currentBuffer.length,
+                currentBuffer.data,
+                currentBuffer.size,
             );
 
             if (transferredSize <= 0) {
-                throw new Error(`Failed to read from SSL: ${transferredSize}`);
+                const error = sslGetError(this.ssl, transferredSize);
+                throw new Error(`Failed to read from SSL: ${error}`);
             }
 
-            totalReadSize += transferredSize;
-            availableBytes = sslGetAvailableBytes(this.ssl);
-            output.resize(output.size + availableBytes);
+            totalTransferredSize += transferredSize;
         }
 
-        return totalReadSize;
+        return totalTransferredSize;
     }
 
     public read(buffer: DataBuffer): number {
@@ -160,7 +163,8 @@ export class Cryptor implements ICryptor {
             );
 
             if (transferredSize <= 0) {
-                throw new Error(`Failed to read from BIO: ${transferredSize}`);
+                const error = sslGetError(this.ssl, transferredSize);
+                throw new Error(`Failed to read from BIO: ${error}`);
             }
 
             totalTransferredSize += transferredSize;
@@ -181,7 +185,8 @@ export class Cryptor implements ICryptor {
             );
 
             if (transferredSize <= 0) {
-                throw new Error(`Failed to write BIO: ${transferredSize}`);
+                const error = sslGetError(this.ssl, transferredSize);
+                throw new Error(`Failed to write BIO: ${error}`);
             }
 
             totalTransferredSize += transferredSize;
