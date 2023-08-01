@@ -49,19 +49,17 @@ export class ControlService extends Service {
     }
 
     public async onPingTimeout(): Promise<void> {
-        console.log('Send ping request');
         await this.sendPingRequest();
         this.schedulePing();
     }
 
     public async onPingRequest(data: PingRequest): Promise<void> {
         assert(data.timestamp instanceof Long);
-        console.log('Receive ping request');
         await this.sendPingResponse(data.timestamp);
     }
 
     public async onPingResponse(_data: PingResponse): Promise<void> {
-        console.log('Receive ping response');
+        // TODO
     }
 
     private async onVersionReponse(payload: DataBuffer): Promise<void> {

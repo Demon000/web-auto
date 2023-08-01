@@ -22,7 +22,7 @@ export class SensorService extends Service {
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,
     ) {
-        super(ChannelId.SENSOR, messageInStream, messageOutStream);
+        super(ChannelId.SENSOR, messageInStream, messageOutStream, false);
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {
