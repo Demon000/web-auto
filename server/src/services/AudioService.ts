@@ -1,13 +1,17 @@
 import { ChannelId, channelIdString } from '../messenger/ChannelId';
-import { Message } from '../messenger/Message';
-import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
 import { MessageInStream } from '../messenger/MessageInStream';
 import { MessageOutStream } from '../messenger/MessageOutStream';
+import {
+    AVChannelSetupRequest,
+    AVChannelStartIndication,
+    AVChannelStopIndication,
+} from '../proto/types';
 import { AVChannel, AVStreamType, AudioType } from '../proto/types';
 import { ChannelOpenRequest, ChannelDescriptor } from '../proto/types';
-import { Service } from './Service';
+import { DataBuffer } from '../utils/DataBuffer';
+import { AVOutputService } from './AVOutputService';
 
-export class AudioService extends Service {
+export class AudioService extends AVOutputService {
     public constructor(
         channelId: ChannelId,
         messageInStream: MessageInStream,
@@ -16,15 +20,27 @@ export class AudioService extends Service {
         super(channelId, messageInStream, messageOutStream);
     }
 
-    protected async openChannel(_data: ChannelOpenRequest): Promise<void> {
-        // TODO
+    protected async open(_data: ChannelOpenRequest): Promise<void> {
+        // TOOD
     }
 
-    protected onMessage(
-        _message: Message,
-        _options?: MessageFrameOptions | undefined,
-    ): boolean {
-        return false;
+    protected async start(_data: AVChannelStartIndication): Promise<void> {
+        // TOOD
+    }
+
+    protected async setup(_data: AVChannelSetupRequest): Promise<void> {
+        // TOOD
+    }
+
+    protected async stop(_data: AVChannelStopIndication): Promise<void> {
+        // TOOD
+    }
+
+    protected async handleData(
+        _buffer: DataBuffer,
+        _timestamp?: bigint | undefined,
+    ): Promise<void> {
+        // TODO
     }
 
     protected fillChannelDescriptor(
@@ -57,7 +73,7 @@ export class AudioService extends Service {
             audioConfigs: [
                 {
                     bitDepth: 16,
-                    channelCount: 2,
+                    channelCount: audioType === AudioType.Enum.MEDIA ? 2 : 1,
                     sampleRate:
                         audioType === AudioType.Enum.MEDIA ? 48000 : 16000,
                 },

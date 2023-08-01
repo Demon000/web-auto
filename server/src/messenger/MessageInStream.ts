@@ -1,7 +1,7 @@
 import assert from 'assert';
 import { ICryptor } from '../ssl/ICryptor';
 import { DataBuffer } from '../utils/DataBuffer';
-import { ChannelId } from './ChannelId';
+import { ChannelId, channelIdString } from './ChannelId';
 import { EncryptionType } from './EncryptionType';
 import { FrameHeader } from './FrameHeader';
 import { FrameType } from './FrameType';
@@ -93,7 +93,20 @@ export class MessageInStream {
             message,
             frameHeader,
         );
-        this.channelEmitter(frameHeader.channelId, false)?.emit(
+
+        const emitter = this.channelEmitter(frameHeader.channelId, false);
+        if (!emitter) {
+            console.log(
+                `Unhandled message with id ${
+                    message.messageId
+                } on channel ${channelIdString(frameHeader.channelId)}`,
+                message.getPayload(),
+                frameHeader,
+            );
+            return;
+        }
+
+        emitter.emit(
             MessageInStreamEvent.MESSAGE_RECEIVED,
             message,
             frameHeader,

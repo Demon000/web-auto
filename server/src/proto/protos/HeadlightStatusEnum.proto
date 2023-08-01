@@ -1,0 +1,16 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+message HeadlightStatus {
+  enum Enum {
+    STATE_0 = 0;
+    STATE_1 = 1;
+    STATE_2 = 2;
+    STATE_3 = 3;
+  }
+}

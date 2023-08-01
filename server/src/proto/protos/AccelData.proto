@@ -1,0 +1,13 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+message Accel {
+  required int32 acceleration_x = 1;
+  required int32 acceleration_y = 2;
+  required int32 acceleration_z = 3;
+}

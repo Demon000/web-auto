@@ -1,0 +1,13 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+message Speed {
+  required int32 speed = 1;
+  optional bool cruise_engaged = 2;
+  optional bool cruise_set_speed = 3;
+}

@@ -1,0 +1,16 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+import "HeadlightStatusEnum.proto";
+import "IndicatorStatusEnum.proto";
+
+message Light {
+  required HeadlightStatus.Enum headlight = 1;
+  required IndicatorStatus.Enum indicator = 2;
+  required bool hazard_light_on = 3;
+}

@@ -1,0 +1,16 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+message SensorChannelMessage {
+  enum Enum {
+    NONE = 0x0000;
+    SENSOR_START_REQUEST = 0x8001;
+    SENSOR_START_RESPONSE = 0x8002;
+    SENSOR_EVENT_INDICATION = 0x8003;
+  }
+}
