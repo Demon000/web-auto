@@ -11,6 +11,7 @@ import {
     ChannelDescriptor,
     ChannelOpenRequest,
     ControlMessage,
+    NavigationTurnType,
     PingRequest,
     PingResponse,
     ServiceDiscoveryRequest,
@@ -20,6 +21,7 @@ import {
 } from '../proto/types';
 import Long from 'long';
 import assert from 'assert';
+import { SensorType } from '../proto/types';
 
 export class ControlService extends Service {
     private pingTimeout?: NodeJS.Timeout;
@@ -72,13 +74,14 @@ export class ControlService extends Service {
             `Major: ${majorCode}, minor: ${mainorCode}, status: ${status}`,
         );
 
-        this.cryptor.doHandshake();
-
-        await this.sendHandshake();
+        this.onHandshake();
     }
 
-    private async onHandshake(message: Message): Promise<void> {
-        this.cryptor.writeHandshakeBuffer(message.getPayload());
+    private async onHandshake(message?: Message): Promise<void> {
+        if (message !== undefined) {
+            const payload = message.getPayload();
+            this.cryptor.writeHandshakeBuffer(payload);
+        }
 
         if (this.cryptor.doHandshake()) {
             console.log('Auth completed');
@@ -192,13 +195,13 @@ export class ControlService extends Service {
 
     public async sendDiscoveryResponse(services: Service[]): Promise<void> {
         const data = ServiceDiscoveryResponse.create({
-            headUnitName: 'WebAuto',
+            headUnitName: 'OpenAuto',
             carModel: 'Universal',
-            carYear: '2023',
-            carSerial: '20230731',
+            carYear: '2018',
+            carSerial: '20180301',
             leftHandDriveVehicle: false,
-            headunitManufacturer: 'WebAuto',
-            headunitModel: 'WebAuto',
+            headunitManufacturer: 'f1x',
+            headunitModel: 'OpenAuto Autoapp',
             swBuild: '1',
             swVersion: '1.0',
             canPlayNativeMediaDuringVr: false,
@@ -209,7 +212,44 @@ export class ControlService extends Service {
             service.fillFeatures(data);
         }
 
-        console.log(ServiceDiscoveryResponse.toObject(data));
+        data.channels.push(
+            ChannelDescriptor.create({
+                channelId: ChannelId.SENSOR,
+                sensorChannel: {
+                    sensors: [
+                        {
+                            type: SensorType.Enum.DRIVING_STATUS,
+                        },
+                        {
+                            type: SensorType.Enum.NIGHT_DATA,
+                        },
+                    ],
+                },
+            }),
+        );
+
+        data.channels.push(
+            ChannelDescriptor.create({
+                channelId: ChannelId.NAVIGATION,
+                navigationChannel: {
+                    minimumIntervalMs: 1000,
+                    type: NavigationTurnType.Enum.IMAGE,
+                    imageOptions: {
+                        width: 256,
+                        height: 256,
+                        colourDepthBits: 16,
+                        dunno: 256,
+                    },
+                },
+            }),
+        );
+
+        data.channels.push(
+            ChannelDescriptor.create({
+                channelId: ChannelId.MEDIA_STATUS,
+                mediaInfoChannel: {},
+            }),
+        );
 
         const payload = DataBuffer.fromBuffer(
             ServiceDiscoveryResponse.encode(data).finish(),
