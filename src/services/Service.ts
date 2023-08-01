@@ -21,50 +21,30 @@ import { DataBuffer } from '../utils/DataBuffer';
 export type ServiceSendMessageOptions = Omit<MessageFrameOptions, 'channelId'>;
 
 export abstract class Service {
+    protected channelName;
+
     public constructor(
         protected channelId: number,
         protected messageInStream: MessageInStream,
         protected messageOutStream: MessageOutStream,
     ) {
+        this.channelName = channelIdString(channelId);
+
         this.messageInStream
             .channelEmitter(this.channelId)
             .on(
                 MessageInStreamEvent.MESSAGE_RECEIVED,
-                this.onMessageInner.bind(this),
+                this.onMessage.bind(this),
             );
     }
 
-    private async onMessageInner(
-        message: Message,
-        options?: MessageFrameOptions,
+    protected async onChannelOpenRequest(
+        data: ChannelOpenRequest,
     ): Promise<void> {
-        switch (message.messageId) {
-            case ControlMessage.Enum.CHANNEL_OPEN_REQUEST:
-                return this.onChannelOpenRequest(message);
-        }
-
-        const found = this.onMessage(message, options);
-        if (found) {
-            return;
-        }
-
-        console.log(
-            `Unhandled message with id ${
-                message.messageId
-            } on channel ${channelIdString(this.channelId)}`,
-            message.getPayload(),
-            options,
-        );
-    }
-
-    protected abstract openChannel(data: ChannelOpenRequest): Promise<void>;
-
-    protected async onChannelOpenRequest(message: Message): Promise<void> {
-        const data = ChannelOpenRequest.decode(message.getBufferPayload());
         let status = false;
 
         try {
-            await this.openChannel(data);
+            await this.open(data);
             status = true;
         } catch (e) {
             console.log(e);
@@ -73,10 +53,59 @@ export abstract class Service {
         return this.sendChannelOpenResponse(status);
     }
 
+    protected printReceive(message: any): void {
+        console.log(
+            this.channelName,
+            'Receive',
+            message.constructor.name,
+            JSON.stringify(message, null, 4),
+        );
+    }
+
+    protected printSend(message: any): void {
+        console.log(
+            this.channelName,
+            'Send',
+            message.constructor.name,
+            JSON.stringify(message, null, 4),
+        );
+    }
+
+    protected onMessage(
+        message: Message,
+        options?: MessageFrameOptions,
+    ): boolean {
+        const bufferPayload = message.getBufferPayload();
+        let data;
+
+        switch (message.messageId) {
+            case ControlMessage.Enum.CHANNEL_OPEN_REQUEST:
+                data = ChannelOpenRequest.decode(bufferPayload);
+                this.printReceive(data);
+                this.onChannelOpenRequest(data);
+                break;
+            default:
+                console.log(
+                    `Unhandled message with id ${
+                        message.messageId
+                    } on channel ${channelIdString(this.channelId)}`,
+                    message.getPayload(),
+                    options,
+                );
+
+                return false;
+        }
+
+        return true;
+    }
+
+    protected abstract open(data: ChannelOpenRequest): Promise<void>;
+
     protected async sendChannelOpenResponse(status: boolean): Promise<void> {
         const data = ChannelOpenResponse.create({
             status: status ? Status.Enum.OK : Status.Enum.FAIL,
         });
+        this.printSend(data);
 
         const payload = DataBuffer.fromBuffer(
             ChannelOpenResponse.encode(data).finish(),
@@ -87,11 +116,6 @@ export abstract class Service {
             payload,
         );
     }
-
-    protected abstract onMessage(
-        message: Message,
-        options?: MessageFrameOptions,
-    ): boolean;
 
     public async sendMessage(
         message: Message,
@@ -133,16 +157,6 @@ export abstract class Service {
         return this.sendMessageWithId(messageId, payload, {
             encryptionType: EncryptionType.ENCRYPTED,
             messageType: MessageType.SPECIFIC,
-        });
-    }
-
-    public async sendPlainControlMessage(
-        messageId: number,
-        payload: DataBuffer,
-    ): Promise<void> {
-        return this.sendMessageWithId(messageId, payload, {
-            encryptionType: EncryptionType.PLAIN,
-            messageType: MessageType.CONTROL,
         });
     }
 

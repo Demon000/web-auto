@@ -15,7 +15,10 @@ import { DummyVideoService } from './services/DummyVideoService';
 import { AudioService } from './services/AudioService';
 import { ChannelId } from './messenger/ChannelId';
 import { AudioInputService } from './services/AudioInputService';
-import { InputService } from './services/InputService';
+import { DummyInputService } from './services/DummyInputService';
+import { SensorService } from './services/SensorService';
+import { MediaStatusService } from './services/MediaStatusService';
+import { NavigationStatusService } from './services/NavigationStatusService';
 
 const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
 const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
@@ -48,14 +51,9 @@ async function initDevice(
     const messageOutStream = new MessageOutStream(transport, cryptor);
 
     const services = [
-        new DummyVideoService(messageInStream, messageOutStream),
+        new AudioInputService(messageInStream, messageOutStream),
         new AudioService(
             ChannelId.MEDIA_AUDIO,
-            messageInStream,
-            messageOutStream,
-        ),
-        new AudioService(
-            ChannelId.SYSTEM_AUDIO,
             messageInStream,
             messageOutStream,
         ),
@@ -64,8 +62,16 @@ async function initDevice(
             messageInStream,
             messageOutStream,
         ),
-        new AudioInputService(messageInStream, messageOutStream),
-        new InputService(messageInStream, messageOutStream),
+        new AudioService(
+            ChannelId.SYSTEM_AUDIO,
+            messageInStream,
+            messageOutStream,
+        ),
+        new SensorService(messageInStream, messageOutStream),
+        new DummyVideoService(messageInStream, messageOutStream),
+        new NavigationStatusService(messageInStream, messageOutStream),
+        new MediaStatusService(messageInStream, messageOutStream),
+        new DummyInputService(messageInStream, messageOutStream),
     ];
 
     const controlService = new ControlService(

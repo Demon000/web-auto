@@ -1,0 +1,22 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+message MediaInfoChannelPlaybackData {
+  enum PlaybackState {
+    NONE = 0x0000;
+    TRACK_CHANGE = 1;
+    PLAY = 2;
+    PAUSE = 3;
+  }
+  required PlaybackState playback_state = 1;
+  required string media_source = 2;
+  required int32 track_progress = 3;
+  required int32 unknown1 = 4;
+  required int32 unknown2 = 5;
+  required int32 unknown3 = 6;
+}

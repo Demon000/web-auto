@@ -1,0 +1,14 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+message AVInputOpenRequest {
+  required bool open = 1;
+  optional bool anc = 2;
+  optional bool ec = 3;
+  optional int32 max_unacked = 4;
+}

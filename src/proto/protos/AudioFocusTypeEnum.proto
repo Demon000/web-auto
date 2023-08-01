@@ -1,0 +1,17 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+message AudioFocusType {
+  enum Enum {
+    NONE = 0;
+    GAIN = 1;
+    GAIN_TRANSIENT = 2;
+    GAIN_NAVI = 3;
+    RELEASE = 4;
+  }
+}
