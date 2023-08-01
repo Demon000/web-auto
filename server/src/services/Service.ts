@@ -113,8 +113,6 @@ export abstract class Service {
             dataPayload,
         });
 
-        console.log('Send', messageId, dataPayload, message, options);
-
         return this.sendMessage(message, options);
     }
 

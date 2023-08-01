@@ -58,7 +58,8 @@ export class AudioService extends Service {
                 {
                     bitDepth: 16,
                     channelCount: 2,
-                    sampleRate: 16000,
+                    sampleRate:
+                        audioType === AudioType.Enum.MEDIA ? 48000 : 16000,
                 },
             ],
         });

@@ -169,6 +169,7 @@ export class Cryptor implements ICryptor {
 
         return totalTransferredSize;
     }
+
     public write(buffer: DataBuffer): void {
         let totalTransferredSize = 0;
 

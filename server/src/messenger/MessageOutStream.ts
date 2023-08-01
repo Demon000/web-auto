@@ -88,8 +88,6 @@ export class MessageOutStream {
         buffer.appendBuffer(frameHeader.toBuffer());
         buffer.appendBuffer(payloadBuffer);
 
-        console.log('Send buffer', buffer);
-
         return buffer;
     }
 }
