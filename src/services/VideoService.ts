@@ -20,10 +20,10 @@ export abstract class VideoService extends AVOutputService {
         super(ChannelId.VIDEO, messageInStream, messageOutStream);
     }
 
-    protected onMessage(
+    protected async onMessage(
         message: Message,
         options: MessageFrameOptions,
-    ): boolean {
+    ): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -31,13 +31,11 @@ export abstract class VideoService extends AVOutputService {
             case AVChannelMessage.Enum.VIDEO_FOCUS_REQUEST:
                 data = VideoFocusRequest.decode(bufferPayload);
                 this.printReceive(data);
-                this.onVideoFocusRequest(data);
+                await this.onVideoFocusRequest(data);
                 break;
             default:
-                return super.onMessage(message, options);
+                await super.onMessage(message, options);
         }
-
-        return true;
     }
 
     protected abstract focus(data: VideoFocusRequest): Promise<void>;
@@ -48,7 +46,7 @@ export abstract class VideoService extends AVOutputService {
             return;
         }
 
-        this.sendVideoFocusIndication();
+        await this.sendVideoFocusIndication();
     }
 
     protected async onVideoFocusRequest(

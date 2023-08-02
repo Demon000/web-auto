@@ -13,6 +13,7 @@
     "license": "ISC",
     "devDependencies": {
         "@types/node": "^20.3.2",
+        "@types/ws": "^8.5.5",
         "@typescript-eslint/eslint-plugin": "^5.60.1",
         "@typescript-eslint/parser": "^5.60.1",
         "eslint": "^8.43.0",
@@ -27,6 +28,7 @@
         "long": "^5.2.3",
         "protobufjs": "^7.2.4",
         "protobufjs-cli": "^1.1.1",
-        "usb": "^2.9.0"
+        "usb": "^2.9.0",
+        "ws": "^8.13.0"
     }
 }

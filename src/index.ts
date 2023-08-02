@@ -11,7 +11,10 @@ import {
     UsbDeviceHandlerEvent,
 } from './usb/UsbDeviceHandler';
 import { Device } from 'usb';
-import { DummyVideoService } from './services/DummyVideoService';
+import {
+    DummyVideoService,
+    DummyVideoServiceEvent,
+} from './services/DummyVideoService';
 import { AudioService } from './services/AudioService';
 import { ChannelId } from './messenger/ChannelId';
 import { AudioInputService } from './services/AudioInputService';
@@ -22,6 +25,10 @@ import { NavigationStatusService } from './services/NavigationStatusService';
 
 const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
 const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
+
+import { WebSocket, WebSocketServer } from 'ws';
+
+const wss = new WebSocketServer({ port: 8080 });
 
 type DeviceCookie = any;
 
@@ -50,6 +57,11 @@ async function initDevice(
     const messageInStream = new MessageInStream(cryptor);
     const messageOutStream = new MessageOutStream(transport, cryptor);
 
+    const videoService = new DummyVideoService(
+        messageInStream,
+        messageOutStream,
+    );
+
     const services = [
         new AudioInputService(messageInStream, messageOutStream),
         new AudioService(
@@ -68,11 +80,18 @@ async function initDevice(
             messageOutStream,
         ),
         new SensorService(messageInStream, messageOutStream),
-        new DummyVideoService(messageInStream, messageOutStream),
+        videoService,
         new NavigationStatusService(messageInStream, messageOutStream),
         new MediaStatusService(messageInStream, messageOutStream),
         new DummyInputService(messageInStream, messageOutStream),
     ];
+
+    wss.on('connection', (socket: WebSocket) => {
+        videoService.emitter.on(DummyVideoServiceEvent.DATA, (buffer) => {
+            console.log('sending', buffer.data);
+            socket.send(buffer.data);
+        });
+    });
 
     const controlService = new ControlService(
         cryptor,

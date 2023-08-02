@@ -33,10 +33,10 @@ export class MediaStatusService extends Service {
         // TODO
     }
 
-    protected onMessage(
+    protected async onMessage(
         message: Message,
         options: MessageFrameOptions,
-    ): boolean {
+    ): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -44,18 +44,16 @@ export class MediaStatusService extends Service {
             case MediaInfoChannelMessage.Enum.METADATA:
                 data = MediaInfoChannelMetadataData.decode(bufferPayload);
                 this.printReceive(data);
-                this.handleMetadata(data);
+                await this.handleMetadata(data);
                 break;
             case MediaInfoChannelMessage.Enum.PLAYBACK:
                 data = MediaInfoChannelPlaybackData.decode(bufferPayload);
                 this.printReceive(data);
-                this.handlePlayback(data);
+                await this.handlePlayback(data);
                 break;
             default:
-                return super.onMessage(message, options);
+                await super.onMessage(message, options);
         }
-
-        return true;
     }
 
     protected fillChannelDescriptor(

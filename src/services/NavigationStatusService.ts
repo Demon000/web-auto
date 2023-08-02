@@ -38,10 +38,10 @@ export class NavigationStatusService extends Service {
         // TODO
     }
 
-    protected onMessage(
+    protected async onMessage(
         message: Message,
         options: MessageFrameOptions,
-    ): boolean {
+    ): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -49,23 +49,21 @@ export class NavigationStatusService extends Service {
             case NavigationChannelMessage.Enum.STATUS:
                 data = NavigationStatus.decode(bufferPayload);
                 this.printReceive(data);
-                this.onStatus(data);
+                await this.onStatus(data);
                 break;
             case NavigationChannelMessage.Enum.DISTANCE_EVENT:
                 data = NavigationDistanceEvent.decode(bufferPayload);
                 this.printReceive(data);
-                this.onDistance(data);
+                await this.onDistance(data);
                 break;
             case NavigationChannelMessage.Enum.TURN_EVENT:
                 data = NavigationTurnEvent.decode(bufferPayload);
                 this.printReceive(data);
-                this.onTurn(data);
+                await this.onTurn(data);
                 break;
             default:
-                return super.onMessage(message, options);
+                await super.onMessage(message, options);
         }
-
-        return true;
     }
 
     protected fillChannelDescriptor(
