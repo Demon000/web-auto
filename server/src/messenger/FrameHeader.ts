@@ -49,7 +49,7 @@ export class FrameHeader {
         const payloadSize = buffer.readUint16BE();
         let totalSize = 0;
         if (frameType === FrameType.FIRST) {
-            totalSize = buffer.readUint16BE();
+            totalSize = buffer.readUint32BE();
         }
 
         return new FrameHeader({
