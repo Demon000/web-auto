@@ -38,10 +38,10 @@ export abstract class InputService extends Service {
         return this.sendBindingResponse(status);
     }
 
-    protected onMessage(
+    protected async onMessage(
         message: Message,
         options: MessageFrameOptions,
-    ): boolean {
+    ): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -49,13 +49,11 @@ export abstract class InputService extends Service {
             case InputChannelMessage.Enum.BINDING_REQUEST:
                 data = BindingRequest.decode(bufferPayload);
                 this.printReceive(data);
-                this.onBindingRequest(data);
+                await this.onBindingRequest(data);
                 break;
             default:
-                return super.onMessage(message, options);
+                await super.onMessage(message, options);
         }
-
-        return true;
     }
 
     protected fillChannelDescriptor(

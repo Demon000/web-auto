@@ -12,8 +12,28 @@ import {
 } from '../proto/types';
 import { DataBuffer } from '../utils/DataBuffer';
 import { VideoService } from './VideoService';
+import { MessageInStream } from '../messenger/MessageInStream';
+import { MessageOutStream } from '../messenger/MessageOutStream';
+import EventEmitter from 'eventemitter3';
+
+export enum DummyVideoServiceEvent {
+    DATA,
+}
+
+export interface DummyVideoServiceEvents {
+    [DummyVideoServiceEvent.DATA]: (buffer: DataBuffer) => void;
+}
 
 export class DummyVideoService extends VideoService {
+    public emitter = new EventEmitter<DummyVideoServiceEvents>();
+
+    public constructor(
+        messageInStream: MessageInStream,
+        messageOutStream: MessageOutStream,
+    ) {
+        super(messageInStream, messageOutStream);
+    }
+
     protected async open(_data: ChannelOpenRequest): Promise<void> {
         // TODO
     }
@@ -35,10 +55,10 @@ export class DummyVideoService extends VideoService {
     }
 
     protected async handleData(
-        _buffer: DataBuffer,
+        buffer: DataBuffer,
         _timestamp?: bigint | undefined,
     ): Promise<void> {
-        // TODO
+        this.emitter.emit(DummyVideoServiceEvent.DATA, buffer);
     }
 
     protected fillChannelDescriptor(

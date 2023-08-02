@@ -42,10 +42,10 @@ export class AudioInputService extends AVService {
         this.sendInputOpenResponse();
     }
 
-    protected onMessage(
+    protected async onMessage(
         message: Message,
         options: MessageFrameOptions,
-    ): boolean {
+    ): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -53,13 +53,11 @@ export class AudioInputService extends AVService {
             case AVChannelMessage.Enum.AV_INPUT_OPEN_REQUEST:
                 data = AVInputOpenRequest.decode(bufferPayload);
                 this.printReceive(data);
-                this.onInputOpenRequest(data);
+                await this.onInputOpenRequest(data);
                 break;
             default:
-                return super.onMessage(message, options);
+                await super.onMessage(message, options);
         }
-
-        return true;
     }
 
     protected async sendInputOpenResponse(): Promise<void> {

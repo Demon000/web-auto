@@ -74,7 +74,7 @@ export class ControlService extends Service {
             `Major: ${majorCode}, minor: ${mainorCode}, status: ${status}`,
         );
 
-        this.onHandshake();
+        await this.onHandshake();
     }
 
     private async onHandshake(payload?: DataBuffer): Promise<void> {
@@ -107,46 +107,44 @@ export class ControlService extends Service {
         return this.sendAudioFocusResponse(data.audioFocusType);
     }
 
-    protected onMessage(
+    protected async onMessage(
         message: Message,
         options: MessageFrameOptions,
-    ): boolean {
+    ): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         const payload = message.getPayload();
         let data;
 
         switch (message.messageId) {
             case ControlMessage.Enum.VERSION_RESPONSE:
-                this.onVersionReponse(payload);
+                await this.onVersionReponse(payload);
                 break;
             case ControlMessage.Enum.SSL_HANDSHAKE:
-                this.onHandshake(payload);
+                await this.onHandshake(payload);
                 break;
             case ControlMessage.Enum.SERVICE_DISCOVERY_REQUEST:
                 data = ServiceDiscoveryRequest.decode(bufferPayload);
                 this.printReceive(data);
-                this.onServiceDiscoveryRequest(data);
+                await this.onServiceDiscoveryRequest(data);
                 break;
             case ControlMessage.Enum.PING_REQUEST:
                 data = PingRequest.decode(bufferPayload);
                 this.printReceive(data);
-                this.onPingRequest(data);
+                await this.onPingRequest(data);
                 break;
             case ControlMessage.Enum.PING_RESPONSE:
                 data = PingResponse.decode(bufferPayload);
                 this.printReceive(data);
-                this.onPingResponse(data);
+                await this.onPingResponse(data);
                 break;
             case ControlMessage.Enum.AUDIO_FOCUS_REQUEST:
                 data = AudioFocusRequest.decode(bufferPayload);
                 this.printReceive(data);
-                this.onAudioFocusRequest(data);
+                await this.onAudioFocusRequest(data);
                 break;
             default:
-                return super.onMessage(message, options);
+                await super.onMessage(message, options);
         }
-
-        return true;
     }
 
     private async sendVersionRequest(): Promise<void> {

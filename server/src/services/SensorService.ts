@@ -48,10 +48,10 @@ export class SensorService extends Service {
         return this.sendSensorStartResponse(data.sensorType, status);
     }
 
-    protected onMessage(
+    protected async onMessage(
         message: Message,
         options: MessageFrameOptions,
-    ): boolean {
+    ): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -59,13 +59,11 @@ export class SensorService extends Service {
             case SensorChannelMessage.Enum.SENSOR_START_REQUEST:
                 data = SensorStartRequest.decode(bufferPayload);
                 this.printReceive(data);
-                this.onSensorStartRequest(data);
+                await this.onSensorStartRequest(data);
                 break;
             default:
-                return super.onMessage(message, options);
+                await super.onMessage(message, options);
         }
-
-        return true;
     }
 
     protected async sendSensorStartResponse(

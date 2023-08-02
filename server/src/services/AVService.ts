@@ -36,10 +36,10 @@ export abstract class AVService extends Service {
         return this.sendSetupResponse(status);
     }
 
-    protected onMessage(
+    protected async onMessage(
         message: Message,
         options: MessageFrameOptions,
-    ): boolean {
+    ): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -47,13 +47,11 @@ export abstract class AVService extends Service {
             case AVChannelMessage.Enum.SETUP_REQUEST:
                 data = AVChannelSetupRequest.decode(bufferPayload);
                 this.printReceive(data);
-                this.onSetupRequest(data);
+                await this.onSetupRequest(data);
                 break;
             default:
-                return super.onMessage(message, options);
+                await super.onMessage(message, options);
         }
-
-        return true;
     }
 
     protected abstract setup(data: AVChannelSetupRequest): Promise<void>;

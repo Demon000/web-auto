@@ -71,36 +71,36 @@ export abstract class AVOutputService extends AVService {
         }
     }
 
-    protected onMessage(
+    protected async onMessage(
         message: Message,
         options: MessageFrameOptions,
-    ): boolean {
+    ): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         const payload = message.getPayload();
         let data;
 
         switch (message.messageId) {
             case AVChannelMessage.Enum.AV_MEDIA_WITH_TIMESTAMP_INDICATION:
-                this.onAvMediaWithTimestampIndication(payload);
+                this.printReceive(payload);
+                await this.onAvMediaWithTimestampIndication(payload);
                 break;
             case AVChannelMessage.Enum.AV_MEDIA_INDICATION:
-                this.onAvMediaIndication(payload);
+                this.printReceive(payload);
+                await this.onAvMediaIndication(payload);
                 break;
             case AVChannelMessage.Enum.START_INDICATION:
                 data = AVChannelStartIndication.decode(bufferPayload);
                 this.printReceive(data);
-                this.onStartIndication(data);
+                await this.onStartIndication(data);
                 break;
             case AVChannelMessage.Enum.STOP_INDICATION:
                 data = AVChannelStopIndication.decode(bufferPayload);
                 this.printReceive(data);
-                this.onStopIndication(data);
+                await this.onStopIndication(data);
                 break;
             default:
-                return super.onMessage(message, options);
+                await super.onMessage(message, options);
         }
-
-        return true;
     }
 
     protected abstract start(data: AVChannelStartIndication): Promise<void>;

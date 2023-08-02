@@ -74,10 +74,10 @@ export abstract class Service {
         );
     }
 
-    protected onMessage(
+    protected async onMessage(
         message: Message,
         options?: MessageFrameOptions,
-    ): boolean {
+    ): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -85,7 +85,7 @@ export abstract class Service {
             case ControlMessage.Enum.CHANNEL_OPEN_REQUEST:
                 data = ChannelOpenRequest.decode(bufferPayload);
                 this.printReceive(data);
-                this.onChannelOpenRequest(data);
+                await this.onChannelOpenRequest(data);
                 break;
             default:
                 console.log(
@@ -95,11 +95,7 @@ export abstract class Service {
                     message.getPayload(),
                     options,
                 );
-
-                return false;
         }
-
-        return true;
     }
 
     protected abstract open(data: ChannelOpenRequest): Promise<void>;
