@@ -125,6 +125,10 @@ export class DataBuffer {
         return this.handleRead(2, this.data.readUint16BE);
     }
 
+    public readUint32BE(): number {
+        return this.handleRead(4, this.data.readUint32BE);
+    }
+
     public readUint64BE(): bigint {
         const data = this.data.readBigUInt64BE(this.readOffset);
         this.readOffset += 4;
