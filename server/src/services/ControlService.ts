@@ -272,6 +272,11 @@ export class ControlService extends Service {
 
     public async start(): Promise<void> {
         this.schedulePing();
+
+        for (const service of this.services) {
+            service.start();
+        }
+
         return this.sendVersionRequest();
     }
 
