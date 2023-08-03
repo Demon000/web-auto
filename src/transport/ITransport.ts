@@ -16,4 +16,5 @@ export interface ITransport {
     init(): void;
     deinit(): void;
     send(buffer: DataBuffer): Promise<void>;
+    receive(size: number): Promise<DataBuffer>;
 }
