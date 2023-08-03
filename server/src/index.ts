@@ -88,7 +88,6 @@ async function initDevice(
 
     wss.on('connection', (socket: WebSocket) => {
         videoService.emitter.on(DummyVideoServiceEvent.DATA, (buffer) => {
-            console.log('sending', buffer.data);
             socket.send(buffer.data);
         });
     });
