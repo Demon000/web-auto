@@ -71,7 +71,7 @@ export class DummyVideoService extends VideoService {
             availableWhileInCall: true,
             videoConfigs: [
                 {
-                    videoResolution: VideoResolution.Enum._480p,
+                    videoResolution: VideoResolution.Enum._1080p,
                     videoFps: VideoFPS.Enum._60,
                     marginHeight: 0,
                     marginWidth: 0,
