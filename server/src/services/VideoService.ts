@@ -72,7 +72,7 @@ export abstract class VideoService extends AVOutputService {
             VideoFocusIndication.encode(data).finish(),
         );
 
-        return this.sendEncryptedSpecificMessage(
+        await this.sendEncryptedSpecificMessage(
             AVChannelMessage.Enum.VIDEO_FOCUS_INDICATION,
             payload,
         );

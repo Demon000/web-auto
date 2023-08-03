@@ -70,7 +70,7 @@ export abstract class AVService extends Service {
             AVChannelSetupResponse.encode(data).finish(),
         );
 
-        return this.sendEncryptedSpecificMessage(
+        await this.sendEncryptedSpecificMessage(
             AVChannelMessage.Enum.SETUP_RESPONSE,
             payload,
         );

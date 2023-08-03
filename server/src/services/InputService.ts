@@ -78,7 +78,7 @@ export abstract class InputService extends Service {
             BindingResponse.encode(data).finish(),
         );
 
-        return this.sendEncryptedSpecificMessage(
+        await this.sendEncryptedSpecificMessage(
             InputChannelMessage.Enum.BINDING_RESPONSE,
             payload,
         );

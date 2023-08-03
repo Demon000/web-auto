@@ -140,7 +140,7 @@ export class ControlService extends Service {
             .appendUint16BE(1)
             .appendUint16BE(1);
 
-        return this.sendPlainSpecificMessage(
+        await this.sendPlainSpecificMessage(
             ControlMessage.Enum.VERSION_REQUEST,
             payload,
         );
@@ -149,7 +149,7 @@ export class ControlService extends Service {
     private async sendHandshake(): Promise<void> {
         const payload = this.cryptor.readHandshakeBuffer();
 
-        return this.sendPlainSpecificMessage(
+        await this.sendPlainSpecificMessage(
             ControlMessage.Enum.SSL_HANDSHAKE,
             payload,
         );
@@ -165,7 +165,7 @@ export class ControlService extends Service {
             AuthCompleteIndication.encode(data).finish(),
         );
 
-        return this.sendPlainSpecificMessage(
+        await this.sendPlainSpecificMessage(
             ControlMessage.Enum.AUTH_COMPLETE,
             payload,
         );
@@ -181,7 +181,7 @@ export class ControlService extends Service {
             PingRequest.encode(data).finish(),
         );
 
-        return this.sendPlainSpecificMessage(
+        await this.sendPlainSpecificMessage(
             ControlMessage.Enum.PING_REQUEST,
             payload,
         );
@@ -202,7 +202,7 @@ export class ControlService extends Service {
             AudioFocusResponse.encode(data).finish(),
         );
 
-        return this.sendEncryptedSpecificMessage(
+        await this.sendEncryptedSpecificMessage(
             ControlMessage.Enum.AUDIO_FOCUS_RESPONSE,
             payload,
         );
@@ -233,7 +233,7 @@ export class ControlService extends Service {
             ServiceDiscoveryResponse.encode(data).finish(),
         );
 
-        return this.sendEncryptedSpecificMessage(
+        await this.sendEncryptedSpecificMessage(
             ControlMessage.Enum.SERVICE_DISCOVERY_RESPONSE,
             payload,
         );
