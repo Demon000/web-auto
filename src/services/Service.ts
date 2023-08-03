@@ -38,6 +38,9 @@ export abstract class Service {
             );
     }
 
+    public start(): void {
+    }
+
     protected async onChannelOpenRequest(
         data: ChannelOpenRequest,
     ): Promise<void> {
