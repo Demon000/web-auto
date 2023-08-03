@@ -99,7 +99,12 @@ export class ControlService extends Service {
     }
 
     private async onAudioFocusRequest(data: AudioFocusRequest): Promise<void> {
-        return this.sendAudioFocusResponse(data.audioFocusType);
+        const audioFocusState =
+            data.audioFocusType === AudioFocusType.Enum.RELEASE
+                ? AudioFocusState.Enum.LOSS
+                : AudioFocusState.Enum.GAIN;
+
+        return this.sendAudioFocusResponse(audioFocusState);
     }
 
     private async onNavigationFocusRequest(
@@ -201,13 +206,10 @@ export class ControlService extends Service {
     }
 
     private async sendAudioFocusResponse(
-        audioFocusType: AudioFocusType.Enum,
+        audioFocusState: AudioFocusState.Enum,
     ): Promise<void> {
         const data = AudioFocusResponse.create({
-            audioFocusState:
-                audioFocusType === AudioFocusType.Enum.RELEASE
-                    ? AudioFocusState.Enum.LOSS
-                    : AudioFocusState.Enum.GAIN,
+            audioFocusState,
         });
         this.printSend(data);
 
