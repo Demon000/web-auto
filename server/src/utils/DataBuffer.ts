@@ -154,6 +154,14 @@ export class DataBuffer {
         return this;
     }
 
+    public getReadOffset(): number {
+        return this.readOffset;
+    }
+
+    public getAppendOffset(): number {
+        return this.appendOffset;
+    }
+
     public appendBuffer(
         buffer: DataBuffer,
         start?: number,
