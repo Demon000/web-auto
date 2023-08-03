@@ -42,14 +42,20 @@ export class NavigationStatusService extends Service {
 
     protected async onStatus(data: NavigationStatus): Promise<void> {
         await this.handleStatus(data);
+
+        this.receiveMessage();
     }
 
     protected async onDistance(data: NavigationDistanceEvent): Promise<void> {
         await this.handleDistance(data);
+
+        this.receiveMessage();
     }
 
     protected async onTurn(data: NavigationTurnEvent): Promise<void> {
         await this.handleTurn(data);
+
+        this.receiveMessage();
     }
 
     protected async onMessage(
