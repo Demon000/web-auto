@@ -80,11 +80,11 @@ export abstract class AVOutputService extends AVService {
 
         switch (message.messageId) {
             case AVChannelMessage.Enum.AV_MEDIA_WITH_TIMESTAMP_INDICATION:
-                this.printReceive(payload);
+                this.printReceive('data');
                 await this.onAvMediaWithTimestampIndication(payload);
                 break;
             case AVChannelMessage.Enum.AV_MEDIA_INDICATION:
-                this.printReceive(payload);
+                this.printReceive('data');
                 await this.onAvMediaIndication(payload);
                 break;
             case AVChannelMessage.Enum.START_INDICATION:
