@@ -64,7 +64,7 @@ export class MessageOutStream {
         let payloadSize = 0;
 
         if (options.encryptionType == EncryptionType.ENCRYPTED) {
-            const encryptedPayloadBuffer = DataBuffer.fromSize(0);
+            const encryptedPayloadBuffer = DataBuffer.empty();
             payloadSize = this.cryptor.encrypt(
                 encryptedPayloadBuffer,
                 payloadBuffer,
