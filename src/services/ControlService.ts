@@ -23,6 +23,8 @@ import { AudioFocusRequest } from '../proto/types';
 import { AudioFocusResponse } from '../proto/types';
 import { AudioFocusState } from '../proto/types';
 import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
+import { NavigationFocusRequest } from '../proto/types';
+import { NavigationFocusResponse } from '../proto/types';
 
 export class ControlService extends Service {
     private pingTimeout?: NodeJS.Timeout;
@@ -100,6 +102,12 @@ export class ControlService extends Service {
         return this.sendAudioFocusResponse(data.audioFocusType);
     }
 
+    private async onNavigationFocusRequest(
+        _data: NavigationFocusRequest,
+    ): Promise<void> {
+        return this.sendNavigationFocusResponse(2);
+    }
+
     protected async onMessage(
         message: Message,
         options: MessageFrameOptions,
@@ -129,6 +137,11 @@ export class ControlService extends Service {
                 data = AudioFocusRequest.decode(bufferPayload);
                 this.printReceive(data);
                 await this.onAudioFocusRequest(data);
+                break;
+            case ControlMessage.Enum.NAVIGATION_FOCUS_REQUEST:
+                data = NavigationFocusRequest.decode(bufferPayload);
+                this.printReceive(data);
+                await this.onNavigationFocusRequest(data);
                 break;
             default:
                 await super.onMessage(message, options);
@@ -204,6 +217,22 @@ export class ControlService extends Service {
 
         await this.sendEncryptedSpecificMessage(
             ControlMessage.Enum.AUDIO_FOCUS_RESPONSE,
+            payload,
+        );
+    }
+
+    private async sendNavigationFocusResponse(type: number): Promise<void> {
+        const data = NavigationFocusResponse.create({
+            type,
+        });
+        this.printSend(data);
+
+        const payload = DataBuffer.fromBuffer(
+            NavigationFocusResponse.encode(data).finish(),
+        );
+
+        await this.sendEncryptedSpecificMessage(
+            ControlMessage.Enum.NAVIGATION_FOCUS_RESPONSE,
             payload,
         );
     }
