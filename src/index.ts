@@ -26,7 +26,7 @@ import { NavigationStatusService } from './services/NavigationStatusService';
 const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
 const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
 
-import { WebSocket, WebSocketServer } from 'ws';
+import { WebSocketServer } from 'ws';
 
 const wss = new WebSocketServer({ port: 8080 });
 
@@ -86,8 +86,8 @@ async function initDevice(
         new DummyInputService(messageInStream, messageOutStream),
     ];
 
-    wss.on('connection', (socket: WebSocket) => {
-        videoService.emitter.on(DummyVideoServiceEvent.DATA, (buffer) => {
+    videoService.emitter.on(DummyVideoServiceEvent.DATA, (buffer) => {
+        wss.clients.forEach((socket) => {
             socket.send(buffer.data);
         });
     });
