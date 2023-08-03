@@ -136,7 +136,7 @@ export class DataBuffer {
 
     public readUint64BE(): bigint {
         const data = this.data.readBigUInt64BE(this.readOffset);
-        this.readOffset += 4;
+        this.readOffset += 8;
         return data;
     }
 
