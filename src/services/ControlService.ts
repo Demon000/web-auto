@@ -55,6 +55,7 @@ export class ControlService extends Service {
 
     public async onPingResponse(_data: PingResponse): Promise<void> {
         // TODO
+        // this.receiveMessage();
     }
 
     private async onVersionReponse(payload: DataBuffer): Promise<void> {
@@ -164,6 +165,8 @@ export class ControlService extends Service {
             ControlMessage.Enum.VERSION_REQUEST,
             payload,
         );
+
+        this.receiveMessage();
     }
 
     private async sendHandshake(): Promise<void> {
@@ -174,6 +177,8 @@ export class ControlService extends Service {
             ControlMessage.Enum.SSL_HANDSHAKE,
             payload,
         );
+
+        this.receiveMessage();
     }
 
     public async sendAuthComplete(): Promise<void> {
@@ -190,6 +195,8 @@ export class ControlService extends Service {
             ControlMessage.Enum.AUTH_COMPLETE,
             payload,
         );
+
+        this.receiveMessage();
     }
 
     private async sendPingRequest(): Promise<void> {
@@ -206,6 +213,8 @@ export class ControlService extends Service {
             ControlMessage.Enum.PING_REQUEST,
             payload,
         );
+
+        this.receiveMessage();
     }
 
     private async sendAudioFocusResponse(
@@ -224,6 +233,8 @@ export class ControlService extends Service {
             ControlMessage.Enum.AUDIO_FOCUS_RESPONSE,
             payload,
         );
+
+        this.receiveMessage();
     }
 
     private async sendNavigationFocusResponse(type: number): Promise<void> {
@@ -240,6 +251,8 @@ export class ControlService extends Service {
             ControlMessage.Enum.NAVIGATION_FOCUS_RESPONSE,
             payload,
         );
+
+        this.receiveMessage();
     }
 
     public async sendDiscoveryResponse(services: Service[]): Promise<void> {
@@ -271,6 +284,8 @@ export class ControlService extends Service {
             ControlMessage.Enum.SERVICE_DISCOVERY_RESPONSE,
             payload,
         );
+
+        this.receiveMessage();
     }
 
     public async start(): Promise<void> {

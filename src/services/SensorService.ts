@@ -84,6 +84,8 @@ export class SensorService extends Service {
             payload,
         );
 
+        this.receiveMessage();
+
         if (status) {
             if (sensorType === SensorType.Enum.NIGHT_DATA) {
                 await this.sendNightData();
