@@ -88,7 +88,7 @@ export class DataBuffer {
         this.resize(neededSize);
     }
 
-    public handleAppend(
+    private handleAppend(
         data: number,
         size: number,
         fn: (value: number, offset?: number) => void,
@@ -99,7 +99,7 @@ export class DataBuffer {
         return this;
     }
 
-    public handleRead(size: number, fn: (offset?: number) => number): number {
+    private handleRead(size: number, fn: (offset?: number) => number): number {
         const data = fn.call(this.data, this.readOffset);
         this.readOffset += size;
         return data;
