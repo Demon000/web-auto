@@ -78,7 +78,6 @@ export class MessageOutStream {
             channelId: options.channelId,
             encryptionType: options.encryptionType,
             messageType: options.messageType,
-            totalSize: message.payload.size,
             frameType,
             payloadSize,
         });
@@ -86,6 +85,11 @@ export class MessageOutStream {
         const buffer = DataBuffer.empty();
 
         buffer.appendBuffer(frameHeader.toBuffer());
+
+        if (frameType === FrameType.FIRST) {
+            buffer.appendUint32BE(message.getRawPayload().size);
+        }
+
         buffer.appendBuffer(payloadBuffer);
 
         return buffer;

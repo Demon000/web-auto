@@ -10,7 +10,6 @@ export type FrameHeaderOptions = {
     encryptionType: EncryptionType;
     messageType: MessageType;
     payloadSize: number;
-    totalSize: number;
 };
 
 export class FrameHeader {
@@ -19,7 +18,6 @@ export class FrameHeader {
     public readonly encryptionType: EncryptionType;
     public readonly messageType: MessageType;
     public readonly payloadSize: number;
-    public readonly totalSize: number;
 
     public constructor(options: FrameHeaderOptions) {
         this.channelId = options.channelId;
@@ -27,14 +25,6 @@ export class FrameHeader {
         this.encryptionType = options.encryptionType;
         this.messageType = options.messageType;
         this.payloadSize = options.payloadSize;
-        this.totalSize = 0;
-
-        if (
-            options.frameType === FrameType.FIRST &&
-            options.totalSize !== undefined
-        ) {
-            this.totalSize = options.totalSize;
-        }
     }
 
     public static fromBuffer(buffer: DataBuffer): FrameHeader {
@@ -47,10 +37,6 @@ export class FrameHeader {
         const messageType = secondByte & MessageType.CONTROL;
 
         const payloadSize = buffer.readUint16BE();
-        let totalSize = 0;
-        if (frameType === FrameType.FIRST) {
-            totalSize = buffer.readUint32BE();
-        }
 
         return new FrameHeader({
             channelId,
@@ -58,12 +44,11 @@ export class FrameHeader {
             encryptionType,
             messageType,
             payloadSize,
-            totalSize,
         });
     }
 
     public toBuffer(): DataBuffer {
-        const buffer = DataBuffer.fromSize(this.getSizeOf());
+        const buffer = DataBuffer.fromSize(FrameHeader.getSizeOf());
 
         const firstByte = this.channelId;
         const secondByte =
@@ -72,18 +57,11 @@ export class FrameHeader {
         buffer.appendUint8(firstByte);
         buffer.appendUint8(secondByte);
         buffer.appendUint16BE(this.payloadSize);
-        if (this.frameType === FrameType.FIRST) {
-            buffer.appendUint32BE(this.totalSize);
-        }
 
         return buffer;
     }
 
-    public getSizeOf(): number {
-        let size = 1 + 1 + 2;
-        if (this.frameType === FrameType.FIRST) {
-            size += 4;
-        }
-        return size;
+    public static getSizeOf(): number {
+        return 1 + 1 + 2;
     }
 }
