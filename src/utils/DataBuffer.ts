@@ -38,10 +38,15 @@ export class DataBuffer {
         buffer: DataBufferInputType,
         start?: number,
         end?: number,
+        copy?: boolean,
     ): DataBuffer {
         let actualBuffer;
 
-        if (buffer instanceof Buffer) {
+        if (copy === undefined) {
+            copy = false;
+        }
+
+        if (buffer instanceof Buffer && !copy) {
             actualBuffer = buffer;
         } else {
             actualBuffer = Buffer.from(buffer);
