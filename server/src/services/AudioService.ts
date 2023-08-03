@@ -24,7 +24,9 @@ export class AudioService extends AVOutputService {
         // TOOD
     }
 
-    protected async start(_data: AVChannelStartIndication): Promise<void> {
+    protected async channelStart(
+        _data: AVChannelStartIndication,
+    ): Promise<void> {
         // TOOD
     }
 
@@ -32,7 +34,7 @@ export class AudioService extends AVOutputService {
         // TOOD
     }
 
-    protected async stop(_data: AVChannelStopIndication): Promise<void> {
+    protected async channelStop(_data: AVChannelStopIndication): Promise<void> {
         // TOOD
     }
 

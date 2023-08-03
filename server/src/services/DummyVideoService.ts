@@ -38,7 +38,9 @@ export class DummyVideoService extends VideoService {
         // TODO
     }
 
-    protected async start(_data: AVChannelStartIndication): Promise<void> {
+    protected async channelStart(
+        _data: AVChannelStartIndication,
+    ): Promise<void> {
         // TODO
     }
 
@@ -50,7 +52,7 @@ export class DummyVideoService extends VideoService {
         // TODO
     }
 
-    protected async stop(_data: AVChannelStopIndication): Promise<void> {
+    protected async channelStop(_data: AVChannelStopIndication): Promise<void> {
         // TODO
     }
 
