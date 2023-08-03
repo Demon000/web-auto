@@ -100,6 +100,11 @@ async function initDevice(
     );
 
     transport.emitter.on(TransportEvent.DATA, (buffer) => {
+        if (!buffer.size) {
+            console.trace('Received zero-sized buffer');
+            return;
+        }
+
         messageInStream.parseBuffer(buffer);
     });
     transport.emitter.on(TransportEvent.ERROR, (err) => {
