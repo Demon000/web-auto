@@ -36,9 +36,8 @@ export abstract class AVOutputService extends AVService {
     protected async onAvMediaWithTimestampIndication(
         payload: DataBuffer,
     ): Promise<void> {
-        console.log(payload);
         const timestamp = payload.readUint64BE();
-        const buffer = payload.unreadSubarray();
+        const buffer = payload.readBuffer();
 
         try {
             await this.handleData(buffer, timestamp);

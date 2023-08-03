@@ -145,8 +145,14 @@ export class DataBuffer {
         return DataBuffer.fromBuffer(buffer, undefined, undefined, copy);
     }
 
-    public unreadSubarray(): DataBuffer {
-        return this.subarray(this.readOffset);
+    public readBuffer(size?: number): DataBuffer {
+        let end;
+        if (size !== undefined) {
+            end = this.readOffset + size;
+        }
+        const buffer = this.subarray(this.readOffset, end);
+        this.readOffset += buffer.size;
+        return buffer;
     }
 
     public readSeek(offset: number): this {
