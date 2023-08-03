@@ -19,8 +19,6 @@ import {
     Status,
     VersionResponseStatus,
 } from '../proto/types';
-import Long from 'long';
-import assert from 'assert';
 import { AudioFocusRequest } from '../proto/types';
 import { AudioFocusResponse } from '../proto/types';
 import { AudioFocusState } from '../proto/types';
@@ -51,11 +49,6 @@ export class ControlService extends Service {
     public async onPingTimeout(): Promise<void> {
         await this.sendPingRequest();
         this.schedulePing();
-    }
-
-    public async onPingRequest(data: PingRequest): Promise<void> {
-        assert(data.timestamp instanceof Long);
-        await this.sendPingResponse(data.timestamp);
     }
 
     public async onPingResponse(_data: PingResponse): Promise<void> {
@@ -126,11 +119,6 @@ export class ControlService extends Service {
                 data = ServiceDiscoveryRequest.decode(bufferPayload);
                 this.printReceive(data);
                 await this.onServiceDiscoveryRequest(data);
-                break;
-            case ControlMessage.Enum.PING_REQUEST:
-                data = PingRequest.decode(bufferPayload);
-                this.printReceive(data);
-                await this.onPingRequest(data);
                 break;
             case ControlMessage.Enum.PING_RESPONSE:
                 data = PingResponse.decode(bufferPayload);
@@ -216,22 +204,6 @@ export class ControlService extends Service {
 
         return this.sendEncryptedSpecificMessage(
             ControlMessage.Enum.AUDIO_FOCUS_RESPONSE,
-            payload,
-        );
-    }
-
-    private async sendPingResponse(timestamp: Long): Promise<void> {
-        const data = PingResponse.create({
-            timestamp,
-        });
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(
-            PingResponse.encode(data).finish(),
-        );
-
-        return this.sendPlainSpecificMessage(
-            ControlMessage.Enum.PING_RESPONSE,
             payload,
         );
     }
