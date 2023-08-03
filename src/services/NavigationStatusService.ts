@@ -26,16 +26,30 @@ export class NavigationStatusService extends Service {
         // TODO
     }
 
-    protected async onStatus(_data: NavigationStatus): Promise<void> {
+    protected async handleStatus(_data: NavigationStatus): Promise<void> {
         // TODO
     }
 
-    protected async onDistance(_data: NavigationDistanceEvent): Promise<void> {
+    protected async handleDistance(
+        _data: NavigationDistanceEvent,
+    ): Promise<void> {
         // TODO
     }
 
-    protected async onTurn(_data: NavigationTurnEvent): Promise<void> {
+    protected async handleTurn(_data: NavigationTurnEvent): Promise<void> {
         // TODO
+    }
+
+    protected async onStatus(data: NavigationStatus): Promise<void> {
+        await this.handleStatus(data);
+    }
+
+    protected async onDistance(data: NavigationDistanceEvent): Promise<void> {
+        await this.handleDistance(data);
+    }
+
+    protected async onTurn(data: NavigationTurnEvent): Promise<void> {
+        await this.handleTurn(data);
     }
 
     protected async onMessage(
