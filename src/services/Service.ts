@@ -27,7 +27,6 @@ export abstract class Service {
         protected channelId: number,
         protected messageInStream: MessageInStream,
         protected messageOutStream: MessageOutStream,
-        protected respondToChannelOpenRequest = true,
     ) {
         this.channelName = channelIdString(channelId);
 
@@ -51,9 +50,7 @@ export abstract class Service {
             console.log(e);
         }
 
-        if (this.respondToChannelOpenRequest) {
-            return this.sendChannelOpenResponse(status);
-        }
+        return this.sendChannelOpenResponse(status);
     }
 
     protected printReceive(message: any): void {
