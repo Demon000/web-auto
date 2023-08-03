@@ -130,7 +130,7 @@ export abstract class AVOutputService extends AVService {
             AVMediaAckIndication.encode(data).finish(),
         );
 
-        return this.sendEncryptedSpecificMessage(
+        await this.sendEncryptedSpecificMessage(
             AVChannelMessage.Enum.AV_MEDIA_ACK_INDICATION,
             payload,
         );

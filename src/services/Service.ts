@@ -110,7 +110,7 @@ export abstract class Service {
             ChannelOpenResponse.encode(data).finish(),
         );
 
-        return this.sendEncryptedControlMessage(
+        await this.sendEncryptedControlMessage(
             ControlMessage.Enum.CHANNEL_OPEN_RESPONSE,
             payload,
         );

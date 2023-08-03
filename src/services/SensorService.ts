@@ -116,7 +116,7 @@ export class SensorService extends Service {
         });
         this.printSend(data);
 
-        return this.sendEventIndication(data);
+        await this.sendEventIndication(data);
     }
 
     protected async sendDrivingStatus(): Promise<void> {
@@ -129,7 +129,7 @@ export class SensorService extends Service {
         });
         this.printSend(data);
 
-        return this.sendEventIndication(data);
+        await this.sendEventIndication(data);
     }
 
     protected fillChannelDescriptor(
