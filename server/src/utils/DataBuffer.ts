@@ -140,9 +140,9 @@ export class DataBuffer {
         return data;
     }
 
-    public subarray(start?: number, end?: number): DataBuffer {
+    public subarray(start?: number, end?: number, copy?: true): DataBuffer {
         const buffer = this.data.subarray(start, end);
-        return DataBuffer.fromBuffer(buffer);
+        return DataBuffer.fromBuffer(buffer, undefined, undefined, copy);
     }
 
     public unreadSubarray(): DataBuffer {
