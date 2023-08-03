@@ -99,9 +99,13 @@ async function initDevice(
         messageOutStream,
     );
 
+    transport.emitter.on(TransportEvent.DATA, (buffer) => {
+        messageInStream.parseBuffer(buffer);
+    });
     transport.emitter.on(TransportEvent.ERROR, (err) => {
         console.log(err);
     });
+    transport.init();
 
     await controlService.start();
 }
@@ -112,6 +116,7 @@ function deinitDevice(device: DeviceCookie): void {
         return;
     }
 
+    deviceData.transport.deinit();
     deviceData.cryptor.deinit();
 }
 

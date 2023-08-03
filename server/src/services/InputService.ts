@@ -82,7 +82,5 @@ export abstract class InputService extends Service {
             InputChannelMessage.Enum.BINDING_RESPONSE,
             payload,
         );
-
-        this.receiveMessage();
     }
 }

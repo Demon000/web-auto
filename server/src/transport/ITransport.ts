@@ -7,11 +7,14 @@ export enum TransportEvent {
 }
 
 export interface TransportEvents {
+    [TransportEvent.DATA]: (data: DataBuffer) => void;
     [TransportEvent.ERROR]: (err: Error) => void;
 }
 
 export interface ITransport {
     emitter: EventEmitter<TransportEvents>;
+    init(): void;
+    deinit(): void;
     send(buffer: DataBuffer): Promise<void>;
     receive(size: number): Promise<DataBuffer>;
 }

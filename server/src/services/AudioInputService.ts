@@ -82,8 +82,6 @@ export class AudioInputService extends AVService {
             AVChannelMessage.Enum.AV_INPUT_OPEN_RESPONSE,
             payload,
         );
-
-        this.receiveMessage();
     }
 
     protected fillChannelDescriptor(
