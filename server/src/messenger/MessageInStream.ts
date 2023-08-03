@@ -18,6 +18,7 @@ type MessageData = {
 type ReceiveData = {
     frameHeader: FrameHeader;
     payload: DataBuffer;
+    totalSize: number;
 };
 
 export enum MessageInStreamEvent {
@@ -54,11 +55,17 @@ export class MessageInStream {
 
     private startReceive(buffer: DataBuffer): void {
         const frameHeader = FrameHeader.fromBuffer(buffer);
-        const payload = buffer.unreadSubarray();
+        let totalSize = 0;
+        if (frameHeader.frameType === FrameType.FIRST) {
+            totalSize = buffer.readUint32BE();
+        }
+
+        const payload = buffer.readBuffer();
 
         this.receiveData = {
             frameHeader,
             payload,
+            totalSize,
         };
 
         this.tryFinishReceive();
@@ -82,6 +89,7 @@ export class MessageInStream {
             this.finishReceive(
                 this.receiveData.frameHeader,
                 this.receiveData.payload,
+                this.receiveData.totalSize,
             );
             this.receiveData = undefined;
         }
@@ -138,7 +146,11 @@ export class MessageInStream {
         this.emitMessage(message, frameHeader);
     }
 
-    private finishReceive(frameHeader: FrameHeader, payload: DataBuffer): void {
+    private finishReceive(
+        frameHeader: FrameHeader,
+        payload: DataBuffer,
+        totalSize: number,
+    ): void {
         const frameType = frameHeader.frameType;
         const channelId = frameHeader.channelId;
         let messageData;
@@ -164,7 +176,7 @@ export class MessageInStream {
             messageData = {
                 message,
                 currentSize: 0,
-                totalSize: frameHeader.totalSize,
+                totalSize,
             };
 
             this.messageMap.set(channelId, messageData);
