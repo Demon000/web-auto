@@ -33,6 +33,18 @@ export class MediaStatusService extends Service {
         // TODO
     }
 
+    protected async onMetadata(
+        data: MediaInfoChannelMetadataData,
+    ): Promise<void> {
+        await this.handleMetadata(data);
+    }
+
+    protected async onPlayback(
+        data: MediaInfoChannelPlaybackData,
+    ): Promise<void> {
+        await this.handlePlayback(data);
+    }
+
     protected async onMessage(
         message: Message,
         options: MessageFrameOptions,
@@ -44,12 +56,12 @@ export class MediaStatusService extends Service {
             case MediaInfoChannelMessage.Enum.METADATA:
                 data = MediaInfoChannelMetadataData.decode(bufferPayload);
                 this.printReceive(data);
-                await this.handleMetadata(data);
+                await this.onMetadata(data);
                 break;
             case MediaInfoChannelMessage.Enum.PLAYBACK:
                 data = MediaInfoChannelPlaybackData.decode(bufferPayload);
                 this.printReceive(data);
-                await this.handlePlayback(data);
+                await this.onPlayback(data);
                 break;
             default:
                 await super.onMessage(message, options);
