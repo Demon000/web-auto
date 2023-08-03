@@ -183,6 +183,10 @@ export class DataBuffer {
         return this;
     }
 
+    public duplicate(): DataBuffer {
+        return this.subarray(undefined, undefined, true);
+    }
+
     public get size(): number {
         return this.data.length;
     }
