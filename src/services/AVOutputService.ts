@@ -53,7 +53,7 @@ export abstract class AVOutputService extends AVService {
         data: AVChannelStopIndication,
     ): Promise<void> {
         try {
-            await this.stop(data);
+            await this.channelStop(data);
         } catch (e) {
             console.log(e);
         }
@@ -65,7 +65,7 @@ export abstract class AVOutputService extends AVService {
         this.session = data.session;
 
         try {
-            await this.start(data);
+            await this.channelStart(data);
         } catch (e) {
             console.log(e);
         }
@@ -103,8 +103,12 @@ export abstract class AVOutputService extends AVService {
         }
     }
 
-    protected abstract start(data: AVChannelStartIndication): Promise<void>;
-    protected abstract stop(data: AVChannelStopIndication): Promise<void>;
+    protected abstract channelStart(
+        data: AVChannelStartIndication,
+    ): Promise<void>;
+    protected abstract channelStop(
+        data: AVChannelStopIndication,
+    ): Promise<void>;
 
     protected abstract handleData(
         buffer: DataBuffer,
