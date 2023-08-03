@@ -39,6 +39,10 @@ export class UsbTransport extends Transport {
         }
 
         this.inEndpoint = inEndpoint;
+        this.inEndpoint.addListener('data', (data: Buffer) => {
+            const buffer = DataBuffer.fromBuffer(data);
+            this.emitter.emit(TransportEvent.DATA, buffer);
+        });
         this.inEndpoint.addListener('error', (err: Error) => {
             this.emitter.emit(TransportEvent.ERROR, err);
         });
@@ -64,6 +68,16 @@ export class UsbTransport extends Transport {
 
             transfer.submit(buffer.data);
         });
+    }
+
+    public init(): void {
+        this.inEndpoint.startPoll();
+    }
+
+    public deinit(): void {
+        if (this.inEndpoint.pollActive) {
+            this.inEndpoint.stopPoll();
+        }
     }
 
     public async receiveImpl(buffer: DataBuffer): Promise<number> {

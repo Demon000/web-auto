@@ -39,7 +39,6 @@ export abstract class Service {
     }
 
     public start(): void {
-        this.receiveMessage();
     }
 
     protected async onChannelOpenRequest(
@@ -115,12 +114,6 @@ export abstract class Service {
             ControlMessage.Enum.CHANNEL_OPEN_RESPONSE,
             payload,
         );
-
-        this.receiveMessage();
-    }
-
-    public receiveMessage(): void {
-        this.messageInStream.enqueueReceive();
     }
 
     public async sendMessage(

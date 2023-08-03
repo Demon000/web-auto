@@ -56,8 +56,6 @@ export abstract class AVOutputService extends AVService {
         } catch (e) {
             console.log(e);
         }
-
-        this.receiveMessage();
     }
 
     protected async onStartIndication(
@@ -70,8 +68,6 @@ export abstract class AVOutputService extends AVService {
         } catch (e) {
             console.log(e);
         }
-
-        this.receiveMessage();
     }
 
     protected async onMessage(
@@ -137,7 +133,5 @@ export abstract class AVOutputService extends AVService {
             AVChannelMessage.Enum.AV_MEDIA_ACK_INDICATION,
             payload,
         );
-
-        this.receiveMessage();
     }
 }

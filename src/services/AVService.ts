@@ -74,7 +74,5 @@ export abstract class AVService extends Service {
             AVChannelMessage.Enum.SETUP_RESPONSE,
             payload,
         );
-
-        this.receiveMessage();
     }
 }

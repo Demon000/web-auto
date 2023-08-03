@@ -8,7 +8,6 @@ export class DataSink {
         const wantedSize = appendOffset + size;
 
         if (wantedSize > this.buffer.size) {
-            console.log('resize to', wantedSize);
             this.buffer.resize(wantedSize);
         }
 
@@ -29,7 +28,6 @@ export class DataSink {
         const appendOffset = this.buffer.getAppendOffset();
         const readOffset = this.buffer.getReadOffset();
         if (appendOffset == readOffset) {
-            console.log('reset read and write');
             this.buffer.readSeek(0);
             this.buffer.appendSeek(0);
         }

@@ -37,16 +37,12 @@ export class MediaStatusService extends Service {
         data: MediaInfoChannelMetadataData,
     ): Promise<void> {
         await this.handleMetadata(data);
-
-        this.receiveMessage();
     }
 
     protected async onPlayback(
         data: MediaInfoChannelPlaybackData,
     ): Promise<void> {
         await this.handlePlayback(data);
-
-        this.receiveMessage();
     }
 
     protected async onMessage(

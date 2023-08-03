@@ -150,24 +150,6 @@ export class MessageInStream {
         this.emitMessage(message, frameHeader);
     }
 
-    public async receive(): Promise<void> {
-        const buffer = await this.transport.receive(FrameHeader.getSizeOf());
-        const frameHeader = FrameHeader.fromBuffer(buffer);
-        console.log('Received frame header', frameHeader);
-        let totalSize = 0;
-        if (frameHeader.frameType === FrameType.FIRST) {
-            const totalSizeBuffer = await this.transport.receive(4);
-            totalSize = totalSizeBuffer.readUint32BE();
-        }
-        const payload = await this.transport.receive(frameHeader.payloadSize);
-        console.log('Received payload', payload.data);
-        return this.finishReceive(frameHeader, payload, totalSize);
-    }
-
-    public enqueueReceive(): void {
-        this.receive();
-    }
-
     private finishReceive(
         frameHeader: FrameHeader,
         payload: DataBuffer,

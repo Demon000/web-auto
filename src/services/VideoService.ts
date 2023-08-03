@@ -76,7 +76,5 @@ export abstract class VideoService extends AVOutputService {
             AVChannelMessage.Enum.VIDEO_FOCUS_INDICATION,
             payload,
         );
-
-        this.receiveMessage();
     }
 }
