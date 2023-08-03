@@ -53,23 +53,22 @@ export class UsbTransport implements ITransport {
 
     private async sendOrReceive(
         endpoint: Endpoint,
-        buffer: Buffer,
-        size: number,
+        buffer: DataBuffer,
         timeout: number,
-    ): Promise<Buffer> {
+    ): Promise<number> {
         return new Promise((resolve, reject) => {
             const transfer = endpoint.makeTransfer(
                 timeout,
-                (error, buffer, length) => {
+                (error, _data, length) => {
                     if (error) {
                         return reject(error);
                     }
 
-                    resolve(buffer);
+                    resolve(length);
                 },
             );
 
-            transfer.submit(buffer);
+            transfer.submit(buffer.data);
         });
     }
 
@@ -86,11 +85,6 @@ export class UsbTransport implements ITransport {
     public async send(buffer: DataBuffer): Promise<void> {
         const timeout = USB_TRANSPORT_SEND_TIMEOUT;
 
-        await this.sendOrReceive(
-            this.outEndpoint,
-            buffer.data,
-            buffer.size,
-            timeout,
-        );
+        await this.sendOrReceive(this.outEndpoint, buffer, timeout);
     }
 }
