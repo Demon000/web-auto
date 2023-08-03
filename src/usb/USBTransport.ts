@@ -61,12 +61,6 @@ export class UsbTransport implements ITransport {
             const transfer = endpoint.makeTransfer(
                 timeout,
                 (error, buffer, length) => {
-                    if (length != size) {
-                        console.log(
-                            `Expected to read ${size} but read ${length}`,
-                        );
-                    }
-
                     if (error) {
                         return reject(error);
                     }
