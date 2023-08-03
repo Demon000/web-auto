@@ -145,6 +145,10 @@ export class DataBuffer {
         return DataBuffer.fromBuffer(data, undefined, undefined, copy);
     }
 
+    public readBufferSize(): number {
+        return this.appendOffset - this.readOffset;
+    }
+
     public readBuffer(size?: number): DataBuffer {
         let end;
         if (size !== undefined) {
