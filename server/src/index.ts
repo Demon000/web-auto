@@ -54,7 +54,7 @@ async function initDevice(
         cryptor,
     });
 
-    const messageInStream = new MessageInStream(cryptor);
+    const messageInStream = new MessageInStream(transport, cryptor);
     const messageOutStream = new MessageOutStream(transport, cryptor);
 
     const videoService = new DummyVideoService(
