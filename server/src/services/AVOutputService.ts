@@ -13,8 +13,6 @@ import { DataBuffer } from '../utils/DataBuffer';
 import { AVService } from './AVService';
 
 export abstract class AVOutputService extends AVService {
-    protected session?: number;
-
     public constructor(
         channelId: ChannelId,
         messageInStream: MessageInStream,
