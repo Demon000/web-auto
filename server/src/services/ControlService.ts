@@ -283,6 +283,10 @@ export class ControlService extends Service {
         return this.sendVersionRequest();
     }
 
+    public stop(): void {
+        this.cancelPing();
+    }
+
     protected fillChannelDescriptor(
         _channelDescriptor: ChannelDescriptor,
     ): void {

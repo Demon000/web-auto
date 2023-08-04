@@ -36,6 +36,7 @@ type DeviceData = {
     device: DeviceCookie;
     transport: ITransport;
     cryptor: Cryptor;
+    controlService: ControlService;
 };
 
 const deviceMap = new Map<Device, DeviceData>();
@@ -47,12 +48,6 @@ async function initDevice(
     const cryptor = new Cryptor(certificateString, privateKeyString);
 
     cryptor.init();
-
-    deviceMap.set(device, {
-        device,
-        transport,
-        cryptor,
-    });
 
     const messageInStream = new MessageInStream(transport, cryptor);
     const messageOutStream = new MessageOutStream(transport, cryptor);
@@ -99,6 +94,13 @@ async function initDevice(
         messageOutStream,
     );
 
+    deviceMap.set(device, {
+        device,
+        transport,
+        cryptor,
+        controlService,
+    });
+
     transport.emitter.on(TransportEvent.DATA, (buffer) => {
         if (!buffer.size) {
             console.trace('Received zero-sized buffer');
@@ -121,6 +123,7 @@ function deinitDevice(device: DeviceCookie): void {
         return;
     }
 
+    deviceData.controlService.stop();
     deviceData.transport.deinit();
     deviceData.cryptor.deinit();
 }
