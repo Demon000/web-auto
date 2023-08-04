@@ -9,7 +9,7 @@
     },
     "keywords": [],
     "author": "",
-    "license": "ISC",
+    "license": "GPL-3.0",
     "devDependencies": {
         "@types/node": "^20.3.2",
         "@types/ws": "^8.5.5",
