@@ -8,7 +8,7 @@
         "build-protos": "./build-protos.sh"
     },
     "keywords": [],
-    "author": "",
+    "author": "Demon000",
     "license": "GPL-3.0",
     "devDependencies": {
         "@types/node": "^20.3.2",
