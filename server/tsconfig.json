@@ -4,6 +4,7 @@
   "compilerOptions": {
     "composite": true,
     "module": "commonjs",
-    "types": ["node"]
+    "types": ["node"],
+    "rootDir": "src",
   },
 }
