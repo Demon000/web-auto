@@ -6,8 +6,7 @@ import { MessageOutStream } from '../messenger/MessageOutStream';
 import { InputChannelMessage, Status } from '@web-auto/protos/types';
 import { BindingRequest } from '@web-auto/protos/types';
 import { BindingResponse } from '@web-auto/protos/types';
-import { InputChannel } from '@web-auto/protos/types';
-import { ChannelOpenRequest, ChannelDescriptor } from '@web-auto/protos/types';
+import { ChannelOpenRequest } from '@web-auto/protos/types';
 import { DataBuffer } from '../utils/DataBuffer';
 import { Service } from './Service';
 

@@ -1,8 +1,4 @@
-import {
-    ChannelDescriptor,
-    ChannelOpenRequest,
-    NavigationTurnType,
-} from '@web-auto/protos/types';
+import { ChannelOpenRequest } from '@web-auto/protos/types';
 import { Service } from './Service';
 import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
 import { Message } from '../messenger/Message';

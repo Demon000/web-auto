@@ -12,7 +12,7 @@ export interface SensorEvents {
 export abstract class Sensor {
     public emitter = new EventEmitter<SensorEvents>();
 
-    constructor(public readonly type: SensorType.Enum) {}
+    public constructor(public readonly type: SensorType.Enum) {}
 
     public abstract start(): Promise<void>;
 }
