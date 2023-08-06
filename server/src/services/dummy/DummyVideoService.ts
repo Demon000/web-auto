@@ -9,11 +9,11 @@ import {
     AVStreamType,
     VideoResolution,
     VideoFPS,
-} from '../proto/types';
-import { DataBuffer } from '../utils/DataBuffer';
-import { VideoService } from './VideoService';
-import { MessageInStream } from '../messenger/MessageInStream';
-import { MessageOutStream } from '../messenger/MessageOutStream';
+} from '@web-auto/protos/types';
+import { DataBuffer } from '../../utils/DataBuffer';
+import { VideoService } from '../VideoService';
+import { MessageInStream } from '../../messenger/MessageInStream';
+import { MessageOutStream } from '../../messenger/MessageOutStream';
 import EventEmitter from 'eventemitter3';
 
 export enum DummyVideoServiceEvent {

@@ -18,13 +18,13 @@ import {
     ServiceDiscoveryResponse,
     Status,
     VersionResponseStatus,
-} from '../proto/types';
-import { AudioFocusRequest } from '../proto/types';
-import { AudioFocusResponse } from '../proto/types';
-import { AudioFocusState } from '../proto/types';
+} from '@web-auto/protos/types';
+import { AudioFocusRequest } from '@web-auto/protos/types';
+import { AudioFocusResponse } from '@web-auto/protos/types';
+import { AudioFocusState } from '@web-auto/protos/types';
 import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
-import { NavigationFocusRequest } from '../proto/types';
-import { NavigationFocusResponse } from '../proto/types';
+import { NavigationFocusRequest } from '@web-auto/protos/types';
+import { NavigationFocusResponse } from '@web-auto/protos/types';
 
 export class ControlService extends Service {
     private pingTimeout?: NodeJS.Timeout;

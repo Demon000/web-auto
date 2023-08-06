@@ -1,8 +1,10 @@
-<script setup lang="ts">
+<script lang="ts">
 </script>
 
 <template>
-  Web Auto
+  <div>
+    Web Auto
+  </div>
 </template>
 
 <style>

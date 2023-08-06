@@ -15,7 +15,7 @@ import {
     DummyVideoService,
     DummyVideoServiceEvent,
 } from './services/DummyVideoService';
-import { AudioService } from './services/AudioService';
+import { AudioOutputService } from './services/AudioOutputService';
 import { ChannelId } from './messenger/ChannelId';
 import { AudioInputService } from './services/AudioInputService';
 import { DummyInputService } from './services/DummyInputService';
@@ -59,17 +59,17 @@ async function initDevice(
 
     const services = [
         new AudioInputService(messageInStream, messageOutStream),
-        new AudioService(
+        new AudioOutputService(
             ChannelId.MEDIA_AUDIO,
             messageInStream,
             messageOutStream,
         ),
-        new AudioService(
+        new AudioOutputService(
             ChannelId.SPEECH_AUDIO,
             messageInStream,
             messageOutStream,
         ),
-        new AudioService(
+        new AudioOutputService(
             ChannelId.SYSTEM_AUDIO,
             messageInStream,
             messageOutStream,

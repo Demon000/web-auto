@@ -3,11 +3,11 @@ import { Message } from '../messenger/Message';
 import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
 import { MessageInStream } from '../messenger/MessageInStream';
 import { MessageOutStream } from '../messenger/MessageOutStream';
-import { InputChannelMessage, Status } from '../proto/types';
-import { BindingRequest } from '../proto/types';
-import { BindingResponse } from '../proto/types';
-import { InputChannel } from '../proto/types';
-import { ChannelOpenRequest, ChannelDescriptor } from '../proto/types';
+import { InputChannelMessage, Status } from '@web-auto/protos/types';
+import { BindingRequest } from '@web-auto/protos/types';
+import { BindingResponse } from '@web-auto/protos/types';
+import { InputChannel } from '@web-auto/protos/types';
+import { ChannelOpenRequest, ChannelDescriptor } from '@web-auto/protos/types';
 import { DataBuffer } from '../utils/DataBuffer';
 import { Service } from './Service';
 
@@ -19,10 +19,7 @@ export abstract class InputService extends Service {
         super(ChannelId.INPUT, messageInStream, messageOutStream);
     }
 
-    protected async open(_data: ChannelOpenRequest): Promise<void> {
-        // TODO
-    }
-
+    protected abstract open(data: ChannelOpenRequest): Promise<void>;
     protected abstract bind(data: BindingRequest): Promise<void>;
 
     protected async onBindingRequest(data: BindingRequest): Promise<void> {
@@ -43,7 +40,7 @@ export abstract class InputService extends Service {
         options: MessageFrameOptions,
     ): Promise<void> {
         const bufferPayload = message.getBufferPayload();
-        let data;
+        let data: BindingRequest;
 
         switch (message.messageId) {
             case InputChannelMessage.Enum.BINDING_REQUEST:
@@ -54,18 +51,6 @@ export abstract class InputService extends Service {
             default:
                 await super.onMessage(message, options);
         }
-    }
-
-    protected fillChannelDescriptor(
-        channelDescriptor: ChannelDescriptor,
-    ): void {
-        channelDescriptor.inputChannel = InputChannel.create({
-            supportedKeycodes: [],
-            touchScreenConfig: {
-                width: 1920,
-                height: 1080,
-            },
-        });
     }
 
     protected async sendBindingResponse(status: boolean): Promise<void> {

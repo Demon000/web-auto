@@ -10,8 +10,5 @@
     {
       "path": "./tsconfig.app.json"
     },
-    {
-      "path": "../server"
-    }
   ]
 }

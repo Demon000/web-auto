@@ -15,7 +15,7 @@ import {
     ControlMessage,
     ServiceDiscoveryResponse,
     Status,
-} from '../proto/types';
+} from '@web-auto/protos/types';
 import { DataBuffer } from '../utils/DataBuffer';
 
 export type ServiceSendMessageOptions = Omit<MessageFrameOptions, 'channelId'>;
@@ -38,8 +38,7 @@ export abstract class Service {
             );
     }
 
-    public start(): void {
-    }
+    public start(): void {}
 
     protected async onChannelOpenRequest(
         data: ChannelOpenRequest,

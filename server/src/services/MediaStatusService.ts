@@ -1,15 +1,15 @@
-import { ChannelDescriptor, ChannelOpenRequest } from '../proto/types';
+import { ChannelOpenRequest } from '@web-auto/protos/types';
 import { Service } from './Service';
 import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
 import { Message } from '../messenger/Message';
-import { MediaInfoChannelMessage } from '../proto/types';
-import { MediaInfoChannelMetadataData } from '../proto/types';
-import { MediaInfoChannelPlaybackData } from '../proto/types';
+import { MediaInfoChannelMessage } from '@web-auto/protos/types';
+import { MediaInfoChannelMetadataData } from '@web-auto/protos/types';
+import { MediaInfoChannelPlaybackData } from '@web-auto/protos/types';
 import { MessageInStream } from '../messenger/MessageInStream';
 import { MessageOutStream } from '../messenger/MessageOutStream';
 import { ChannelId } from '../messenger/ChannelId';
 
-export class MediaStatusService extends Service {
+export abstract class MediaStatusService extends Service {
     public constructor(
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,
@@ -17,21 +17,15 @@ export class MediaStatusService extends Service {
         super(ChannelId.MEDIA_STATUS, messageInStream, messageOutStream);
     }
 
-    protected async open(_data: ChannelOpenRequest): Promise<void> {
-        // TODO
-    }
+    protected abstract open(_data: ChannelOpenRequest): Promise<void>;
 
-    protected async handleMetadata(
-        _data: MediaInfoChannelMetadataData,
-    ): Promise<void> {
-        // TODO
-    }
+    protected abstract handleMetadata(
+        data: MediaInfoChannelMetadataData,
+    ): Promise<void>;
 
-    protected async handlePlayback(
-        _data: MediaInfoChannelPlaybackData,
-    ): Promise<void> {
-        // TODO
-    }
+    protected abstract handlePlayback(
+        data: MediaInfoChannelPlaybackData,
+    ): Promise<void>;
 
     protected async onMetadata(
         data: MediaInfoChannelMetadataData,
@@ -66,11 +60,5 @@ export class MediaStatusService extends Service {
             default:
                 await super.onMessage(message, options);
         }
-    }
-
-    protected fillChannelDescriptor(
-        channelDescriptor: ChannelDescriptor,
-    ): void {
-        channelDescriptor.mediaInfoChannel = {};
     }
 }

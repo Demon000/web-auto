@@ -2,19 +2,19 @@ import {
     ChannelDescriptor,
     ChannelOpenRequest,
     NavigationTurnType,
-} from '../proto/types';
+} from '@web-auto/protos/types';
 import { Service } from './Service';
 import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
 import { Message } from '../messenger/Message';
 import { MessageInStream } from '../messenger/MessageInStream';
 import { MessageOutStream } from '../messenger/MessageOutStream';
 import { ChannelId } from '../messenger/ChannelId';
-import { NavigationChannelMessage } from '../proto/types';
-import { NavigationStatus } from '../proto/types';
-import { NavigationDistanceEvent } from '../proto/types';
-import { NavigationTurnEvent } from '../proto/types';
+import { NavigationChannelMessage } from '@web-auto/protos/types';
+import { NavigationStatus } from '@web-auto/protos/types';
+import { NavigationDistanceEvent } from '@web-auto/protos/types';
+import { NavigationTurnEvent } from '@web-auto/protos/types';
 
-export class NavigationStatusService extends Service {
+export abstract class NavigationStatusService extends Service {
     public constructor(
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,
@@ -22,23 +22,15 @@ export class NavigationStatusService extends Service {
         super(ChannelId.NAVIGATION, messageInStream, messageOutStream);
     }
 
-    protected async open(_data: ChannelOpenRequest): Promise<void> {
-        // TODO
-    }
+    protected abstract open(data: ChannelOpenRequest): Promise<void>;
 
-    protected async handleStatus(_data: NavigationStatus): Promise<void> {
-        // TODO
-    }
+    protected abstract handleStatus(data: NavigationStatus): Promise<void>;
 
-    protected async handleDistance(
-        _data: NavigationDistanceEvent,
-    ): Promise<void> {
-        // TODO
-    }
+    protected abstract handleDistance(
+        data: NavigationDistanceEvent,
+    ): Promise<void>;
 
-    protected async handleTurn(_data: NavigationTurnEvent): Promise<void> {
-        // TODO
-    }
+    protected abstract handleTurn(data: NavigationTurnEvent): Promise<void>;
 
     protected async onStatus(data: NavigationStatus): Promise<void> {
         await this.handleStatus(data);
@@ -78,20 +70,5 @@ export class NavigationStatusService extends Service {
             default:
                 await super.onMessage(message, options);
         }
-    }
-
-    protected fillChannelDescriptor(
-        channelDescriptor: ChannelDescriptor,
-    ): void {
-        channelDescriptor.navigationChannel = {
-            minimumIntervalMs: 1000,
-            type: NavigationTurnType.Enum.IMAGE,
-            imageOptions: {
-                width: 256,
-                height: 256,
-                colourDepthBits: 16,
-                dunno: 256,
-            },
-        };
     }
 }

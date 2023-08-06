@@ -8,7 +8,7 @@ import {
     VideoFocusIndication,
     VideoFocusMode,
     VideoFocusRequest,
-} from '../proto/types';
+} from '@web-auto/protos/types';
 import { DataBuffer } from '../utils/DataBuffer';
 import { AVOutputService } from './AVOutputService';
 

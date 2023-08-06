@@ -5,13 +5,13 @@ import {
     AVChannelSetupRequest,
     AVChannelStartIndication,
     AVChannelStopIndication,
-} from '../proto/types';
-import { AVChannel, AVStreamType, AudioType } from '../proto/types';
-import { ChannelOpenRequest, ChannelDescriptor } from '../proto/types';
+} from '@web-auto/protos/types';
+import { AVChannel, AVStreamType, AudioType } from '@web-auto/protos/types';
+import { ChannelOpenRequest, ChannelDescriptor } from '@web-auto/protos/types';
 import { DataBuffer } from '../utils/DataBuffer';
 import { AVOutputService } from './AVOutputService';
 
-export class AudioService extends AVOutputService {
+export abstract class AudioOutputService extends AVOutputService {
     public constructor(
         channelId: ChannelId,
         messageInStream: MessageInStream,
@@ -20,30 +20,22 @@ export class AudioService extends AVOutputService {
         super(channelId, messageInStream, messageOutStream);
     }
 
-    protected async open(_data: ChannelOpenRequest): Promise<void> {
-        // TOOD
-    }
+    protected abstract open(data: ChannelOpenRequest): Promise<void>;
 
-    protected async channelStart(
-        _data: AVChannelStartIndication,
-    ): Promise<void> {
-        // TOOD
-    }
+    protected abstract channelStart(
+        data: AVChannelStartIndication,
+    ): Promise<void>;
 
-    protected async setup(_data: AVChannelSetupRequest): Promise<void> {
-        // TOOD
-    }
+    protected abstract setup(data: AVChannelSetupRequest): Promise<void>;
 
-    protected async channelStop(_data: AVChannelStopIndication): Promise<void> {
-        // TOOD
-    }
+    protected abstract channelStop(
+        data: AVChannelStopIndication,
+    ): Promise<void>;
 
-    protected async handleData(
+    protected abstract handleData(
         _buffer: DataBuffer,
         _timestamp?: bigint | undefined,
-    ): Promise<void> {
-        // TODO
-    }
+    ): Promise<void>;
 
     protected fillChannelDescriptor(
         channelDescriptor: ChannelDescriptor,

@@ -10,12 +10,12 @@ import {
     AVInputOpenRequest,
     AVInputOpenResponse,
     AVStreamType,
-} from '../proto/types';
-import { ChannelOpenRequest, ChannelDescriptor } from '../proto/types';
+} from '@web-auto/protos/types';
+import { ChannelOpenRequest, ChannelDescriptor } from '@web-auto/protos/types';
 import { DataBuffer } from '../utils/DataBuffer';
 import { AVService } from './AVService';
 
-export class AudioInputService extends AVService {
+export abstract class AudioInputService extends AVService {
     public constructor(
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,
@@ -23,17 +23,11 @@ export class AudioInputService extends AVService {
         super(ChannelId.AV_INPUT, messageInStream, messageOutStream);
     }
 
-    protected async setup(_data: AVChannelSetupRequest): Promise<void> {
-        // TOOD
-    }
+    protected abstract setup(data: AVChannelSetupRequest): Promise<void>;
 
-    protected async open(_data: ChannelOpenRequest): Promise<void> {
-        // TOOD
-    }
+    protected abstract open(data: ChannelOpenRequest): Promise<void>;
 
-    protected async inputOpen(_data: AVInputOpenRequest): Promise<void> {
-        // TOOD
-    }
+    protected abstract inputOpen(data: AVInputOpenRequest): Promise<void>;
 
     protected async onInputOpenRequest(
         data: AVInputOpenRequest,
