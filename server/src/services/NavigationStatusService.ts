@@ -1,14 +1,18 @@
-import { ChannelOpenRequest } from '@web-auto/protos/types';
+import {
+    ChannelOpenRequest,
+    NavigationChannelMessage,
+    NavigationDistanceEvent,
+    NavigationStatus,
+    NavigationTurnEvent,
+} from '@web-auto/protos/types';
+
+import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
+import { Message } from '@/messenger/Message';
+import { MessageInStream } from '@/messenger/MessageInStream';
+import { MessageOutStream } from '@/messenger/MessageOutStream';
+import { ChannelId } from '@/messenger/ChannelId';
+
 import { Service } from './Service';
-import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
-import { Message } from '../messenger/Message';
-import { MessageInStream } from '../messenger/MessageInStream';
-import { MessageOutStream } from '../messenger/MessageOutStream';
-import { ChannelId } from '../messenger/ChannelId';
-import { NavigationChannelMessage } from '@web-auto/protos/types';
-import { NavigationStatus } from '@web-auto/protos/types';
-import { NavigationDistanceEvent } from '@web-auto/protos/types';
-import { NavigationTurnEvent } from '@web-auto/protos/types';
 
 export abstract class NavigationStatusService extends Service {
     public constructor(

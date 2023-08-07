@@ -1,32 +1,21 @@
 import {
-    AVChannelStartIndication,
-    AVChannelSetupRequest,
-    VideoFocusRequest,
-    AVChannelStopIndication,
-    ChannelOpenRequest,
-    ChannelDescriptor,
     AVChannel,
+    AVChannelSetupRequest,
+    AVChannelStartIndication,
+    AVChannelStopIndication,
     AVStreamType,
-    VideoResolution,
+    ChannelDescriptor,
+    ChannelOpenRequest,
     VideoFPS,
+    VideoFocusRequest,
+    VideoResolution,
 } from '@web-auto/protos/types';
-import { DataBuffer } from '../../utils/DataBuffer';
-import { VideoService } from '../VideoService';
-import { MessageInStream } from '../../messenger/MessageInStream';
-import { MessageOutStream } from '../../messenger/MessageOutStream';
-import EventEmitter from 'eventemitter3';
-
-export enum DummyVideoServiceEvent {
-    DATA,
-}
-
-export interface DummyVideoServiceEvents {
-    [DummyVideoServiceEvent.DATA]: (buffer: DataBuffer) => void;
-}
+import { DataBuffer } from '@/utils/DataBuffer';
+import { VideoService } from '@/services/VideoService';
+import { MessageInStream } from '@/messenger/MessageInStream';
+import { MessageOutStream } from '@/messenger/MessageOutStream';
 
 export class DummyVideoService extends VideoService {
-    public emitter = new EventEmitter<DummyVideoServiceEvents>();
-
     public constructor(
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,
@@ -57,11 +46,9 @@ export class DummyVideoService extends VideoService {
     }
 
     protected async handleData(
-        buffer: DataBuffer,
+        _buffer: DataBuffer,
         _timestamp?: bigint | undefined,
-    ): Promise<void> {
-        this.emitter.emit(DummyVideoServiceEvent.DATA, buffer);
-    }
+    ): Promise<void> {}
 
     protected fillChannelDescriptor(
         channelDescriptor: ChannelDescriptor,

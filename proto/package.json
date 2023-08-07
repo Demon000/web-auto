@@ -3,6 +3,8 @@
     "version": "1.0.0",
     "author": "Demon000",
     "license": "GPL-3.0",
+    "main": "./types/index.js",
+    "types": "./types/index.d.ts",
     "devDependencies": {
         "protobufjs": "^7.2.4",
         "protobufjs-cli": "^1.1.1"

@@ -1,5 +1,6 @@
 import EventEmitter from 'eventemitter3';
-import { DataBuffer } from '../utils/DataBuffer';
+
+import { DataBuffer } from '@/utils/DataBuffer';
 
 export enum TransportEvent {
     DATA,

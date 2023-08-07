@@ -1,29 +1,30 @@
 {
-    "name": "@web-auto/server",
-    "version": "1.0.0",
-    "description": "",
-    "scripts": {
-        "start": "node --inspect -r ts-node/register ./src/index.ts",
-        "lint": "eslint --fix .",
-        "build-protos": "./build-protos.sh"
-    },
-    "keywords": [],
-    "author": "Demon000",
-    "license": "GPL-3.0",
-    "devDependencies": {
-        "@web-auto/eslint-config": "^1.0.0",
-        "@tsconfig/node20": "^20.1.0",
-        "@types/node": "^20.4.7",
-        "@types/ws": "^8.5.5",
-        "ts-node": "^10.9.1",
-        "typescript": "^5.1.6"
-    },
-    "dependencies": {
-        "eventemitter3": "^5.0.1",
-        "koffi": "^2.5.7",
-        "long": "^5.2.3",
-        "protobufjs": "^7.2.4",
-        "usb": "^2.9.0",
-        "ws": "^8.13.0"
-    }
+  "name": "@web-auto/server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tspc",
+    "lint": "eslint --fix ."
+  },
+  "keywords": [],
+  "author": "Demon000",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.1",
+    "@types/node": "^20.4.7",
+    "@types/ws": "^8.5.5",
+    "ts-patch": "^3.0.2",
+    "typescript": "^5.1.6",
+    "typescript-transform-paths": "^3.4.6"
+  },
+  "dependencies": {
+    "eventemitter3": "^5.0.1",
+    "koffi": "^2.5.7",
+    "long": "^5.2.3",
+    "protobufjs": "^7.2.4",
+    "usb": "^2.9.0",
+    "ws": "^8.13.0"
+  }
 }

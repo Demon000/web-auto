@@ -1,7 +1,7 @@
-import { DataBuffer } from '../utils/DataBuffer';
+import { DataBuffer } from '@/utils/DataBuffer';
 
 export interface ICryptor {
-    doHandshake(): void;
+    doHandshake(): boolean;
     readHandshakeBuffer(): DataBuffer;
     writeHandshakeBuffer(buffer: DataBuffer): void;
 

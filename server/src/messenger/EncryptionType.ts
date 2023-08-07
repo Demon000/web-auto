@@ -1,4 +1,4 @@
-import { bit } from '../utils/bits';
+import { bit } from '@/utils/bits';
 
 export enum EncryptionType {
     PLAIN = 0,

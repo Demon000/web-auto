@@ -15,4 +15,6 @@ export abstract class Sensor {
     public constructor(public readonly type: SensorType.Enum) {}
 
     public abstract start(): Promise<void>;
+
+    public abstract emit(): void;
 }

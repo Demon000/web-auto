@@ -1,13 +1,17 @@
-import { ChannelOpenRequest } from '@web-auto/protos/types';
+import {
+    ChannelOpenRequest,
+    MediaInfoChannelMessage,
+    MediaInfoChannelMetadataData,
+    MediaInfoChannelPlaybackData,
+} from '@web-auto/protos/types';
+
+import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
+import { Message } from '@/messenger/Message';
+import { MessageInStream } from '@/messenger/MessageInStream';
+import { MessageOutStream } from '@/messenger/MessageOutStream';
+import { ChannelId } from '@/messenger/ChannelId';
+
 import { Service } from './Service';
-import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
-import { Message } from '../messenger/Message';
-import { MediaInfoChannelMessage } from '@web-auto/protos/types';
-import { MediaInfoChannelMetadataData } from '@web-auto/protos/types';
-import { MediaInfoChannelPlaybackData } from '@web-auto/protos/types';
-import { MessageInStream } from '../messenger/MessageInStream';
-import { MessageOutStream } from '../messenger/MessageOutStream';
-import { ChannelId } from '../messenger/ChannelId';
 
 export abstract class MediaStatusService extends Service {
     public constructor(

@@ -1,6 +1,6 @@
-import { ICryptor } from '../ssl/ICryptor';
-import { ITransport } from '../transport/ITransport';
-import { DataBuffer } from '../utils/DataBuffer';
+import { ICryptor } from '@/ssl/ICryptor';
+import { ITransport } from '@/transport/ITransport';
+import { DataBuffer } from '@/utils/DataBuffer';
 import { EncryptionType } from './EncryptionType';
 import { FrameHeader } from './FrameHeader';
 import { FrameType } from './FrameType';

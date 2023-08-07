@@ -1,7 +1,8 @@
-import { DataBuffer } from '../utils/DataBuffer';
 import { Device, Endpoint, InEndpoint, OutEndpoint } from 'usb';
-import { Transport } from '../transport/Transport';
-import { TransportEvent } from '../transport/ITransport';
+
+import { DataBuffer } from '@/utils/DataBuffer';
+import { Transport } from '@/transport/Transport';
+import { TransportEvent } from '@/transport/ITransport';
 
 const USB_TRANSPORT_RECEIVE_TIMEOUT = 0;
 const USB_TRANSPORT_SEND_TIMEOUT = 10000;

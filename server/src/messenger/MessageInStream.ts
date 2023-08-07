@@ -1,6 +1,6 @@
 import assert from 'assert';
-import { ICryptor } from '../ssl/ICryptor';
-import { DataBuffer } from '../utils/DataBuffer';
+import { ICryptor } from '@/ssl/ICryptor';
+import { DataBuffer } from '@/utils/DataBuffer';
 import { ChannelId, channelIdString } from './ChannelId';
 import { EncryptionType } from './EncryptionType';
 import { FrameHeader } from './FrameHeader';
@@ -8,7 +8,7 @@ import { FrameType } from './FrameType';
 import { Message } from './Message';
 import EventEmitter from 'eventemitter3';
 import { MessageFrameOptions } from './MessageFrameOptions';
-import { ITransport } from '../transport/ITransport';
+import { ITransport } from '@/transport/ITransport';
 
 type MessageData = {
     message: Message;

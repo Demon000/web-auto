@@ -1,4 +1,4 @@
-import { DataBuffer } from '../utils/DataBuffer';
+import { DataBuffer } from '@/utils/DataBuffer';
 import { ChannelId } from './ChannelId';
 import { EncryptionType } from './EncryptionType';
 import { FrameType } from './FrameType';

@@ -1,15 +1,15 @@
-import { ChannelId } from '../messenger/ChannelId';
-import { Message } from '../messenger/Message';
-import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
-import { MessageInStream } from '../messenger/MessageInStream';
-import { MessageOutStream } from '../messenger/MessageOutStream';
+import { ChannelId } from '@/messenger/ChannelId';
+import { Message } from '@/messenger/Message';
+import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
+import { MessageInStream } from '@/messenger/MessageInStream';
+import { MessageOutStream } from '@/messenger/MessageOutStream';
 import {
     AVChannelMessage,
     AVChannelStartIndication,
     AVChannelStopIndication,
     AVMediaAckIndication,
 } from '@web-auto/protos/types';
-import { DataBuffer } from '../utils/DataBuffer';
+import { DataBuffer } from '@/utils/DataBuffer';
 import { AVService } from './AVService';
 
 export abstract class AVOutputService extends AVService {

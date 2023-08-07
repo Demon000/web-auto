@@ -1,4 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import { ElectronAndroidAutoServer } from '../ElectronAndroidAutoServer';
+import { ServiceFactory } from '@web-auto/server';
+import { WebSocketServer } from 'ws';
+
+const wss = new WebSocketServer({ port: 8080 });
+
+const serviceFactory = new ServiceFactory(wss);
+const androidAutoServer = new ElectronAndroidAutoServer();
 
 contextBridge.exposeInMainWorld('api', {
     send: (channel: string, data: any) => {

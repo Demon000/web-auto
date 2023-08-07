@@ -1,15 +1,17 @@
-import { ChannelId } from '../messenger/ChannelId';
-import { Message } from '../messenger/Message';
-import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
-import { MessageInStream } from '../messenger/MessageInStream';
-import { MessageOutStream } from '../messenger/MessageOutStream';
 import {
     AVChannelMessage,
     VideoFocusIndication,
     VideoFocusMode,
     VideoFocusRequest,
 } from '@web-auto/protos/types';
-import { DataBuffer } from '../utils/DataBuffer';
+
+import { ChannelId } from '@/messenger/ChannelId';
+import { Message } from '@/messenger/Message';
+import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
+import { MessageInStream } from '@/messenger/MessageInStream';
+import { MessageOutStream } from '@/messenger/MessageOutStream';
+import { DataBuffer } from '@/utils/DataBuffer';
+
 import { AVOutputService } from './AVOutputService';
 
 export abstract class VideoService extends AVOutputService {

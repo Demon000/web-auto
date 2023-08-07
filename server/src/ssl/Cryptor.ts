@@ -1,3 +1,5 @@
+import { DataBuffer } from '@/utils/DataBuffer';
+
 import {
     sslBioCtrlPending,
     sslBioRead,
@@ -23,7 +25,6 @@ import {
     sslWrite,
 } from './ssl';
 import { ICryptor } from './ICryptor';
-import { DataBuffer } from '../utils/DataBuffer';
 import { SSL_ERROR_NONE, SSL_ERROR_WANT_READ } from './openssl_bindings';
 
 export class Cryptor implements ICryptor {

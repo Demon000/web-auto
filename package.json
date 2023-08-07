@@ -4,7 +4,6 @@
     "packages": [
       "client",
       "server",
-      "eslint-config",
       "proto"
     ]
   }

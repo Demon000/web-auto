@@ -2,9 +2,21 @@
   "extends": "@tsconfig/node20/tsconfig.json",
   "include": ["src/**/*"],
   "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
     "composite": true,
     "module": "commonjs",
     "types": ["node"],
-    "rootDir": "src",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "plugins": [
+      { "transform": "typescript-transform-paths" },
+      { "transform": "typescript-transform-paths", "afterDeclarations": true }
+    ]
   },
 }

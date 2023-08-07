@@ -1,14 +1,14 @@
-import { ChannelId, channelIdString } from '../messenger/ChannelId';
-import { MessageInStream } from '../messenger/MessageInStream';
-import { MessageOutStream } from '../messenger/MessageOutStream';
+import { ChannelId, channelIdString } from '@/messenger/ChannelId';
+import { MessageInStream } from '@/messenger/MessageInStream';
+import { MessageOutStream } from '@/messenger/MessageOutStream';
 import {
     AVChannelSetupRequest,
     AVChannelStartIndication,
     AVChannelStopIndication,
 } from '@web-auto/protos/types';
 import { AVChannel, AVStreamType, AudioType } from '@web-auto/protos/types';
-import { ChannelOpenRequest, ChannelDescriptor } from '@web-auto/protos/types';
-import { DataBuffer } from '../utils/DataBuffer';
+import { ChannelDescriptor, ChannelOpenRequest } from '@web-auto/protos/types';
+import { DataBuffer } from '@/utils/DataBuffer';
 import { AVOutputService } from './AVOutputService';
 
 export abstract class AudioOutputService extends AVOutputService {

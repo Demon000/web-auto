@@ -1,30 +1,34 @@
-import { ChannelId } from '../messenger/ChannelId';
-import { Message } from '../messenger/Message';
-import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
-import { MessageInStream } from '../messenger/MessageInStream';
-import { MessageOutStream } from '../messenger/MessageOutStream';
-import { ISensor, SensorStartResponse, Status } from '@web-auto/protos/types';
-import { SensorChannel } from '@web-auto/protos/types';
-import { SensorEventIndication } from '@web-auto/protos/types';
-import { DrivingStatusNumber } from '@web-auto/protos/types';
-import { SensorStartRequest } from '@web-auto/protos/types';
-import { SensorChannelMessage } from '@web-auto/protos/types';
 import {
-    ChannelOpenRequest,
     ChannelDescriptor,
+    ChannelOpenRequest,
+    ISensor,
+    SensorChannel,
+    SensorChannelMessage,
+    SensorEventIndication,
+    SensorStartRequest,
+    SensorStartResponse,
     SensorType,
+    Status,
 } from '@web-auto/protos/types';
-import { Sensor } from '../sensors/Sensor';
-import { DataBuffer } from '../utils/DataBuffer';
+
+import { ChannelId } from '@/messenger/ChannelId';
+import { Message } from '@/messenger/Message';
+import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
+import { MessageInStream } from '@/messenger/MessageInStream';
+import { MessageOutStream } from '@/messenger/MessageOutStream';
+import { Sensor, SensorEvent } from '@/sensors/Sensor';
+import { DataBuffer } from '@/utils/DataBuffer';
 import { Service } from './Service';
 
 export class SensorService extends Service {
     public constructor(
-        protected sensors: Sensor<any>[],
+        protected sensors: Sensor[],
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,
     ) {
         super(ChannelId.SENSOR, messageInStream, messageOutStream);
+
+        this.sendEventIndication = this.sendEventIndication.bind(this);
     }
 
     protected findSensor(sensorType: SensorType.Enum): Sensor | undefined {
@@ -37,17 +41,19 @@ export class SensorService extends Service {
         return undefined;
     }
 
-    protected async open(_data: ChannelOpenRequest): Promise<void> {
-        // TODO
-    }
-
-    protected async sensorStart(sensorType: SensorType.Enum): Promise<void> {
+    protected getSensor(sensorType: SensorType.Enum): Sensor {
         const sensor = this.findSensor(sensorType);
         if (sensor === undefined) {
             throw new Error(
-                `Failed to find sensor with type ${sensorType.toString()}`,
+                `Failed to get sensor with type ${sensorType.toString()}`,
             );
         }
+
+        return sensor;
+    }
+
+    protected async open(_data: ChannelOpenRequest): Promise<void> {
+        // TODO
     }
 
     protected async onSensorStartRequest(
@@ -56,7 +62,9 @@ export class SensorService extends Service {
         let status = false;
 
         try {
-            await this.sensorStart(data.sensorType);
+            const sensor = this.getSensor(data.sensorType);
+            sensor.emitter.on(SensorEvent.DATA, this.sendEventIndication);
+            await sensor.start();
             status = true;
         } catch (e) {
             console.log(e);
@@ -101,13 +109,8 @@ export class SensorService extends Service {
             payload,
         );
 
-        if (status) {
-            if (sensorType === SensorType.Enum.NIGHT_DATA) {
-                await this.sendNightData();
-            } else if (sensorType === SensorType.Enum.DRIVING_STATUS) {
-                await this.sendDrivingStatus();
-            }
-        }
+        const sensor = this.getSensor(sensorType);
+        sensor.emit();
     }
 
     protected async sendEventIndication(
@@ -121,32 +124,6 @@ export class SensorService extends Service {
             SensorChannelMessage.Enum.SENSOR_EVENT_INDICATION,
             payload,
         );
-    }
-
-    protected async sendNightData(): Promise<void> {
-        const data = SensorEventIndication.create({
-            nightMode: [
-                {
-                    isNight: true,
-                },
-            ],
-        });
-        this.printSend(data);
-
-        await this.sendEventIndication(data);
-    }
-
-    protected async sendDrivingStatus(): Promise<void> {
-        const data = SensorEventIndication.create({
-            drivingStatus: [
-                {
-                    status: DrivingStatusNumber.Enum.UNRESTRICTED,
-                },
-            ],
-        });
-        this.printSend(data);
-
-        await this.sendEventIndication(data);
     }
 
     protected fillChannelDescriptor(

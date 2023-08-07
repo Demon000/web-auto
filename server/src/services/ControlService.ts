@@ -1,17 +1,14 @@
-import { ChannelId } from '../messenger/ChannelId';
-import { Message } from '../messenger/Message';
-import { MessageInStream } from '../messenger/MessageInStream';
-import { MessageOutStream } from '../messenger/MessageOutStream';
-import { Service } from './Service';
-import { Cryptor } from '../ssl/Cryptor';
-import { DataBuffer } from '../utils/DataBuffer';
-import { microsecondsTime } from '../utils/time';
 import {
+    AudioFocusRequest,
+    AudioFocusResponse,
+    AudioFocusState,
     AudioFocusType,
     AuthCompleteIndication,
     ChannelDescriptor,
     ChannelOpenRequest,
     ControlMessage,
+    NavigationFocusRequest,
+    NavigationFocusResponse,
     PingRequest,
     PingResponse,
     ServiceDiscoveryRequest,
@@ -19,18 +16,23 @@ import {
     Status,
     VersionResponseStatus,
 } from '@web-auto/protos/types';
-import { AudioFocusRequest } from '@web-auto/protos/types';
-import { AudioFocusResponse } from '@web-auto/protos/types';
-import { AudioFocusState } from '@web-auto/protos/types';
-import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
-import { NavigationFocusRequest } from '@web-auto/protos/types';
-import { NavigationFocusResponse } from '@web-auto/protos/types';
+
+import { ChannelId } from '@/messenger/ChannelId';
+import { Message } from '@/messenger/Message';
+import { MessageInStream } from '@/messenger/MessageInStream';
+import { MessageOutStream } from '@/messenger/MessageOutStream';
+import { DataBuffer } from '@/utils/DataBuffer';
+import { microsecondsTime } from '@/utils/time';
+import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
+import { ICryptor } from '@/ssl/ICryptor';
+
+import { Service } from './Service';
 
 export class ControlService extends Service {
     private pingTimeout?: NodeJS.Timeout;
 
     public constructor(
-        private cryptor: Cryptor,
+        private cryptor: ICryptor,
         private services: Service[],
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,

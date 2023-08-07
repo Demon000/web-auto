@@ -1,13 +1,18 @@
-import { ChannelId } from '../messenger/ChannelId';
-import { Message } from '../messenger/Message';
-import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
-import { MessageInStream } from '../messenger/MessageInStream';
-import { MessageOutStream } from '../messenger/MessageOutStream';
-import { InputChannelMessage, Status } from '@web-auto/protos/types';
-import { BindingRequest } from '@web-auto/protos/types';
-import { BindingResponse } from '@web-auto/protos/types';
-import { ChannelOpenRequest } from '@web-auto/protos/types';
-import { DataBuffer } from '../utils/DataBuffer';
+import {
+    BindingRequest,
+    BindingResponse,
+    ChannelOpenRequest,
+    InputChannelMessage,
+    Status,
+} from '@web-auto/protos/types';
+
+import { ChannelId } from '@/messenger/ChannelId';
+import { Message } from '@/messenger/Message';
+import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
+import { MessageInStream } from '@/messenger/MessageInStream';
+import { MessageOutStream } from '@/messenger/MessageOutStream';
+import { DataBuffer } from '@/utils/DataBuffer';
+
 import { Service } from './Service';
 
 export abstract class InputService extends Service {

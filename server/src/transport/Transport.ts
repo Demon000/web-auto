@@ -1,6 +1,8 @@
 import EventEmitter from 'eventemitter3';
+
+import { DataBuffer } from '@/utils/DataBuffer';
+
 import { DataSink } from './DataSink';
-import { DataBuffer } from '../utils/DataBuffer';
 import { TransportEvents } from './ITransport';
 
 export abstract class Transport {

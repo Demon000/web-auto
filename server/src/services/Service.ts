@@ -1,13 +1,13 @@
-import { channelIdString } from '../messenger/ChannelId';
-import { EncryptionType } from '../messenger/EncryptionType';
-import { Message } from '../messenger/Message';
-import { MessageFrameOptions } from '../messenger/MessageFrameOptions';
+import { channelIdString } from '@/messenger/ChannelId';
+import { EncryptionType } from '@/messenger/EncryptionType';
+import { Message } from '@/messenger/Message';
+import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
 import {
     MessageInStream,
     MessageInStreamEvent,
-} from '../messenger/MessageInStream';
-import { MessageOutStream } from '../messenger/MessageOutStream';
-import { MessageType } from '../messenger/MessageType';
+} from '@/messenger/MessageInStream';
+import { MessageOutStream } from '@/messenger/MessageOutStream';
+import { MessageType } from '@/messenger/MessageType';
 import {
     ChannelDescriptor,
     ChannelOpenRequest,
@@ -16,7 +16,7 @@ import {
     ServiceDiscoveryResponse,
     Status,
 } from '@web-auto/protos/types';
-import { DataBuffer } from '../utils/DataBuffer';
+import { DataBuffer } from '@/utils/DataBuffer';
 
 export type ServiceSendMessageOptions = Omit<MessageFrameOptions, 'channelId'>;
 
