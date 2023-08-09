@@ -7,12 +7,12 @@ import {
     DummyNavigationStatusService,
     DummySensorService,
     ServiceFactory,
-} from '@web-auto/server';
-import { MessageInStream } from '@web-auto/server';
-import { MessageOutStream } from '@web-auto/server';
-import { Service } from '@web-auto/server';
-import { ICryptor } from '@web-auto/server';
-import { ChannelId } from '@web-auto/server';
+} from '@web-auto/android-auto';
+import { MessageInStream } from '@web-auto/android-auto';
+import { MessageOutStream } from '@web-auto/android-auto';
+import { Service } from '@web-auto/android-auto';
+import { ICryptor } from '@web-auto/android-auto';
+import { ChannelId } from '@web-auto/android-auto';
 import {
     ElectronVideoService,
     ElectronVideoServiceEvent,

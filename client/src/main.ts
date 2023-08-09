@@ -9,7 +9,7 @@ import {
     type AndroidAutoMainMethods,
     type AndroidAutoRendererMethods,
 } from '@shared/ipc';
-import type { DataBuffer } from '@web-auto/server';
+import type { DataBuffer } from '@web-auto/android-auto';
 
 const androidAutoChannel = new RendererCommuncationChannel<
     AndroidAutoRendererMethods,

@@ -1,4 +1,4 @@
-import { AndroidAutoServer, DataBuffer } from '@web-auto/server';
+import { AndroidAutoServer, DataBuffer } from '@web-auto/android-auto';
 import { ElectronServiceFactory } from './ElectronServiceFactory';
 import { BrowserWindow } from 'electron';
 import { MainCommuncationChannel } from './ipc';

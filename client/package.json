@@ -18,7 +18,7 @@
     "lint": "eslint --fix ."
   },
   "dependencies": {
-    "@web-auto/server": "1.0.0",
+    "@web-auto/android-auto": "1.0.0",
     "eventemitter3": "^5.0.1",
     "pinia": "^2.1.4",
     "vue": "^3.3.4",

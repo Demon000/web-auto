@@ -10,7 +10,7 @@ import {
     VideoFocusRequest,
     VideoResolution,
 } from '@web-auto/protos';
-import { DataBuffer, VideoService } from '@web-auto/server';
+import { DataBuffer, VideoService } from '@web-auto/android-auto';
 import EventEmitter from 'eventemitter3';
 
 export enum ElectronVideoServiceEvent {
