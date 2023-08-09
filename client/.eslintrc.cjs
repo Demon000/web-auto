@@ -26,7 +26,7 @@ module.exports = {
             ],
         },
         {
-            files: ['electron/**/*.ts'],
+            files: ['electron/**/*.ts', 'shared/**/*.ts'],
             parserOptions: {
                 project: 'tsconfig.node.json',
             },

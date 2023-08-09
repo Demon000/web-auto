@@ -30,8 +30,25 @@ type DeviceData = {
 
 export class AndroidAutoServer {
     private deviceMap = new Map<Device, DeviceData>();
+    private usbDeviceHandler = new UsbDeviceHandler();
 
-    public constructor(private serviceFactory: ServiceFactory) {}
+    public constructor(private serviceFactory: ServiceFactory) {
+        this.usbDeviceHandler.emitter.on(
+            UsbDeviceHandlerEvent.CONNECTED,
+            async (device: Device) => {
+                const transport = new UsbTransport(device);
+
+                await this.initDevice(device, transport);
+            },
+        );
+
+        this.usbDeviceHandler.emitter.on(
+            UsbDeviceHandlerEvent.DISCONNECTED,
+            (device: Device) => {
+                this.deinitDevice(device);
+            },
+        );
+    }
 
     public async initDevice(
         device: DeviceCookie,
@@ -90,33 +107,12 @@ export class AndroidAutoServer {
         deviceData.cryptor.deinit();
     }
 
-    public async init(): Promise<void> {
-        const usbDeviceHandler = new UsbDeviceHandler();
+    public async start(): Promise<void> {
+        await this.usbDeviceHandler.waitForDevices();
+    }
 
-        usbDeviceHandler.emitter.on(
-            UsbDeviceHandlerEvent.CONNECTED,
-            async (device: Device) => {
-                const transport = new UsbTransport(device);
-
-                await this.initDevice(device, transport);
-            },
-        );
-
-        usbDeviceHandler.emitter.on(
-            UsbDeviceHandlerEvent.DISCONNECTED,
-            (device: Device) => {
-                this.deinitDevice(device);
-            },
-        );
-
-        const handleEnd = () => {
-            usbDeviceHandler.stopWaitingForDevices();
-            usbDeviceHandler.disconnectDevices();
-            process.exit();
-        };
-
-        process.on('SIGINT', handleEnd);
-
-        await usbDeviceHandler.waitForDevices();
+    public stop(): void {
+        this.usbDeviceHandler.stopWaitingForDevices();
+        this.usbDeviceHandler.disconnectDevices();
     }
 }

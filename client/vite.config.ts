@@ -1,10 +1,30 @@
 import { rmSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { defineConfig } from 'vite';
+import { InlineConfig, defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import electron from 'vite-plugin-electron';
 import renderer from 'vite-plugin-electron-renderer';
 import pkg from './package.json';
+import { fileURLToPath } from 'node:url';
+
+const commonResolveConfig: InlineConfig['resolve'] = {
+    alias: {
+        '@shared/': fileURLToPath(new URL('./shared/', import.meta.url)),
+    },
+};
+
+const appResolveConfig: InlineConfig['resolve'] = {
+    alias: {
+        ...commonResolveConfig.alias,
+        '@/': fileURLToPath(new URL('./src/', import.meta.url)),
+    },
+};
+
+const electronResolveConfig: InlineConfig['resolve'] = {
+    alias: {
+        ...commonResolveConfig.alias,
+        '@electron/': fileURLToPath(new URL('./electron/', import.meta.url)),
+    },
+};
 
 export default defineConfig(({ command }) => {
     rmSync('dist-electron', { recursive: true, force: true });
@@ -14,17 +34,14 @@ export default defineConfig(({ command }) => {
     const sourcemap = isServe;
 
     return {
-        resolve: {
-            alias: {
-                '@web-auto/server': resolve(__dirname, '../server'),
-            },
-        },
+        resolve: appResolveConfig,
         plugins: [
             vue(),
             electron([
                 {
                     entry: 'electron/main/index.ts',
                     vite: {
+                        resolve: electronResolveConfig,
                         build: {
                             sourcemap,
                             minify: isBuild,
@@ -45,6 +62,7 @@ export default defineConfig(({ command }) => {
                         options.reload();
                     },
                     vite: {
+                        resolve: electronResolveConfig,
                         build: {
                             sourcemap: sourcemap ? 'inline' : undefined, // #332
                             minify: isBuild,

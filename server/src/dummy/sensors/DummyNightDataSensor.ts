@@ -2,7 +2,7 @@ import { Sensor, SensorEvent } from '@/sensors';
 import { SensorEventIndication, SensorType } from '@web-auto/protos/types';
 
 export class DummyNightDataSensor extends Sensor {
-    constructor() {
+    public constructor() {
         super(SensorType.Enum.NIGHT_DATA);
     }
 

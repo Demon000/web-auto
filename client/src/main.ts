@@ -1,13 +1,30 @@
 import App from './App.vue';
 import { createApp } from 'vue';
 import './style.css';
+import { RendererCommuncationChannel } from './ipc/ipc';
+import {
+    ANDROID_AUTO_CHANNEL_NAME,
+    AndroidAutoMainMethod,
+    AndroidAutoRendererMethod,
+    type AndroidAutoMainMethods,
+    type AndroidAutoRendererMethods,
+} from '@shared/ipc';
+import type { DataBuffer } from '@web-auto/server';
+
+const androidAutoChannel = new RendererCommuncationChannel<
+    AndroidAutoRendererMethods,
+    AndroidAutoMainMethods
+>(ANDROID_AUTO_CHANNEL_NAME);
 
 const app = createApp(App);
 
 app.mount('#app');
 
-console.log('bla');
+androidAutoChannel.send(AndroidAutoMainMethod.START);
 
-window.api.receive('main-process-message', (...args: any) => () => {
-    console.log(args);
-});
+androidAutoChannel.on(
+    AndroidAutoRendererMethod.VIDEO_DATA,
+    (buffer: DataBuffer) => {
+        console.log(buffer);
+    },
+);

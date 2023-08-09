@@ -3,12 +3,17 @@
   "include": [
     "vite.config.ts",
     "package.json",
-    "electron/**/*"
+    "electron/**/*",
+    "shared/**/*"
   ],
   "compilerOptions": {
     "composite": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@electron/*": ["./electron/*"],
+      "@shared/*": ["./shared/*"]
+    }
   }
 }

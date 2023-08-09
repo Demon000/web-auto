@@ -1,13 +1,14 @@
 import { app, BrowserWindow } from 'electron';
-import assert from 'node:assert';
 import { release } from 'node:os';
 import { join } from 'node:path';
+import { createAndroidAutoServer } from './android-auto';
 
 process.env.DIST_ELECTRON = join(__dirname, '..');
 process.env.DIST = join(process.env.DIST_ELECTRON, '../dist');
-process.env.VITE_PUBLIC = process.env.VITE_DEV_SERVER_URL
-    ? join(process.env.DIST_ELECTRON, '../public')
-    : process.env.DIST;
+process.env.VITE_PUBLIC =
+    process.env.VITE_DEV_SERVER_URL !== undefined
+        ? join(process.env.DIST_ELECTRON, '../public')
+        : process.env.DIST;
 
 // Disable GPU Acceleration for Windows 7
 if (release().startsWith('6.1')) app.disableHardwareAcceleration();
@@ -30,27 +31,21 @@ async function createWindow() {
         icon: join(process.env.VITE_PUBLIC, 'favicon.ico'),
         webPreferences: {
             preload,
-            nodeIntegration: true,
+            nodeIntegration: false,
             contextIsolation: true,
         },
     });
 
+    createAndroidAutoServer(win);
+
     const url = process.env.VITE_DEV_SERVER_URL;
-    if (url) {
+    if (url !== undefined) {
         win.loadURL(url);
         win.webContents.openDevTools();
     } else {
         const indexHtml = join(process.env.DIST, 'index.html');
         win.loadFile(indexHtml);
     }
-
-    win.webContents.on('did-finish-load', () => {
-        assert(win);
-        win.webContents.send(
-            'main-process-message',
-            new Date().toLocaleString(),
-        );
-    });
 }
 
 app.whenReady().then(createWindow);

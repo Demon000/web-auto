@@ -13,16 +13,15 @@ import { MessageOutStream } from '@web-auto/server';
 import { Service } from '@web-auto/server';
 import { ICryptor } from '@web-auto/server';
 import { ChannelId } from '@web-auto/server';
-import { WebSocketServer } from 'ws';
 import {
     ElectronVideoService,
     ElectronVideoServiceEvent,
+    ElectronVideoServiceEvents,
 } from './ElectronVideoService';
+import EventEmitter from 'eventemitter3';
 
 export class ElectronServiceFactory extends ServiceFactory {
-    public constructor(private wss: WebSocketServer) {
-        super();
-    }
+    public emitter = new EventEmitter<ElectronVideoServiceEvents>();
 
     public buildControlService(
         cryptor: ICryptor,
@@ -47,6 +46,10 @@ export class ElectronServiceFactory extends ServiceFactory {
             messageOutStream,
         );
 
+        videoService.emitter.on(ElectronVideoServiceEvent.DATA, (buffer) => {
+            this.emitter.emit(ElectronVideoServiceEvent.DATA, buffer);
+        });
+
         const services: Service[] = [
             new DummyAudioInputService(messageInStream, messageOutStream),
             new DummyAudioOutputService(
@@ -70,12 +73,6 @@ export class ElectronServiceFactory extends ServiceFactory {
             new DummyMediaStatusService(messageInStream, messageOutStream),
             new DummyInputService(messageInStream, messageOutStream),
         ];
-
-        videoService.emitter.on(ElectronVideoServiceEvent.DATA, (buffer) => {
-            this.wss.clients.forEach((socket) => {
-                socket.send(buffer.data);
-            });
-        });
 
         return services;
     }

@@ -1,26 +1,24 @@
-import { contextBridge, ipcRenderer } from 'electron';
-import { ElectronAndroidAutoServer } from '../ElectronAndroidAutoServer';
-import { ServiceFactory } from '@web-auto/server';
-import { WebSocketServer } from 'ws';
+import {
+    wireMainMethods,
+    wireMainPromiseMethods,
+    wireRendererMethods,
+} from '@electron/preload/ipc';
+import {
+    ANDROID_AUTO_CHANNEL_NAME,
+    AndroidAutoMainMethod,
+    AndroidAutoMainMethods,
+    AndroidAutoRendererMethod,
+    AndroidAutoRendererMethods,
+} from '@shared/ipc';
 
-const wss = new WebSocketServer({ port: 8080 });
+wireRendererMethods<AndroidAutoRendererMethods>(ANDROID_AUTO_CHANNEL_NAME, [
+    AndroidAutoRendererMethod.VIDEO_DATA,
+]);
 
-const serviceFactory = new ServiceFactory(wss);
-const androidAutoServer = new ElectronAndroidAutoServer();
+wireMainMethods<AndroidAutoMainMethods>(ANDROID_AUTO_CHANNEL_NAME, [
+    AndroidAutoMainMethod.START,
+]);
 
-contextBridge.exposeInMainWorld('api', {
-    send: (channel: string, data: any) => {
-        // whitelist channels
-        const validChannels = ['toMain', 'did-finish-load'];
-        if (validChannels.includes(channel)) {
-            ipcRenderer.send(channel, data);
-        }
-    },
-    receive: (channel: string, func: Function) => {
-        const validChannels = ['fromMain', 'main-process-message'];
-        if (validChannels.includes(channel)) {
-            // Deliberately strip event as it includes `sender`
-            ipcRenderer.on(channel, (event, ...args) => func(...args));
-        }
-    },
-});
+wireMainPromiseMethods<AndroidAutoMainMethods>(ANDROID_AUTO_CHANNEL_NAME, [
+    AndroidAutoMainMethod.START_PROMISE,
+]);

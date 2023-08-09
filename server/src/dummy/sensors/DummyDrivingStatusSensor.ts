@@ -6,7 +6,7 @@ import {
 } from '@web-auto/protos/types';
 
 export class DummyDrivingStatusSensor extends Sensor {
-    constructor() {
+    public constructor() {
         super(SensorType.Enum.DRIVING_STATUS);
     }
 
