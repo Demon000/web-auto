@@ -3,8 +3,12 @@
   "workspaces": {
     "packages": [
       "client",
+      "client-common",
+      "electron",
+      "eslint-config",
+      "prettier-config",
       "android-auto",
-      "proto"
+      "android-auto-proto"
     ]
   }
 }

@@ -1,21 +1,19 @@
 {
   "name": "@web-auto/android-auto",
   "version": "1.0.0",
-  "description": "",
+  "author": "Demon000",
+  "license": "GPL-3.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tspc",
     "lint": "eslint --fix ."
   },
-  "keywords": [],
-  "author": "Demon000",
-  "license": "GPL-3.0",
   "devDependencies": {
     "@tsconfig/node20": "^20.1.1",
     "@types/node": "^20.4.7",
     "@types/ws": "^8.5.5",
-    "@typescript-eslint/eslint-plugin": "^6.3.0",
+    "eslint": "^8.46.0",
     "ts-patch": "^3.0.2",
     "typescript": "^5.1.6",
     "typescript-transform-paths": "^3.4.6"
