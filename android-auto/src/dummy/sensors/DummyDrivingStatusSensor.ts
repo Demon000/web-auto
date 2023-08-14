@@ -3,7 +3,7 @@ import {
     DrivingStatusNumber,
     SensorEventIndication,
     SensorType,
-} from '@web-auto/protos/types';
+} from '@web-auto/android-auto-proto';
 
 export class DummyDrivingStatusSensor extends Sensor {
     public constructor() {

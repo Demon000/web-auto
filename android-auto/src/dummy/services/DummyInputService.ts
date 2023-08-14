@@ -3,7 +3,7 @@ import {
     ChannelDescriptor,
     ChannelOpenRequest,
     InputChannel,
-} from '@web-auto/protos/types';
+} from '@web-auto/android-auto-proto';
 import { InputService } from '@/services/InputService';
 import { MessageInStream, MessageOutStream } from '@/messenger';
 

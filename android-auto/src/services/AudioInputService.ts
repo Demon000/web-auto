@@ -10,8 +10,11 @@ import {
     AVInputOpenRequest,
     AVInputOpenResponse,
     AVStreamType,
-} from '@web-auto/protos/types';
-import { ChannelDescriptor, ChannelOpenRequest } from '@web-auto/protos/types';
+} from '@web-auto/android-auto-proto';
+import {
+    ChannelDescriptor,
+    ChannelOpenRequest,
+} from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { AVService } from './AVService';
 

@@ -8,7 +8,7 @@ import {
     AVChannelSetupRequest,
     AVChannelSetupResponse,
     AVChannelSetupStatus,
-} from '@web-auto/protos/types';
+} from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { Service } from './Service';
 

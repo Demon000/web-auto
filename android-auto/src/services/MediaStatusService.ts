@@ -3,7 +3,7 @@ import {
     MediaInfoChannelMessage,
     MediaInfoChannelMetadataData,
     MediaInfoChannelPlaybackData,
-} from '@web-auto/protos/types';
+} from '@web-auto/android-auto-proto';
 
 import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
 import { Message } from '@/messenger/Message';

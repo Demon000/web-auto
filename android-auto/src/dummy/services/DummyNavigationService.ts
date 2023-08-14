@@ -5,7 +5,7 @@ import {
     NavigationStatus,
     NavigationTurnEvent,
     NavigationTurnType,
-} from '@web-auto/protos/types';
+} from '@web-auto/android-auto-proto';
 import { NavigationStatusService } from '@/services/NavigationStatusService';
 import { MessageInStream, MessageOutStream } from '@/messenger';
 

@@ -1,0 +1,14 @@
+{
+  "name": "@web-auto/electron-ipc-android-auto",
+  "version": "1.0.0",
+  "author": "Demon000",
+  "license": "GPL-3.0",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint --fix ."
+  },
+  "devDependencies": {
+    "eslint": "^8.46.0",
+    "typescript": "^5.1.6"
+  }
+}

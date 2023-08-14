@@ -4,7 +4,7 @@ import {
     ChannelOpenRequest,
     InputChannelMessage,
     Status,
-} from '@web-auto/protos/types';
+} from '@web-auto/android-auto-proto';
 
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';

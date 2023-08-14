@@ -8,7 +8,7 @@ import {
     AVChannelStartIndication,
     AVChannelStopIndication,
     AVMediaAckIndication,
-} from '@web-auto/protos/types';
+} from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { AVService } from './AVService';
 

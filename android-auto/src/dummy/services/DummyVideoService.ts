@@ -9,7 +9,7 @@ import {
     VideoFPS,
     VideoFocusRequest,
     VideoResolution,
-} from '@web-auto/protos/types';
+} from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { VideoService } from '@/services/VideoService';
 import { MessageInStream } from '@/messenger/MessageInStream';

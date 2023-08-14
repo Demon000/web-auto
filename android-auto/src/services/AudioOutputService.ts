@@ -5,9 +5,16 @@ import {
     AVChannelSetupRequest,
     AVChannelStartIndication,
     AVChannelStopIndication,
-} from '@web-auto/protos/types';
-import { AVChannel, AVStreamType, AudioType } from '@web-auto/protos/types';
-import { ChannelDescriptor, ChannelOpenRequest } from '@web-auto/protos/types';
+} from '@web-auto/android-auto-proto';
+import {
+    AVChannel,
+    AVStreamType,
+    AudioType,
+} from '@web-auto/android-auto-proto';
+import {
+    ChannelDescriptor,
+    ChannelOpenRequest,
+} from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { AVOutputService } from './AVOutputService';
 

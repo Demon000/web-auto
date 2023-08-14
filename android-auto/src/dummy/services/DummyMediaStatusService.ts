@@ -3,7 +3,7 @@ import {
     ChannelOpenRequest,
     MediaInfoChannelMetadataData,
     MediaInfoChannelPlaybackData,
-} from '@web-auto/protos/types';
+} from '@web-auto/android-auto-proto';
 import { MediaStatusService } from '@/services/MediaStatusService';
 import { MessageInStream, MessageOutStream } from '@/messenger';
 

@@ -1,5 +1,8 @@
 import EventEmitter from 'eventemitter3';
-import { SensorEventIndication, SensorType } from '@web-auto/protos/types';
+import {
+    SensorEventIndication,
+    SensorType,
+} from '@web-auto/android-auto-proto';
 
 export enum SensorEvent {
     DATA,

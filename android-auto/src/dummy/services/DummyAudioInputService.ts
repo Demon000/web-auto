@@ -2,7 +2,7 @@ import {
     AVChannelSetupRequest,
     AVInputOpenRequest,
     ChannelOpenRequest,
-} from '@web-auto/protos/types';
+} from '@web-auto/android-auto-proto';
 import { AudioInputService } from '@/services/AudioInputService';
 import { MessageInStream, MessageOutStream } from '@/messenger';
 

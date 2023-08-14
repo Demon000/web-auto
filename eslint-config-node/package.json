@@ -1,0 +1,18 @@
+{
+  "name": "@web-auto/eslint-config-node",
+  "version": "1.0.0",
+  "author": "Demon000",
+  "license": "GPL-3.0",
+  "main": "index.cjs",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.3.0",
+    "@typescript-eslint/parser": "^6.3.0",
+    "eslint": "^8.46.0",
+    "eslint-config-prettier": "^9.0.0",
+    "prettier": "^3.0.1",
+    "@vue/eslint-config-prettier": "^8.0.0",
+    "@vue/eslint-config-typescript": "^11.0.3",
+    "@vue/tsconfig": "^0.4.0",
+    "@rushstack/eslint-patch": "^1.3.3"
+  }
+}

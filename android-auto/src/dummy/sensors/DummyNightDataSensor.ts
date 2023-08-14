@@ -1,5 +1,8 @@
 import { Sensor, SensorEvent } from '@/sensors';
-import { SensorEventIndication, SensorType } from '@web-auto/protos/types';
+import {
+    SensorEventIndication,
+    SensorType,
+} from '@web-auto/android-auto-proto';
 
 export class DummyNightDataSensor extends Sensor {
     public constructor() {

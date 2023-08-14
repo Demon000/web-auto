@@ -3,7 +3,7 @@ import {
     AVChannelStartIndication,
     AVChannelStopIndication,
     ChannelOpenRequest,
-} from '@web-auto/protos/types';
+} from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { AudioOutputService } from '@/services/AudioOutputService';
 import { ChannelId, MessageInStream, MessageOutStream } from '@/messenger';
