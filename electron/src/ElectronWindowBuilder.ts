@@ -3,7 +3,7 @@ import { ElectronAndroidAutoServiceFactory } from './ElectronAndroidAutoServiceF
 import { AndroidAutoServer, DataBuffer } from '@web-auto/android-auto';
 import path from 'node:path';
 import assert from 'node:assert';
-import { AndroidAutoCommuncationChannel } from './android-auto';
+import { AndroidAutoCommuncationChannel } from './android-auto-ipc';
 import {
     AndroidAutoMainMethod,
     AndroidAutoRendererMethod,
@@ -22,6 +22,7 @@ export interface ElectronWindowConfig {
 }
 
 export interface ElectronWindowBuilderConfig {
+    openDevTools?: boolean;
     windows: ElectronWindowConfig[];
 }
 
@@ -88,6 +89,9 @@ export class ElectronWindowBuilder {
         const window = new BrowserWindow({
             width: config.width,
             height: config.height,
+            x: config.x,
+            y: config.y,
+            fullscreen: true,
             webPreferences: {
                 preload: preloadPath,
                 nodeIntegration: false,
@@ -121,7 +125,9 @@ export class ElectronWindowBuilder {
 
         await window.loadURL(indexUrl);
 
-        window.webContents.openDevTools();
+        if (this.config.openDevTools) {
+            window.webContents.openDevTools();
+        }
     }
 
     public buildWindows(): void {
