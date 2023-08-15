@@ -2,7 +2,7 @@ import { app, protocol, BrowserWindow } from 'electron';
 import * as path from 'node:path';
 import * as url from 'node:url';
 
-const indexPath = require.resolve('@web-auto/client');
+const indexPath = require.resolve('@web-auto/web');
 const appPath = path.dirname(indexPath);
 const preloadPath = path.join(__dirname, 'preload.js');
 const indexUrl = url.format({

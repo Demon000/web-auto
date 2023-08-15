@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { MethodsMap, composeName } from '@shared/ipc';
+import { MethodsMap, composeName } from '@web-auto/electron-ipc';
 import { contextBridge, ipcRenderer } from 'electron';
 
 export function wireRendererMethod<E extends MethodsMap>(

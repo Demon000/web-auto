@@ -5,7 +5,7 @@
     "package.json",
     "electron/**/*",
     "shared/**/*"
-  ],
+, "../electron-ipc-android-auto/index.ts"  ],
   "compilerOptions": {
     "composite": true,
     "module": "ESNext",

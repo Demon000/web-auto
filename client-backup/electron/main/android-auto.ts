@@ -1,14 +1,14 @@
 import { AndroidAutoServer, DataBuffer } from '@web-auto/android-auto';
 import { ElectronServiceFactory } from './ElectronServiceFactory';
 import { BrowserWindow } from 'electron';
-import { MainCommuncationChannel } from './ipc';
+import { MainCommuncationChannel } from '@web-auto/electron-ipc-node';
 import {
     ANDROID_AUTO_CHANNEL_NAME,
     AndroidAutoMainMethod,
     AndroidAutoMainMethods,
     AndroidAutoRendererMethod,
     AndroidAutoRendererMethods,
-} from '@shared/ipc';
+} from '@web-auto/electron-ipc-android-auto';
 import { ElectronVideoServiceEvent } from './ElectronVideoService';
 
 export class AndroidAutoCommuncationChannel extends MainCommuncationChannel<

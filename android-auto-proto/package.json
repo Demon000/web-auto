@@ -1,12 +1,16 @@
 {
-    "name": "@web-auto/android-auto-proto",
-    "version": "1.0.0",
-    "author": "Demon000",
-    "license": "GPL-3.0",
-    "main": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "devDependencies": {
-        "protobufjs": "^7.2.4",
-        "protobufjs-cli": "^1.1.1"
-    }
+  "name": "@web-auto/android-auto-proto",
+  "version": "1.0.0",
+  "author": "Demon000",
+  "license": "GPL-3.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "./build-protos.sh",
+    "clean": "rm -rf ./dist"
+  },
+  "devDependencies": {
+    "protobufjs": "^7.2.4",
+    "protobufjs-cli": "^1.1.1"
+  }
 }

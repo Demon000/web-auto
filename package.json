@@ -2,17 +2,18 @@
   "private": true,
   "workspaces": {
     "packages": [
-      "web",
-      "electron",
-      "electron-ipc",
-      "electron-ipc-node",
-      "electron-ipc-web",
-      "electron-ipc-android-auto",
       "eslint-config",
       "eslint-config-node",
       "prettier-config",
+      "electron-ipc",
+      "electron-ipc-node",
+      "electron-ipc-web",
+      "electron-ipc-preload",
+      "electron-ipc-android-auto",
+      "android-auto-proto",
       "android-auto",
-      "android-auto-proto"
+      "web",
+      "electron"
     ]
   },
   "devDependencies": {

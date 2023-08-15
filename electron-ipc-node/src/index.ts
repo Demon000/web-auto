@@ -1,4 +1,8 @@
-import { CommunicationChannel, MethodsMap, composeName } from '@shared/ipc';
+import {
+    CommunicationChannel,
+    MethodsMap,
+    composeName,
+} from '@web-auto/electron-ipc';
 import { BrowserWindow, ipcMain } from 'electron';
 
 export class MainCommuncationChannel<

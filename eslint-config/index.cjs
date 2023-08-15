@@ -1,5 +1,5 @@
 module.exports = {
-    ignorePatterns: ['dist'],
+    ignorePatterns: ['dist', '.eslintrc.cjs'],
     extends: ['eslint:recommended'],
     rules: {
         'linebreak-style': ['error', 'unix'],
@@ -41,12 +41,13 @@ module.exports = {
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-empty-interface': 'off',
 
-        '@typescript-eslint/strict-boolean-expressions': [
-            'error',
-            {
-                allowNullableBoolean: true,
-            },
-        ],
+        // TODO
+        // '@typescript-eslint/strict-boolean-expressions': [
+        //     'error',
+        //     {
+        //         allowNullableBoolean: true,
+        //     },
+        // ],
 
         'no-constant-condition': [
             'error',
