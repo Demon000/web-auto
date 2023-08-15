@@ -6,14 +6,14 @@ import { ElectronAndroidAutoServiceFactory } from './ElectronAndroidAutoServiceF
 import { AndroidAutoServer } from '@web-auto/android-auto';
 import assert from 'node:assert';
 
-const electronConfig = autoConf('web-auto', {
+const electronConfig = autoConf<ElectronConfig>('web-auto', {
     searchPlaces: ['../config.json5'],
     default: {
         electronWindowBuilder: {
             windows: [],
         },
     },
-}) as ElectronConfig;
+});
 
 let serviceFactory: ElectronAndroidAutoServiceFactory | undefined;
 let androidAutoServer: AndroidAutoServer | undefined;
