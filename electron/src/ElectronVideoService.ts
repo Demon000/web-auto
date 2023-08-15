@@ -9,7 +9,7 @@ import {
     VideoFPS,
     VideoFocusRequest,
     VideoResolution,
-} from '@web-auto/protos';
+} from '@web-auto/android-auto-proto';
 import { DataBuffer, VideoService } from '@web-auto/android-auto';
 import EventEmitter from 'eventemitter3';
 

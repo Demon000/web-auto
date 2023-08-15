@@ -1,6 +1,7 @@
 import { app, protocol, BrowserWindow } from 'electron';
 import * as path from 'node:path';
 import * as url from 'node:url';
+import { createAndroidAutoServer } from './android-auto';
 
 const indexPath = require.resolve('@web-auto/web');
 const appPath = path.dirname(indexPath);
@@ -21,6 +22,8 @@ function createWindow() {
             contextIsolation: true,
         },
     });
+
+    createAndroidAutoServer(window);
 
     window.loadURL(indexUrl);
 
