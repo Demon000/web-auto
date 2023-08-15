@@ -1,50 +1,48 @@
-import { app, protocol, BrowserWindow } from 'electron';
-import * as path from 'node:path';
-import * as url from 'node:url';
-import { createAndroidAutoServer } from './android-auto';
+import { app, BrowserWindow } from 'electron';
+import { ElectronWindowBuilder } from './ElectronWindowBuilder';
+import { autoConf } from 'auto-config-loader';
+import { ElectronConfig } from './config';
+import { ElectronAndroidAutoServiceFactory } from './ElectronAndroidAutoServiceFactory';
+import { AndroidAutoServer } from '@web-auto/android-auto';
+import assert from 'node:assert';
 
-const indexPath = require.resolve('@web-auto/web');
-const appPath = path.dirname(indexPath);
-const preloadPath = path.join(__dirname, 'preload.js');
-const indexUrl = url.format({
-    pathname: indexPath,
-    protocol: 'file',
-    slashes: true,
-});
-
-function createWindow() {
-    const window = new BrowserWindow({
-        height: 600,
-        width: 800,
-        webPreferences: {
-            preload: preloadPath,
-            nodeIntegration: false,
-            contextIsolation: true,
+const electronConfig = autoConf('web-auto', {
+    searchPlaces: ['../config.json5'],
+    default: {
+        electronWindowBuilder: {
+            windows: [],
         },
+    },
+}) as ElectronConfig;
+
+let serviceFactory: ElectronAndroidAutoServiceFactory | undefined;
+let androidAutoServer: AndroidAutoServer | undefined;
+if (
+    electronConfig.createAndroidAutoServer !== undefined &&
+    electronConfig.createAndroidAutoServer
+) {
+    serviceFactory = new ElectronAndroidAutoServiceFactory();
+    androidAutoServer = new AndroidAutoServer(serviceFactory);
+
+    process.on('exit', () => {
+        assert(androidAutoServer);
+        androidAutoServer.stop();
     });
-
-    createAndroidAutoServer(window);
-
-    window.loadURL(indexUrl);
-
-    window.webContents.openDevTools();
 }
 
+const electronWindowBuilder = new ElectronWindowBuilder(
+    electronConfig.electronWindowBuilder,
+    serviceFactory,
+    androidAutoServer,
+);
+
 app.whenReady().then(() => {
-    protocol.interceptFileProtocol('file', (request, callback) => {
-        let url = request.url;
-        url = url.substring(7);
-        if (!url.startsWith(appPath)) {
-            url = path.join(appPath, url);
-        }
-
-        callback({ path: url });
-    });
-
-    createWindow();
+    electronWindowBuilder.buildWindows();
 
     app.on('activate', function () {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+        if (BrowserWindow.getAllWindows().length === 0) {
+            electronWindowBuilder.buildWindows();
+        }
     });
 });
 

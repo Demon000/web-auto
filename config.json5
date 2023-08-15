@@ -1,0 +1,11 @@
+{
+    createAndroidAutoServer: true,
+    electronWindowBuilder: {
+        windows: [
+            {
+                display: 0,
+                app: 'web',
+            },
+        ],
+    },
+}

@@ -13,6 +13,7 @@
       "android-auto-proto",
       "android-auto",
       "web",
+      "electron-window-builder-schema",
       "electron"
     ]
   },

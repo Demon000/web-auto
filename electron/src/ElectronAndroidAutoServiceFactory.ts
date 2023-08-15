@@ -14,13 +14,13 @@ import { Service } from '@web-auto/android-auto';
 import { ICryptor } from '@web-auto/android-auto';
 import { ChannelId } from '@web-auto/android-auto';
 import {
-    ElectronVideoService,
+    ElectronAndroidAutoVideoService,
     ElectronVideoServiceEvent,
     ElectronVideoServiceEvents,
-} from './ElectronVideoService';
+} from './ElectronAndroidAutoVideoService';
 import EventEmitter from 'eventemitter3';
 
-export class ElectronServiceFactory extends ServiceFactory {
+export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
     public emitter = new EventEmitter<ElectronVideoServiceEvents>();
 
     public buildControlService(
@@ -41,7 +41,7 @@ export class ElectronServiceFactory extends ServiceFactory {
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,
     ): Service[] {
-        const videoService = new ElectronVideoService(
+        const videoService = new ElectronAndroidAutoVideoService(
             messageInStream,
             messageOutStream,
         );

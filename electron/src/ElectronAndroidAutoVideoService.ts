@@ -21,7 +21,7 @@ export interface ElectronVideoServiceEvents {
     [ElectronVideoServiceEvent.DATA]: (buffer: DataBuffer) => void;
 }
 
-export class ElectronVideoService extends VideoService {
+export class ElectronAndroidAutoVideoService extends VideoService {
     public emitter = new EventEmitter<ElectronVideoServiceEvents>();
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {
