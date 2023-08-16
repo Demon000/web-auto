@@ -1,7 +1,7 @@
 import {
     CommunicationChannel,
     composeName,
-    type MethodsMap,
+    MethodsMap,
 } from '@web-auto/electron-ipc';
 
 export class RendererCommuncationChannel<

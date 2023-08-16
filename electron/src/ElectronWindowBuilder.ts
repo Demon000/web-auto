@@ -67,7 +67,7 @@ export class ElectronWindowBuilder {
             this.androidAutoServer.start();
         });
 
-        webConfigChannel.on(WebConfigMainMethod.CONFIG, () => {
+        webConfigChannel.handle(WebConfigMainMethod.CONFIG, () => {
             return Promise.resolve(config.app.config);
         });
 
@@ -83,7 +83,10 @@ export class ElectronWindowBuilder {
     }
 
     public async buildWindow(config: ElectronWindowConfig): Promise<void> {
-        const preloadPath = path.join(__dirname, `${config.app}-preload.js`);
+        const preloadPath = path.join(
+            __dirname,
+            `${config.app.name}-preload.js`,
+        );
 
         const displays = screen.getAllDisplays();
         let display;
@@ -156,7 +159,7 @@ export class ElectronWindowBuilder {
                 throw new Error(`Unknown app name ${config.app.name}`);
         }
 
-        const indexPath = require.resolve(`@web-auto/${config.app}`);
+        const indexPath = require.resolve(`@web-auto/${config.app.name}`);
         const appPath = path.dirname(indexPath);
         const indexUrl = url.format({
             pathname: indexPath,

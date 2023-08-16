@@ -3,6 +3,7 @@
   "compilerOptions": {
     "lib": [
       "DOM",
+      "es2023",
     ],
   },
 }

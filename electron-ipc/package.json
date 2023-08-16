@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "author": "Demon000",
   "license": "GPL-3.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "exports": {
+    "import": "./dist/esm/index.js",
+    "require": "./dist/index.js",
+    "default": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  },
   "scripts": {
-    "build": "tspc",
+    "build": "tspc --project tsconfig.esm.json && tspc --project tsconfig.cjs.json",
     "clean": "tsc --build --clean",
     "lint": "eslint --fix ."
   },
