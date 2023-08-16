@@ -31,6 +31,7 @@ type DeviceData = {
 export class AndroidAutoServer {
     private deviceMap = new Map<Device, DeviceData>();
     private usbDeviceHandler = new UsbDeviceHandler();
+    private started = false;
 
     public constructor(private serviceFactory: ServiceFactory) {
         this.usbDeviceHandler.emitter.on(
@@ -108,10 +109,20 @@ export class AndroidAutoServer {
     }
 
     public async start(): Promise<void> {
+        if (this.started) {
+            return;
+        }
+
         await this.usbDeviceHandler.waitForDevices();
+        this.started = true;
     }
 
     public stop(): void {
+        if (!this.started) {
+            return;
+        }
+
+        this.started = false;
         this.usbDeviceHandler.stopWaitingForDevices();
         this.usbDeviceHandler.disconnectDevices();
     }
