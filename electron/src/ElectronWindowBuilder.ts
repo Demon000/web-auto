@@ -9,16 +9,28 @@ import {
     AndroidAutoRendererMethod,
 } from '@web-auto/electron-ipc-android-auto';
 import { ElectronVideoServiceEvent } from './ElectronAndroidAutoVideoService';
+import { WebConfig } from '@web-auto/web-config';
 import * as url from 'node:url';
+import { WebConfigCommuncationChannel } from './config-ipc';
+import { WebConfigMainMethod } from '@web-auto/electron-ipc-web-config';
 
 export interface ElectronWindowConfig {
     name: string;
-    display?: number;
+    display?:
+        | {
+              id: number;
+          }
+        | {
+              label: string;
+          };
     width?: number;
     height?: number;
     x?: number;
     y?: number;
-    app: string;
+    app: {
+        name: 'web';
+        config: WebConfig;
+    };
 }
 
 export interface ElectronWindowBuilderConfig {
@@ -35,21 +47,37 @@ export class ElectronWindowBuilder {
         private androidAutoServer: AndroidAutoServer | undefined,
     ) {}
 
-    public createWebWindow(window: BrowserWindow): void {
-        const channel = new AndroidAutoCommuncationChannel(window);
+    public logDisplays(): void {
+        const displays = screen.getAllDisplays();
+        console.log('Displays', displays);
+    }
+
+    public createWebWindow(
+        window: BrowserWindow,
+        config: ElectronWindowConfig,
+    ): void {
+        const androidAutoChannel = new AndroidAutoCommuncationChannel(window);
+        const webConfigChannel = new WebConfigCommuncationChannel(window);
 
         assert(this.androidAutoServiceFactory);
         assert(this.androidAutoServer);
 
-        channel.on(AndroidAutoMainMethod.START, () => {
+        androidAutoChannel.on(AndroidAutoMainMethod.START, () => {
             assert(this.androidAutoServer);
             this.androidAutoServer.start();
+        });
+
+        webConfigChannel.on(WebConfigMainMethod.CONFIG, () => {
+            return Promise.resolve(config.app.config);
         });
 
         this.androidAutoServiceFactory.emitter.on(
             ElectronVideoServiceEvent.DATA,
             (buffer: DataBuffer) => {
-                channel.send(AndroidAutoRendererMethod.VIDEO_DATA, buffer.data);
+                androidAutoChannel.send(
+                    AndroidAutoRendererMethod.VIDEO_DATA,
+                    buffer.data,
+                );
             },
         );
     }
@@ -57,10 +85,29 @@ export class ElectronWindowBuilder {
     public async buildWindow(config: ElectronWindowConfig): Promise<void> {
         const preloadPath = path.join(__dirname, `${config.app}-preload.js`);
 
+        const displays = screen.getAllDisplays();
         let display;
 
         if (config.display === undefined) {
             display = screen.getPrimaryDisplay();
+        } else {
+            for (const possibleDisplay of displays) {
+                if (
+                    ('id' in config.display &&
+                        possibleDisplay.id === config.display.id) ||
+                    ('label' in config.display &&
+                        possibleDisplay.label === config.display.label)
+                ) {
+                    display = possibleDisplay;
+                    break;
+                }
+            }
+
+            if (display === undefined) {
+                console.error(
+                    `Failed to find display with id ${config.display}`,
+                );
+            }
         }
         if (display === undefined) {
             const cursorPoint = screen.getCursorScreenPoint();
@@ -101,8 +148,12 @@ export class ElectronWindowBuilder {
             },
         });
 
-        if (config.app === 'web') {
-            this.createWebWindow(window);
+        switch (config.app.name) {
+            case 'web':
+                this.createWebWindow(window, config);
+                break;
+            default:
+                throw new Error(`Unknown app name ${config.app.name}`);
         }
 
         const indexPath = require.resolve(`@web-auto/${config.app}`);

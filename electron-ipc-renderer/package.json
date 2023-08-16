@@ -1,5 +1,5 @@
 {
-  "name": "@web-auto/electron-ipc-web",
+  "name": "@web-auto/electron-ipc-renderer",
   "version": "1.0.0",
   "author": "Demon000",
   "license": "GPL-3.0",

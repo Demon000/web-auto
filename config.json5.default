@@ -3,8 +3,15 @@
     electronWindowBuilder: {
         windows: [
             {
-                display: 0,
-                app: 'web',
+                display: {
+                    id: 4693741488312405,
+                },
+                app: {
+                    name: 'web',
+                    config: {
+                        data: 'xxx',
+                    },
+                },
             },
         ],
     },

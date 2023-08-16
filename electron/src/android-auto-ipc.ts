@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron';
-import { MainCommuncationChannel } from '@web-auto/electron-ipc-node';
+import { MainCommuncationChannel } from '@web-auto/electron-ipc-main';
 import {
     ANDROID_AUTO_CHANNEL_NAME,
     AndroidAutoMainMethods,

@@ -10,10 +10,8 @@ export interface AndroidAutoRendererMethods {
 
 export enum AndroidAutoMainMethod {
     START = 'start',
-    START_PROMISE = 'start-promise',
 }
 
 export interface AndroidAutoMainMethods {
     [AndroidAutoMainMethod.START]: () => void;
-    [AndroidAutoMainMethod.START_PROMISE]: () => Promise<number>;
 }

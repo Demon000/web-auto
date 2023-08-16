@@ -37,6 +37,8 @@ const electronWindowBuilder = new ElectronWindowBuilder(
 );
 
 app.whenReady().then(() => {
+    electronWindowBuilder.logDisplays();
+
     electronWindowBuilder.buildWindows();
 
     app.on('activate', function () {
