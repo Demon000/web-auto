@@ -1,0 +1,17 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+message TouchAction {
+  enum Enum {
+    PRESS = 0;
+    RELEASE = 1;
+    DRAG = 2;
+    POINTER_DOWN = 5;
+    POINTER_UP = 6;
+  }
+}
