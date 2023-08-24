@@ -7,7 +7,7 @@
     "build": "tspc",
     "clean": "tsc --build --clean",
     "lint": "eslint --fix .",
-    "start": "npm run build && electron ./dist/main.js"
+    "start": "electron ./dist/main.js"
   },
   "devDependencies": {
     "electron": "^24.3.0",
