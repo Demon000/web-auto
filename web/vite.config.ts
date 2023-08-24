@@ -11,21 +11,4 @@ export default defineConfig({
             '@': fileURLToPath(new URL('./src', import.meta.url)),
         },
     },
-    // optimizeDeps: {
-    //     include: [
-    //         '../electron-ipc-renderer/*',
-    //         '../electron-ipc-android-auto/*',
-    //         '../electron-ipc-web-config/*',
-    //     ],
-    // },
-    // build: {
-    //     commonjsOptions: {
-    //         include: [
-    //             /..\/electron-ipc-renderer\/*/,
-    //             /..\/electron-ipc-android-auto\/*/,
-    //             /..\/electron-ipc-web-config\/*/,
-    //             /node_modules/,
-    //         ],
-    //     },
-    // },
 });
