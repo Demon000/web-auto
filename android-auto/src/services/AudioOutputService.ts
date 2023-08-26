@@ -1,4 +1,4 @@
-import { ChannelId, channelIdString } from '@/messenger/ChannelId';
+import { ChannelId } from '@/messenger/ChannelId';
 import { MessageInStream } from '@/messenger/MessageInStream';
 import { MessageOutStream } from '@/messenger/MessageOutStream';
 import {
@@ -15,7 +15,6 @@ import {
     ChannelDescriptor,
     ChannelOpenRequest,
 } from '@web-auto/android-auto-proto';
-import { DataBuffer } from '@/utils/DataBuffer';
 import { AVOutputService } from './AVOutputService';
 
 export abstract class AudioOutputService extends AVOutputService {
@@ -39,31 +38,32 @@ export abstract class AudioOutputService extends AVOutputService {
         data: AVChannelStopIndication,
     ): Promise<void>;
 
-    protected abstract handleData(
-        _buffer: DataBuffer,
-        _timestamp?: bigint | undefined,
-    ): Promise<void>;
-
     protected fillChannelDescriptor(
         channelDescriptor: ChannelDescriptor,
     ): void {
+        let channelCount;
+        let sampleRate;
         let audioType;
 
         switch (this.channelId) {
             case ChannelId.MEDIA_AUDIO:
                 audioType = AudioType.Enum.MEDIA;
+                channelCount = 2;
+                sampleRate = 48000;
                 break;
             case ChannelId.SYSTEM_AUDIO:
                 audioType = AudioType.Enum.SYSTEM;
+                channelCount = 1;
+                sampleRate = 16000;
                 break;
             case ChannelId.SPEECH_AUDIO:
                 audioType = AudioType.Enum.SPEECH;
+                channelCount = 1;
+                sampleRate = 16000;
                 break;
             default:
                 throw new Error(
-                    `Invalid channel id ${channelIdString(
-                        this.channelId,
-                    )} for audio service`,
+                    `Invalid channel id ${this.channelName} for audio service`,
                 );
         }
 
@@ -74,9 +74,8 @@ export abstract class AudioOutputService extends AVOutputService {
             audioConfigs: [
                 {
                     bitDepth: 16,
-                    channelCount: audioType === AudioType.Enum.MEDIA ? 2 : 1,
-                    sampleRate:
-                        audioType === AudioType.Enum.MEDIA ? 48000 : 16000,
+                    channelCount,
+                    sampleRate,
                 },
             ],
         });
