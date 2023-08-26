@@ -26,7 +26,9 @@ export class MainCommuncationChannel<
 
     public on<K extends keyof L & string>(eventName: K, callback: L[K]): void {
         const name = composeName(this.name, eventName);
-        ipcMain.on(name, callback);
+        ipcMain.on(name, (_event, ...args) => {
+            callback(...args);
+        });
     }
 
     public handle<K extends keyof L & string>(
@@ -34,6 +36,8 @@ export class MainCommuncationChannel<
         callback: L[K],
     ): void {
         const name = composeName(this.name, eventName);
-        ipcMain.handle(name, callback);
+        ipcMain.handle(name, (_event, ...args) => {
+            callback(...args);
+        });
     }
 }
