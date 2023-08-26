@@ -1,5 +1,33 @@
 {
-    createAndroidAutoServer: true,
+    androidAuto: {
+        videoConfigs: [
+            {
+                videoResolution: '_1080p',
+                videoFps: '_60',
+                marginHeight: 0,
+                marginWidth: 0,
+                dpi: 140,
+            },
+            {
+                videoResolution: '_720p',
+                videoFps: '_60',
+                marginHeight: 0,
+                marginWidth: 0,
+                dpi: 140,
+            },
+            {
+                videoResolution: '_480p',
+                videoFps: '_60',
+                marginHeight: 0,
+                marginWidth: 0,
+                dpi: 140,
+            },
+        ],
+        touchScreenConfig: {
+            width: 1920,
+            height: 1080,
+        },
+    },
     electronWindowBuilder: {
         windows: [
             {

@@ -8,11 +8,12 @@ import {
     AndroidAutoMainMethod,
     AndroidAutoRendererMethod,
 } from '@web-auto/electron-ipc-android-auto';
-import { ElectronVideoServiceEvent } from './ElectronAndroidAutoVideoService';
+import { ElectronAndroidAutoVideoServiceEvent } from './ElectronAndroidAutoVideoService';
 import { WebConfig } from '@web-auto/web-config';
 import * as url from 'node:url';
 import { WebConfigCommuncationChannel } from './config-ipc';
 import { WebConfigMainMethod } from '@web-auto/electron-ipc-web-config';
+import { ElectronAndroidAutoInputServiceEvent } from './ElectronAndroidAutoInputService';
 
 export interface ElectronWindowConfig {
     name: string;
@@ -58,21 +59,33 @@ export class ElectronWindowBuilder {
     ): void {
         const androidAutoChannel = new AndroidAutoCommuncationChannel(window);
         const webConfigChannel = new WebConfigCommuncationChannel(window);
+        const androidAutoServiceFactory = this.androidAutoServiceFactory;
+        const androidAutoServer = this.androidAutoServer;
 
-        assert(this.androidAutoServiceFactory);
-        assert(this.androidAutoServer);
+        assert(androidAutoServiceFactory);
+        assert(androidAutoServer);
+
+        androidAutoChannel.on(
+            AndroidAutoMainMethod.SEND_INPUT_SERVICE_TOUCH,
+            (data) => {
+                assert(androidAutoServiceFactory);
+                androidAutoServiceFactory.emitter.emit(
+                    ElectronAndroidAutoInputServiceEvent.TOUCH,
+                    data.event,
+                );
+            },
+        );
 
         androidAutoChannel.on(AndroidAutoMainMethod.START, () => {
-            assert(this.androidAutoServer);
-            this.androidAutoServer.start();
+            androidAutoServer.start();
         });
 
         webConfigChannel.handle(WebConfigMainMethod.CONFIG, () => {
             return Promise.resolve(config.app.config);
         });
 
-        this.androidAutoServiceFactory.emitter.on(
-            ElectronVideoServiceEvent.DATA,
+        androidAutoServiceFactory.emitter.on(
+            ElectronAndroidAutoVideoServiceEvent.DATA,
             (buffer: DataBuffer) => {
                 androidAutoChannel.send(
                     AndroidAutoRendererMethod.VIDEO_DATA,

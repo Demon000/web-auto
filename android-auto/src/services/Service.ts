@@ -27,6 +27,7 @@ export abstract class Service {
         protected channelId: number,
         protected messageInStream: MessageInStream,
         protected messageOutStream: MessageOutStream,
+        protected debug = false,
     ) {
         this.channelName = channelIdString(channelId);
 
@@ -56,6 +57,10 @@ export abstract class Service {
     }
 
     protected printReceive(message: any): void {
+        if (!this.debug) {
+            return;
+        }
+
         console.log(
             this.channelName,
             'Receive',
@@ -65,6 +70,10 @@ export abstract class Service {
     }
 
     protected printSend(message: any): void {
+        if (!this.debug) {
+            return;
+        }
+
         console.log(
             this.channelName,
             'Send',

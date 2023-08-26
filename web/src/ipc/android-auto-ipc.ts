@@ -6,8 +6,8 @@ import {
 } from '@web-auto/electron-ipc-android-auto';
 
 export class AndroidAutoCommuncationChannel extends RendererCommuncationChannel<
-    AndroidAutoMainMethods,
-    AndroidAutoRendererMethods
+    AndroidAutoRendererMethods,
+    AndroidAutoMainMethods
 > {
     public constructor() {
         super(ANDROID_AUTO_CHANNEL_NAME);

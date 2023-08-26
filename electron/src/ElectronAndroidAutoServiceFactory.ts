@@ -2,7 +2,6 @@ import {
     ControlService,
     DummyAudioInputService,
     DummyAudioOutputService,
-    DummyInputService,
     DummyMediaStatusService,
     DummyNavigationStatusService,
     DummySensorService,
@@ -15,13 +14,33 @@ import { ICryptor } from '@web-auto/android-auto';
 import { ChannelId } from '@web-auto/android-auto';
 import {
     ElectronAndroidAutoVideoService,
-    ElectronVideoServiceEvent,
-    ElectronVideoServiceEvents,
+    ElectronAndroidAutoVideoServiceEvent,
+    ElectronAndroidAutoVideoServiceEvents,
 } from './ElectronAndroidAutoVideoService';
 import EventEmitter from 'eventemitter3';
+import {
+    ITouchConfig,
+    ITouchEvent,
+    IVideoConfig,
+} from '@web-auto/android-auto-proto';
+import {
+    ElectronAndroidAutoInputService,
+    ElectronAndroidAutoInputServiceEvent,
+    ElectronAndroidAutoInputServiceEvents,
+} from './ElectronAndroidAutoInputService';
 
 export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
-    public emitter = new EventEmitter<ElectronVideoServiceEvents>();
+    public emitter = new EventEmitter<
+        | ElectronAndroidAutoVideoServiceEvents
+        | ElectronAndroidAutoInputServiceEvents
+    >();
+
+    public constructor(
+        private videoConfigs: IVideoConfig[],
+        private touchSreenConfig: ITouchConfig,
+    ) {
+        super();
+    }
 
     public buildControlService(
         cryptor: ICryptor,
@@ -42,13 +61,32 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
         messageOutStream: MessageOutStream,
     ): Service[] {
         const videoService = new ElectronAndroidAutoVideoService(
+            this.videoConfigs,
+            messageInStream,
+            messageOutStream,
+        );
+        const inputService = new ElectronAndroidAutoInputService(
+            this.touchSreenConfig,
             messageInStream,
             messageOutStream,
         );
 
-        videoService.emitter.on(ElectronVideoServiceEvent.DATA, (buffer) => {
-            this.emitter.emit(ElectronVideoServiceEvent.DATA, buffer);
-        });
+        videoService.emitter.on(
+            ElectronAndroidAutoVideoServiceEvent.DATA,
+            (buffer) => {
+                this.emitter.emit(
+                    ElectronAndroidAutoVideoServiceEvent.DATA,
+                    buffer,
+                );
+            },
+        );
+
+        this.emitter.on(
+            ElectronAndroidAutoInputServiceEvent.TOUCH,
+            (data: ITouchEvent) => {
+                inputService.sendTouchEvent(data);
+            },
+        );
 
         const services: Service[] = [
             new DummyAudioInputService(messageInStream, messageOutStream),
@@ -71,7 +109,7 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
             videoService,
             new DummyNavigationStatusService(messageInStream, messageOutStream),
             new DummyMediaStatusService(messageInStream, messageOutStream),
-            new DummyInputService(messageInStream, messageOutStream),
+            inputService,
         ];
 
         return services;

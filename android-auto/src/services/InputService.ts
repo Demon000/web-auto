@@ -2,7 +2,9 @@ import {
     BindingRequest,
     BindingResponse,
     ChannelOpenRequest,
+    ITouchEvent,
     InputChannelMessage,
+    InputEventIndication,
     Status,
 } from '@web-auto/android-auto-proto';
 
@@ -14,6 +16,7 @@ import { MessageOutStream } from '@/messenger/MessageOutStream';
 import { DataBuffer } from '@/utils/DataBuffer';
 
 import { Service } from './Service';
+import { microsecondsTime } from '@/utils/time';
 
 export abstract class InputService extends Service {
     public constructor(
@@ -69,6 +72,23 @@ export abstract class InputService extends Service {
 
         await this.sendEncryptedSpecificMessage(
             InputChannelMessage.Enum.BINDING_RESPONSE,
+            payload,
+        );
+    }
+
+    public async sendTouchEvent(touchEvent: ITouchEvent): Promise<void> {
+        const data = InputEventIndication.create({
+            timestamp: microsecondsTime(),
+            touchEvent,
+        });
+        this.printSend(data);
+
+        const payload = DataBuffer.fromBuffer(
+            InputEventIndication.encode(data).finish(),
+        );
+
+        await this.sendEncryptedSpecificMessage(
+            InputChannelMessage.Enum.INPUT_EVENT_INDICATION,
             payload,
         );
     }

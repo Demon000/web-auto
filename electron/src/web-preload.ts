@@ -22,6 +22,7 @@ wireRendererMethods<AndroidAutoRendererMethods>(ANDROID_AUTO_CHANNEL_NAME, [
 
 wireMainMethods<AndroidAutoMainMethods>(ANDROID_AUTO_CHANNEL_NAME, [
     AndroidAutoMainMethod.START,
+    AndroidAutoMainMethod.SEND_INPUT_SERVICE_TOUCH,
 ]);
 
 wireMainPromiseMethods<WebConfigMainMethods>(WEB_CONFIG_CHANNEL_NAME, [

@@ -17,11 +17,11 @@ const electronConfig = autoConf<ElectronConfig>('web-auto', {
 
 let serviceFactory: ElectronAndroidAutoServiceFactory | undefined;
 let androidAutoServer: AndroidAutoServer | undefined;
-if (
-    electronConfig.createAndroidAutoServer !== undefined &&
-    electronConfig.createAndroidAutoServer
-) {
-    serviceFactory = new ElectronAndroidAutoServiceFactory();
+if (electronConfig.androidAuto !== undefined) {
+    serviceFactory = new ElectronAndroidAutoServiceFactory(
+        electronConfig.androidAuto.videoConfigs,
+        electronConfig.androidAuto.touchScreenConfig,
+    );
     androidAutoServer = new AndroidAutoServer(serviceFactory);
 
     process.on('exit', () => {

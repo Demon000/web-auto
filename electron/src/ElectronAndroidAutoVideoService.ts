@@ -6,23 +6,42 @@ import {
     AVStreamType,
     ChannelDescriptor,
     ChannelOpenRequest,
-    VideoFPS,
+    IVideoConfig,
+    VideoConfig,
     VideoFocusRequest,
-    VideoResolution,
 } from '@web-auto/android-auto-proto';
-import { DataBuffer, VideoService } from '@web-auto/android-auto';
+import {
+    DataBuffer,
+    MessageInStream,
+    MessageOutStream,
+    VideoService,
+} from '@web-auto/android-auto';
 import EventEmitter from 'eventemitter3';
 
-export enum ElectronVideoServiceEvent {
-    DATA,
+export enum ElectronAndroidAutoVideoServiceEvent {
+    DATA = 'data',
 }
 
-export interface ElectronVideoServiceEvents {
-    [ElectronVideoServiceEvent.DATA]: (buffer: DataBuffer) => void;
+export interface ElectronAndroidAutoVideoServiceEvents {
+    [ElectronAndroidAutoVideoServiceEvent.DATA]: (buffer: DataBuffer) => void;
 }
 
 export class ElectronAndroidAutoVideoService extends VideoService {
-    public emitter = new EventEmitter<ElectronVideoServiceEvents>();
+    public emitter = new EventEmitter<ElectronAndroidAutoVideoServiceEvents>();
+
+    private videoConfigs: IVideoConfig[] = [];
+
+    public constructor(
+        videoConfigs: IVideoConfig[],
+        messageInStream: MessageInStream,
+        messageOutStream: MessageOutStream,
+    ) {
+        super(messageInStream, messageOutStream);
+
+        for (const videoConfig of videoConfigs) {
+            this.videoConfigs.push(VideoConfig.fromObject(videoConfig));
+        }
+    }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {
         // TODO
@@ -50,7 +69,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         buffer: DataBuffer,
         _timestamp?: bigint | undefined,
     ): Promise<void> {
-        this.emitter.emit(ElectronVideoServiceEvent.DATA, buffer);
+        this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.DATA, buffer);
     }
 
     protected fillChannelDescriptor(
@@ -59,15 +78,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         channelDescriptor.avChannel = AVChannel.create({
             streamType: AVStreamType.Enum.VIDEO,
             availableWhileInCall: true,
-            videoConfigs: [
-                {
-                    videoResolution: VideoResolution.Enum._1080p,
-                    videoFps: VideoFPS.Enum._60,
-                    marginHeight: 0,
-                    marginWidth: 0,
-                    dpi: 140,
-                },
-            ],
+            videoConfigs: this.videoConfigs,
         });
     }
 }

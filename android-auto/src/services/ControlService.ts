@@ -158,7 +158,7 @@ export class ControlService extends Service {
     private async sendVersionRequest(): Promise<void> {
         const payload = DataBuffer.fromSize(4)
             .appendUint16BE(1)
-            .appendUint16BE(1);
+            .appendUint16BE(6);
 
         this.printSend('version request');
 

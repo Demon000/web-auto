@@ -1,0 +1,21 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+import "TouchEventData.proto";
+import "ButtonEventsData.proto";
+import "AbsoluteInputEventsData.proto";
+import "RelativeInputEventsData.proto";
+
+message InputEventIndication {
+  required uint64 timestamp = 1;
+  optional int32 disp_channel = 2;
+  optional TouchEvent touch_event = 3;
+  optional ButtonEvents button_event = 4;
+  optional AbsoluteInputEvents absolute_input_event = 5;
+  optional RelativeInputEvents relative_input_event = 6;
+}
