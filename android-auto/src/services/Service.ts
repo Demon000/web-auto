@@ -97,9 +97,7 @@ export abstract class Service {
                 break;
             default:
                 console.log(
-                    `Unhandled message with id ${
-                        message.messageId
-                    } on channel ${channelIdString(this.channelId)}`,
+                    `Unhandled message with id ${message.messageId} on channel ${this.channelName}`,
                     message.getPayload(),
                     options,
                 );
