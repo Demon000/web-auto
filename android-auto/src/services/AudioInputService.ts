@@ -5,16 +5,12 @@ import { MessageInStream } from '@/messenger/MessageInStream';
 import { MessageOutStream } from '@/messenger/MessageOutStream';
 import {
     AVChannelMessage,
-    AVChannelSetupRequest,
     AVInputChannel,
     AVInputOpenRequest,
     AVInputOpenResponse,
     AVStreamType,
 } from '@web-auto/android-auto-proto';
-import {
-    ChannelDescriptor,
-    ChannelOpenRequest,
-} from '@web-auto/android-auto-proto';
+import { ChannelDescriptor } from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { AVService } from './AVService';
 
@@ -25,10 +21,6 @@ export abstract class AudioInputService extends AVService {
     ) {
         super(ChannelId.AV_INPUT, messageInStream, messageOutStream);
     }
-
-    protected abstract setup(data: AVChannelSetupRequest): Promise<void>;
-
-    protected abstract open(data: ChannelOpenRequest): Promise<void>;
 
     protected abstract inputOpen(data: AVInputOpenRequest): Promise<void>;
 

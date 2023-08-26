@@ -1,5 +1,4 @@
 import {
-    ChannelOpenRequest,
     NavigationChannelMessage,
     NavigationDistanceEvent,
     NavigationStatus,
@@ -21,8 +20,6 @@ export abstract class NavigationStatusService extends Service {
     ) {
         super(ChannelId.NAVIGATION, messageInStream, messageOutStream);
     }
-
-    protected abstract open(data: ChannelOpenRequest): Promise<void>;
 
     protected abstract handleStatus(data: NavigationStatus): Promise<void>;
 

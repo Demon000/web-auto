@@ -106,7 +106,6 @@ export abstract class AVOutputService extends AVService {
     protected abstract channelStop(
         data: AVChannelStopIndication,
     ): Promise<void>;
-
     protected abstract handleData(
         buffer: DataBuffer,
         timestamp?: bigint,

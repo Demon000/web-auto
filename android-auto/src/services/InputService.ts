@@ -1,7 +1,6 @@
 import {
     BindingRequest,
     BindingResponse,
-    ChannelOpenRequest,
     ITouchEvent,
     InputChannelMessage,
     InputEventIndication,
@@ -26,7 +25,6 @@ export abstract class InputService extends Service {
         super(ChannelId.INPUT, messageInStream, messageOutStream);
     }
 
-    protected abstract open(data: ChannelOpenRequest): Promise<void>;
     protected abstract bind(data: BindingRequest): Promise<void>;
 
     protected async onBindingRequest(data: BindingRequest): Promise<void> {

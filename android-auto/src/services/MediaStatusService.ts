@@ -1,5 +1,4 @@
 import {
-    ChannelOpenRequest,
     MediaInfoChannelMessage,
     MediaInfoChannelMetadataData,
     MediaInfoChannelPlaybackData,
@@ -20,8 +19,6 @@ export abstract class MediaStatusService extends Service {
     ) {
         super(ChannelId.MEDIA_STATUS, messageInStream, messageOutStream);
     }
-
-    protected abstract open(_data: ChannelOpenRequest): Promise<void>;
 
     protected abstract handleMetadata(
         data: MediaInfoChannelMetadataData,

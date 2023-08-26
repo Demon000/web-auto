@@ -1,6 +1,5 @@
 import {
     ChannelDescriptor,
-    ChannelOpenRequest,
     ISensor,
     SensorChannel,
     SensorChannelMessage,
@@ -20,7 +19,7 @@ import { Sensor, SensorEvent } from '@/sensors/Sensor';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { Service } from './Service';
 
-export class SensorService extends Service {
+export abstract class SensorService extends Service {
     public constructor(
         protected sensors: Sensor[],
         messageInStream: MessageInStream,
@@ -50,10 +49,6 @@ export class SensorService extends Service {
         }
 
         return sensor;
-    }
-
-    protected async open(_data: ChannelOpenRequest): Promise<void> {
-        // TODO
     }
 
     protected async onSensorStartRequest(
