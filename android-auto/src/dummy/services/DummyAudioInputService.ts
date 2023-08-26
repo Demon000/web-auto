@@ -15,14 +15,14 @@ export class DummyAudioInputService extends AudioInputService {
     }
 
     protected async setup(_data: AVChannelSetupRequest): Promise<void> {
-        // TOOD
+        // TODO
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {
-        // TOOD
+        // TODO
     }
 
     protected async inputOpen(_data: AVInputOpenRequest): Promise<void> {
-        // TOOD
+        // TODO
     }
 }

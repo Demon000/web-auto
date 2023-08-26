@@ -18,21 +18,21 @@ export class DummyAudioOutputService extends AudioOutputService {
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {
-        // TOOD
+        // TODO
     }
 
     protected async channelStart(
         _data: AVChannelStartIndication,
     ): Promise<void> {
-        // TOOD
+        // TODO
     }
 
     protected async setup(_data: AVChannelSetupRequest): Promise<void> {
-        // TOOD
+        // TODO
     }
 
     protected async channelStop(_data: AVChannelStopIndication): Promise<void> {
-        // TOOD
+        // TODO
     }
 
     protected async handleData(
