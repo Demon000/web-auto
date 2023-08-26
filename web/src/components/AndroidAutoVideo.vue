@@ -26,8 +26,6 @@ const setCanvasSizes = () => {
     const canvasBoundingBox = canvas.getBoundingClientRect();
     canvasSize.width = canvasBoundingBox.width;
     canvasSize.height = canvasBoundingBox.height;
-
-    console.log(canvasRealSize, canvasSize);
 };
 
 onMounted(() => {
@@ -63,16 +61,16 @@ onMounted(() => {
     androidAutoChannel.send(AndroidAutoMainMethod.START);
 });
 
-const onCanvasClick = (event: MouseEvent) => {
+const translateCanvasPosition = (x: number, y: number): [number, number] => {
     const canvas = canvasRef.value;
     if (canvas === undefined) {
-        return;
+        return [0, 0];
     }
 
     const { objectFit, objectPosition } = getComputedStyle(canvas);
     const [left, top] = objectPosition.split(' ');
-    const { x, y } = transformFittedPoint(
-        { x: event.offsetX, y: event.offsetY },
+    const { x: translatedX, y: translatedY } = transformFittedPoint(
+        { x, y },
         canvasSize,
         canvas,
         objectFit as any,
@@ -80,7 +78,13 @@ const onCanvasClick = (event: MouseEvent) => {
         top,
     );
 
-    androidAutoChannel.send(AndroidAutoMainMethod.SEND_INPUT_SERVICE_TOUCH, {
+    return [Math.round(translatedX), Math.round(translatedY)];
+};
+
+const onCanvasClick = (event: MouseEvent) => {
+    const [x, y] = translateCanvasPosition(event.x, event.y);
+
+    let data = {
         event: {
             touchAction: TouchAction.Enum.PRESS,
             actionIndex: null,
@@ -92,7 +96,18 @@ const onCanvasClick = (event: MouseEvent) => {
                 },
             ],
         },
-    });
+    };
+    androidAutoChannel.send(
+        AndroidAutoMainMethod.SEND_INPUT_SERVICE_TOUCH,
+        data,
+    );
+
+    data.event.touchAction = TouchAction.Enum.RELEASE;
+
+    androidAutoChannel.send(
+        AndroidAutoMainMethod.SEND_INPUT_SERVICE_TOUCH,
+        data,
+    );
 };
 </script>
 
