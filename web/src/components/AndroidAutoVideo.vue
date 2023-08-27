@@ -21,6 +21,16 @@ function assert(conditional: boolean, message?: string): asserts conditional {
     if (!conditional) throw new Error(message);
 }
 
+const setCanvasObjectPosition = () => {
+    const canvas = canvasRef.value;
+    assert(canvas !== undefined);
+
+    const { objectPosition } = getComputedStyle(canvas);
+    const objectPositionSplit = objectPosition.split(' ');
+    assert(objectPositionSplit.length === 2);
+    canvasObjectPosition = objectPositionSplit as [string, string];
+};
+
 const setCanvasSize = () => {
     const canvas = canvasRef.value;
     assert(canvas !== undefined);
@@ -28,6 +38,8 @@ const setCanvasSize = () => {
     const canvasBoundingBox = canvas.getBoundingClientRect();
     canvasSize.width = canvasBoundingBox.width;
     canvasSize.height = canvasBoundingBox.height;
+
+    setCanvasObjectPosition();
 };
 
 const setCanvasRealSize = () => {
