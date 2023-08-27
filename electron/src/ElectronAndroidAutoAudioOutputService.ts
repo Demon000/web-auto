@@ -38,7 +38,7 @@ export class ElectronAndroidAutoAudioOutputService extends AudioOutputService {
             this.chunkSize(),
             this.channelName,
             null,
-            () => {},
+            null,
         );
     }
 
