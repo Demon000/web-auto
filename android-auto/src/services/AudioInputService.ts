@@ -91,12 +91,19 @@ export abstract class AudioInputService extends AVService {
         );
     }
 
-    protected sendAvMediaWithTimestampIndication(buffer: DataBuffer): void {
+    protected async sendAvMediaWithTimestampIndication(
+        buffer: DataBuffer,
+    ): Promise<void> {
         const payload = DataBuffer.empty();
         const timestamp = microsecondsTime();
 
         payload.appendUint64BE(timestamp);
         payload.appendBuffer(buffer);
+
+        await this.sendEncryptedSpecificMessage(
+            AVChannelMessage.Enum.AV_MEDIA_WITH_TIMESTAMP_INDICATION,
+            payload,
+        );
     }
 
     protected fillChannelDescriptor(
