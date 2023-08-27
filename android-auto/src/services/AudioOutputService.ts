@@ -18,14 +18,14 @@ export abstract class AudioOutputService extends AVOutputService {
         super(channelId, messageInStream, messageOutStream);
     }
 
-    protected channelConfig(): [AudioType.Enum, number, number] {
+    protected channelConfig(): [AudioType.Enum, number, number, number] {
         switch (this.channelId) {
             case ChannelId.MEDIA_AUDIO:
-                return [AudioType.Enum.MEDIA, 2, 48000];
+                return [AudioType.Enum.MEDIA, 2, 48000, 2048];
             case ChannelId.SYSTEM_AUDIO:
-                return [AudioType.Enum.SYSTEM, 1, 16000];
+                return [AudioType.Enum.SYSTEM, 1, 16000, 1024];
             case ChannelId.SPEECH_AUDIO:
-                return [AudioType.Enum.SPEECH, 1, 16000];
+                return [AudioType.Enum.SPEECH, 1, 16000, 1024];
             default:
                 throw new Error(
                     `Invalid channel id ${this.channelName} for audio service`,
@@ -37,16 +37,16 @@ export abstract class AudioOutputService extends AVOutputService {
         return this.channelConfig()[0];
     }
 
-    protected chunkSize(): number {
-        return 2048;
-    }
-
     protected channelCount(): number {
         return this.channelConfig()[1];
     }
 
     protected sampleRate(): number {
         return this.channelConfig()[2];
+    }
+
+    protected chunkSize(): number {
+        return this.channelConfig()[3];
     }
 
     protected fillChannelDescriptor(
