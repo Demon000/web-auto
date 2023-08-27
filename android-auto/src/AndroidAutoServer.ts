@@ -9,7 +9,7 @@ import { UsbTransport } from './usb/USBTransport';
 import { Cryptor } from './ssl/Cryptor';
 import { MessageInStream } from './messenger/MessageInStream';
 import { MessageOutStream } from './messenger/MessageOutStream';
-import { ControlService } from './services/ControlService';
+import { ControlService, ControlServiceEvent } from './services/ControlService';
 import { ITransport, TransportEvent } from './transport/ITransport';
 
 import { Device } from 'usb';
@@ -18,6 +18,8 @@ const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
 const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
 
 import { ServiceFactory } from './services/ServiceFactory';
+import { ServiceDiscoveryResponse } from '@web-auto/android-auto-proto';
+import { Service } from './services';
 
 type DeviceCookie = any;
 
@@ -26,6 +28,7 @@ type DeviceData = {
     transport: ITransport;
     cryptor: Cryptor;
     controlService: ControlService;
+    services: Service[];
 };
 
 export class AndroidAutoServer {
@@ -69,9 +72,41 @@ export class AndroidAutoServer {
 
         const controlService = this.serviceFactory.buildControlService(
             cryptor,
-            services,
             messageInStream,
             messageOutStream,
+        );
+
+        const sendServiceDiscoveryResponse = () => {
+            const data = ServiceDiscoveryResponse.create({
+                headUnitName: 'OpenAuto',
+                carModel: 'Universal',
+                carYear: '2018',
+                carSerial: '20180301',
+                leftHandDriveVehicle: false,
+                headunitManufacturer: 'f1x',
+                headunitModel: 'OpenAuto Autoapp',
+                swBuild: '1',
+                swVersion: '1.0',
+                canPlayNativeMediaDuringVr: false,
+                hideClock: false,
+            });
+
+            for (const service of services) {
+                service.fillFeatures(data);
+            }
+
+            controlService.sendDiscoveryResponse(data);
+        };
+
+        controlService.emitter.on(
+            ControlServiceEvent.SERVICE_DISCOVERY_REQUEST,
+            (data) => {
+                console.log(
+                    `Discovery request, brand: ${data.deviceBrand}, device name ${data.deviceName}`,
+                );
+
+                sendServiceDiscoveryResponse();
+            },
         );
 
         this.deviceMap.set(device, {
@@ -79,6 +114,7 @@ export class AndroidAutoServer {
             transport,
             cryptor,
             controlService,
+            services,
         });
 
         transport.emitter.on(TransportEvent.DATA, (buffer) => {
@@ -94,6 +130,10 @@ export class AndroidAutoServer {
         });
         transport.init();
 
+        for (const service of services) {
+            await service.start();
+        }
+
         await controlService.start();
     }
 
@@ -101,6 +141,10 @@ export class AndroidAutoServer {
         const deviceData = this.deviceMap.get(device);
         if (deviceData === undefined) {
             return;
+        }
+
+        for (const service of deviceData.services) {
+            service.stop();
         }
 
         deviceData.controlService.stop();

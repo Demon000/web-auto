@@ -15,10 +15,12 @@ import {
 import EventEmitter from 'eventemitter3';
 
 export enum ElectronAndroidAutoInputServiceEvent {
+    STOP = 'stop',
     TOUCH = 'touch',
 }
 
 export interface ElectronAndroidAutoInputServiceEvents {
+    [ElectronAndroidAutoInputServiceEvent.STOP]: () => void;
     [ElectronAndroidAutoInputServiceEvent.TOUCH]: (data: ITouchEvent) => void;
 }
 
@@ -37,6 +39,10 @@ export class ElectronAndroidAutoInputService extends InputService {
         this.touchScreenConfig = TouchConfig.fromObject(touchScreenConfig);
 
         this.emitter.on(ElectronAndroidAutoInputServiceEvent.TOUCH, () => {});
+    }
+
+    public stop(): void {
+        this.emitter.emit(ElectronAndroidAutoInputServiceEvent.STOP);
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {}

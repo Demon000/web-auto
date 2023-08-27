@@ -27,13 +27,24 @@ import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
 import { ICryptor } from '@/ssl/ICryptor';
 
 import { Service } from './Service';
+import { EventEmitter } from 'eventemitter3';
+
+export enum ControlServiceEvent {
+    SERVICE_DISCOVERY_REQUEST = 'service-discovery-request',
+}
+
+export interface ControlServiceEvents {
+    [ControlServiceEvent.SERVICE_DISCOVERY_REQUEST]: (
+        data: ServiceDiscoveryRequest,
+    ) => void;
+}
 
 export class ControlService extends Service {
+    public emitter = new EventEmitter<ControlServiceEvents>();
     private pingTimeout?: NodeJS.Timeout;
 
     public constructor(
         private cryptor: ICryptor,
-        private services: Service[],
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,
     ) {
@@ -93,11 +104,7 @@ export class ControlService extends Service {
     private async onServiceDiscoveryRequest(
         data: ServiceDiscoveryRequest,
     ): Promise<void> {
-        console.log(
-            `Discovery request, brand: ${data.deviceBrand}, device name ${data.deviceName}`,
-        );
-
-        return this.sendDiscoveryResponse(this.services);
+        this.emitter.emit(ControlServiceEvent.SERVICE_DISCOVERY_REQUEST, data);
     }
 
     private async onAudioFocusRequest(data: AudioFocusRequest): Promise<void> {
@@ -244,25 +251,9 @@ export class ControlService extends Service {
         );
     }
 
-    public async sendDiscoveryResponse(services: Service[]): Promise<void> {
-        const data = ServiceDiscoveryResponse.create({
-            headUnitName: 'OpenAuto',
-            carModel: 'Universal',
-            carYear: '2018',
-            carSerial: '20180301',
-            leftHandDriveVehicle: false,
-            headunitManufacturer: 'f1x',
-            headunitModel: 'OpenAuto Autoapp',
-            swBuild: '1',
-            swVersion: '1.0',
-            canPlayNativeMediaDuringVr: false,
-            hideClock: false,
-        });
-
-        for (const service of services) {
-            service.fillFeatures(data);
-        }
-
+    public async sendDiscoveryResponse(
+        data: ServiceDiscoveryResponse,
+    ): Promise<void> {
         this.printSend(data);
 
         const payload = DataBuffer.fromBuffer(
@@ -277,10 +268,6 @@ export class ControlService extends Service {
 
     public async start(): Promise<void> {
         this.schedulePing();
-
-        for (const service of this.services) {
-            service.start();
-        }
 
         return this.sendVersionRequest();
     }

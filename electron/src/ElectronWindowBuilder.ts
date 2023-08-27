@@ -85,7 +85,7 @@ export class ElectronWindowBuilder {
         });
 
         androidAutoServiceFactory.emitter.on(
-            ElectronAndroidAutoVideoServiceEvent.DATA,
+            ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
             (buffer: DataBuffer) => {
                 androidAutoChannel.send(
                     AndroidAutoRendererMethod.VIDEO_DATA,

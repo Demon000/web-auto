@@ -1,5 +1,6 @@
 import {
     ControlService,
+    DataBuffer,
     DummyMediaStatusService,
     DummyNavigationStatusService,
     DummySensorService,
@@ -44,16 +45,10 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
 
     public buildControlService(
         cryptor: ICryptor,
-        services: Service[],
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,
     ): ControlService {
-        return new ControlService(
-            cryptor,
-            services,
-            messageInStream,
-            messageOutStream,
-        );
+        return new ControlService(cryptor, messageInStream, messageOutStream);
     }
 
     public buildServices(
@@ -65,26 +60,51 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
             messageInStream,
             messageOutStream,
         );
+
+        const onVideoData = (buffer: DataBuffer) => {
+            this.emitter.emit(
+                ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
+                buffer,
+            );
+        };
+
+        videoService.emitter.on(
+            ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
+            onVideoData,
+        );
+
+        videoService.emitter.once(
+            ElectronAndroidAutoVideoServiceEvent.STOP,
+            () => {
+                videoService.emitter.off(
+                    ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
+                    onVideoData,
+                );
+            },
+        );
+
         const inputService = new ElectronAndroidAutoInputService(
             this.touchSreenConfig,
             messageInStream,
             messageOutStream,
         );
 
-        videoService.emitter.on(
-            ElectronAndroidAutoVideoServiceEvent.DATA,
-            (buffer) => {
-                this.emitter.emit(
-                    ElectronAndroidAutoVideoServiceEvent.DATA,
-                    buffer,
-                );
-            },
-        );
+        const onTouchEvent = (data: ITouchEvent) => {
+            inputService.sendTouchEvent(data);
+        };
 
         this.emitter.on(
             ElectronAndroidAutoInputServiceEvent.TOUCH,
-            (data: ITouchEvent) => {
-                inputService.sendTouchEvent(data);
+            onTouchEvent,
+        );
+
+        inputService.emitter.once(
+            ElectronAndroidAutoInputServiceEvent.STOP,
+            () => {
+                this.emitter.off(
+                    ElectronAndroidAutoInputServiceEvent.TOUCH,
+                    onTouchEvent,
+                );
             },
         );
 

@@ -16,16 +16,10 @@ import { DummySensorService } from '.';
 export class DummyServiceFactory extends ServiceFactory {
     public buildControlService(
         cryptor: ICryptor,
-        services: Service[],
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,
     ): ControlService {
-        return new ControlService(
-            cryptor,
-            services,
-            messageInStream,
-            messageOutStream,
-        );
+        return new ControlService(cryptor, messageInStream, messageOutStream);
     }
     public buildServices(
         messageInStream: MessageInStream,

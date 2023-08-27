@@ -8,7 +8,6 @@ import { Service } from './Service';
 export abstract class ServiceFactory {
     public abstract buildControlService(
         cryptor: ICryptor,
-        services: Service[],
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,
     ): ControlService;
