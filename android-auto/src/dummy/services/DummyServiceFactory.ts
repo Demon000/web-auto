@@ -2,7 +2,6 @@ import { ChannelId } from '@/messenger/ChannelId';
 import { MessageInStream } from '@/messenger/MessageInStream';
 import { MessageOutStream } from '@/messenger/MessageOutStream';
 import { ControlService } from '@/services/ControlService';
-import { SensorService } from '@/services/SensorService';
 import { Service } from '@/services/Service';
 import { ServiceFactory } from '@/services/ServiceFactory';
 import { ICryptor } from '@/ssl/ICryptor';
@@ -12,6 +11,7 @@ import { DummyInputService } from './DummyInputService';
 import { DummyMediaStatusService } from './DummyMediaStatusService';
 import { DummyNavigationStatusService } from './DummyNavigationService';
 import { DummyVideoService } from './DummyVideoService';
+import { DummySensorService } from '.';
 
 export class DummyServiceFactory extends ServiceFactory {
     public buildControlService(
@@ -53,7 +53,7 @@ export class DummyServiceFactory extends ServiceFactory {
                 messageInStream,
                 messageOutStream,
             ),
-            new SensorService([], messageInStream, messageOutStream),
+            new DummySensorService(messageInStream, messageOutStream),
             videoService,
             new DummyNavigationStatusService(messageInStream, messageOutStream),
             new DummyMediaStatusService(messageInStream, messageOutStream),
