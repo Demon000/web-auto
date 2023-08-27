@@ -18,44 +18,49 @@ export abstract class AudioOutputService extends AVOutputService {
         super(channelId, messageInStream, messageOutStream);
     }
 
-    protected fillChannelDescriptor(
-        channelDescriptor: ChannelDescriptor,
-    ): void {
-        let channelCount;
-        let sampleRate;
-        let audioType;
-
+    protected channelConfig(): [AudioType.Enum, number, number] {
         switch (this.channelId) {
             case ChannelId.MEDIA_AUDIO:
-                audioType = AudioType.Enum.MEDIA;
-                channelCount = 2;
-                sampleRate = 48000;
-                break;
+                return [AudioType.Enum.MEDIA, 2, 48000];
             case ChannelId.SYSTEM_AUDIO:
-                audioType = AudioType.Enum.SYSTEM;
-                channelCount = 1;
-                sampleRate = 16000;
-                break;
+                return [AudioType.Enum.SYSTEM, 1, 16000];
             case ChannelId.SPEECH_AUDIO:
-                audioType = AudioType.Enum.SPEECH;
-                channelCount = 1;
-                sampleRate = 16000;
-                break;
+                return [AudioType.Enum.SPEECH, 1, 16000];
             default:
                 throw new Error(
                     `Invalid channel id ${this.channelName} for audio service`,
                 );
         }
+    }
 
+    protected audioType(): number {
+        return this.channelConfig()[0];
+    }
+
+    protected chunkSize(): number {
+        return 2048;
+    }
+
+    protected channelCount(): number {
+        return this.channelConfig()[1];
+    }
+
+    protected sampleRate(): number {
+        return this.channelConfig()[2];
+    }
+
+    protected fillChannelDescriptor(
+        channelDescriptor: ChannelDescriptor,
+    ): void {
         channelDescriptor.avChannel = AVChannel.create({
             streamType: AVStreamType.Enum.AUDIO,
-            audioType,
+            audioType: this.audioType(),
             availableWhileInCall: true,
             audioConfigs: [
                 {
                     bitDepth: 16,
-                    channelCount,
-                    sampleRate,
+                    channelCount: this.channelCount(),
+                    sampleRate: this.sampleRate(),
                 },
             ],
         });
