@@ -14,6 +14,7 @@ import { DataBuffer } from '@/utils/DataBuffer';
 import { VideoService } from '@/services/VideoService';
 import { MessageInStream } from '@/messenger/MessageInStream';
 import { MessageOutStream } from '@/messenger/MessageOutStream';
+import Long from 'long';
 
 export class DummyVideoService extends VideoService {
     public constructor(
@@ -47,7 +48,7 @@ export class DummyVideoService extends VideoService {
 
     protected async handleData(
         _buffer: DataBuffer,
-        _timestamp?: bigint | undefined,
+        _timestamp?: Long,
     ): Promise<void> {}
 
     protected fillChannelDescriptor(

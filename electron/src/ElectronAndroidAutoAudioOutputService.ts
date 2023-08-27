@@ -12,6 +12,7 @@ import {
     ChannelOpenRequest,
 } from '@web-auto/android-auto-proto';
 import { RtAudio, RtAudioFormat } from 'audify';
+import Long from 'long';
 
 export class ElectronAndroidAutoAudioOutputService extends AudioOutputService {
     private rtaudio: RtAudio;
@@ -57,7 +58,7 @@ export class ElectronAndroidAutoAudioOutputService extends AudioOutputService {
 
     protected async handleData(
         buffer: DataBuffer,
-        _timestamp?: bigint | undefined,
+        _timestamp?: Long,
     ): Promise<void> {
         this.rtaudio.write(buffer.data);
     }

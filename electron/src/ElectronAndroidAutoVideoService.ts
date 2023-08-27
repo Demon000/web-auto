@@ -17,6 +17,7 @@ import {
     VideoService,
 } from '@web-auto/android-auto';
 import EventEmitter from 'eventemitter3';
+import Long from 'long';
 
 export enum ElectronAndroidAutoVideoServiceEvent {
     DATA = 'data',
@@ -67,7 +68,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
 
     protected async handleData(
         buffer: DataBuffer,
-        _timestamp?: bigint | undefined,
+        _timestamp?: Long,
     ): Promise<void> {
         this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.DATA, buffer);
     }

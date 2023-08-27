@@ -1,4 +1,5 @@
 import assert from 'assert';
+import Long from 'long';
 
 export type DataBufferInputType = Buffer | Uint8Array;
 
@@ -117,6 +118,16 @@ export class DataBuffer {
         return this.handleAppend(data, 4, this.data.writeUint32BE);
     }
 
+    public appendUint64BE(value: Long): this {
+        const size = 8;
+        const numbers = value.toBytesBE();
+        const buffer = Buffer.from(numbers);
+        const data = DataBuffer.fromBuffer(buffer);
+        this.appendBuffer(data);
+        this.readOffset += size;
+        return this;
+    }
+
     public appendSeek(offset: number): this {
         this.appendOffset = offset;
         return this;
@@ -134,10 +145,11 @@ export class DataBuffer {
         return this.handleRead(4, this.data.readUint32BE);
     }
 
-    public readUint64BE(): bigint {
-        const data = this.data.readBigUInt64BE(this.readOffset);
-        this.readOffset += 8;
-        return data;
+    public readUint64BE(): Long {
+        const size = 8;
+        const data = this.readBuffer(size);
+        const numbers = [...data.data];
+        return Long.fromBytesBE(numbers);
     }
 
     public subarray(start?: number, end?: number, copy?: true): DataBuffer {

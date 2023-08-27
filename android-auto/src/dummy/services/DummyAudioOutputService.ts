@@ -7,6 +7,7 @@ import {
 import { DataBuffer } from '@/utils/DataBuffer';
 import { AudioOutputService } from '@/services/AudioOutputService';
 import { ChannelId, MessageInStream, MessageOutStream } from '@/messenger';
+import Long from 'long';
 
 export class DummyAudioOutputService extends AudioOutputService {
     public constructor(
@@ -37,7 +38,7 @@ export class DummyAudioOutputService extends AudioOutputService {
 
     protected async handleData(
         _buffer: DataBuffer,
-        _timestamp?: bigint | undefined,
+        _timestamp?: Long,
     ): Promise<void> {
         // TODO
     }

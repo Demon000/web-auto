@@ -11,6 +11,7 @@ import {
 } from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { AVService } from './AVService';
+import Long from 'long';
 
 export abstract class AVOutputService extends AVService {
     public constructor(
@@ -108,7 +109,7 @@ export abstract class AVOutputService extends AVService {
     ): Promise<void>;
     protected abstract handleData(
         buffer: DataBuffer,
-        timestamp?: bigint,
+        timestamp?: Long,
     ): Promise<void>;
 
     protected async sendAvMediaAckIndication(): Promise<void> {
