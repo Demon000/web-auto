@@ -1,7 +1,5 @@
 import {
     ControlService,
-    DummyAudioInputService,
-    DummyAudioOutputService,
     DummyMediaStatusService,
     DummyNavigationStatusService,
     DummySensorService,
