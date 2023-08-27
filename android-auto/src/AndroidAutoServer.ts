@@ -113,7 +113,7 @@ export class AndroidAutoServer {
             return;
         }
 
-        await this.usbDeviceHandler.waitForDevices();
+        this.usbDeviceHandler.waitForDevices();
         this.started = true;
     }
 
