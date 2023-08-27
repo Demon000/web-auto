@@ -29,6 +29,7 @@ import {
     ElectronAndroidAutoInputServiceEvents,
 } from './ElectronAndroidAutoInputService';
 import { ElectronAndroidAutoAudioOutputService } from './ElectronAndroidAutoAudioOutputService';
+import { ElectronAndroidAutoAudioInputService } from './ElectronAndroidAutoAudioInputService';
 
 export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
     public emitter = new EventEmitter<
@@ -90,7 +91,10 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
         );
 
         const services: Service[] = [
-            new DummyAudioInputService(messageInStream, messageOutStream),
+            new ElectronAndroidAutoAudioInputService(
+                messageInStream,
+                messageOutStream,
+            ),
             new ElectronAndroidAutoAudioOutputService(
                 ChannelId.MEDIA_AUDIO,
                 messageInStream,
