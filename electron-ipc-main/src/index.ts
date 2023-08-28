@@ -37,7 +37,7 @@ export class MainCommuncationChannel<
     ): void {
         const name = composeName(this.name, eventName);
         ipcMain.handle(name, (_event, ...args) => {
-            callback(...args);
+            return callback(...args);
         });
     }
 }
