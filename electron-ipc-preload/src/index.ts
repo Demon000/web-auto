@@ -1,17 +1,39 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { MethodsMap, composeName } from '@web-auto/electron-ipc';
+import {
+    COMMUNICATION_CHANNEL_GET_WEB_CONTENTS_ID,
+    MethodsMap,
+    composeName,
+} from '@web-auto/electron-ipc';
 import { contextBridge, ipcRenderer } from 'electron';
+
+export const window = {
+    webContents: {
+        id: ipcRenderer.sendSync(COMMUNICATION_CHANNEL_GET_WEB_CONTENTS_ID),
+    },
+};
+
+const composeElectronName = (
+    channelName: string,
+    eventName: string,
+): string => {
+    return composeName(
+        window.webContents.id!.toString(),
+        channelName,
+        eventName,
+    );
+};
 
 export function wireRendererMethod<E extends MethodsMap>(
     channelName: string,
     eventName: keyof E & string,
 ): void {
-    const name = composeName(channelName, eventName);
-    contextBridge.exposeInMainWorld(name, {
+    const mainName = composeName(channelName, eventName);
+    const electronName = composeElectronName(channelName, eventName);
+    contextBridge.exposeInMainWorld(mainName, {
         fn: (callback: Function) =>
-            ipcRenderer.on(name, (_event, ...args: any[]) => {
+            ipcRenderer.on(electronName, (_event, ...args: any[]) => {
                 callback(...args);
             }),
     });
@@ -21,9 +43,10 @@ export function wireMainMethod<E extends MethodsMap>(
     channelName: string,
     eventName: keyof E & string,
 ): void {
-    const name = composeName(channelName, eventName);
-    contextBridge.exposeInMainWorld(name, {
-        fn: (...args: any[]): any => ipcRenderer.send(name, ...args),
+    const mainName = composeName(channelName, eventName);
+    const electronName = composeElectronName(channelName, eventName);
+    contextBridge.exposeInMainWorld(mainName, {
+        fn: (...args: any[]): any => ipcRenderer.send(electronName, ...args),
     });
 }
 
@@ -31,9 +54,10 @@ export function wireMainPromiseMethod<E extends MethodsMap>(
     channelName: string,
     eventName: keyof E & string,
 ): void {
-    const name = composeName(channelName, eventName);
-    contextBridge.exposeInMainWorld(name, {
-        fn: (...args: any[]): any => ipcRenderer.invoke(name, ...args),
+    const mainName = composeName(channelName, eventName);
+    const electronName = composeElectronName(channelName, eventName);
+    contextBridge.exposeInMainWorld(mainName, {
+        fn: (...args: any[]): any => ipcRenderer.invoke(electronName, ...args),
     });
 }
 

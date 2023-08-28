@@ -2,6 +2,8 @@
 
 export type MethodsMap = Record<string, any>;
 
+export const COMMUNICATION_CHANNEL_GET_WEB_CONTENTS_ID = 'get-web-contents-id';
+
 type DefaultMethods = Record<string, (...args: any) => void>;
 
 export abstract class CommunicationChannel<
@@ -21,15 +23,11 @@ export abstract class CommunicationChannel<
     ): void;
 }
 
-export function composeName(channelName: string, eventName: string): string {
-    return `${channelName}#${eventName}`;
+export function composeName(...args: string[]): string {
+    return args.join('#');
 }
 
-export function decomposeName(name: string): [string, string] {
+export function decomposeName(name: string): string[] {
     const names = name.split('#');
-    if (names.length !== 2) {
-        throw new Error(`Invalid name ${name}`);
-    }
-
-    return names as [string, string];
+    return names;
 }
