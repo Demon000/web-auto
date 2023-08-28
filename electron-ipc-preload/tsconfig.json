@@ -1,12 +1,12 @@
 {
-  "extends": "../tsconfig/tsconfig.node.json",
-  "include": ["src/**/*"],
-  "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"],
-    },
-  },
+    "extends": "../tsconfig/tsconfig.node.json",
+    "include": ["src/**/*"],
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./src/*"]
+        }
+    }
 }
