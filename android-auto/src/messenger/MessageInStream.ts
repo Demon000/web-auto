@@ -109,9 +109,7 @@ export class MessageInStream {
         const emitter = this.channelEmitter(frameHeader.channelId, false);
         if (!emitter) {
             console.log(
-                `Unhandled message with id ${
-                    message.messageId
-                } on channel ${channelIdString(frameHeader.channelId)}`,
+                `Unhandled message with id ${message.messageId} on channel with id ${frameHeader.channelId}`,
                 message.getPayload(),
                 frameHeader,
             );
