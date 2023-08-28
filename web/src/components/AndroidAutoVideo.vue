@@ -5,12 +5,26 @@ import {
     type VideoDimensions,
 } from '@/codec/H264WebCodecsDecoder';
 import { androidAutoChannel } from '@/ipc/channels';
+import { webConfigChannel } from '@/ipc/channels';
 import { AndroidAutoMainMethod } from '@web-auto/electron-ipc-android-auto';
 import { AndroidAutoRendererMethod } from '@web-auto/electron-ipc-android-auto';
 import { onMounted, ref, type Ref } from 'vue';
 import { transformFittedPoint } from 'object-fit-math';
 import { type FitMode } from 'object-fit-math/dist/types';
 import { TouchAction } from '@web-auto/android-auto-proto';
+import { WebConfigMainMethod } from '@web-auto/electron-ipc-web-config';
+
+let marginHeight = 0;
+let marginWidth = 0;
+let marginVertical = 0;
+let marginHorizontal = 0;
+
+webConfigChannel.invoke(WebConfigMainMethod.CONFIG).then((config) => {
+    marginHeight = config.androidAuto?.video?.marginHeight ?? 0;
+    marginWidth = config.androidAuto?.video?.marginWidth ?? 0;
+    marginVertical = Math.floor(marginHeight / 2);
+    marginHorizontal = Math.floor(marginWidth / 2);
+});
 
 const canvasRef: Ref<HTMLCanvasElement | undefined> = ref(undefined);
 let canvasSize: { width: number; height: number } = { width: 0, height: 0 };
@@ -63,12 +77,22 @@ onMounted(() => {
     let decoder: H264WebCodecsDecoder | undefined;
 
     const onDecoderFrame = (data: VideoFrame) => {
-        context.drawImage(data, 0, 0);
+        context.drawImage(
+            data,
+            marginHorizontal,
+            marginVertical,
+            canvas.width,
+            canvas.height,
+            0,
+            0,
+            canvas.width,
+            canvas.height,
+        );
     };
 
     const onDecoderDimensions = (data: VideoDimensions) => {
-        canvas.width = data.width;
-        canvas.height = data.height;
+        canvas.width = data.width - marginWidth;
+        canvas.height = data.height - marginHeight;
 
         setCanvasRealSize();
     };

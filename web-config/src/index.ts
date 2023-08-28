@@ -1,3 +1,8 @@
 export interface WebConfig {
-    data: string;
+    androidAuto?: {
+        video?: {
+            marginHeight?: number;
+            marginWidth?: number;
+        };
+    };
 }

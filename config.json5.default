@@ -4,7 +4,7 @@
             {
                 videoResolution: '_1080p',
                 videoFps: '_60',
-                marginHeight: 0,
+                marginHeight: 280,
                 marginWidth: 0,
                 dpi: 140,
             },
@@ -37,7 +37,12 @@
                 app: {
                     name: 'web',
                     config: {
-                        data: 'xxx',
+                        androidAuto: {
+                            video: {
+                                marginHeight: 280,
+                                marginWidth: 0,
+                            },
+                        },
                     },
                 },
             },
