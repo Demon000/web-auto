@@ -3,11 +3,15 @@ import { ITouchEvent } from '@web-auto/android-auto-proto';
 export const ANDROID_AUTO_CHANNEL_NAME = 'android-auto';
 
 export enum AndroidAutoRendererMethod {
+    VIDEO_STOP = 'video-stop',
     VIDEO_DATA = 'video-data',
+    VIDEO_START = 'video-start',
 }
 
 export interface AndroidAutoRendererMethods {
     [AndroidAutoRendererMethod.VIDEO_DATA]: (buffer: Buffer) => void;
+    [AndroidAutoRendererMethod.VIDEO_START]: () => void;
+    [AndroidAutoRendererMethod.VIDEO_STOP]: () => void;
 }
 
 export enum AndroidAutoMainMethod {

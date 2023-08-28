@@ -2,6 +2,7 @@
 import {
     H264WebCodecsDecoder,
     H264WebCodecsDecoderEvent,
+    type VideoDimensions,
 } from '@/codec/H264WebCodecsDecoder';
 import { androidAutoChannel } from '@/ipc/channels';
 import { AndroidAutoMainMethod } from '@web-auto/electron-ipc-android-auto';
@@ -59,21 +60,49 @@ onMounted(() => {
 
     new ResizeObserver(setCanvasSize).observe(canvas);
 
-    const decoder = new H264WebCodecsDecoder(canvas);
+    let decoder: H264WebCodecsDecoder | undefined;
 
-    decoder.emitter.on(H264WebCodecsDecoderEvent.DIMENSIONS, (data) => {
+    const onDecoderFrame = (data: VideoFrame) => {
+        context.drawImage(data, 0, 0);
+    };
+
+    const onDecoderDimensions = (data: VideoDimensions) => {
         canvas.width = data.width;
         canvas.height = data.height;
 
         setCanvasRealSize();
-    });
+    };
 
-    decoder.emitter.on(H264WebCodecsDecoderEvent.FRAME, (data) => {
-        context.drawImage(data, 0, 0);
+    androidAutoChannel.on(AndroidAutoRendererMethod.VIDEO_START, () => {
+        decoder = new H264WebCodecsDecoder();
+
+        decoder.emitter.on(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
+
+        decoder.emitter.on(
+            H264WebCodecsDecoderEvent.DIMENSIONS,
+            onDecoderDimensions,
+        );
     });
 
     androidAutoChannel.on(AndroidAutoRendererMethod.VIDEO_DATA, (buffer) => {
+        assert(decoder !== undefined);
+
         decoder.decode(buffer);
+    });
+
+    androidAutoChannel.on(AndroidAutoRendererMethod.VIDEO_STOP, () => {
+        assert(decoder !== undefined);
+
+        decoder.emitter.off(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
+
+        decoder.emitter.off(
+            H264WebCodecsDecoderEvent.DIMENSIONS,
+            onDecoderDimensions,
+        );
+
+        decoder.dispose();
+
+        decoder = undefined;
     });
 
     androidAutoChannel.send(AndroidAutoMainMethod.START);

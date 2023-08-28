@@ -17,7 +17,9 @@ import {
 } from '@web-auto/electron-ipc-web-config';
 
 wireRendererMethods<AndroidAutoRendererMethods>(ANDROID_AUTO_CHANNEL_NAME, [
+    AndroidAutoRendererMethod.VIDEO_START,
     AndroidAutoRendererMethod.VIDEO_DATA,
+    AndroidAutoRendererMethod.VIDEO_STOP,
 ]);
 
 wireMainMethods<AndroidAutoMainMethods>(ANDROID_AUTO_CHANNEL_NAME, [

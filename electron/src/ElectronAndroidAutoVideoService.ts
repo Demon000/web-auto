@@ -23,10 +23,12 @@ export enum ElectronAndroidAutoVideoServiceEvent {
     STOP = 'stop',
     VIDEO_START = 'start',
     VIDEO_DATA = 'video-data',
+    VIDEO_STOP = 'video-stop',
 }
 
 export interface ElectronAndroidAutoVideoServiceEvents {
     [ElectronAndroidAutoVideoServiceEvent.VIDEO_START]: () => void;
+    [ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP]: () => void;
     [ElectronAndroidAutoVideoServiceEvent.STOP]: () => void;
     [ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA]: (
         buffer: DataBuffer,
@@ -56,6 +58,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
 
     public stop(): void {
         this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.STOP);
+        this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP);
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {

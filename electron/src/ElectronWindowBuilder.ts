@@ -85,6 +85,20 @@ export class ElectronWindowBuilder {
         });
 
         androidAutoServiceFactory.emitter.on(
+            ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
+            () => {
+                androidAutoChannel.send(AndroidAutoRendererMethod.VIDEO_START);
+            },
+        );
+
+        androidAutoServiceFactory.emitter.on(
+            ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP,
+            () => {
+                androidAutoChannel.send(AndroidAutoRendererMethod.VIDEO_STOP);
+            },
+        );
+
+        androidAutoServiceFactory.emitter.on(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
             (buffer: DataBuffer) => {
                 androidAutoChannel.send(

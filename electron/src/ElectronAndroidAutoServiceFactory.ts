@@ -67,8 +67,17 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
             this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_START);
         };
 
+        const onVideoStop = () => {
+            this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP);
+        };
+
         videoService.emitter.on(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
+            onVideoStart,
+        );
+
+        videoService.emitter.on(
+            ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP,
             onVideoStart,
         );
 
@@ -94,6 +103,10 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
                 videoService.emitter.off(
                     ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
                     onVideoData,
+                );
+                videoService.emitter.off(
+                    ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP,
+                    onVideoStop,
                 );
             },
         );
