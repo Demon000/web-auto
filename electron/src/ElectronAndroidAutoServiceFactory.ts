@@ -4,7 +4,9 @@ import {
     DummyMediaStatusService,
     DummyNavigationStatusService,
     DummySensorService,
+    InputService,
     ServiceFactory,
+    VideoService,
 } from '@web-auto/android-auto';
 import { MessageInStream } from '@web-auto/android-auto';
 import { MessageOutStream } from '@web-auto/android-auto';
@@ -51,14 +53,23 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
         return new ControlService(cryptor, messageInStream, messageOutStream);
     }
 
-    public buildServices(
+    private buildVideoService(
         messageInStream: MessageInStream,
         messageOutStream: MessageOutStream,
-    ): Service[] {
+    ): VideoService {
         const videoService = new ElectronAndroidAutoVideoService(
             this.videoConfigs,
             messageInStream,
             messageOutStream,
+        );
+
+        const onVideoStart = () => {
+            this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_START);
+        };
+
+        videoService.emitter.on(
+            ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
+            onVideoStart,
         );
 
         const onVideoData = (buffer: DataBuffer) => {
@@ -77,12 +88,22 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
             ElectronAndroidAutoVideoServiceEvent.STOP,
             () => {
                 videoService.emitter.off(
+                    ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
+                    onVideoStart,
+                );
+                videoService.emitter.off(
                     ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
                     onVideoData,
                 );
             },
         );
 
+        return videoService;
+    }
+    private buildInputService(
+        messageInStream: MessageInStream,
+        messageOutStream: MessageOutStream,
+    ): InputService {
         const inputService = new ElectronAndroidAutoInputService(
             this.touchSreenConfig,
             messageInStream,
@@ -106,6 +127,21 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
                     onTouchEvent,
                 );
             },
+        );
+
+        return inputService;
+    }
+    public buildServices(
+        messageInStream: MessageInStream,
+        messageOutStream: MessageOutStream,
+    ): Service[] {
+        const videoService = this.buildVideoService(
+            messageInStream,
+            messageOutStream,
+        );
+        const inputService = this.buildInputService(
+            messageInStream,
+            messageOutStream,
         );
 
         const services: Service[] = [

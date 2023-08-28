@@ -21,10 +21,12 @@ import Long from 'long';
 
 export enum ElectronAndroidAutoVideoServiceEvent {
     STOP = 'stop',
+    VIDEO_START = 'start',
     VIDEO_DATA = 'video-data',
 }
 
 export interface ElectronAndroidAutoVideoServiceEvents {
+    [ElectronAndroidAutoVideoServiceEvent.VIDEO_START]: () => void;
     [ElectronAndroidAutoVideoServiceEvent.STOP]: () => void;
     [ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA]: (
         buffer: DataBuffer,
@@ -46,6 +48,10 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         for (const videoConfig of videoConfigs) {
             this.videoConfigs.push(VideoConfig.fromObject(videoConfig));
         }
+    }
+
+    public async start(): Promise<void> {
+        this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_START);
     }
 
     public stop(): void {

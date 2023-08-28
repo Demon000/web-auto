@@ -23,25 +23,14 @@ export interface H264WebCodecsDecoderEvents {
 export class H264WebCodecsDecoder {
     public emitter = new EventEmitter<H264WebCodecsDecoderEvents>();
 
-    private frameRendered = 0;
-    private frameSkipped = 0;
-
     private decoder: VideoDecoder;
     private configData?: Uint8Array;
 
-    private currentFrameRendered = false;
     private animationFrameId = 0;
 
-    constructor(private renderer: HTMLCanvasElement) {
+    constructor() {
         this.decoder = new VideoDecoder({
             output: (frame) => {
-                if (this.currentFrameRendered) {
-                    this.frameSkipped += 1;
-                } else {
-                    this.currentFrameRendered = true;
-                    this.frameRendered += 1;
-                }
-
                 // PERF: H.264 renderer may draw multiple frames in one vertical sync interval to minimize latency.
                 // When multiple frames are drawn in one vertical sync interval,
                 // only the last one is visible to users.
@@ -49,6 +38,7 @@ export class H264WebCodecsDecoder {
                 // This is also the behavior of official Scrcpy client.
                 // https://github.com/Genymobile/scrcpy/issues/3679
                 this.emitter.emit(H264WebCodecsDecoderEvent.FRAME, frame);
+
                 frame.close();
             },
             error(e) {
@@ -60,7 +50,6 @@ export class H264WebCodecsDecoder {
     }
 
     private onFramePresented = () => {
-        this.currentFrameRendered = false;
         this.animationFrameId = requestAnimationFrame(this.onFramePresented);
     };
 
@@ -129,6 +118,14 @@ export class H264WebCodecsDecoder {
             );
         } catch (e) {
             console.error(e);
+        }
+    }
+
+    dispose() {
+        cancelAnimationFrame(this.animationFrameId);
+
+        if (this.decoder.state !== 'closed') {
+            this.decoder.close();
         }
     }
 }
