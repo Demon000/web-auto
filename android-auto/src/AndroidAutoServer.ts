@@ -5,7 +5,7 @@ import {
     UsbDeviceHandler,
     UsbDeviceHandlerEvent,
 } from './usb/UsbDeviceHandler';
-import { UsbTransport } from './usb/USBTransport';
+import { UsbTransport } from './usb/UsbTransport';
 import { Cryptor } from './ssl/Cryptor';
 import { MessageInStream } from './messenger/MessageInStream';
 import { MessageOutStream } from './messenger/MessageOutStream';
