@@ -1,20 +1,19 @@
 import { Device, Endpoint, InEndpoint, OutEndpoint } from 'usb';
 
 import { DataBuffer } from '@/utils/DataBuffer';
-import { Transport } from '@/transport/Transport';
+import { ITransport, TransportEvents } from '@/transport/ITransport';
 import { TransportEvent } from '@/transport/ITransport';
+import EventEmitter from 'eventemitter3';
 
-const USB_TRANSPORT_RECEIVE_TIMEOUT = 0;
 const USB_TRANSPORT_SEND_TIMEOUT = 10000;
-const USB_TRANSPORT_CHUNK_SIZE = 16 * 1024;
 
-export class UsbTransport extends Transport {
+export class UsbTransport implements ITransport {
+    public emitter = new EventEmitter<TransportEvents>();
+
     private inEndpoint: InEndpoint;
     private outEndpoint: OutEndpoint;
 
     public constructor(device: Device) {
-        super(USB_TRANSPORT_CHUNK_SIZE);
-
         const iface = device.interface(0);
 
         iface.claim();
@@ -81,16 +80,8 @@ export class UsbTransport extends Transport {
         }
     }
 
-    public async receiveImpl(buffer: DataBuffer): Promise<number> {
-        return this.sendOrReceive(
-            this.inEndpoint,
-            buffer,
-            USB_TRANSPORT_RECEIVE_TIMEOUT,
-        );
-    }
-
-    public async sendImpl(buffer: DataBuffer): Promise<number> {
-        return this.sendOrReceive(
+    public async send(buffer: DataBuffer): Promise<void> {
+        this.sendOrReceive(
             this.outEndpoint,
             buffer,
             USB_TRANSPORT_SEND_TIMEOUT,
