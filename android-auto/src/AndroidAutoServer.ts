@@ -4,8 +4,8 @@ import * as path from 'path';
 import {
     UsbDeviceHandler,
     UsbDeviceHandlerEvent,
-} from './usb/UsbDeviceHandler';
-import { UsbTransport } from './usb/UsbTransport';
+} from './transport/UsbDeviceHandler';
+import { UsbTransport } from './transport/UsbTransport';
 import { Cryptor } from './ssl/Cryptor';
 import { MessageInStream } from './messenger/MessageInStream';
 import { MessageOutStream } from './messenger/MessageOutStream';
