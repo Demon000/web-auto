@@ -1,7 +1,7 @@
 import assert from 'assert';
 import { ICryptor } from '@/ssl/ICryptor';
 import { DataBuffer } from '@/utils/DataBuffer';
-import { ChannelId, channelIdString } from './ChannelId';
+import { ChannelId } from './ChannelId';
 import { EncryptionType } from './EncryptionType';
 import { FrameHeader } from './FrameHeader';
 import { FrameType } from './FrameType';
