@@ -1,6 +1,9 @@
+import {
+    DeviceHandler,
+    DeviceHandlerEvent,
+} from '@web-auto/android-auto/dist/transport/DeviceHandler';
 import { Device, LibUSBException, usb } from 'usb';
-import { DeviceHandler, DeviceHandlerEvent } from './DeviceHandler';
-import { UsbTransport } from './UsbTransport';
+import { ElectronUsbTransport } from './ElectronUsbTransport';
 
 enum StringType {
     MANUFACTURER,
@@ -11,8 +14,8 @@ enum StringType {
     SERIAL,
 }
 
-export class UsbDeviceHandler extends DeviceHandler {
-    private deviceTransportMap = new Map<Device, UsbTransport>();
+export class ElectronUsbDeviceHandler extends DeviceHandler {
+    private deviceTransportMap = new Map<Device, ElectronUsbTransport>();
 
     public constructor() {
         super();
@@ -166,7 +169,7 @@ export class UsbDeviceHandler extends DeviceHandler {
                 `Found device ${manufacturer} ${deviceName} with Android Auto`,
             );
 
-            const transport = new UsbTransport(device);
+            const transport = new ElectronUsbTransport(device);
             this.deviceTransportMap.set(device, transport);
             this.emitter.emit(DeviceHandlerEvent.CONNECTED, transport);
             return;

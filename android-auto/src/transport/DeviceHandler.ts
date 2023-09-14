@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3';
-import { ITransport } from './ITransport';
+import { Transport } from './Transport';
 
 export enum DeviceHandlerEvent {
     CONNECTED,
@@ -7,8 +7,8 @@ export enum DeviceHandlerEvent {
 }
 
 export interface DeviceHandlerEvents {
-    [DeviceHandlerEvent.CONNECTED]: (transport: ITransport) => void;
-    [DeviceHandlerEvent.DISCONNECTED]: (transport: ITransport) => void;
+    [DeviceHandlerEvent.CONNECTED]: (transport: Transport) => void;
+    [DeviceHandlerEvent.DISCONNECTED]: (transport: Transport) => void;
 }
 
 export abstract class DeviceHandler {

@@ -12,9 +12,9 @@ export interface TransportEvents {
     [TransportEvent.ERROR]: (err: Error) => void;
 }
 
-export interface ITransport {
-    emitter: EventEmitter<TransportEvents>;
-    init(): void;
-    deinit(): void;
-    send(buffer: DataBuffer): Promise<void>;
+export abstract class Transport {
+    public emitter = new EventEmitter<TransportEvents>();
+    public abstract init(): void;
+    public abstract deinit(): void;
+    public abstract send(buffer: DataBuffer): Promise<void>;
 }

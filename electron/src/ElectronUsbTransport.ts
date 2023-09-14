@@ -1,13 +1,16 @@
 import { Device, Endpoint, InEndpoint, OutEndpoint } from 'usb';
 
-import { DataBuffer } from '@/utils/DataBuffer';
-import { ITransport, TransportEvents } from '@/transport/ITransport';
-import { TransportEvent } from '@/transport/ITransport';
 import EventEmitter from 'eventemitter3';
+import {
+    Transport,
+    TransportEvent,
+    TransportEvents,
+} from '@web-auto/android-auto/dist/transport/Transport';
+import { DataBuffer } from '@web-auto/android-auto';
 
 const USB_TRANSPORT_SEND_TIMEOUT = 10000;
 
-export class UsbTransport implements ITransport {
+export class ElectronUsbTransport implements Transport {
     public emitter = new EventEmitter<TransportEvents>();
 
     private inEndpoint: InEndpoint;

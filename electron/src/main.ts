@@ -5,6 +5,7 @@ import { ElectronConfig } from './config';
 import { ElectronAndroidAutoServiceFactory } from './ElectronAndroidAutoServiceFactory';
 import { AndroidAutoServer } from '@web-auto/android-auto';
 import assert from 'node:assert';
+import { ElectronUsbDeviceHandler } from './ElectronUsbDeviceHandler';
 
 const electronConfig = autoConf<ElectronConfig>('web-auto', {
     searchPlaces: ['../config.json5'],
@@ -22,7 +23,9 @@ if (electronConfig.androidAuto !== undefined) {
         electronConfig.androidAuto.videoConfigs,
         electronConfig.androidAuto.touchScreenConfig,
     );
-    androidAutoServer = new AndroidAutoServer(serviceFactory);
+    androidAutoServer = new AndroidAutoServer(serviceFactory, [
+        new ElectronUsbDeviceHandler(),
+    ]);
 
     process.on('exit', () => {
         assert(androidAutoServer);

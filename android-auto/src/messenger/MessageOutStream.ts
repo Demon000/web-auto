@@ -1,19 +1,26 @@
 import { ICryptor } from '@/ssl/ICryptor';
-import { ITransport } from '@/transport/ITransport';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { EncryptionType } from './EncryptionType';
 import { FrameHeader } from './FrameHeader';
 import { FrameType } from './FrameType';
 import { Message } from './Message';
 import { MessageFrameOptions } from './MessageFrameOptions';
+import EventEmitter from 'eventemitter3';
 
 const MAX_FRAME_PAYLOAD_SIZE = 0x4000;
 
+export enum MessageOutStreamEvent {
+    MESSAGE_SENT,
+}
+
+export interface MessageOutStreamEvents {
+    [MessageOutStreamEvent.MESSAGE_SENT]: (data: DataBuffer) => void;
+}
+
 export class MessageOutStream {
-    public constructor(
-        private transport: ITransport,
-        private cryptor: ICryptor,
-    ) {}
+    public emitter = new EventEmitter<MessageOutStreamEvents>();
+
+    public constructor(private cryptor: ICryptor) {}
 
     public async send(
         message: Message,
@@ -46,7 +53,7 @@ export class MessageOutStream {
             .getRawPayload()
             .subarray(offset, offset + size);
         const data = this.composeFrame(message, options, frameType, rawPayload);
-        await this.transport.send(data);
+        this.emitter.emit(MessageOutStreamEvent.MESSAGE_SENT, data);
 
         offset += size;
 

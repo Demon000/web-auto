@@ -8,7 +8,6 @@ import { FrameType } from './FrameType';
 import { Message } from './Message';
 import EventEmitter from 'eventemitter3';
 import { MessageFrameOptions } from './MessageFrameOptions';
-import { ITransport } from '@/transport/ITransport';
 
 type MessageData = {
     message: Message;
@@ -42,10 +41,7 @@ export class MessageInStream {
 
     private receiveData?: ReceiveData;
 
-    public constructor(
-        private transport: ITransport,
-        private cryptor: ICryptor,
-    ) {}
+    public constructor(private cryptor: ICryptor) {}
 
     public emitter = new EventEmitter<MessageInStreamEvents>();
 
