@@ -98,7 +98,7 @@ export class AndroidAutoServer {
             controlService.sendDiscoveryResponse(data);
         };
 
-        controlService.emitter.on(
+        controlService.emitter.once(
             ControlServiceEvent.SERVICE_DISCOVERY_REQUEST,
             (data) => {
                 console.log(
