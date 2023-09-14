@@ -106,7 +106,7 @@ export class MessageInStream {
             frameHeader,
         );
 
-        const emitter = this.channelEmitter(frameHeader.channelId, false);
+        const emitter = this.optionalChannelEmitter(frameHeader.channelId);
         if (!emitter) {
             console.log(
                 `Unhandled message with id ${message.messageId} on channel with id ${frameHeader.channelId}`,
@@ -210,19 +210,17 @@ export class MessageInStream {
         }
     }
 
-    public channelEmitter(
+    public optionalChannelEmitter(
         channelId: ChannelId,
-    ): EventEmitter<MessageInStreamEvents>;
-    public channelEmitter(
-        channelId: ChannelId,
-        create: false,
-    ): EventEmitter<MessageInStreamEvents> | undefined;
-    public channelEmitter(
-        channelId: ChannelId,
-        create = true,
     ): EventEmitter<MessageInStreamEvents> | undefined {
+        return this.emitterMap.get(channelId);
+    }
+
+    public channelEmitter(
+        channelId: ChannelId,
+    ): EventEmitter<MessageInStreamEvents> {
         let emitter = this.emitterMap.get(channelId);
-        if (emitter === undefined && create) {
+        if (emitter === undefined) {
             emitter = new EventEmitter<MessageInStreamEvents>();
             this.emitterMap.set(channelId, emitter);
         }
