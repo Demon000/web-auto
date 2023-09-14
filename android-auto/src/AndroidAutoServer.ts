@@ -1,18 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {
-    UsbDeviceHandler,
-    UsbDeviceHandlerEvent,
-} from './transport/UsbDeviceHandler';
-import { UsbTransport } from './transport/UsbTransport';
+import { UsbDeviceHandler } from './transport/UsbDeviceHandler';
 import { Cryptor } from './ssl/Cryptor';
 import { MessageInStream } from './messenger/MessageInStream';
 import { MessageOutStream } from './messenger/MessageOutStream';
 import { ControlService, ControlServiceEvent } from './services/ControlService';
 import { ITransport, TransportEvent } from './transport/ITransport';
-
-import { Device } from 'usb';
 
 const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
 const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
@@ -20,11 +14,9 @@ const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
 import { ServiceFactory } from './services/ServiceFactory';
 import { ServiceDiscoveryResponse } from '@web-auto/android-auto-proto';
 import { Service } from './services';
-
-type DeviceCookie = any;
+import { DeviceHandlerEvent } from './transport/DeviceHandler';
 
 type DeviceData = {
-    device: DeviceCookie;
     transport: ITransport;
     cryptor: Cryptor;
     controlService: ControlService;
@@ -32,32 +24,25 @@ type DeviceData = {
 };
 
 export class AndroidAutoServer {
-    private deviceMap = new Map<Device, DeviceData>();
+    private deviceMap = new Map<ITransport, DeviceData>();
     private usbDeviceHandler = new UsbDeviceHandler();
     private started = false;
 
     public constructor(private serviceFactory: ServiceFactory) {
+        this.initDevice = this.initDevice.bind(this);
+        this.deinitDevice = this.deinitDevice.bind(this);
         this.usbDeviceHandler.emitter.on(
-            UsbDeviceHandlerEvent.CONNECTED,
-            async (device: Device) => {
-                const transport = new UsbTransport(device);
-
-                await this.initDevice(device, transport);
-            },
+            DeviceHandlerEvent.CONNECTED,
+            this.initDevice,
         );
 
         this.usbDeviceHandler.emitter.on(
-            UsbDeviceHandlerEvent.DISCONNECTED,
-            (device: Device) => {
-                this.deinitDevice(device);
-            },
+            DeviceHandlerEvent.DISCONNECTED,
+            this.deinitDevice,
         );
     }
 
-    public async initDevice(
-        device: DeviceCookie,
-        transport: ITransport,
-    ): Promise<void> {
+    public async initDevice(transport: ITransport): Promise<void> {
         const cryptor = new Cryptor(certificateString, privateKeyString);
 
         cryptor.init();
@@ -109,8 +94,7 @@ export class AndroidAutoServer {
             },
         );
 
-        this.deviceMap.set(device, {
-            device,
+        this.deviceMap.set(transport, {
             transport,
             cryptor,
             controlService,
@@ -137,8 +121,8 @@ export class AndroidAutoServer {
         await controlService.start();
     }
 
-    public deinitDevice(device: DeviceCookie): void {
-        const deviceData = this.deviceMap.get(device);
+    public deinitDevice(transport: ITransport): void {
+        const deviceData = this.deviceMap.get(transport);
         if (deviceData === undefined) {
             return;
         }
@@ -148,8 +132,8 @@ export class AndroidAutoServer {
         }
 
         deviceData.controlService.stop();
-        deviceData.transport.deinit();
         deviceData.cryptor.deinit();
+        deviceData.transport.deinit();
     }
 
     public async start(): Promise<void> {
@@ -169,5 +153,6 @@ export class AndroidAutoServer {
         this.started = false;
         this.usbDeviceHandler.stopWaitingForDevices();
         this.usbDeviceHandler.disconnectDevices();
+        // this.tcpDeviceHandler.disconnectDevices();
     }
 }

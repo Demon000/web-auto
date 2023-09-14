@@ -1,5 +1,6 @@
-import EventEmitter from 'eventemitter3';
 import { Device, LibUSBException, usb } from 'usb';
+import { DeviceHandler, DeviceHandlerEvent } from './DeviceHandler';
+import { UsbTransport } from './UsbTransport';
 
 enum StringType {
     MANUFACTURER,
@@ -10,20 +11,12 @@ enum StringType {
     SERIAL,
 }
 
-export enum UsbDeviceHandlerEvent {
-    CONNECTED,
-    DISCONNECTED,
-}
+export class UsbDeviceHandler extends DeviceHandler {
+    private deviceTransportMap = new Map<Device, UsbTransport>();
 
-export interface UsbDeviceHandlerEvents {
-    [UsbDeviceHandlerEvent.CONNECTED]: (device: Device) => void;
-    [UsbDeviceHandlerEvent.DISCONNECTED]: (device: Device) => void;
-}
-
-export class UsbDeviceHandler {
-    public emitter = new EventEmitter<UsbDeviceHandlerEvents>();
-    private androidAutoDevices: Device[] = [];
     public constructor() {
+        super();
+
         this.handleConnectedDevice = this.handleConnectedDevice.bind(this);
         this.handleDisconnectedDevice =
             this.handleDisconnectedDevice.bind(this);
@@ -172,8 +165,10 @@ export class UsbDeviceHandler {
             console.log(
                 `Found device ${manufacturer} ${deviceName} with Android Auto`,
             );
-            this.androidAutoDevices.push(device);
-            this.emitter.emit(UsbDeviceHandlerEvent.CONNECTED, device);
+
+            const transport = new UsbTransport(device);
+            this.deviceTransportMap.set(device, transport);
+            this.emitter.emit(DeviceHandlerEvent.CONNECTED, transport);
             return;
         }
 
@@ -196,17 +191,22 @@ export class UsbDeviceHandler {
     }
 
     private handleDisconnectedDevice(device: Device): void {
-        this.emitter.emit(UsbDeviceHandlerEvent.DISCONNECTED, device);
+        const transport = this.deviceTransportMap.get(device);
+        if (transport === undefined) {
+            return;
+        }
+
+        this.emitter.emit(DeviceHandlerEvent.DISCONNECTED, transport);
     }
 
-    public async waitForDevices(): Promise<void> {
+    public waitForDevices(): void {
         const devices = usb.getDeviceList();
 
         usb.on('attach', this.handleConnectedDevice);
         usb.on('detach', this.handleDisconnectedDevice);
 
         for (const device of devices) {
-            await this.handleConnectedDevice(device);
+            this.handleConnectedDevice(device);
         }
     }
 
@@ -216,7 +216,7 @@ export class UsbDeviceHandler {
     }
 
     public disconnectDevices(): void {
-        for (const device of this.androidAutoDevices) {
+        for (const device of this.deviceTransportMap.keys()) {
             this.handleDisconnectedDevice(device);
             device.close();
         }

@@ -13,7 +13,7 @@ export class UsbTransport implements ITransport {
     private inEndpoint: InEndpoint;
     private outEndpoint: OutEndpoint;
 
-    public constructor(device: Device) {
+    public constructor(private device: Device) {
         const iface = device.interface(0);
 
         iface.claim();
@@ -75,8 +75,16 @@ export class UsbTransport implements ITransport {
     }
 
     public deinit(): void {
-        if (this.inEndpoint.pollActive) {
-            this.inEndpoint.stopPoll();
+        let iface;
+        try {
+            if (this.inEndpoint.pollActive) {
+                this.inEndpoint.stopPoll();
+            }
+
+            iface = this.device.interface(0);
+            iface.release();
+        } catch (e) {
+            console.log(e);
         }
     }
 
