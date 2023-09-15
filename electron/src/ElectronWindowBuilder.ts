@@ -15,6 +15,11 @@ import { WebConfigCommuncationChannel } from './config-ipc';
 import { WebConfigMainMethod } from '@web-auto/electron-ipc-web-config';
 import { ElectronAndroidAutoInputServiceEvent } from './ElectronAndroidAutoInputService';
 
+export interface ElectronWindowBuilderAndroidAuto {
+    server: AndroidAutoServer;
+    serviceFactory: ElectronAndroidAutoServiceFactory;
+}
+
 export interface ElectronWindowConfig {
     name: string;
     display?:
@@ -42,10 +47,7 @@ export interface ElectronWindowBuilderConfig {
 export class ElectronWindowBuilder {
     public constructor(
         private config: ElectronWindowBuilderConfig,
-        private androidAutoServiceFactory:
-            | ElectronAndroidAutoServiceFactory
-            | undefined,
-        private androidAutoServer: AndroidAutoServer | undefined,
+        private androidAuto: ElectronWindowBuilderAndroidAuto | undefined,
     ) {}
 
     public logDisplays(): void {
@@ -59,17 +61,15 @@ export class ElectronWindowBuilder {
     ): void {
         const androidAutoChannel = new AndroidAutoCommuncationChannel(window);
         const webConfigChannel = new WebConfigCommuncationChannel(window);
-        const androidAutoServiceFactory = this.androidAutoServiceFactory;
-        const androidAutoServer = this.androidAutoServer;
+        const androidAuto = this.androidAuto;
 
-        assert(androidAutoServiceFactory);
-        assert(androidAutoServer);
+        assert(androidAuto !== undefined);
 
         androidAutoChannel.on(
             AndroidAutoMainMethod.SEND_INPUT_SERVICE_TOUCH,
             (data) => {
-                assert(androidAutoServiceFactory);
-                androidAutoServiceFactory.emitter.emit(
+                assert(androidAuto.serviceFactory);
+                androidAuto.serviceFactory.emitter.emit(
                     ElectronAndroidAutoInputServiceEvent.TOUCH,
                     data.event,
                 );
@@ -77,28 +77,28 @@ export class ElectronWindowBuilder {
         );
 
         androidAutoChannel.on(AndroidAutoMainMethod.START, () => {
-            androidAutoServer.start();
+            androidAuto.server.start();
         });
 
         webConfigChannel.handle(WebConfigMainMethod.CONFIG, () => {
             return Promise.resolve(config.app.config);
         });
 
-        androidAutoServiceFactory.emitter.on(
+        androidAuto.serviceFactory.emitter.on(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
             () => {
                 androidAutoChannel.send(AndroidAutoRendererMethod.VIDEO_START);
             },
         );
 
-        androidAutoServiceFactory.emitter.on(
+        androidAuto.serviceFactory.emitter.on(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP,
             () => {
                 androidAutoChannel.send(AndroidAutoRendererMethod.VIDEO_STOP);
             },
         );
 
-        androidAutoServiceFactory.emitter.on(
+        androidAuto.serviceFactory.emitter.on(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
             (buffer: DataBuffer) => {
                 androidAutoChannel.send(

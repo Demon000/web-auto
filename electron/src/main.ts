@@ -1,5 +1,8 @@
 import { app, BrowserWindow } from 'electron';
-import { ElectronWindowBuilder } from './ElectronWindowBuilder';
+import {
+    ElectronWindowBuilder,
+    ElectronWindowBuilderAndroidAuto,
+} from './ElectronWindowBuilder';
 import { autoConf } from 'auto-config-loader';
 import { ElectronConfig } from './config';
 import { ElectronAndroidAutoServiceFactory } from './ElectronAndroidAutoServiceFactory';
@@ -16,27 +19,31 @@ const electronConfig = autoConf<ElectronConfig>('web-auto', {
     },
 });
 
-let serviceFactory: ElectronAndroidAutoServiceFactory | undefined;
-let androidAutoServer: AndroidAutoServer | undefined;
+let androidAuto: ElectronWindowBuilderAndroidAuto | undefined;
+
 if (electronConfig.androidAuto !== undefined) {
-    serviceFactory = new ElectronAndroidAutoServiceFactory(
+    const serviceFactory = new ElectronAndroidAutoServiceFactory(
         electronConfig.androidAuto.videoConfigs,
         electronConfig.androidAuto.touchScreenConfig,
     );
-    androidAutoServer = new AndroidAutoServer(serviceFactory, [
+    const server = new AndroidAutoServer(serviceFactory, [
         new ElectronUsbDeviceHandler(),
     ]);
 
+    androidAuto = {
+        server,
+        serviceFactory,
+    };
+
     process.on('exit', () => {
-        assert(androidAutoServer);
-        androidAutoServer.stop();
+        assert(server);
+        server.stop();
     });
 }
 
 const electronWindowBuilder = new ElectronWindowBuilder(
     electronConfig.electronWindowBuilder,
-    serviceFactory,
-    androidAutoServer,
+    androidAuto,
 );
 
 app.whenReady().then(() => {
