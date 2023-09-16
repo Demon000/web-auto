@@ -1,7 +1,4 @@
-import * as fs from 'fs';
-import * as path from 'path';
-
-import { Cryptor } from './ssl/Cryptor';
+import { Cryptor } from './crypto/Cryptor';
 import {
     MessageInStream,
     MessageInStreamEvent,
@@ -13,14 +10,15 @@ import {
 import { ControlServiceEvent } from './services/ControlService';
 import { Transport, TransportEvent } from './transport/Transport';
 
-const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
-const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
-
 import { ServiceFactory } from './services/ServiceFactory';
 import { ServiceDiscoveryResponse } from '@web-auto/android-auto-proto';
 import { Service, ServiceEvent } from './services';
 import { DeviceHandler, DeviceHandlerEvent } from './transport/DeviceHandler';
 import { ChannelId } from './messenger/ChannelId';
+import {
+    ANDROID_AUTO_CERTIFICATE,
+    ANDROID_AUTO_PRIVATE_KEY,
+} from './crypto/keys';
 
 type DeviceData = {
     transport: Transport;
@@ -55,7 +53,10 @@ export class AndroidAutoServer {
     }
 
     public async initDevice(transport: Transport): Promise<void> {
-        const cryptor = new Cryptor(certificateString, privateKeyString);
+        const cryptor = this.serviceFactory.buildCryptor(
+            ANDROID_AUTO_CERTIFICATE,
+            ANDROID_AUTO_PRIVATE_KEY,
+        );
 
         cryptor.init();
 

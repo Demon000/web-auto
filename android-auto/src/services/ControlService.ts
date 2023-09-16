@@ -22,7 +22,7 @@ import { Message } from '@/messenger/Message';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { microsecondsTime } from '@/utils/time';
 import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
-import { ICryptor } from '@/ssl/ICryptor';
+import { Cryptor } from '@/crypto/Cryptor';
 
 import { Service } from './Service';
 import { EventEmitter } from 'eventemitter3';
@@ -41,7 +41,7 @@ export class ControlService extends Service {
     public extraEmitter = new EventEmitter<ControlServiceEvents>();
     private pingTimeout?: NodeJS.Timeout;
 
-    public constructor(private cryptor: ICryptor) {
+    public constructor(private cryptor: Cryptor) {
         super(ChannelId.CONTROL);
 
         this.onPingTimeout = this.onPingTimeout.bind(this);

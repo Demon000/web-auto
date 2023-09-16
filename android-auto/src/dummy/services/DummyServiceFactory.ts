@@ -2,7 +2,7 @@ import { ChannelId } from '@/messenger/ChannelId';
 import { ControlService } from '@/services/ControlService';
 import { Service } from '@/services/Service';
 import { ServiceFactory } from '@/services/ServiceFactory';
-import { ICryptor } from '@/ssl/ICryptor';
+import { Cryptor } from '@/crypto/Cryptor';
 import { DummyAudioInputService } from './DummyAudioInputService';
 import { DummyAudioOutputService } from './DummyAudioOutputService';
 import { DummyInputService } from './DummyInputService';
@@ -10,9 +10,16 @@ import { DummyMediaStatusService } from './DummyMediaStatusService';
 import { DummyNavigationStatusService } from './DummyNavigationService';
 import { DummyVideoService } from './DummyVideoService';
 import { DummySensorService } from '.';
+import { DummyCryptor } from '../transport/DummyCryptor';
 
 export class DummyServiceFactory extends ServiceFactory {
-    public buildControlService(cryptor: ICryptor): ControlService {
+    public buildCryptor(
+        certificateBuffer: Buffer,
+        privateKeyBuffer: Buffer,
+    ): Cryptor {
+        return new DummyCryptor(certificateBuffer, privateKeyBuffer);
+    }
+    public buildControlService(cryptor: Cryptor): ControlService {
         return new ControlService(cryptor);
     }
     public buildServices(): Service[] {

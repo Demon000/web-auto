@@ -1,4 +1,4 @@
-import { ICryptor } from '@/ssl/ICryptor';
+import { Cryptor } from '@/crypto/Cryptor';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { EncryptionType } from './EncryptionType';
 import { FrameHeader } from './FrameHeader';
@@ -20,7 +20,7 @@ export interface MessageOutStreamEvents {
 export class MessageOutStream {
     public emitter = new EventEmitter<MessageOutStreamEvents>();
 
-    public constructor(private cryptor: ICryptor) {}
+    public constructor(private cryptor: Cryptor) {}
 
     public async send(
         message: Message,

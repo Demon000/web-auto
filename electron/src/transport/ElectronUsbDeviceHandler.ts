@@ -1,7 +1,4 @@
-import {
-    DeviceHandler,
-    DeviceHandlerEvent,
-} from '@web-auto/android-auto/dist/transport/DeviceHandler';
+import { DeviceHandler, DeviceHandlerEvent } from '@web-auto/android-auto';
 import { Device, LibUSBException, usb } from 'usb';
 import { ElectronUsbTransport } from './ElectronUsbTransport';
 

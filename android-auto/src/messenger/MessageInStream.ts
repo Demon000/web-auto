@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { ICryptor } from '@/ssl/ICryptor';
+import { Cryptor } from '@/crypto/Cryptor';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { ChannelId } from './ChannelId';
 import { EncryptionType } from './EncryptionType';
@@ -37,7 +37,7 @@ export class MessageInStream {
 
     private receiveData?: ReceiveData;
 
-    public constructor(private cryptor: ICryptor) {}
+    public constructor(private cryptor: Cryptor) {}
 
     public emitter = new EventEmitter<MessageInStreamEvents>();
 

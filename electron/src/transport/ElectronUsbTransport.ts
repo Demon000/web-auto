@@ -5,7 +5,7 @@ import {
     Transport,
     TransportEvent,
     TransportEvents,
-} from '@web-auto/android-auto/dist/transport/Transport';
+} from '@web-auto/android-auto';
 import { DataBuffer } from '@web-auto/android-auto';
 
 const USB_TRANSPORT_SEND_TIMEOUT = 10000;

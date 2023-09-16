@@ -9,7 +9,7 @@ import {
     VideoService,
 } from '@web-auto/android-auto';
 import { Service } from '@web-auto/android-auto';
-import { ICryptor } from '@web-auto/android-auto';
+import { Cryptor } from '@web-auto/android-auto';
 import { ChannelId } from '@web-auto/android-auto';
 import {
     ElectronAndroidAutoVideoService,
@@ -29,6 +29,7 @@ import {
 } from './ElectronAndroidAutoInputService';
 import { ElectronAndroidAutoAudioOutputService } from './ElectronAndroidAutoAudioOutputService';
 import { ElectronAndroidAutoAudioInputService } from './ElectronAndroidAutoAudioInputService';
+import { OpenSSLCryptor } from '@/crypto/OpenSSLCryptor';
 
 export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
     public emitter = new EventEmitter<
@@ -43,7 +44,14 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
         super();
     }
 
-    public buildControlService(cryptor: ICryptor): ControlService {
+    public buildCryptor(
+        certificateBuffer: Buffer,
+        privateKeyBuffer: Buffer,
+    ): Cryptor {
+        return new OpenSSLCryptor(certificateBuffer, privateKeyBuffer);
+    }
+
+    public buildControlService(cryptor: Cryptor): ControlService {
         return new ControlService(cryptor);
     }
 

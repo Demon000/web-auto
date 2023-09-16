@@ -1,4 +1,4 @@
-import { DataBuffer } from '@/utils/DataBuffer';
+import { DataBuffer } from '@web-auto/android-auto';
 
 import {
     sslBioCtrlPending,
@@ -23,11 +23,11 @@ import {
     sslSetBIOs,
     sslSetConnectState,
     sslWrite,
-} from './ssl';
-import { ICryptor } from './ICryptor';
+} from './openssl';
+import { Cryptor } from '@web-auto/android-auto';
 import { SSL_ERROR_NONE, SSL_ERROR_WANT_READ } from './openssl_bindings';
 
-export class Cryptor implements ICryptor {
+export class OpenSSLCryptor extends Cryptor {
     private maxBufferSize = 1024 * 20;
     private context = null;
     private certificate = null;
@@ -36,10 +36,9 @@ export class Cryptor implements ICryptor {
     private wbio = null;
     private ssl = null;
 
-    public constructor(
-        private certificateBuffer: Buffer,
-        private privateKeyBuffer: Buffer,
-    ) {}
+    public constructor(certificateBuffer: Buffer, privateKeyBuffer: Buffer) {
+        super(certificateBuffer, privateKeyBuffer);
+    }
 
     public init(): void {
         this.certificate = sslReadCertificate(this.certificateBuffer);
