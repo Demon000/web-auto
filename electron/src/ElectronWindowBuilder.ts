@@ -1,5 +1,5 @@
 import { BrowserWindow, screen, session } from 'electron';
-import { ElectronAndroidAutoServiceFactory } from './ElectronAndroidAutoServiceFactory';
+import { ElectronAndroidAutoServiceFactory } from './services/ElectronAndroidAutoServiceFactory';
 import { AndroidAutoServer, DataBuffer } from '@web-auto/android-auto';
 import path from 'node:path';
 import assert from 'node:assert';
@@ -8,12 +8,12 @@ import {
     AndroidAutoMainMethod,
     AndroidAutoRendererMethod,
 } from '@web-auto/electron-ipc-android-auto';
-import { ElectronAndroidAutoVideoServiceEvent } from './ElectronAndroidAutoVideoService';
+import { ElectronAndroidAutoVideoServiceEvent } from './services/ElectronAndroidAutoVideoService';
 import { WebConfig } from '@web-auto/web-config';
 import * as url from 'node:url';
 import { WebConfigCommuncationChannel } from './config-ipc';
 import { WebConfigMainMethod } from '@web-auto/electron-ipc-web-config';
-import { ElectronAndroidAutoInputServiceEvent } from './ElectronAndroidAutoInputService';
+import { ElectronAndroidAutoInputServiceEvent } from './services/ElectronAndroidAutoInputService';
 
 export interface ElectronWindowBuilderAndroidAuto {
     server: AndroidAutoServer;

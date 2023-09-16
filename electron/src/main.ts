@@ -5,10 +5,10 @@ import {
 } from './ElectronWindowBuilder';
 import { autoConf } from 'auto-config-loader';
 import { ElectronConfig } from './config';
-import { ElectronAndroidAutoServiceFactory } from './ElectronAndroidAutoServiceFactory';
+import { ElectronAndroidAutoServiceFactory } from './services/ElectronAndroidAutoServiceFactory';
 import { AndroidAutoServer } from '@web-auto/android-auto';
 import assert from 'node:assert';
-import { ElectronUsbDeviceHandler } from './ElectronUsbDeviceHandler';
+import { ElectronUsbDeviceHandler } from './transport/ElectronUsbDeviceHandler';
 
 const electronConfig = autoConf<ElectronConfig>('web-auto', {
     searchPlaces: ['../config.json5'],
