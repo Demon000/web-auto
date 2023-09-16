@@ -7,16 +7,8 @@ import {
     NavigationTurnType,
 } from '@web-auto/android-auto-proto';
 import { NavigationStatusService } from '@/services/NavigationStatusService';
-import { MessageInStream, MessageOutStream } from '@/messenger';
 
 export class DummyNavigationStatusService extends NavigationStatusService {
-    public constructor(
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(messageInStream, messageOutStream);
-    }
-
     protected async open(_data: ChannelOpenRequest): Promise<void> {
         // TODO
     }

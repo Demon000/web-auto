@@ -34,10 +34,6 @@ export interface MessageInStreamEvents {
 
 export class MessageInStream {
     private messageMap = new Map<ChannelId, MessageData>();
-    private emitterMap = new Map<
-        ChannelId,
-        EventEmitter<MessageInStreamEvents>
-    >();
 
     private receiveData?: ReceiveData;
 
@@ -97,22 +93,6 @@ export class MessageInStream {
 
     private emitMessage(message: Message, frameHeader: FrameHeader): void {
         this.emitter.emit(
-            MessageInStreamEvent.MESSAGE_RECEIVED,
-            message,
-            frameHeader,
-        );
-
-        const emitter = this.optionalChannelEmitter(frameHeader.channelId);
-        if (!emitter) {
-            console.log(
-                `Unhandled message with id ${message.messageId} on channel with id ${frameHeader.channelId}`,
-                message.getPayload(),
-                frameHeader,
-            );
-            return;
-        }
-
-        emitter.emit(
             MessageInStreamEvent.MESSAGE_RECEIVED,
             message,
             frameHeader,
@@ -206,21 +186,7 @@ export class MessageInStream {
         }
     }
 
-    public optionalChannelEmitter(
-        channelId: ChannelId,
-    ): EventEmitter<MessageInStreamEvents> | undefined {
-        return this.emitterMap.get(channelId);
-    }
-
-    public channelEmitter(
-        channelId: ChannelId,
-    ): EventEmitter<MessageInStreamEvents> {
-        let emitter = this.emitterMap.get(channelId);
-        if (emitter === undefined) {
-            emitter = new EventEmitter<MessageInStreamEvents>();
-            this.emitterMap.set(channelId, emitter);
-        }
-
-        return emitter;
+    public stop(): void {
+        this.emitter.removeAllListeners();
     }
 }

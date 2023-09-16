@@ -1,6 +1,4 @@
 import { ChannelId } from '@/messenger/ChannelId';
-import { MessageInStream } from '@/messenger/MessageInStream';
-import { MessageOutStream } from '@/messenger/MessageOutStream';
 import { ControlService } from '@/services/ControlService';
 import { Service } from '@/services/Service';
 import { ServiceFactory } from '@/services/ServiceFactory';
@@ -14,44 +12,22 @@ import { DummyVideoService } from './DummyVideoService';
 import { DummySensorService } from '.';
 
 export class DummyServiceFactory extends ServiceFactory {
-    public buildControlService(
-        cryptor: ICryptor,
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ): ControlService {
-        return new ControlService(cryptor, messageInStream, messageOutStream);
+    public buildControlService(cryptor: ICryptor): ControlService {
+        return new ControlService(cryptor);
     }
-    public buildServices(
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ): Service[] {
-        const videoService = new DummyVideoService(
-            messageInStream,
-            messageOutStream,
-        );
+    public buildServices(): Service[] {
+        const videoService = new DummyVideoService();
 
         const services: Service[] = [
-            new DummyAudioInputService(messageInStream, messageOutStream),
-            new DummyAudioOutputService(
-                ChannelId.MEDIA_AUDIO,
-                messageInStream,
-                messageOutStream,
-            ),
-            new DummyAudioOutputService(
-                ChannelId.SPEECH_AUDIO,
-                messageInStream,
-                messageOutStream,
-            ),
-            new DummyAudioOutputService(
-                ChannelId.SYSTEM_AUDIO,
-                messageInStream,
-                messageOutStream,
-            ),
-            new DummySensorService(messageInStream, messageOutStream),
+            new DummyAudioInputService(),
+            new DummyAudioOutputService(ChannelId.MEDIA_AUDIO),
+            new DummyAudioOutputService(ChannelId.SPEECH_AUDIO),
+            new DummyAudioOutputService(ChannelId.SYSTEM_AUDIO),
+            new DummySensorService(),
             videoService,
-            new DummyNavigationStatusService(messageInStream, messageOutStream),
-            new DummyMediaStatusService(messageInStream, messageOutStream),
-            new DummyInputService(messageInStream, messageOutStream),
+            new DummyNavigationStatusService(),
+            new DummyMediaStatusService(),
+            new DummyInputService(),
         ];
 
         return services;

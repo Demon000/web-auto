@@ -1,8 +1,4 @@
-import {
-    InputService,
-    MessageInStream,
-    MessageOutStream,
-} from '@web-auto/android-auto';
+import { InputService } from '@web-auto/android-auto';
 import {
     ChannelOpenRequest,
     BindingRequest,
@@ -25,24 +21,26 @@ export interface ElectronAndroidAutoInputServiceEvents {
 }
 
 export class ElectronAndroidAutoInputService extends InputService {
-    public emitter = new EventEmitter<ElectronAndroidAutoInputServiceEvents>();
+    public extraEmitter =
+        new EventEmitter<ElectronAndroidAutoInputServiceEvents>();
 
     private touchScreenConfig: ITouchConfig;
 
-    public constructor(
-        touchScreenConfig: ITouchConfig,
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(messageInStream, messageOutStream);
+    public constructor(touchScreenConfig: ITouchConfig) {
+        super();
 
         this.touchScreenConfig = TouchConfig.fromObject(touchScreenConfig);
 
-        this.emitter.on(ElectronAndroidAutoInputServiceEvent.TOUCH, () => {});
+        this.extraEmitter.on(
+            ElectronAndroidAutoInputServiceEvent.TOUCH,
+            () => {},
+        );
     }
 
     public stop(): void {
-        this.emitter.emit(ElectronAndroidAutoInputServiceEvent.STOP);
+        super.stop();
+        this.extraEmitter.emit(ElectronAndroidAutoInputServiceEvent.STOP);
+        this.extraEmitter.removeAllListeners();
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {}

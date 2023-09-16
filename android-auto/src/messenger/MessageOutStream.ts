@@ -101,4 +101,8 @@ export class MessageOutStream {
 
         return buffer;
     }
+
+    public stop(): void {
+        this.emitter.removeAllListeners();
+    }
 }

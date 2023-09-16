@@ -1,9 +1,4 @@
-import {
-    AudioInputService,
-    DataBuffer,
-    MessageInStream,
-    MessageOutStream,
-} from '@web-auto/android-auto';
+import { AudioInputService, DataBuffer } from '@web-auto/android-auto';
 import {
     AVChannelSetupRequest,
     AVInputOpenRequest,
@@ -14,11 +9,8 @@ import { RtAudio, RtAudioFormat } from 'audify';
 export class ElectronAndroidAutoAudioInputService extends AudioInputService {
     private rtaudio: RtAudio;
 
-    public constructor(
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(messageInStream, messageOutStream);
+    public constructor() {
+        super();
 
         this.rtaudio = new RtAudio();
         this.session = 0;

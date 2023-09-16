@@ -1,6 +1,4 @@
 import { ChannelId } from '@/messenger/ChannelId';
-import { MessageInStream } from '@/messenger/MessageInStream';
-import { MessageOutStream } from '@/messenger/MessageOutStream';
 import {
     AVChannel,
     AVStreamType,
@@ -10,12 +8,8 @@ import { ChannelDescriptor } from '@web-auto/android-auto-proto';
 import { AVOutputService } from './AVOutputService';
 
 export abstract class AudioOutputService extends AVOutputService {
-    public constructor(
-        channelId: ChannelId,
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(channelId, messageInStream, messageOutStream);
+    public constructor(channelId: ChannelId) {
+        super(channelId);
     }
 
     protected channelConfig(): [AudioType.Enum, number, number, number] {

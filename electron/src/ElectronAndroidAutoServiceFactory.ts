@@ -8,8 +8,6 @@ import {
     ServiceFactory,
     VideoService,
 } from '@web-auto/android-auto';
-import { MessageInStream } from '@web-auto/android-auto';
-import { MessageOutStream } from '@web-auto/android-auto';
 import { Service } from '@web-auto/android-auto';
 import { ICryptor } from '@web-auto/android-auto';
 import { ChannelId } from '@web-auto/android-auto';
@@ -45,22 +43,13 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
         super();
     }
 
-    public buildControlService(
-        cryptor: ICryptor,
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ): ControlService {
-        return new ControlService(cryptor, messageInStream, messageOutStream);
+    public buildControlService(cryptor: ICryptor): ControlService {
+        return new ControlService(cryptor);
     }
 
-    private buildVideoService(
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ): VideoService {
+    private buildVideoService(): VideoService {
         const videoService = new ElectronAndroidAutoVideoService(
             this.videoConfigs,
-            messageInStream,
-            messageOutStream,
         );
 
         const onVideoStart = () => {
@@ -71,12 +60,12 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
             this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP);
         };
 
-        videoService.emitter.on(
+        videoService.extraEmitter.on(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
             onVideoStart,
         );
 
-        videoService.emitter.on(
+        videoService.extraEmitter.on(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP,
             onVideoStart,
         );
@@ -88,23 +77,23 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
             );
         };
 
-        videoService.emitter.on(
+        videoService.extraEmitter.on(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
             onVideoData,
         );
 
-        videoService.emitter.once(
+        videoService.extraEmitter.once(
             ElectronAndroidAutoVideoServiceEvent.STOP,
             () => {
-                videoService.emitter.off(
+                videoService.extraEmitter.off(
                     ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
                     onVideoStart,
                 );
-                videoService.emitter.off(
+                videoService.extraEmitter.off(
                     ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
                     onVideoData,
                 );
-                videoService.emitter.off(
+                videoService.extraEmitter.off(
                     ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP,
                     onVideoStop,
                 );
@@ -113,14 +102,9 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
 
         return videoService;
     }
-    private buildInputService(
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ): InputService {
+    private buildInputService(): InputService {
         const inputService = new ElectronAndroidAutoInputService(
             this.touchSreenConfig,
-            messageInStream,
-            messageOutStream,
         );
 
         const onTouchEvent = (data: ITouchEvent) => {
@@ -132,7 +116,7 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
             onTouchEvent,
         );
 
-        inputService.emitter.once(
+        inputService.extraEmitter.once(
             ElectronAndroidAutoInputServiceEvent.STOP,
             () => {
                 this.emitter.off(
@@ -144,43 +128,19 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
 
         return inputService;
     }
-    public buildServices(
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ): Service[] {
-        const videoService = this.buildVideoService(
-            messageInStream,
-            messageOutStream,
-        );
-        const inputService = this.buildInputService(
-            messageInStream,
-            messageOutStream,
-        );
+    public buildServices(): Service[] {
+        const videoService = this.buildVideoService();
+        const inputService = this.buildInputService();
 
         const services: Service[] = [
-            new ElectronAndroidAutoAudioInputService(
-                messageInStream,
-                messageOutStream,
-            ),
-            new ElectronAndroidAutoAudioOutputService(
-                ChannelId.MEDIA_AUDIO,
-                messageInStream,
-                messageOutStream,
-            ),
-            new ElectronAndroidAutoAudioOutputService(
-                ChannelId.SPEECH_AUDIO,
-                messageInStream,
-                messageOutStream,
-            ),
-            new ElectronAndroidAutoAudioOutputService(
-                ChannelId.SYSTEM_AUDIO,
-                messageInStream,
-                messageOutStream,
-            ),
-            new DummySensorService(messageInStream, messageOutStream),
+            new ElectronAndroidAutoAudioInputService(),
+            new ElectronAndroidAutoAudioOutputService(ChannelId.MEDIA_AUDIO),
+            new ElectronAndroidAutoAudioOutputService(ChannelId.SPEECH_AUDIO),
+            new ElectronAndroidAutoAudioOutputService(ChannelId.SYSTEM_AUDIO),
+            new DummySensorService(),
             videoService,
-            new DummyNavigationStatusService(messageInStream, messageOutStream),
-            new DummyMediaStatusService(messageInStream, messageOutStream),
+            new DummyNavigationStatusService(),
+            new DummyMediaStatusService(),
             inputService,
         ];
 

@@ -12,18 +12,9 @@ import {
 } from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { VideoService } from '@/services/VideoService';
-import { MessageInStream } from '@/messenger/MessageInStream';
-import { MessageOutStream } from '@/messenger/MessageOutStream';
 import Long from 'long';
 
 export class DummyVideoService extends VideoService {
-    public constructor(
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(messageInStream, messageOutStream);
-    }
-
     protected async open(_data: ChannelOpenRequest): Promise<void> {
         // TODO
     }

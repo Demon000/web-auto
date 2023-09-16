@@ -13,19 +13,13 @@ import {
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
-import { MessageInStream } from '@/messenger/MessageInStream';
-import { MessageOutStream } from '@/messenger/MessageOutStream';
 import { Sensor, SensorEvent } from '@/sensors/Sensor';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { Service } from './Service';
 
 export abstract class SensorService extends Service {
-    public constructor(
-        protected sensors: Sensor[],
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(ChannelId.SENSOR, messageInStream, messageOutStream);
+    public constructor(protected sensors: Sensor[]) {
+        super(ChannelId.SENSOR);
 
         this.sendEventIndication = this.sendEventIndication.bind(this);
     }
@@ -68,7 +62,7 @@ export abstract class SensorService extends Service {
         return this.sendSensorStartResponse(data.sensorType, status);
     }
 
-    protected async onMessage(
+    public async onMessage(
         message: Message,
         options: MessageFrameOptions,
     ): Promise<void> {

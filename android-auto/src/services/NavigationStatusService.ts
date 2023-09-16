@@ -7,18 +7,13 @@ import {
 
 import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
 import { Message } from '@/messenger/Message';
-import { MessageInStream } from '@/messenger/MessageInStream';
-import { MessageOutStream } from '@/messenger/MessageOutStream';
 import { ChannelId } from '@/messenger/ChannelId';
 
 import { Service } from './Service';
 
 export abstract class NavigationStatusService extends Service {
-    public constructor(
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(ChannelId.NAVIGATION, messageInStream, messageOutStream);
+    public constructor() {
+        super(ChannelId.NAVIGATION);
     }
 
     protected abstract handleStatus(data: NavigationStatus): Promise<void>;
@@ -41,7 +36,7 @@ export abstract class NavigationStatusService extends Service {
         await this.handleTurn(data);
     }
 
-    protected async onMessage(
+    public async onMessage(
         message: Message,
         options: MessageFrameOptions,
     ): Promise<void> {

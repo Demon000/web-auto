@@ -6,16 +6,12 @@ import {
 } from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { AudioOutputService } from '@/services/AudioOutputService';
-import { ChannelId, MessageInStream, MessageOutStream } from '@/messenger';
+import { ChannelId } from '@/messenger';
 import Long from 'long';
 
 export class DummyAudioOutputService extends AudioOutputService {
-    public constructor(
-        channelId: ChannelId,
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(channelId, messageInStream, messageOutStream);
+    public constructor(channelId: ChannelId) {
+        super(channelId);
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {

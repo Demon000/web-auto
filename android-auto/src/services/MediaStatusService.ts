@@ -6,18 +6,13 @@ import {
 
 import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
 import { Message } from '@/messenger/Message';
-import { MessageInStream } from '@/messenger/MessageInStream';
-import { MessageOutStream } from '@/messenger/MessageOutStream';
 import { ChannelId } from '@/messenger/ChannelId';
 
 import { Service } from './Service';
 
 export abstract class MediaStatusService extends Service {
-    public constructor(
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(ChannelId.MEDIA_STATUS, messageInStream, messageOutStream);
+    public constructor() {
+        super(ChannelId.MEDIA_STATUS);
     }
 
     protected abstract handleMetadata(
@@ -40,7 +35,7 @@ export abstract class MediaStatusService extends Service {
         await this.handlePlayback(data);
     }
 
-    protected async onMessage(
+    public async onMessage(
         message: Message,
         options: MessageFrameOptions,
     ): Promise<void> {

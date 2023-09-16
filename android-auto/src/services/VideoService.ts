@@ -8,21 +8,16 @@ import {
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
-import { MessageInStream } from '@/messenger/MessageInStream';
-import { MessageOutStream } from '@/messenger/MessageOutStream';
 import { DataBuffer } from '@/utils/DataBuffer';
 
 import { AVOutputService } from './AVOutputService';
 
 export abstract class VideoService extends AVOutputService {
-    public constructor(
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(ChannelId.VIDEO, messageInStream, messageOutStream);
+    public constructor() {
+        super(ChannelId.VIDEO);
     }
 
-    protected async onMessage(
+    public async onMessage(
         message: Message,
         options: MessageFrameOptions,
     ): Promise<void> {

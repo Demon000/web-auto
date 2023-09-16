@@ -19,8 +19,6 @@ import {
 
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
-import { MessageInStream } from '@/messenger/MessageInStream';
-import { MessageOutStream } from '@/messenger/MessageOutStream';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { microsecondsTime } from '@/utils/time';
 import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
@@ -40,15 +38,11 @@ export interface ControlServiceEvents {
 }
 
 export class ControlService extends Service {
-    public emitter = new EventEmitter<ControlServiceEvents>();
+    public extraEmitter = new EventEmitter<ControlServiceEvents>();
     private pingTimeout?: NodeJS.Timeout;
 
-    public constructor(
-        private cryptor: ICryptor,
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(ChannelId.CONTROL, messageInStream, messageOutStream);
+    public constructor(private cryptor: ICryptor) {
+        super(ChannelId.CONTROL);
 
         this.onPingTimeout = this.onPingTimeout.bind(this);
     }
@@ -104,7 +98,10 @@ export class ControlService extends Service {
     private async onServiceDiscoveryRequest(
         data: ServiceDiscoveryRequest,
     ): Promise<void> {
-        this.emitter.emit(ControlServiceEvent.SERVICE_DISCOVERY_REQUEST, data);
+        this.extraEmitter.emit(
+            ControlServiceEvent.SERVICE_DISCOVERY_REQUEST,
+            data,
+        );
     }
 
     private async onAudioFocusRequest(data: AudioFocusRequest): Promise<void> {
@@ -122,7 +119,7 @@ export class ControlService extends Service {
         return this.sendNavigationFocusResponse(2);
     }
 
-    protected async onMessage(
+    public async onMessage(
         message: Message,
         options: MessageFrameOptions,
     ): Promise<void> {
@@ -273,6 +270,7 @@ export class ControlService extends Service {
     }
 
     public stop(): void {
+        super.stop();
         this.cancelPing();
     }
 

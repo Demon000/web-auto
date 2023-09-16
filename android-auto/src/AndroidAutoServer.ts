@@ -2,12 +2,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { Cryptor } from './ssl/Cryptor';
-import { MessageInStream } from './messenger/MessageInStream';
+import {
+    MessageInStream,
+    MessageInStreamEvent,
+} from './messenger/MessageInStream';
 import {
     MessageOutStream,
     MessageOutStreamEvent,
 } from './messenger/MessageOutStream';
-import { ControlService, ControlServiceEvent } from './services/ControlService';
+import { ControlServiceEvent } from './services/ControlService';
 import { Transport, TransportEvent } from './transport/Transport';
 
 const certificateString = fs.readFileSync(path.join(__dirname, '..', 'aa.crt'));
@@ -15,13 +18,15 @@ const privateKeyString = fs.readFileSync(path.join(__dirname, '..', 'aa.key'));
 
 import { ServiceFactory } from './services/ServiceFactory';
 import { ServiceDiscoveryResponse } from '@web-auto/android-auto-proto';
-import { Service } from './services';
+import { Service, ServiceEvent } from './services';
 import { DeviceHandler, DeviceHandlerEvent } from './transport/DeviceHandler';
+import { ChannelId } from './messenger/ChannelId';
 
 type DeviceData = {
     transport: Transport;
     cryptor: Cryptor;
-    controlService: ControlService;
+    messageInStream: MessageInStream;
+    messageOutStream: MessageOutStream;
     services: Service[];
 };
 
@@ -57,16 +62,9 @@ export class AndroidAutoServer {
         const messageInStream = new MessageInStream(cryptor);
         const messageOutStream = new MessageOutStream(cryptor);
 
-        const services = this.serviceFactory.buildServices(
-            messageInStream,
-            messageOutStream,
-        );
-
-        const controlService = this.serviceFactory.buildControlService(
-            cryptor,
-            messageInStream,
-            messageOutStream,
-        );
+        const services = this.serviceFactory.buildServices();
+        const controlService = this.serviceFactory.buildControlService(cryptor);
+        const allServices = [...services, controlService];
 
         const sendServiceDiscoveryResponse = () => {
             const data = ServiceDiscoveryResponse.create({
@@ -90,7 +88,7 @@ export class AndroidAutoServer {
             controlService.sendDiscoveryResponse(data);
         };
 
-        controlService.emitter.once(
+        controlService.extraEmitter.once(
             ControlServiceEvent.SERVICE_DISCOVERY_REQUEST,
             (data) => {
                 console.log(
@@ -104,9 +102,40 @@ export class AndroidAutoServer {
         this.deviceMap.set(transport, {
             transport,
             cryptor,
-            controlService,
-            services,
+            messageInStream,
+            messageOutStream,
+            services: allServices,
         });
+
+        const channelIdServiceMap = new Map<ChannelId, Service>();
+
+        for (const service of allServices) {
+            channelIdServiceMap.set(service.channelId, service);
+        }
+
+        messageInStream.emitter.on(
+            MessageInStreamEvent.MESSAGE_RECEIVED,
+            (message, frameHeader) => {
+                const service = channelIdServiceMap.get(frameHeader.channelId);
+                if (service === undefined) {
+                    console.log(
+                        `Unhandled message with id ${message.messageId} on channel with id ${frameHeader.channelId}`,
+                        message.getPayload(),
+                        frameHeader,
+                    );
+                    return;
+                }
+
+                service.onMessage(message);
+            },
+        );
+
+        messageOutStream.emitter.on(
+            MessageOutStreamEvent.MESSAGE_SENT,
+            (buffer) => {
+                transport.send(buffer);
+            },
+        );
 
         transport.emitter.on(TransportEvent.DATA, (buffer) => {
             if (!buffer.size) {
@@ -116,22 +145,28 @@ export class AndroidAutoServer {
 
             messageInStream.parseBuffer(buffer);
         });
-        messageOutStream.emitter.on(
-            MessageOutStreamEvent.MESSAGE_SENT,
-            (buffer) => {
-                transport.send(buffer);
-            },
-        );
+
         transport.emitter.on(TransportEvent.ERROR, (err) => {
             console.log(err);
         });
-        transport.init();
 
-        for (const service of services) {
-            await service.start();
+        for (const service of allServices) {
+            service.emitter.on(
+                ServiceEvent.MESSAGE_SENT,
+                (message, options) => {
+                    messageOutStream.send(message, {
+                        channelId: service.channelId,
+                        ...options,
+                    });
+                },
+            );
         }
 
-        await controlService.start();
+        transport.init();
+
+        for (const service of allServices) {
+            await service.start();
+        }
     }
 
     public deinitDevice(transport: Transport): void {
@@ -144,7 +179,8 @@ export class AndroidAutoServer {
             service.stop();
         }
 
-        deviceData.controlService.stop();
+        deviceData.messageInStream.stop();
+        deviceData.messageOutStream.stop();
         deviceData.cryptor.deinit();
         deviceData.transport.deinit();
     }
@@ -169,6 +205,7 @@ export class AndroidAutoServer {
         for (const deviceHandler of this.deviceHandlers) {
             deviceHandler.stopWaitingForDevices();
             deviceHandler.disconnectDevices();
+            deviceHandler.stop();
         }
     }
 }

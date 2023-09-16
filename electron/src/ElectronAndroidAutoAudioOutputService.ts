@@ -2,8 +2,6 @@ import {
     AudioOutputService,
     ChannelId,
     DataBuffer,
-    MessageInStream,
-    MessageOutStream,
 } from '@web-auto/android-auto';
 import {
     AVChannelSetupRequest,
@@ -17,12 +15,8 @@ import Long from 'long';
 export class ElectronAndroidAutoAudioOutputService extends AudioOutputService {
     private rtaudio: RtAudio;
 
-    public constructor(
-        channelId: ChannelId,
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(channelId, messageInStream, messageOutStream);
+    public constructor(channelId: ChannelId) {
+        super(channelId);
 
         this.rtaudio = new RtAudio();
     }

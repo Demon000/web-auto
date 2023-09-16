@@ -10,12 +10,7 @@ import {
     VideoConfig,
     VideoFocusRequest,
 } from '@web-auto/android-auto-proto';
-import {
-    DataBuffer,
-    MessageInStream,
-    MessageOutStream,
-    VideoService,
-} from '@web-auto/android-auto';
+import { DataBuffer, VideoService } from '@web-auto/android-auto';
 import EventEmitter from 'eventemitter3';
 import Long from 'long';
 
@@ -36,16 +31,13 @@ export interface ElectronAndroidAutoVideoServiceEvents {
 }
 
 export class ElectronAndroidAutoVideoService extends VideoService {
-    public emitter = new EventEmitter<ElectronAndroidAutoVideoServiceEvents>();
+    public extraEmitter =
+        new EventEmitter<ElectronAndroidAutoVideoServiceEvents>();
 
     private videoConfigs: IVideoConfig[] = [];
 
-    public constructor(
-        videoConfigs: IVideoConfig[],
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(messageInStream, messageOutStream);
+    public constructor(videoConfigs: IVideoConfig[]) {
+        super();
 
         for (const videoConfig of videoConfigs) {
             this.videoConfigs.push(VideoConfig.fromObject(videoConfig));
@@ -53,12 +45,16 @@ export class ElectronAndroidAutoVideoService extends VideoService {
     }
 
     public async start(): Promise<void> {
-        this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_START);
+        this.extraEmitter.emit(
+            ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
+        );
     }
 
     public stop(): void {
-        this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.STOP);
-        this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP);
+        super.stop();
+        this.extraEmitter.emit(ElectronAndroidAutoVideoServiceEvent.STOP);
+        this.extraEmitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP);
+        this.extraEmitter.removeAllListeners();
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {
@@ -87,7 +83,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         buffer: DataBuffer,
         _timestamp?: Long,
     ): Promise<void> {
-        this.emitter.emit(
+        this.extraEmitter.emit(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
             buffer,
         );

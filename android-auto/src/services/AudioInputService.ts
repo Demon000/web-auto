@@ -1,8 +1,6 @@
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
-import { MessageInStream } from '@/messenger/MessageInStream';
-import { MessageOutStream } from '@/messenger/MessageOutStream';
 import {
     AVChannelMessage,
     AVInputChannel,
@@ -16,11 +14,8 @@ import { AVService } from './AVService';
 import { microsecondsTime } from '@/utils/time';
 
 export abstract class AudioInputService extends AVService {
-    public constructor(
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(ChannelId.AV_INPUT, messageInStream, messageOutStream);
+    public constructor() {
+        super(ChannelId.AV_INPUT);
     }
 
     protected channelCount(): number {
@@ -49,7 +44,7 @@ export abstract class AudioInputService extends AVService {
         this.sendInputOpenResponse();
     }
 
-    protected async onMessage(
+    public async onMessage(
         message: Message,
         options: MessageFrameOptions,
     ): Promise<void> {

@@ -224,4 +224,8 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
             device.close();
         }
     }
+
+    public stop(): void {
+        this.emitter.removeAllListeners();
+    }
 }

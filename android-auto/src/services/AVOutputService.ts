@@ -1,8 +1,6 @@
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
-import { MessageInStream } from '@/messenger/MessageInStream';
-import { MessageOutStream } from '@/messenger/MessageOutStream';
 import {
     AVChannelMessage,
     AVChannelStartIndication,
@@ -14,12 +12,8 @@ import { AVService } from './AVService';
 import Long from 'long';
 
 export abstract class AVOutputService extends AVService {
-    public constructor(
-        channelId: ChannelId,
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(channelId, messageInStream, messageOutStream);
+    public constructor(channelId: ChannelId) {
+        super(channelId);
     }
 
     protected async onAvMediaIndication(buffer: DataBuffer): Promise<void> {
@@ -69,7 +63,7 @@ export abstract class AVOutputService extends AVService {
         }
     }
 
-    protected async onMessage(
+    public async onMessage(
         message: Message,
         options: MessageFrameOptions,
     ): Promise<void> {

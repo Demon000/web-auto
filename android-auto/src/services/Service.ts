@@ -2,11 +2,6 @@ import { channelIdString } from '@/messenger/ChannelId';
 import { EncryptionType } from '@/messenger/EncryptionType';
 import { Message } from '@/messenger/Message';
 import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
-import {
-    MessageInStream,
-    MessageInStreamEvent,
-} from '@/messenger/MessageInStream';
-import { MessageOutStream } from '@/messenger/MessageOutStream';
 import { MessageType } from '@/messenger/MessageType';
 import {
     ChannelDescriptor,
@@ -17,30 +12,37 @@ import {
     Status,
 } from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
+import EventEmitter from 'eventemitter3';
 
 export type ServiceSendMessageOptions = Omit<MessageFrameOptions, 'channelId'>;
 
+export enum ServiceEvent {
+    MESSAGE_SENT = 'message-sent',
+}
+
+export interface ServiceEvents {
+    [ServiceEvent.MESSAGE_SENT]: (
+        message: Message,
+        options: ServiceSendMessageOptions,
+    ) => void;
+}
+
 export abstract class Service {
-    protected channelName;
+    public emitter = new EventEmitter<ServiceEvents>();
+
+    public channelName;
 
     public constructor(
-        protected channelId: number,
-        protected messageInStream: MessageInStream,
-        protected messageOutStream: MessageOutStream,
+        public channelId: number,
         protected debug = false,
     ) {
         this.channelName = channelIdString(channelId);
-
-        this.messageInStream
-            .channelEmitter(this.channelId)
-            .on(
-                MessageInStreamEvent.MESSAGE_RECEIVED,
-                this.onMessage.bind(this),
-            );
     }
 
     public async start(): Promise<void> {}
-    public stop(): void {}
+    public stop(): void {
+        this.emitter.removeAllListeners();
+    }
 
     protected async onChannelOpenRequest(
         data: ChannelOpenRequest,
@@ -83,7 +85,7 @@ export abstract class Service {
         );
     }
 
-    protected async onMessage(
+    public async onMessage(
         message: Message,
         options?: MessageFrameOptions,
     ): Promise<void> {
@@ -127,10 +129,7 @@ export abstract class Service {
         message: Message,
         options: ServiceSendMessageOptions,
     ): Promise<void> {
-        return this.messageOutStream.send(message, {
-            channelId: this.channelId,
-            ...options,
-        });
+        this.emitter.emit(ServiceEvent.MESSAGE_SENT, message, options);
     }
 
     public async sendMessageWithId(

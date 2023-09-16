@@ -10,19 +10,14 @@ import {
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
-import { MessageInStream } from '@/messenger/MessageInStream';
-import { MessageOutStream } from '@/messenger/MessageOutStream';
 import { DataBuffer } from '@/utils/DataBuffer';
 
 import { Service } from './Service';
 import { microsecondsTime } from '@/utils/time';
 
 export abstract class InputService extends Service {
-    public constructor(
-        messageInStream: MessageInStream,
-        messageOutStream: MessageOutStream,
-    ) {
-        super(ChannelId.INPUT, messageInStream, messageOutStream);
+    public constructor() {
+        super(ChannelId.INPUT);
     }
 
     protected abstract bind(data: BindingRequest): Promise<void>;
@@ -40,7 +35,7 @@ export abstract class InputService extends Service {
         return this.sendBindingResponse(status);
     }
 
-    protected async onMessage(
+    public async onMessage(
         message: Message,
         options: MessageFrameOptions,
     ): Promise<void> {

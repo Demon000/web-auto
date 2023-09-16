@@ -17,4 +17,5 @@ export abstract class DeviceHandler {
     public abstract waitForDevices(): void;
     public abstract stopWaitingForDevices(): void;
     public abstract disconnectDevices(): void;
+    public abstract stop(): void;
 }
