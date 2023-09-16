@@ -6,6 +6,7 @@ import {
     AVInputChannel,
     AVInputOpenRequest,
     AVInputOpenResponse,
+    AVMediaAckIndication,
     AVStreamType,
 } from '@web-auto/android-auto-proto';
 import { ChannelDescriptor } from '@web-auto/android-auto-proto';
@@ -44,6 +45,10 @@ export abstract class AudioInputService extends AVService {
         this.sendInputOpenResponse();
     }
 
+    protected async onAckIndication(
+        _data: AVMediaAckIndication,
+    ): Promise<void> {}
+
     public async onMessage(
         message: Message,
         options: MessageFrameOptions,
@@ -56,6 +61,11 @@ export abstract class AudioInputService extends AVService {
                 data = AVInputOpenRequest.decode(bufferPayload);
                 this.printReceive(data);
                 await this.onInputOpenRequest(data);
+                break;
+            case AVChannelMessage.Enum.AV_MEDIA_ACK_INDICATION:
+                data = AVMediaAckIndication.decode(bufferPayload);
+                this.printReceive(data);
+                await this.onAckIndication(data);
                 break;
             default:
                 await super.onMessage(message, options);
