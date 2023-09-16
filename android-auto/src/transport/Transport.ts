@@ -14,6 +14,7 @@ export interface TransportEvents {
 
 export abstract class Transport {
     public emitter = new EventEmitter<TransportEvents>();
+
     public abstract init(): void;
     public abstract deinit(): void;
     public abstract send(buffer: DataBuffer): Promise<void>;
