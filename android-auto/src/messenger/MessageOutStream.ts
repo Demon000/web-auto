@@ -52,7 +52,12 @@ export class MessageOutStream {
         const rawPayload = message
             .getRawPayload()
             .subarray(offset, offset + size);
-        const data = this.composeFrame(message, options, frameType, rawPayload);
+        const data = await this.composeFrame(
+            message,
+            options,
+            frameType,
+            rawPayload,
+        );
         this.emitter.emit(MessageOutStreamEvent.MESSAGE_SENT, data);
 
         offset += size;
@@ -62,17 +67,17 @@ export class MessageOutStream {
         }
     }
 
-    private composeFrame(
+    private async composeFrame(
         message: Message,
         options: MessageFrameOptions,
         frameType: FrameType,
         payloadBuffer: DataBuffer,
-    ): DataBuffer {
+    ): Promise<DataBuffer> {
         let payloadSize = 0;
 
         if (options.encryptionType == EncryptionType.ENCRYPTED) {
             const encryptedPayloadBuffer = DataBuffer.empty();
-            payloadSize = this.cryptor.encrypt(
+            payloadSize = await this.cryptor.encrypt(
                 encryptedPayloadBuffer,
                 payloadBuffer,
             );

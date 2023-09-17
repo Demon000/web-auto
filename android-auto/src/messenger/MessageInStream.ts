@@ -41,15 +41,15 @@ export class MessageInStream {
 
     public emitter = new EventEmitter<MessageInStreamEvents>();
 
-    public parseBuffer(buffer: DataBuffer): void {
+    public async parseBuffer(buffer: DataBuffer): Promise<void> {
         if (this.receiveData) {
-            this.continueReceive(buffer);
+            await this.continueReceive(buffer);
         } else {
-            this.startReceive(buffer);
+            await this.startReceive(buffer);
         }
     }
 
-    private startReceive(buffer: DataBuffer): void {
+    private async startReceive(buffer: DataBuffer): Promise<void> {
         const frameHeader = FrameHeader.fromBuffer(buffer);
         let totalSize = 0;
         if (frameHeader.frameType === FrameType.FIRST) {
@@ -64,25 +64,25 @@ export class MessageInStream {
             totalSize,
         };
 
-        this.tryFinishReceive();
+        await this.tryFinishReceive();
     }
 
-    private continueReceive(buffer: DataBuffer): void {
+    private async continueReceive(buffer: DataBuffer): Promise<void> {
         assert(this.receiveData);
 
         this.receiveData.payload.appendBuffer(buffer);
 
-        this.tryFinishReceive();
+        await this.tryFinishReceive();
     }
 
-    private tryFinishReceive(): void {
+    private async tryFinishReceive(): Promise<void> {
         assert(this.receiveData);
 
         if (
             this.receiveData.payload.size ==
             this.receiveData.frameHeader.payloadSize
         ) {
-            this.finishReceive(
+            await this.finishReceive(
                 this.receiveData.frameHeader,
                 this.receiveData.payload,
                 this.receiveData.totalSize,
@@ -99,24 +99,24 @@ export class MessageInStream {
         );
     }
 
-    private decryptPayload(
+    private async decryptPayload(
         frameHeader: FrameHeader,
         payload: DataBuffer,
-    ): DataBuffer {
+    ): Promise<DataBuffer> {
         if (frameHeader.encryptionType != EncryptionType.ENCRYPTED) {
             return payload;
         }
 
         const decryptedBuffer = DataBuffer.empty();
-        this.cryptor.decrypt(decryptedBuffer, payload);
+        await this.cryptor.decrypt(decryptedBuffer, payload);
         return decryptedBuffer;
     }
 
-    private parseBulkMessage(
+    private async parseBulkMessage(
         frameHeader: FrameHeader,
         payload: DataBuffer,
-    ): void {
-        payload = this.decryptPayload(frameHeader, payload);
+    ): Promise<void> {
+        payload = await this.decryptPayload(frameHeader, payload);
 
         const message = new Message({
             rawPayload: payload,
@@ -124,20 +124,20 @@ export class MessageInStream {
         this.emitMessage(message, frameHeader);
     }
 
-    private finishReceive(
+    private async finishReceive(
         frameHeader: FrameHeader,
         payload: DataBuffer,
         totalSize: number,
-    ): void {
+    ): Promise<void> {
         const frameType = frameHeader.frameType;
         const channelId = frameHeader.channelId;
         let messageData;
 
         if (frameType & FrameType.FIRST && frameType & FrameType.LAST) {
-            return this.parseBulkMessage(frameHeader, payload);
+            return await this.parseBulkMessage(frameHeader, payload);
         }
 
-        payload = this.decryptPayload(frameHeader, payload);
+        payload = await this.decryptPayload(frameHeader, payload);
 
         if (frameType === FrameType.FIRST) {
             const message = new Message({

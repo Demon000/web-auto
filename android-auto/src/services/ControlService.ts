@@ -173,7 +173,7 @@ export class ControlService extends Service {
     }
 
     private async sendHandshake(): Promise<void> {
-        const payload = this.cryptor.readHandshakeBuffer();
+        const payload = await this.cryptor.readHandshakeBuffer();
         this.printSend('handshake');
 
         await this.sendPlainSpecificMessage(

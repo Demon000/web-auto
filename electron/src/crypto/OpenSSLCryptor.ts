@@ -76,16 +76,20 @@ export class OpenSSLCryptor extends Cryptor {
         }
     }
 
-    public readHandshakeBuffer(): DataBuffer {
+    public async readHandshakeBuffer(): Promise<DataBuffer> {
         const buffer = DataBuffer.empty();
         this.read(buffer);
+        console.log(buffer.data, 'buffer');
         return buffer;
     }
-    public writeHandshakeBuffer(buffer: DataBuffer): void {
+    public async writeHandshakeBuffer(buffer: DataBuffer): Promise<void> {
         this.write(buffer);
     }
 
-    public encrypt(output: DataBuffer, input: DataBuffer): number {
+    public async encrypt(
+        output: DataBuffer,
+        input: DataBuffer,
+    ): Promise<number> {
         let totalTransferredSize = 0;
 
         while (totalTransferredSize < input.size) {
@@ -108,7 +112,10 @@ export class OpenSSLCryptor extends Cryptor {
         return this.read(output);
     }
 
-    public decrypt(output: DataBuffer, input: DataBuffer): number {
+    public async decrypt(
+        output: DataBuffer,
+        input: DataBuffer,
+    ): Promise<number> {
         this.write(input);
 
         const beginOffset = output.size;
