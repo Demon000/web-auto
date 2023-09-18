@@ -12,12 +12,6 @@ export abstract class Cryptor {
     public abstract readHandshakeBuffer(): Promise<DataBuffer>;
     public abstract writeHandshakeBuffer(buffer: DataBuffer): Promise<void>;
 
-    public abstract encrypt(
-        output: DataBuffer,
-        input: DataBuffer,
-    ): Promise<number>;
-    public abstract decrypt(
-        output: DataBuffer,
-        input: DataBuffer,
-    ): Promise<number>;
+    public abstract encrypt(buffer: DataBuffer): Promise<DataBuffer>;
+    public abstract decrypt(buffer: DataBuffer): Promise<DataBuffer>;
 }

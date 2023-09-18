@@ -77,23 +77,17 @@ export class OpenSSLCryptor extends Cryptor {
     }
 
     public async readHandshakeBuffer(): Promise<DataBuffer> {
-        const buffer = DataBuffer.empty();
-        this.read(buffer);
-        console.log(buffer.data, 'buffer');
-        return buffer;
+        return this.read();
     }
     public async writeHandshakeBuffer(buffer: DataBuffer): Promise<void> {
         this.write(buffer);
     }
 
-    public async encrypt(
-        output: DataBuffer,
-        input: DataBuffer,
-    ): Promise<number> {
+    public async encrypt(buffer: DataBuffer): Promise<DataBuffer> {
         let totalTransferredSize = 0;
 
-        while (totalTransferredSize < input.size) {
-            const currentBuffer = input.subarray(totalTransferredSize);
+        while (totalTransferredSize < buffer.size) {
+            const currentBuffer = buffer.subarray(totalTransferredSize);
 
             const transferredSize = sslWrite(
                 this.ssl,
@@ -109,24 +103,22 @@ export class OpenSSLCryptor extends Cryptor {
             totalTransferredSize += transferredSize;
         }
 
-        return this.read(output);
+        return this.read();
     }
 
-    public async decrypt(
-        output: DataBuffer,
-        input: DataBuffer,
-    ): Promise<number> {
-        this.write(input);
+    public async decrypt(buffer: DataBuffer): Promise<DataBuffer> {
+        this.write(buffer);
 
-        const beginOffset = output.size;
+        const decryptedBuffer = DataBuffer.empty();
+        const beginOffset = 0;
 
         let availableBytes = 1;
         let totalTransferredSize = 0;
 
         while (availableBytes > 0) {
-            output.resize(output.size + availableBytes);
+            decryptedBuffer.resize(decryptedBuffer.size + availableBytes);
 
-            const currentBuffer = output.subarray(
+            const currentBuffer = decryptedBuffer.subarray(
                 totalTransferredSize + beginOffset,
             );
 
@@ -145,13 +137,14 @@ export class OpenSSLCryptor extends Cryptor {
             totalTransferredSize += transferredSize;
         }
 
-        return totalTransferredSize;
+        return decryptedBuffer;
     }
 
-    public read(buffer: DataBuffer): number {
+    public read(): DataBuffer {
         const pendingSize = sslBioCtrlPending(this.wbio);
 
-        const beginOffset = buffer.size;
+        const buffer = DataBuffer.empty();
+        const beginOffset = 0;
         buffer.resize(beginOffset + pendingSize);
         let totalTransferredSize = 0;
 
@@ -174,7 +167,7 @@ export class OpenSSLCryptor extends Cryptor {
             totalTransferredSize += transferredSize;
         }
 
-        return totalTransferredSize;
+        return buffer;
     }
 
     public write(buffer: DataBuffer): void {

@@ -76,12 +76,11 @@ export class MessageOutStream {
         let payloadSize = 0;
 
         if (options.encryptionType == EncryptionType.ENCRYPTED) {
-            const encryptedPayloadBuffer = DataBuffer.empty();
-            payloadSize = await this.cryptor.encrypt(
-                encryptedPayloadBuffer,
+            const encryptedPayloadBuffer = await this.cryptor.encrypt(
                 payloadBuffer,
             );
             payloadBuffer = encryptedPayloadBuffer;
+            payloadSize = encryptedPayloadBuffer.size;
         } else {
             payloadSize = payloadBuffer.size;
         }

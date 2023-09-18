@@ -107,9 +107,7 @@ export class MessageInStream {
             return payload;
         }
 
-        const decryptedBuffer = DataBuffer.empty();
-        await this.cryptor.decrypt(decryptedBuffer, payload);
-        return decryptedBuffer;
+        return await this.cryptor.decrypt(payload);
     }
 
     private async parseBulkMessage(
