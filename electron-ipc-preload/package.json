@@ -11,7 +11,7 @@
     "lint": "eslint --fix ."
   },
   "devDependencies": {
-    "electron": "^24.3.0",
+    "electron": "^26.2.2",
     "eslint": "^8.46.0",
     "typescript": "^5.1.6"
   }
