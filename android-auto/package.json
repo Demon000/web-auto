@@ -11,6 +11,7 @@
     "lint": "eslint --fix ."
   },
   "dependencies": {
+    "dedent": "^1.5.1",
     "eventemitter3": "^5.0.1",
     "koffi": "^2.5.7",
     "long": "^5.2.3",
