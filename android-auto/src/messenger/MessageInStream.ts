@@ -79,15 +79,26 @@ export class MessageInStream {
         assert(this.receiveData);
 
         if (
-            this.receiveData.payload.size ==
+            this.receiveData.payload.size <
             this.receiveData.frameHeader.payloadSize
         ) {
-            await this.finishReceive(
-                this.receiveData.frameHeader,
-                this.receiveData.payload,
-                this.receiveData.totalSize,
-            );
-            this.receiveData = undefined;
+            return;
+        }
+
+        const payload = this.receiveData.payload.readBuffer(
+            this.receiveData.frameHeader.payloadSize,
+        );
+        const leftoverPayload = this.receiveData.payload.readBuffer();
+
+        await this.finishReceive(
+            this.receiveData.frameHeader,
+            payload,
+            this.receiveData.totalSize,
+        );
+        this.receiveData = undefined;
+
+        if (leftoverPayload.size !== 0) {
+            await this.parseBuffer(leftoverPayload);
         }
     }
 
