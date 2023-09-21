@@ -9,6 +9,7 @@ import { ElectronAndroidAutoServiceFactory } from './services/ElectronAndroidAut
 import { AndroidAutoServer } from '@web-auto/android-auto';
 import assert from 'node:assert';
 import { ElectronUsbDeviceHandler } from './transport/ElectronUsbDeviceHandler';
+import { ElectronTcpDeviceHandler } from './transport/ElectronTcpDeviceHandler';
 
 const electronConfig = autoConf<ElectronConfig>('web-auto', {
     searchPlaces: ['../config.json5'],
@@ -28,6 +29,9 @@ if (electronConfig.androidAuto !== undefined) {
     );
     const server = new AndroidAutoServer(serviceFactory, [
         new ElectronUsbDeviceHandler(),
+        new ElectronTcpDeviceHandler(
+            electronConfig.androidAuto.tcpDeviceHandlerConfig,
+        ),
     ]);
 
     androidAuto = {
