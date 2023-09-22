@@ -1,8 +1,4 @@
-import { app, BrowserWindow } from 'electron';
-import {
-    ElectronWindowBuilder,
-    ElectronWindowBuilderAndroidAuto,
-} from './ElectronWindowBuilder';
+import { ElectronWindowBuilderAndroidAuto } from './ElectronWindowBuilder';
 import { autoConf } from 'auto-config-loader';
 import { ElectronConfig } from './config';
 import { ElectronAndroidAutoServiceFactory } from './services/ElectronAndroidAutoServiceFactory';
@@ -44,6 +40,38 @@ if (electronConfig.androidAuto !== undefined) {
         server.stop();
     });
 }
+
+/*
+import { ElectronAndroidAutoVideoServiceEvent } from './services/ElectronAndroidAutoVideoService';
+import { DataBuffer } from '@web-auto/android-auto';
+
+if (androidAuto !== undefined) {
+    androidAuto.serviceFactory.emitter.on(
+        ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
+        () => {
+            console.log('video-start');
+        },
+    );
+
+    androidAuto.serviceFactory.emitter.on(
+        ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP,
+        () => {
+            console.log('video-stop');
+        },
+    );
+
+    androidAuto.serviceFactory.emitter.on(
+        ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
+        (buffer: DataBuffer): void => {
+            console.log('video-data', buffer);
+        },
+    );
+    androidAuto.server.start();
+}
+*/
+
+import { app, BrowserWindow } from 'electron';
+import { ElectronWindowBuilder } from './ElectronWindowBuilder';
 
 const electronWindowBuilder = new ElectronWindowBuilder(
     electronConfig.electronWindowBuilder,
