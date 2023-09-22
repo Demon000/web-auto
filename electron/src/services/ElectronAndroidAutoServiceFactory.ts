@@ -29,7 +29,7 @@ import {
 } from './ElectronAndroidAutoInputService';
 import { ElectronAndroidAutoAudioOutputService } from './ElectronAndroidAutoAudioOutputService';
 import { ElectronAndroidAutoAudioInputService } from './ElectronAndroidAutoAudioInputService';
-import { OpenSSLCryptor } from '@/crypto/OpenSSLCryptor';
+import { NodeCryptor } from '@/crypto/NodeCryptor';
 
 export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
     public emitter = new EventEmitter<
@@ -48,7 +48,7 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
         certificateBuffer: Buffer,
         privateKeyBuffer: Buffer,
     ): Cryptor {
-        return new OpenSSLCryptor(certificateBuffer, privateKeyBuffer);
+        return new NodeCryptor(certificateBuffer, privateKeyBuffer);
     }
 
     public buildControlService(cryptor: Cryptor): ControlService {
