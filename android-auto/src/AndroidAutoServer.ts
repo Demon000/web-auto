@@ -19,6 +19,9 @@ import {
     ANDROID_AUTO_CERTIFICATE,
     ANDROID_AUTO_PRIVATE_KEY,
 } from './crypto/keys';
+import { DataBuffer } from '.';
+import { EncryptionType } from './messenger/EncryptionType';
+import { Message } from './messenger/Message';
 
 type DeviceData = {
     transport: Transport;
@@ -60,8 +63,8 @@ export class AndroidAutoServer {
 
         cryptor.init();
 
-        const messageInStream = new MessageInStream(cryptor);
-        const messageOutStream = new MessageOutStream(cryptor);
+        const messageInStream = new MessageInStream();
+        const messageOutStream = new MessageOutStream();
 
         const services = this.serviceFactory.buildServices();
         const controlService = this.serviceFactory.buildControlService();
@@ -136,11 +139,45 @@ export class AndroidAutoServer {
 
         messageInStream.emitter.on(
             MessageInStreamEvent.MESSAGE_RECEIVED,
-            (message, frameHeader) => {
+            async (payloads, frameHeader, totalSize) => {
+                const promises = [];
+                for (const payload of payloads) {
+                    if (
+                        frameHeader.encryptionType === EncryptionType.ENCRYPTED
+                    ) {
+                        try {
+                            promises.push(cryptor.decrypt(payload));
+                        } catch (err) {
+                            console.log(err);
+                            return;
+                        }
+                    }
+                }
+
+                if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
+                    payloads = await Promise.all(promises);
+                }
+
+                const buffer = DataBuffer.fromSize(0);
+                for (const payload of payloads) {
+                    buffer.appendBuffer(payload);
+                }
+
+                if (totalSize !== 0 && totalSize !== buffer.size) {
+                    throw new Error(
+                        `Received compound message for channel ${frameHeader.channelId} ` +
+                            `but size ${buffer.size} does not ` +
+                            `match total size ${totalSize}`,
+                    );
+                }
+
+                const message = new Message({ rawPayload: buffer });
+
                 const service = channelIdServiceMap.get(frameHeader.channelId);
                 if (service === undefined) {
                     console.log(
-                        `Unhandled message with id ${message.messageId} on channel with id ${frameHeader.channelId}`,
+                        `Unhandled message with id ${message.messageId} ` +
+                            `on channel with id ${frameHeader.channelId}`,
                         message.getPayload(),
                         frameHeader,
                     );
@@ -153,7 +190,20 @@ export class AndroidAutoServer {
 
         messageOutStream.emitter.on(
             MessageOutStreamEvent.MESSAGE_SENT,
-            (buffer) => {
+            async (payload, frameHeader, totalSize) => {
+                if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
+                    payload = await cryptor.encrypt(payload);
+                }
+
+                frameHeader.payloadSize = payload.size;
+
+                const buffer = DataBuffer.empty();
+                buffer.appendBuffer(frameHeader.toBuffer());
+                if (totalSize !== 0) {
+                    buffer.appendUint32BE(totalSize);
+                }
+                buffer.appendBuffer(payload);
+
                 transport.send(buffer);
             },
         );

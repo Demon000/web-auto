@@ -1,4 +1,3 @@
-import { Cryptor } from '@/crypto/Cryptor';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { EncryptionType } from './EncryptionType';
 import { FrameHeader } from './FrameHeader';
@@ -14,13 +13,15 @@ export enum MessageOutStreamEvent {
 }
 
 export interface MessageOutStreamEvents {
-    [MessageOutStreamEvent.MESSAGE_SENT]: (data: DataBuffer) => void;
+    [MessageOutStreamEvent.MESSAGE_SENT]: (
+        payload: DataBuffer,
+        frameHeader: FrameHeader,
+        totalSize: number,
+    ) => void;
 }
 
 export class MessageOutStream {
     public emitter = new EventEmitter<MessageOutStreamEvents>();
-
-    public constructor(private cryptor: Cryptor) {}
 
     public async send(
         message: Message,
@@ -52,58 +53,32 @@ export class MessageOutStream {
         const rawPayload = message
             .getRawPayload()
             .subarray(offset, offset + size);
-        const data = await this.composeFrame(
-            message,
-            options,
-            frameType,
-            rawPayload,
-        );
-        this.emitter.emit(MessageOutStreamEvent.MESSAGE_SENT, data);
-
-        offset += size;
-
-        if (remainingSize !== 0) {
-            await this.sendSplitMessage(message, options, offset);
-        }
-    }
-
-    private async composeFrame(
-        message: Message,
-        options: MessageFrameOptions,
-        frameType: FrameType,
-        payloadBuffer: DataBuffer,
-    ): Promise<DataBuffer> {
-        let payloadSize = 0;
-
-        if (options.encryptionType == EncryptionType.ENCRYPTED) {
-            const encryptedPayloadBuffer = await this.cryptor.encrypt(
-                payloadBuffer,
-            );
-            payloadBuffer = encryptedPayloadBuffer;
-            payloadSize = encryptedPayloadBuffer.size;
-        } else {
-            payloadSize = payloadBuffer.size;
-        }
 
         const frameHeader = new FrameHeader({
             channelId: options.channelId,
             encryptionType: options.encryptionType,
             messageType: options.messageType,
             frameType,
-            payloadSize,
+            payloadSize: 0,
         });
 
-        const buffer = DataBuffer.empty();
-
-        buffer.appendBuffer(frameHeader.toBuffer());
-
+        let totalSize = 0;
         if (frameType === FrameType.FIRST) {
-            buffer.appendUint32BE(message.getRawPayload().size);
+            totalSize = message.getRawPayload().size;
         }
 
-        buffer.appendBuffer(payloadBuffer);
+        this.emitter.emit(
+            MessageOutStreamEvent.MESSAGE_SENT,
+            rawPayload,
+            frameHeader,
+            totalSize,
+        );
 
-        return buffer;
+        offset += size;
+
+        if (remainingSize !== 0) {
+            await this.sendSplitMessage(message, options, offset);
+        }
     }
 
     public stop(): void {

@@ -1,18 +1,14 @@
 import assert from 'assert';
-import { Cryptor } from '@/crypto/Cryptor';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { ChannelId } from './ChannelId';
-import { EncryptionType } from './EncryptionType';
 import { FrameHeader } from './FrameHeader';
 import { FrameType } from './FrameType';
-import { Message } from './Message';
 import EventEmitter from 'eventemitter3';
 import { MessageFrameOptions } from './MessageFrameOptions';
 
 type MessageData = {
-    message: Message;
-    currentSize: number;
-    totalSize?: number;
+    payloads: DataBuffer[];
+    totalSize: number;
 };
 
 type ReceiveData = {
@@ -27,8 +23,9 @@ export enum MessageInStreamEvent {
 
 export interface MessageInStreamEvents {
     [MessageInStreamEvent.MESSAGE_RECEIVED]: (
-        message: Message,
+        payloads: DataBuffer[],
         options: MessageFrameOptions,
+        totalSize: number,
     ) => void;
 }
 
@@ -36,8 +33,6 @@ export class MessageInStream {
     private messageMap = new Map<ChannelId, MessageData>();
 
     private receiveData?: ReceiveData;
-
-    public constructor(private cryptor: Cryptor) {}
 
     public emitter = new EventEmitter<MessageInStreamEvents>();
 
@@ -102,37 +97,6 @@ export class MessageInStream {
         }
     }
 
-    private emitMessage(message: Message, frameHeader: FrameHeader): void {
-        this.emitter.emit(
-            MessageInStreamEvent.MESSAGE_RECEIVED,
-            message,
-            frameHeader,
-        );
-    }
-
-    private async decryptPayload(
-        frameHeader: FrameHeader,
-        payload: DataBuffer,
-    ): Promise<DataBuffer> {
-        if (frameHeader.encryptionType != EncryptionType.ENCRYPTED) {
-            return payload;
-        }
-
-        return await this.cryptor.decrypt(payload);
-    }
-
-    private async parseBulkMessage(
-        frameHeader: FrameHeader,
-        payload: DataBuffer,
-    ): Promise<void> {
-        payload = await this.decryptPayload(frameHeader, payload);
-
-        const message = new Message({
-            rawPayload: payload,
-        });
-        this.emitMessage(message, frameHeader);
-    }
-
     private async finishReceive(
         frameHeader: FrameHeader,
         payload: DataBuffer,
@@ -143,16 +107,16 @@ export class MessageInStream {
         let messageData;
 
         if (frameType & FrameType.FIRST && frameType & FrameType.LAST) {
-            return await this.parseBulkMessage(frameHeader, payload);
+            this.emitter.emit(
+                MessageInStreamEvent.MESSAGE_RECEIVED,
+                [payload],
+                frameHeader,
+                totalSize,
+            );
+            return;
         }
 
-        payload = await this.decryptPayload(frameHeader, payload);
-
         if (frameType === FrameType.FIRST) {
-            const message = new Message({
-                rawPayload: payload,
-            });
-
             if (this.messageMap.has(channelId)) {
                 throw new Error(
                     `Received new first frame for channel ${channelId} ` +
@@ -161,8 +125,7 @@ export class MessageInStream {
             }
 
             messageData = {
-                message,
-                currentSize: 0,
+                payloads: [],
                 totalSize,
             };
 
@@ -177,21 +140,17 @@ export class MessageInStream {
             }
         }
 
-        messageData.currentSize += payload.size;
-        messageData.message.payload.appendBuffer(payload);
+        messageData.payloads.push(payload);
 
         if (frameType === FrameType.LAST) {
             assert(messageData);
-            if (messageData.currentSize !== messageData.totalSize) {
-                throw new Error(
-                    `Received last frame for channel ${channelId} ` +
-                        `but current size ${messageData.currentSize} does not ` +
-                        `match total size ${messageData.totalSize}`,
-                );
-            }
-
             this.messageMap.delete(channelId);
-            this.emitMessage(messageData.message, frameHeader);
+            this.emitter.emit(
+                MessageInStreamEvent.MESSAGE_RECEIVED,
+                messageData.payloads,
+                frameHeader,
+                messageData.totalSize,
+            );
         }
     }
 

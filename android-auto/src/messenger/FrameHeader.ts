@@ -17,7 +17,7 @@ export class FrameHeader {
     public readonly frameType: FrameType;
     public readonly encryptionType: EncryptionType;
     public readonly messageType: MessageType;
-    public readonly payloadSize: number;
+    public payloadSize: number;
 
     public constructor(options: FrameHeaderOptions) {
         this.channelId = options.channelId;
