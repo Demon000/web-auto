@@ -81,7 +81,7 @@ export class ControlService extends Service {
 
     private async onHandshake(payload?: DataBuffer): Promise<void> {
         if (payload !== undefined) {
-            this.cryptor.writeHandshakeBuffer(payload);
+            await this.cryptor.writeHandshakeBuffer(payload);
         }
 
         if (this.cryptor.doHandshake()) {
