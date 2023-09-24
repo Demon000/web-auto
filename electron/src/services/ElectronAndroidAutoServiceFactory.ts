@@ -51,8 +51,8 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
         return new NodeCryptor(certificateBuffer, privateKeyBuffer);
     }
 
-    public buildControlService(cryptor: Cryptor): ControlService {
-        return new ControlService(cryptor);
+    public buildControlService(): ControlService {
+        return new ControlService();
     }
 
     private buildVideoService(): VideoService {

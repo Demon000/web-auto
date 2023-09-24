@@ -8,6 +8,6 @@ export abstract class ServiceFactory {
         certificateBuffer: Buffer,
         privateKeyBuffer: Buffer,
     ): Cryptor;
-    public abstract buildControlService(cryptor: Cryptor): ControlService;
+    public abstract buildControlService(): ControlService;
     public abstract buildServices(): Service[];
 }

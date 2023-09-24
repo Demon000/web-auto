@@ -22,16 +22,17 @@ import { Message } from '@/messenger/Message';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { microsecondsTime } from '@/utils/time';
 import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
-import { Cryptor } from '@/crypto/Cryptor';
 
 import { Service } from './Service';
 import { EventEmitter } from 'eventemitter3';
 
 export enum ControlServiceEvent {
+    HANDSHAKE = 'handshake',
     SERVICE_DISCOVERY_REQUEST = 'service-discovery-request',
 }
 
 export interface ControlServiceEvents {
+    [ControlServiceEvent.HANDSHAKE]: (payload?: DataBuffer) => void;
     [ControlServiceEvent.SERVICE_DISCOVERY_REQUEST]: (
         data: ServiceDiscoveryRequest,
     ) => void;
@@ -41,7 +42,7 @@ export class ControlService extends Service {
     public extraEmitter = new EventEmitter<ControlServiceEvents>();
     private pingTimeout?: NodeJS.Timeout;
 
-    public constructor(private cryptor: Cryptor) {
+    public constructor() {
         super(ChannelId.CONTROL);
 
         this.onPingTimeout = this.onPingTimeout.bind(this);
@@ -80,19 +81,7 @@ export class ControlService extends Service {
     }
 
     private async onHandshake(payload?: DataBuffer): Promise<void> {
-        if (payload !== undefined) {
-            await this.cryptor.writeHandshakeBuffer(payload);
-        }
-
-        if (this.cryptor.doHandshake()) {
-            console.log('Auth completed');
-
-            await this.sendAuthComplete();
-        } else {
-            console.log('Continue handshake');
-
-            await this.sendHandshake();
-        }
+        this.extraEmitter.emit(ControlServiceEvent.HANDSHAKE, payload);
     }
 
     private async onServiceDiscoveryRequest(
@@ -172,8 +161,7 @@ export class ControlService extends Service {
         );
     }
 
-    private async sendHandshake(): Promise<void> {
-        const payload = await this.cryptor.readHandshakeBuffer();
+    public async sendHandshake(payload: DataBuffer): Promise<void> {
         this.printSend('handshake');
 
         await this.sendPlainSpecificMessage(

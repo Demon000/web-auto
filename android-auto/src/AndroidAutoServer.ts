@@ -64,7 +64,7 @@ export class AndroidAutoServer {
         const messageOutStream = new MessageOutStream(cryptor);
 
         const services = this.serviceFactory.buildServices();
-        const controlService = this.serviceFactory.buildControlService(cryptor);
+        const controlService = this.serviceFactory.buildControlService();
         const allServices = [...services, controlService];
 
         const sendServiceDiscoveryResponse = () => {
@@ -97,6 +97,26 @@ export class AndroidAutoServer {
                 );
 
                 sendServiceDiscoveryResponse();
+            },
+        );
+
+        controlService.extraEmitter.on(
+            ControlServiceEvent.HANDSHAKE,
+            async (payload) => {
+                if (payload !== undefined) {
+                    await cryptor.writeHandshakeBuffer(payload);
+                }
+
+                if (cryptor.doHandshake()) {
+                    console.log('Auth completed');
+
+                    await controlService.sendAuthComplete();
+                } else {
+                    console.log('Continue handshake');
+
+                    const payload = await cryptor.readHandshakeBuffer();
+                    await controlService.sendHandshake(payload);
+                }
             },
         );
 
