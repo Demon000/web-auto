@@ -10,7 +10,6 @@ export class NodeCryptor extends Cryptor {
     private encrypted;
 
     private duplexPair: DuplexPair;
-    private operationCount = 0;
     private encryptMutex = new Mutex();
     private decryptMutex = new Mutex();
 
@@ -45,46 +44,34 @@ export class NodeCryptor extends Cryptor {
     }
 
     public async readHandshakeBuffer(): Promise<DataBuffer> {
-        const count = this.operationCount++;
-        console.log();
-        const buffer = await this.read(this.encrypted, count);
-        console.log(count, 'read handshake buffer', buffer);
-        return buffer;
+        return await this.read(this.encrypted);
     }
 
     public async writeHandshakeBuffer(buffer: DataBuffer): Promise<void> {
-        const count = this.operationCount++;
-        console.log();
-        console.log(count, 'write handshake buffer', buffer);
-        await this.write(this.encrypted, buffer, count);
+        await this.write(this.encrypted, buffer);
     }
 
-    private readSync(readable: Readable, count: number): DataBuffer {
+    private readSync(readable: Readable): DataBuffer {
         const buffer = DataBuffer.empty();
         let chunk;
         while (null !== (chunk = readable.read())) {
-            console.log(count, 'read chunk', chunk);
             const chunkBuffer = DataBuffer.fromBuffer(chunk);
             buffer.appendBuffer(chunkBuffer);
         }
         return buffer;
     }
 
-    private async read(readable: Readable, count: number): Promise<DataBuffer> {
+    private async read(readable: Readable): Promise<DataBuffer> {
         return new Promise((resolve, reject) => {
-            const buffer = this.readSync(readable, count);
+            const buffer = this.readSync(readable);
             if (buffer.size) {
-                console.log(count, 'read immediately', buffer);
                 resolve(buffer);
             } else {
-                console.log(count, 'read later');
                 readable.once('readable', () => {
-                    const buffer = this.readSync(readable, count);
-                    console.log(count, 'finished read later', buffer);
+                    const buffer = this.readSync(readable);
                     if (buffer.size) {
                         resolve(buffer);
                     } else {
-                        console.log(count, 'read failed');
                         reject(buffer);
                     }
                 });
@@ -95,14 +82,10 @@ export class NodeCryptor extends Cryptor {
     private async write(
         writeable: Writable,
         buffer: DataBuffer,
-        count: number,
     ): Promise<void> {
         return new Promise((resolve, reject) => {
-            console.log(count, 'starting write');
             writeable.write(buffer.data, (err) => {
-                console.log(count, 'finished write');
                 if (err !== undefined && err !== null) {
-                    console.log(count, 'error write');
                     return reject(err);
                 }
 
@@ -112,30 +95,20 @@ export class NodeCryptor extends Cryptor {
     }
 
     public async encrypt(buffer: DataBuffer): Promise<DataBuffer> {
-        const count = this.operationCount++;
-        console.log();
-        console.log(count, 'schedule encrypt', buffer);
-
         const release = await this.encryptMutex.acquire();
         try {
-            console.log(count, 'encrypt', buffer);
-            await this.write(this.cleartext, buffer, count);
-            return this.read(this.encrypted, count);
+            await this.write(this.cleartext, buffer);
+            return this.read(this.encrypted);
         } finally {
             release();
         }
     }
 
     public async decrypt(buffer: DataBuffer): Promise<DataBuffer> {
-        const count = this.operationCount++;
-        console.log();
-        console.log(count, 'schedule decrypt', buffer);
-
         const release = await this.decryptMutex.acquire();
         try {
-            console.log(count, 'decrypt', buffer);
-            await this.write(this.encrypted, buffer, count);
-            return this.read(this.cleartext, count);
+            await this.write(this.encrypted, buffer);
+            return this.read(this.cleartext);
         } finally {
             release();
         }
