@@ -39,6 +39,10 @@ export class ElectronUsbTransport extends Transport {
         this.inEndpoint = inEndpoint;
         this.inEndpoint.addListener('data', (data: Buffer) => {
             const buffer = DataBuffer.fromBuffer(data);
+            if (!buffer.size) {
+                return;
+            }
+
             this.emitter.emit(TransportEvent.DATA, buffer);
         });
         this.inEndpoint.addListener('error', (err: Error) => {

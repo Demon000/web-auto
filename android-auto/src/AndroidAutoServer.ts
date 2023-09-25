@@ -209,11 +209,6 @@ export class AndroidAutoServer {
         );
 
         transport.emitter.on(TransportEvent.DATA, (buffer) => {
-            if (!buffer.size) {
-                console.trace('Received zero-sized buffer');
-                return;
-            }
-
             messageInStream.parseBuffer(buffer);
         });
 
