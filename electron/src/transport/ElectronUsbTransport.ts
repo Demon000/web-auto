@@ -1,30 +1,27 @@
-import { Device, Endpoint, InEndpoint, OutEndpoint } from 'usb';
-
 import { Transport, TransportEvent } from '@web-auto/android-auto';
 import { DataBuffer } from '@web-auto/android-auto';
-
-const USB_TRANSPORT_SEND_TIMEOUT = 10000;
+import assert from 'node:assert';
 
 export class ElectronUsbTransport extends Transport {
-    private inEndpoint: InEndpoint;
-    private outEndpoint: OutEndpoint;
+    private inEndpoint: USBEndpoint;
+    private outEndpoint: USBEndpoint;
+    private deinited = false;
 
-    public constructor(private device: Device) {
+    public constructor(private device: USBDevice) {
         super();
 
-        const iface = device.interface(0);
+        assert(device.configuration !== undefined);
 
-        iface.claim();
-
-        let inEndpoint: InEndpoint | undefined;
-        let outEndpoint: OutEndpoint | undefined;
-        for (const endpoint of iface.endpoints) {
+        let inEndpoint: USBEndpoint | undefined;
+        let outEndpoint: USBEndpoint | undefined;
+        for (const endpoint of device.configuration.interfaces[0].alternate
+            .endpoints) {
             if (endpoint.direction == 'in') {
-                inEndpoint = endpoint as InEndpoint;
+                inEndpoint = endpoint as USBEndpoint;
             }
 
             if (endpoint.direction == 'out') {
-                outEndpoint = endpoint as OutEndpoint;
+                outEndpoint = endpoint as USBEndpoint;
             }
 
             if (inEndpoint && outEndpoint) {
@@ -37,64 +34,56 @@ export class ElectronUsbTransport extends Transport {
         }
 
         this.inEndpoint = inEndpoint;
-        this.inEndpoint.addListener('data', (data: Buffer) => {
-            const buffer = DataBuffer.fromBuffer(data);
-            if (!buffer.size) {
-                return;
-            }
-
-            this.emitter.emit(TransportEvent.DATA, buffer);
-        });
-        this.inEndpoint.addListener('error', (err: Error) => {
-            this.emitter.emit(TransportEvent.ERROR, err);
-        });
         this.outEndpoint = outEndpoint;
     }
 
-    private async sendOrReceive(
-        endpoint: Endpoint,
-        buffer: DataBuffer,
-        timeout: number,
-    ): Promise<number> {
-        return new Promise((resolve, reject) => {
-            const transfer = endpoint.makeTransfer(
-                timeout,
-                (error, _data, length) => {
-                    if (error) {
-                        return reject(error);
-                    }
-
-                    resolve(length);
-                },
-            );
-
-            transfer.submit(buffer.data);
-        });
-    }
-
-    public init(): void {
-        this.inEndpoint.startPoll();
-    }
-
-    public deinit(): void {
-        let iface;
+    private async read(): Promise<void> {
+        let result;
         try {
-            if (this.inEndpoint.pollActive) {
-                this.inEndpoint.stopPoll();
-            }
-
-            iface = this.device.interface(0);
-            iface.release();
+            result = await this.device.transferIn(
+                this.inEndpoint.endpointNumber,
+                this.inEndpoint.packetSize,
+            );
         } catch (e) {
-            console.log(e);
+            return;
+        }
+
+        if (result.status !== 'ok' || result.data === undefined) {
+            throw new Error('Invalid status');
+        }
+
+        if (result.data.byteLength) {
+            const buffer = DataBuffer.fromDataView(result.data);
+            this.emitter.emit(TransportEvent.DATA, buffer);
+        }
+
+        this.read();
+    }
+
+    public async init(): Promise<void> {
+        await this.device.claimInterface(0);
+
+        this.read();
+    }
+
+    public async deinit(): Promise<void> {
+        this.deinited = true;
+
+        try {
+            await this.device.releaseInterface(0);
+            await this.device.close();
+        } catch (e) {
+            // console.log(e);
         }
     }
 
     public async send(buffer: DataBuffer): Promise<void> {
-        this.sendOrReceive(
-            this.outEndpoint,
-            buffer,
-            USB_TRANSPORT_SEND_TIMEOUT,
+        const result = await this.device.transferOut(
+            this.outEndpoint.endpointNumber,
+            buffer.data,
         );
+        if (result.status !== 'ok') {
+            throw new Error('Invalid status');
+        }
     }
 }

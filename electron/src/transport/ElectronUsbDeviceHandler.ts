@@ -1,5 +1,5 @@
 import { DeviceHandler, DeviceHandlerEvent } from '@web-auto/android-auto';
-import { Device, LibUSBException, usb } from 'usb';
+import { WebUSB } from 'usb';
 import { ElectronUsbTransport } from './ElectronUsbTransport';
 
 enum StringType {
@@ -11,8 +11,13 @@ enum StringType {
     SERIAL,
 }
 
+const GOOGLE_VENDOR_ID = 0x18d1;
+const GOOGLE_AOAP_WITHOUT_ADB_ID = 0x2d00;
+const GOOGLE_AOAP_WITH_ADB_ID = 0x2d01;
+
 export class ElectronUsbDeviceHandler extends DeviceHandler {
-    private deviceTransportMap = new Map<Device, ElectronUsbTransport>();
+    private deviceTransportMap = new Map<USBDevice, ElectronUsbTransport>();
+    private usb;
 
     public constructor() {
         super();
@@ -20,177 +25,154 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         this.handleConnectedDevice = this.handleConnectedDevice.bind(this);
         this.handleDisconnectedDevice =
             this.handleDisconnectedDevice.bind(this);
-    }
-
-    private async controlTransfer(
-        device: Device,
-        bmRequestType: number,
-        bRequest: number,
-        wValue: number,
-        wIndex: number,
-        dataOrLength: number | Buffer,
-    ): Promise<Buffer | number | undefined> {
-        return new Promise((resolve, reject) => {
-            device.controlTransfer(
-                bmRequestType,
-                bRequest,
-                wValue,
-                wIndex,
-                dataOrLength,
-                (
-                    error: LibUSBException | undefined,
-                    buffer: number | Buffer | undefined,
-                ) => {
-                    if (error) {
-                        return reject(error);
-                    }
-
-                    resolve(buffer);
-                },
-            );
+        this.usb = new WebUSB({
+            allowAllDevices: true,
         });
     }
 
-    private async startProtocolQuery(device: Device): Promise<number> {
-        const ACC_REQ_GET_PROTOCOL_VERSION = 51;
-        const buffer = (await this.controlTransfer(
-            device,
-            usb.LIBUSB_ENDPOINT_IN | usb.LIBUSB_REQUEST_TYPE_VENDOR,
-            ACC_REQ_GET_PROTOCOL_VERSION,
-            0,
-            0,
-            2,
-        )) as Buffer;
-        return buffer.readUint16LE();
+    private print(device: USBDevice, message: string): void {
+        console.log(`${device.productName}${message}`);
     }
 
-    private async startSendStringQuery(
-        device: Device,
+    private isDeviceAoap(device: USBDevice): boolean {
+        return (
+            device.vendorId === GOOGLE_VENDOR_ID &&
+            (device.productId === GOOGLE_AOAP_WITH_ADB_ID ||
+                device.productId === GOOGLE_AOAP_WITHOUT_ADB_ID)
+        );
+    }
+
+    private async protocolQuery(device: USBDevice): Promise<number> {
+        const ACC_REQ_GET_PROTOCOL_VERSION = 51;
+        const result = await device.controlTransferIn(
+            {
+                requestType: 'vendor',
+                recipient: 'device',
+                request: ACC_REQ_GET_PROTOCOL_VERSION,
+                value: 0,
+                index: 0,
+            },
+            2,
+        );
+
+        if (result.data === undefined) {
+            throw new Error('Invalid data');
+        } else if (result.status !== 'ok') {
+            throw new Error('Invalid status');
+        }
+
+        return result.data.getUint16(0, true);
+    }
+
+    private async sendString(
+        device: USBDevice,
         stringType: StringType,
         str: string,
     ): Promise<void> {
         const ACC_REQ_SEND_STRING = 52;
+
         const data = Buffer.alloc(str.length + 1);
         data.write(str);
-        await this.controlTransfer(
-            device,
-            usb.LIBUSB_ENDPOINT_OUT | usb.LIBUSB_REQUEST_TYPE_VENDOR,
-            ACC_REQ_SEND_STRING,
-            0,
-            stringType,
+
+        const result = await device.controlTransferOut(
+            {
+                requestType: 'vendor',
+                recipient: 'device',
+                request: ACC_REQ_SEND_STRING,
+                value: 0,
+                index: stringType,
+            },
             data,
         );
+
+        if (result.status !== 'ok') {
+            throw new Error('Invalid status');
+        }
     }
 
-    private async startStartQuery(device: Device): Promise<void> {
-        /* Library throws error if buffer is not passed when specifying out endpoint. */
+    private async start(device: USBDevice): Promise<void> {
         const ACC_REQ_START = 53;
-        const data = Buffer.from('');
-        await this.controlTransfer(
-            device,
-            usb.LIBUSB_ENDPOINT_OUT | usb.LIBUSB_REQUEST_TYPE_VENDOR,
-            ACC_REQ_START,
-            0,
-            0,
-            data,
-        );
+
+        const result = await device.controlTransferOut({
+            requestType: 'vendor',
+            recipient: 'device',
+            request: ACC_REQ_START,
+            value: 0,
+            index: 0,
+        });
+
+        if (result.status !== 'ok') {
+            throw new Error('Invalid status');
+        }
     }
 
-    private isUsbDeviceAndroidAuto(device: Device): boolean {
-        const deviceDescriptor = device.deviceDescriptor;
-        const googleVendorId = 0x18d1;
-        const aoapId = 0x2d00;
-        const aoapWithAdbId = 0x2d01;
-
-        return (
-            deviceDescriptor.idVendor === googleVendorId &&
-            (deviceDescriptor.idProduct === aoapId ||
-                deviceDescriptor.idProduct === aoapWithAdbId)
-        );
-    }
-
-    private async swithUsbDeviceToAndroidAuto(device: Device): Promise<void> {
-        const protocolVersion = await this.startProtocolQuery(device);
+    private async checkUsbDeviceSupportsAoap(device: USBDevice): Promise<void> {
+        const protocolVersion = await this.protocolQuery(device);
         if (protocolVersion !== 1 && protocolVersion !== 2) {
+            throw new Error('Invalid AOAP protocol version');
+        }
+    }
+
+    private async startAndroidAutoAoap(device: USBDevice): Promise<void> {
+        await this.sendString(device, StringType.MANUFACTURER, 'Android');
+        await this.sendString(device, StringType.MODEL, 'Android Auto');
+        await this.sendString(device, StringType.DESCRIPTION, 'Android Auto');
+        await this.sendString(device, StringType.VERSION, '2.0.1');
+
+        await this.start(device);
+    }
+
+    private async handleConnectedAoapDevice(device: USBDevice): Promise<void> {
+        this.print(device, ' found with Android Auto');
+
+        try {
+            await device.open();
+        } catch (e) {
+            console.log('Failed to open device', device);
             return;
         }
 
-        await this.startSendStringQuery(
-            device,
-            StringType.MANUFACTURER,
-            'Android',
-        );
-        await this.startSendStringQuery(
-            device,
-            StringType.MODEL,
-            'Android Auto',
-        );
-        await this.startSendStringQuery(
-            device,
-            StringType.DESCRIPTION,
-            'Android Auto',
-        );
-        await this.startSendStringQuery(device, StringType.VERSION, '2.0.1');
-        // await startSendStringQuery(device, StringType.URI, "https://f1xstudio.com");
-        // await startSendStringQuery(device, StringType.SERIAL, "HU-AAAAAA001");
-        await this.startStartQuery(device);
+        const transport = new ElectronUsbTransport(device);
+        this.deviceTransportMap.set(device, transport);
+        this.emitter.emit(DeviceHandlerEvent.CONNECTED, transport);
     }
 
-    private getStringDescriptor(device: Device, id: number): Promise<string> {
-        return new Promise((resolve) =>
-            device.getStringDescriptor(id, (error, text) => {
-                if (error || text === undefined) {
-                    text = '';
-                }
-
-                resolve(text);
-            }),
-        );
-    }
-
-    private async handleConnectedDevice(device: Device): Promise<void> {
-        device.open();
-
-        const deviceDescriptor = device.deviceDescriptor;
-        const manufacturer = await this.getStringDescriptor(
-            device,
-            deviceDescriptor.iManufacturer,
-        );
-        const deviceName = await this.getStringDescriptor(
-            device,
-            deviceDescriptor.iProduct,
-        );
-
-        if (this.isUsbDeviceAndroidAuto(device)) {
-            console.log(
-                `Found device ${manufacturer} ${deviceName} with Android Auto`,
-            );
-
-            const transport = new ElectronUsbTransport(device);
-            this.deviceTransportMap.set(device, transport);
-            this.emitter.emit(DeviceHandlerEvent.CONNECTED, transport);
+    private async handleConnectedUnknownDevice(
+        device: USBDevice,
+    ): Promise<void> {
+        try {
+            await device.open();
+        } catch (e) {
+            console.log('Failed to open device', device);
             return;
         }
 
         let supported;
         try {
-            await this.swithUsbDeviceToAndroidAuto(device);
+            await this.checkUsbDeviceSupportsAoap(device);
             supported = true;
         } catch (e) {
             supported = false;
         }
 
-        if (supported) {
-            console.log(`Found device ${manufacturer} ${deviceName} with AOAP`);
-        } else {
-            console.log(
-                `Found device ${manufacturer} ${deviceName} without AOAP`,
-            );
-            device.close();
+        if (!supported) {
+            await device.close();
+            return;
+        }
+
+        this.print(device, ' found with AOAP');
+
+        try {
+            await this.startAndroidAutoAoap(device);
+        } catch (e) {
+            this.print(device, ' failed to start Android Auto');
+            await device.close();
         }
     }
 
-    private handleDisconnectedDevice(device: Device): void {
+    private async handleDisconnectedAoapDevice(
+        device: USBDevice,
+    ): Promise<void> {
         const transport = this.deviceTransportMap.get(device);
         if (transport === undefined) {
             return;
@@ -199,26 +181,55 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         this.emitter.emit(DeviceHandlerEvent.DISCONNECTED, transport);
     }
 
-    public waitForDevices(): void {
-        const devices = usb.getDeviceList();
-
-        usb.on('attach', this.handleConnectedDevice);
-        usb.on('detach', this.handleDisconnectedDevice);
-
-        for (const device of devices) {
-            this.handleConnectedDevice(device);
+    private async handleConnectedDevice(
+        event: USBConnectionEvent,
+    ): Promise<void> {
+        const device = event.device;
+        if (this.isDeviceAoap(device)) {
+            this.handleConnectedAoapDevice(device);
+        } else {
+            this.handleConnectedUnknownDevice(device);
         }
     }
 
+    private async handleDisconnectedDevice(
+        event: USBConnectionEvent,
+    ): Promise<void> {
+        const device = event.device;
+        if (!this.isDeviceAoap(device)) {
+            return;
+        }
+
+        this.handleDisconnectedAoapDevice(device);
+    }
+
+    private async waitForDevicesAsync(): Promise<void> {
+        this.usb.addEventListener('connect', this.handleConnectedDevice);
+        this.usb.addEventListener('disconnect', this.handleDisconnectedDevice);
+
+        const aoapDevices = await this.usb.getDevices();
+        for (const device of aoapDevices) {
+            if (!this.isDeviceAoap(device)) {
+                await this.handleConnectedUnknownDevice(device);
+            }
+        }
+    }
+
+    public waitForDevices(): void {
+        this.waitForDevicesAsync();
+    }
+
     public stopWaitingForDevices(): void {
-        usb.removeListener('attach', this.handleConnectedDevice);
-        usb.removeListener('detach', this.handleDisconnectedDevice);
+        this.usb.removeEventListener('connect', this.handleConnectedDevice);
+        this.usb.removeEventListener(
+            'disconnect',
+            this.handleDisconnectedDevice,
+        );
     }
 
     public disconnectDevices(): void {
         for (const device of this.deviceTransportMap.keys()) {
-            this.handleDisconnectedDevice(device);
-            device.close();
+            this.handleDisconnectedAoapDevice(device);
         }
     }
 
