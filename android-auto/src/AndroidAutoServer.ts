@@ -228,14 +228,14 @@ export class AndroidAutoServer {
             );
         }
 
-        transport.init();
+        await transport.init();
 
         for (const service of allServices) {
             await service.start();
         }
     }
 
-    public deinitDevice(transport: Transport): void {
+    public async deinitDevice(transport: Transport): Promise<void> {
         const deviceData = this.deviceMap.get(transport);
         if (deviceData === undefined) {
             return;
@@ -248,7 +248,7 @@ export class AndroidAutoServer {
         deviceData.messageInStream.stop();
         deviceData.messageOutStream.stop();
         deviceData.cryptor.deinit();
-        deviceData.transport.deinit();
+        await deviceData.transport.deinit();
     }
 
     public async start(): Promise<void> {
