@@ -14,11 +14,11 @@ export class ElectronTcpTransport extends Transport {
         this.emitter.emit(TransportEvent.DATA, buffer);
     }
 
-    public init(): void {
+    public async init(): Promise<void> {
         this.socket.on('data', this.onData);
     }
 
-    public deinit(): void {
+    public async deinit(): Promise<void> {
         this.socket.off('data', this.onData);
         this.socket.destroy();
     }
