@@ -85,10 +85,7 @@ export abstract class Service {
         );
     }
 
-    public async onMessage(
-        message: Message,
-        options?: MessageFrameOptions,
-    ): Promise<void> {
+    public async onMessage(message: Message): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -102,7 +99,6 @@ export abstract class Service {
                 console.log(
                     `Unhandled message with id ${message.messageId} on channel ${this.channelName}`,
                     message.getPayload(),
-                    options,
                 );
         }
     }

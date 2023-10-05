@@ -1,6 +1,5 @@
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
-import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
 import {
     AVChannelMessage,
     AVChannelStartIndication,
@@ -63,10 +62,7 @@ export abstract class AVOutputService extends AVService {
         }
     }
 
-    public async onMessage(
-        message: Message,
-        options: MessageFrameOptions,
-    ): Promise<void> {
+    public async onMessage(message: Message): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         const payload = message.getPayload();
         let data;
@@ -91,7 +87,7 @@ export abstract class AVOutputService extends AVService {
                 await this.onStopIndication(data);
                 break;
             default:
-                await super.onMessage(message, options);
+                await super.onMessage(message);
         }
     }
 

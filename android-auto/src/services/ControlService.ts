@@ -21,7 +21,6 @@ import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { microsecondsTime } from '@/utils/time';
-import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
 
 import { Service } from './Service';
 import { EventEmitter } from 'eventemitter3';
@@ -108,10 +107,7 @@ export class ControlService extends Service {
         return this.sendNavigationFocusResponse(2);
     }
 
-    public async onMessage(
-        message: Message,
-        options: MessageFrameOptions,
-    ): Promise<void> {
+    public async onMessage(message: Message): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         const payload = message.getPayload();
         let data;
@@ -144,7 +140,7 @@ export class ControlService extends Service {
                 await this.onNavigationFocusRequest(data);
                 break;
             default:
-                await super.onMessage(message, options);
+                await super.onMessage(message);
         }
     }
 

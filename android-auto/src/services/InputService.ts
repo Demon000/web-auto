@@ -9,7 +9,6 @@ import {
 
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
-import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
 import { DataBuffer } from '@/utils/DataBuffer';
 
 import { Service } from './Service';
@@ -35,10 +34,7 @@ export abstract class InputService extends Service {
         return this.sendBindingResponse(status);
     }
 
-    public async onMessage(
-        message: Message,
-        options: MessageFrameOptions,
-    ): Promise<void> {
+    public async onMessage(message: Message): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data: BindingRequest;
 
@@ -49,7 +45,7 @@ export abstract class InputService extends Service {
                 await this.onBindingRequest(data);
                 break;
             default:
-                await super.onMessage(message, options);
+                await super.onMessage(message);
         }
     }
 

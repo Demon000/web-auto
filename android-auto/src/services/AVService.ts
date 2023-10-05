@@ -1,6 +1,5 @@
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
-import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
 import {
     AVChannelMessage,
     AVChannelSetupRequest,
@@ -30,10 +29,7 @@ export abstract class AVService extends Service {
         return this.sendSetupResponse(status);
     }
 
-    public async onMessage(
-        message: Message,
-        options: MessageFrameOptions,
-    ): Promise<void> {
+    public async onMessage(message: Message): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -44,7 +40,7 @@ export abstract class AVService extends Service {
                 await this.onSetupRequest(data);
                 break;
             default:
-                await super.onMessage(message, options);
+                await super.onMessage(message);
         }
     }
 

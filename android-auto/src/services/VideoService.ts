@@ -7,7 +7,6 @@ import {
 
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
-import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
 import { DataBuffer } from '@/utils/DataBuffer';
 
 import { AVOutputService } from './AVOutputService';
@@ -17,10 +16,7 @@ export abstract class VideoService extends AVOutputService {
         super(ChannelId.VIDEO);
     }
 
-    public async onMessage(
-        message: Message,
-        options: MessageFrameOptions,
-    ): Promise<void> {
+    public async onMessage(message: Message): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -31,7 +27,7 @@ export abstract class VideoService extends AVOutputService {
                 await this.onVideoFocusRequest(data);
                 break;
             default:
-                await super.onMessage(message, options);
+                await super.onMessage(message);
         }
     }
 

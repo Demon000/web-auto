@@ -1,6 +1,5 @@
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
-import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
 import {
     AVChannelMessage,
     AVInputChannel,
@@ -49,10 +48,7 @@ export abstract class AudioInputService extends AVService {
         _data: AVMediaAckIndication,
     ): Promise<void> {}
 
-    public async onMessage(
-        message: Message,
-        options: MessageFrameOptions,
-    ): Promise<void> {
+    public async onMessage(message: Message): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -68,7 +64,7 @@ export abstract class AudioInputService extends AVService {
                 await this.onAckIndication(data);
                 break;
             default:
-                await super.onMessage(message, options);
+                await super.onMessage(message);
         }
     }
 

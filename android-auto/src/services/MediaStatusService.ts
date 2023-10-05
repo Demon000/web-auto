@@ -4,7 +4,6 @@ import {
     MediaInfoChannelPlaybackData,
 } from '@web-auto/android-auto-proto';
 
-import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
 import { Message } from '@/messenger/Message';
 import { ChannelId } from '@/messenger/ChannelId';
 
@@ -35,10 +34,7 @@ export abstract class MediaStatusService extends Service {
         await this.handlePlayback(data);
     }
 
-    public async onMessage(
-        message: Message,
-        options: MessageFrameOptions,
-    ): Promise<void> {
+    public async onMessage(message: Message): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -54,7 +50,7 @@ export abstract class MediaStatusService extends Service {
                 await this.onPlayback(data);
                 break;
             default:
-                await super.onMessage(message, options);
+                await super.onMessage(message);
         }
     }
 }
