@@ -13,7 +13,6 @@
   "dependencies": {
     "dedent": "^1.5.1",
     "eventemitter3": "^5.0.1",
-    "koffi": "^2.5.7",
     "long": "^5.2.3",
     "protobufjs": "^7.2.4",
     "usb": "^2.9.0"
