@@ -9,8 +9,6 @@ import {
     ControlMessage,
     NavigationFocusRequest,
     NavigationFocusResponse,
-    PingRequest,
-    PingResponse,
     ServiceDiscoveryRequest,
     ServiceDiscoveryResponse,
     Status,
@@ -20,7 +18,6 @@ import {
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { DataBuffer } from '@/utils/DataBuffer';
-import { microsecondsTime } from '@/utils/time';
 
 import { Service } from './Service';
 import { EventEmitter } from 'eventemitter3';
@@ -39,29 +36,9 @@ export interface ControlServiceEvents {
 
 export class ControlService extends Service {
     public extraEmitter = new EventEmitter<ControlServiceEvents>();
-    private pingTimeout?: NodeJS.Timeout;
 
     public constructor() {
         super(ChannelId.CONTROL);
-
-        this.onPingTimeout = this.onPingTimeout.bind(this);
-    }
-
-    public schedulePing(): void {
-        this.pingTimeout = setTimeout(this.onPingTimeout, 5000);
-    }
-
-    public cancelPing(): void {
-        clearTimeout(this.pingTimeout);
-    }
-
-    public async onPingTimeout(): Promise<void> {
-        await this.sendPingRequest();
-        this.schedulePing();
-    }
-
-    public async onPingResponse(_data: PingResponse): Promise<void> {
-        // TODO
     }
 
     private async onVersionReponse(payload: DataBuffer): Promise<void> {
@@ -125,11 +102,6 @@ export class ControlService extends Service {
                 this.printReceive(data);
                 await this.onServiceDiscoveryRequest(data);
                 break;
-            case ControlMessage.Enum.PING_RESPONSE:
-                data = PingResponse.decode(bufferPayload);
-                this.printReceive(data);
-                await this.onPingResponse(data);
-                break;
             case ControlMessage.Enum.AUDIO_FOCUS_REQUEST:
                 data = AudioFocusRequest.decode(bufferPayload);
                 this.printReceive(data);
@@ -179,22 +151,6 @@ export class ControlService extends Service {
 
         await this.sendPlainSpecificMessage(
             ControlMessage.Enum.AUTH_COMPLETE,
-            payload,
-        );
-    }
-
-    private async sendPingRequest(): Promise<void> {
-        const data = PingRequest.create({
-            timestamp: microsecondsTime(),
-        });
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(
-            PingRequest.encode(data).finish(),
-        );
-
-        await this.sendPlainSpecificMessage(
-            ControlMessage.Enum.PING_REQUEST,
             payload,
         );
     }
@@ -249,14 +205,11 @@ export class ControlService extends Service {
     }
 
     public async start(): Promise<void> {
-        this.schedulePing();
-
         return this.sendVersionRequest();
     }
 
     public stop(): void {
         super.stop();
-        this.cancelPing();
     }
 
     protected fillChannelDescriptor(
