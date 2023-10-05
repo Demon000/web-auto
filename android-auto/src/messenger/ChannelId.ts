@@ -12,7 +12,3 @@ export enum ChannelId {
     MEDIA_STATUS,
     NONE = 255,
 }
-
-export function channelIdString(channelId: ChannelId): string {
-    return ChannelId[channelId];
-}

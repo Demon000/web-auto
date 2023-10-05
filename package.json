@@ -5,6 +5,7 @@
       "eslint-config",
       "eslint-config-node",
       "prettier-config",
+      "logging",
       "electron-ipc",
       "electron-ipc-main",
       "electron-ipc-renderer",

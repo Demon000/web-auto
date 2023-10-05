@@ -22,6 +22,7 @@ import {
 import { DataBuffer } from '.';
 import { EncryptionType } from './messenger/EncryptionType';
 import { Message } from './messenger/Message';
+import { getLogger } from '@web-auto/logging';
 
 type DeviceData = {
     transport: Transport;
@@ -32,6 +33,7 @@ type DeviceData = {
 };
 
 export class AndroidAutoServer {
+    private logger = getLogger(this.constructor.name);
     private deviceMap = new Map<Transport, DeviceData>();
     private started = false;
 
@@ -95,7 +97,7 @@ export class AndroidAutoServer {
         controlService.extraEmitter.once(
             ControlServiceEvent.SERVICE_DISCOVERY_REQUEST,
             (data) => {
-                console.log(
+                this.logger.info(
                     `Discovery request, brand: ${data.deviceBrand}, device name ${data.deviceName}`,
                 );
 
@@ -111,11 +113,11 @@ export class AndroidAutoServer {
                 }
 
                 if (cryptor.doHandshake()) {
-                    console.log('Auth completed');
+                    this.logger.debug('Auth completed');
 
                     await controlService.sendAuthComplete();
                 } else {
-                    console.log('Continue handshake');
+                    this.logger.debug('Continue handshake');
 
                     const payload = await cryptor.readHandshakeBuffer();
                     await controlService.sendHandshake(payload);
@@ -148,7 +150,7 @@ export class AndroidAutoServer {
                         try {
                             promises.push(cryptor.decrypt(payload));
                         } catch (err) {
-                            console.log(err);
+                            this.logger.error(err);
                             return;
                         }
                     }
@@ -164,22 +166,27 @@ export class AndroidAutoServer {
                 }
 
                 if (totalSize !== 0 && totalSize !== buffer.size) {
-                    throw new Error(
+                    this.logger.error(
                         `Received compound message for channel ${frameHeader.channelId} ` +
                             `but size ${buffer.size} does not ` +
                             `match total size ${totalSize}`,
                     );
+                    return;
                 }
 
                 const message = new Message({ rawPayload: buffer });
 
                 const service = channelIdServiceMap.get(frameHeader.channelId);
                 if (service === undefined) {
-                    console.log(
+                    this.logger.error(
                         `Unhandled message with id ${message.messageId} ` +
                             `on channel with id ${frameHeader.channelId}`,
-                        message.getPayload(),
-                        frameHeader,
+                        {
+                            metadata: {
+                                payload: message.getPayload(),
+                                frameHeader,
+                            },
+                        },
                     );
                     return;
                 }
@@ -213,7 +220,7 @@ export class AndroidAutoServer {
         });
 
         transport.emitter.on(TransportEvent.ERROR, (err) => {
-            console.log(err);
+            this.logger.error(err);
         });
 
         for (const service of allServices) {

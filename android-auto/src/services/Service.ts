@@ -1,4 +1,3 @@
-import { channelIdString } from '@/messenger/ChannelId';
 import { EncryptionType } from '@/messenger/EncryptionType';
 import { Message } from '@/messenger/Message';
 import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
@@ -13,6 +12,7 @@ import {
 } from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
 import EventEmitter from 'eventemitter3';
+import { getLogger } from '@web-auto/logging';
 
 export type ServiceSendMessageOptions = Omit<MessageFrameOptions, 'channelId'>;
 
@@ -28,16 +28,11 @@ export interface ServiceEvents {
 }
 
 export abstract class Service {
+    protected logger = getLogger(this.constructor.name);
+
     public emitter = new EventEmitter<ServiceEvents>();
 
-    public channelName;
-
-    public constructor(
-        public channelId: number,
-        protected debug = false,
-    ) {
-        this.channelName = channelIdString(channelId);
-    }
+    public constructor(public channelId: number) {}
 
     public async start(): Promise<void> {}
     public stop(): void {
@@ -53,36 +48,33 @@ export abstract class Service {
             await this.open(data);
             status = true;
         } catch (e) {
-            console.log(e);
+            this.logger.error(e);
+            return;
         }
 
         return this.sendChannelOpenResponse(status);
     }
 
     protected printReceive(message: any): void {
-        if (!this.debug) {
-            return;
+        let extra = '';
+        if (typeof message === 'string') {
+            extra = message;
+            message = undefined;
         }
-
-        console.log(
-            this.channelName,
-            'Receive',
-            message.constructor.name,
-            JSON.stringify(message, null, 4),
-        );
+        this.logger.debug(`Receive ${extra}`, {
+            metadata: message,
+        });
     }
 
     protected printSend(message: any): void {
-        if (!this.debug) {
-            return;
+        let extra = '';
+        if (typeof message === 'string') {
+            extra = message;
+            message = undefined;
         }
-
-        console.log(
-            this.channelName,
-            'Send',
-            message.constructor.name,
-            JSON.stringify(message, null, 4),
-        );
+        this.logger.debug(`Send ${extra}`, {
+            metadata: message,
+        });
     }
 
     public async onMessage(message: Message): Promise<void> {
@@ -96,9 +88,12 @@ export abstract class Service {
                 await this.onChannelOpenRequest(data);
                 break;
             default:
-                console.log(
-                    `Unhandled message with id ${message.messageId} on channel ${this.channelName}`,
-                    message.getPayload(),
+                this.logger.error(
+                    `Unhandled message with id ${message.messageId} ` +
+                        `on service ${this.constructor.name}`,
+                    {
+                        metadata: message.getPayload(),
+                    },
                 );
         }
     }

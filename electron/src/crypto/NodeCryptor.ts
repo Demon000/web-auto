@@ -3,8 +3,11 @@ import DuplexPair from 'native-duplexpair';
 import { Readable, Writable } from 'node:stream';
 import { connect } from 'node:tls';
 import { Mutex } from 'async-mutex';
+import { getLogger } from '@web-auto/logging';
 
 export class NodeCryptor extends Cryptor {
+    private logger = getLogger(this.constructor.name);
+
     private connected = false;
     private cleartext;
     private encrypted;
@@ -31,7 +34,9 @@ export class NodeCryptor extends Cryptor {
 
         this.cleartext.once('secureConnect', () => {
             const cipher = this.cleartext.getCipher();
-            console.log(`connected, cipher: ${cipher.name} ${cipher.version}`);
+            this.logger.debug(
+                `Connected, cipher: ${cipher.name} ${cipher.version}`,
+            );
             this.connected = true;
         });
     }

@@ -28,7 +28,8 @@ export abstract class InputService extends Service {
             await this.bind(data);
             status = true;
         } catch (e) {
-            console.log(e);
+            this.logger.error(e);
+            return;
         }
 
         return this.sendBindingResponse(status);

@@ -5,6 +5,7 @@ import {
 } from '@web-auto/android-auto';
 import { Socket } from 'node:net';
 import { ElectronTcpTransport } from './ElectronTcpTransport';
+import { getLogger } from '@web-auto/logging';
 
 export interface ElectronTcpDeviceHandlerConfig {
     ips: string[];
@@ -12,6 +13,8 @@ export interface ElectronTcpDeviceHandlerConfig {
 }
 
 export class ElectronTcpDeviceHandler extends DeviceHandler {
+    private logger = getLogger(this.constructor.name);
+
     public constructor(private config: ElectronTcpDeviceHandlerConfig) {
         super();
     }
@@ -19,7 +22,7 @@ export class ElectronTcpDeviceHandler extends DeviceHandler {
     private connect(ip: string): void {
         const socket = new Socket();
 
-        console.log(`Connecting to IP ${ip}`);
+        this.logger.info(`Connecting to IP ${ip}`);
 
         let transport: Transport;
 
@@ -58,26 +61,26 @@ export class ElectronTcpDeviceHandler extends DeviceHandler {
             clearTimeout(timeoutId);
 
             if (err.code === 'ECONNREFUSED' || err.code === 'EHOSTUNREACH') {
-                console.log(
+                this.logger.error(
                     `Connection refused, retrying in ${this.config.retryMs}ms`,
                 );
                 retryLater();
                 return;
             } else if (err.code === 'ECONNRESET') {
-                console.log(
+                this.logger.error(
                     `Connection reset, retrying in ${this.config.retryMs}ms`,
                 );
                 retryLater();
                 return;
             }
 
-            console.log('Connection failed', err);
+            this.logger.error('Connection failed', err);
         });
 
         socket.once('connect', () => {
             clearTimeout(timeoutId);
 
-            console.log(`Connected to IP ${ip}`);
+            this.logger.info(`Connected to IP ${ip}`);
 
             transport = new ElectronTcpTransport(socket);
             this.emitter.emit(DeviceHandlerEvent.CONNECTED, transport);

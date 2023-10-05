@@ -1,6 +1,7 @@
 import { DeviceHandler, DeviceHandlerEvent } from '@web-auto/android-auto';
 import { WebUSB } from 'usb';
 import { ElectronUsbTransport } from './ElectronUsbTransport';
+import { getLogger } from '@web-auto/logging';
 
 enum StringType {
     MANUFACTURER,
@@ -16,6 +17,8 @@ const GOOGLE_AOAP_WITHOUT_ADB_ID = 0x2d00;
 const GOOGLE_AOAP_WITH_ADB_ID = 0x2d01;
 
 export class ElectronUsbDeviceHandler extends DeviceHandler {
+    private logger = getLogger(this.constructor.name);
+
     private deviceTransportMap = new Map<USBDevice, ElectronUsbTransport>();
     private usb;
 
@@ -28,10 +31,6 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         this.usb = new WebUSB({
             allowAllDevices: true,
         });
-    }
-
-    private print(device: USBDevice, message: string): void {
-        console.log(`${device.productName}${message}`);
     }
 
     private isDeviceAoap(device: USBDevice): boolean {
@@ -123,12 +122,12 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
     }
 
     private async handleConnectedAoapDevice(device: USBDevice): Promise<void> {
-        this.print(device, ' found with Android Auto');
+        this.logger.error(`Found device ${device.productName} with AA`);
 
         try {
             await device.open();
         } catch (e) {
-            console.log('Failed to open device', device);
+            this.logger.error(`Failed to open device ${device.productName}`);
             return;
         }
 
@@ -143,30 +142,45 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         try {
             await device.open();
         } catch (e) {
-            console.log('Failed to open device', device);
+            this.logger.error(`Failed to open device ${device.productName}`);
             return;
         }
 
-        let supported;
         try {
             await this.checkUsbDeviceSupportsAoap(device);
-            supported = true;
         } catch (e) {
-            supported = false;
-        }
+            this.logger.debug(
+                `Found device ${device.productName} without AOAP`,
+            );
 
-        if (!supported) {
-            await device.close();
+            try {
+                await device.close();
+            } catch (e) {
+                this.logger.error(
+                    `Failed to close device ${device.productName}`,
+                );
+                return;
+            }
             return;
         }
 
-        this.print(device, ' found with AOAP');
+        this.logger.info(`Found device ${device.productName} with AOAP`);
 
         try {
             await this.startAndroidAutoAoap(device);
         } catch (e) {
-            this.print(device, ' failed to start Android Auto');
-            await device.close();
+            this.logger.error(
+                `Failed to start AA on device ${device.productName}`,
+            );
+
+            try {
+                await device.close();
+            } catch (e) {
+                this.logger.error(
+                    `Failed to close device ${device.productName}`,
+                );
+                return;
+            }
         }
     }
 

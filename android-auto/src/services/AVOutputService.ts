@@ -19,10 +19,15 @@ export abstract class AVOutputService extends AVService {
         try {
             await this.handleData(buffer);
         } catch (e) {
-            console.log(e);
+            this.logger.error(e);
+            return;
         }
 
-        await this.sendAvMediaAckIndication();
+        try {
+            await this.sendAvMediaAckIndication();
+        } catch (e) {
+            this.logger.error(e);
+        }
     }
 
     protected async onAvMediaWithTimestampIndication(
@@ -34,10 +39,15 @@ export abstract class AVOutputService extends AVService {
         try {
             await this.handleData(buffer, timestamp);
         } catch (e) {
-            console.log(e);
+            this.logger.error(e);
+            return;
         }
 
-        await this.sendAvMediaAckIndication();
+        try {
+            await this.sendAvMediaAckIndication();
+        } catch (e) {
+            this.logger.error(e);
+        }
     }
 
     protected async onStopIndication(
@@ -46,7 +56,7 @@ export abstract class AVOutputService extends AVService {
         try {
             await this.channelStop(data);
         } catch (e) {
-            console.log(e);
+            this.logger.error(e);
         }
     }
 
@@ -58,7 +68,7 @@ export abstract class AVOutputService extends AVService {
         try {
             await this.channelStart(data);
         } catch (e) {
-            console.log(e);
+            this.logger.error(e);
         }
     }
 

@@ -30,7 +30,7 @@ export class ElectronAndroidAutoAudioOutputService extends AudioOutputService {
             RtAudioFormat.RTAUDIO_SINT16,
             this.sampleRate(),
             this.chunkSize(),
-            this.channelName,
+            this.constructor.name,
             null,
             null,
         );

@@ -69,10 +69,11 @@ export class ControlService extends Service {
         const mainorCode = payload.readUint16BE();
         const status = payload.readUint16BE();
         if (status === VersionResponseStatus.Enum.MISMATCH) {
-            throw new Error('Mismatched verion');
+            this.logger.error('Mismatched verion');
+            return;
         }
 
-        console.log(
+        this.logger.info(
             `Major: ${majorCode}, minor: ${mainorCode}, status: ${status}`,
         );
 

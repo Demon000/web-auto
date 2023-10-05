@@ -6,14 +6,26 @@ import { AndroidAutoServer } from '@web-auto/android-auto';
 import assert from 'node:assert';
 import { ElectronUsbDeviceHandler } from './transport/ElectronUsbDeviceHandler';
 import { ElectronTcpDeviceHandler } from './transport/ElectronTcpDeviceHandler';
+import { getLogger, setConfig } from '@web-auto/logging';
 
 const electronConfig = autoConf<ElectronConfig>('web-auto', {
     searchPlaces: ['../config.json5'],
     default: {
+        logging: {
+            debug: true,
+        },
         electronWindowBuilder: {
             windows: [],
         },
     },
+});
+
+setConfig(electronConfig.logging);
+
+const logger = getLogger('electron');
+
+logger.info('Electron config', {
+    metadata: electronConfig,
 });
 
 let androidAuto: ElectronWindowBuilderAndroidAuto | undefined;

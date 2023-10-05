@@ -1,11 +1,13 @@
 import { Transport, TransportEvent } from '@web-auto/android-auto';
 import { DataBuffer } from '@web-auto/android-auto';
+import { getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
 
 export class ElectronUsbTransport extends Transport {
+    private logger = getLogger(this.constructor.name);
+
     private inEndpoint: USBEndpoint;
     private outEndpoint: USBEndpoint;
-    private deinited = false;
 
     public constructor(private device: USBDevice) {
         super();
@@ -67,13 +69,11 @@ export class ElectronUsbTransport extends Transport {
     }
 
     public async deinit(): Promise<void> {
-        this.deinited = true;
-
         try {
             await this.device.releaseInterface(0);
             await this.device.close();
         } catch (e) {
-            // console.log(e);
+            this.logger.error(e);
         }
     }
 

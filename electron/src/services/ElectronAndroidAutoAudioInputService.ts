@@ -29,7 +29,7 @@ export class ElectronAndroidAutoAudioInputService extends AudioInputService {
             RtAudioFormat.RTAUDIO_SINT16,
             this.sampleRate(),
             this.chunkSize(),
-            this.channelName,
+            this.constructor.name,
             (data) => {
                 this.sendAvMediaWithTimestampIndication(
                     DataBuffer.fromBuffer(data),

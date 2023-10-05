@@ -48,7 +48,8 @@ export abstract class VideoService extends AVOutputService {
         try {
             await this.focus(data);
         } catch (e) {
-            console.log(e);
+            this.logger.error(e);
+            return;
         }
 
         await this.sendVideoFocusIndication();

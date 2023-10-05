@@ -23,7 +23,8 @@ export abstract class AVService extends Service {
             await this.setup(data);
             status = true;
         } catch (e) {
-            console.log(e);
+            this.logger.error(e);
+            return;
         }
 
         return this.sendSetupResponse(status);

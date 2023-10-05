@@ -47,18 +47,16 @@ export abstract class SensorService extends Service {
     protected async onSensorStartRequest(
         data: SensorStartRequest,
     ): Promise<void> {
-        let status = false;
-
         try {
             const sensor = this.getSensor(data.sensorType);
             sensor.emitter.on(SensorEvent.DATA, this.sendEventIndication);
             await sensor.start();
-            status = true;
         } catch (e) {
-            console.log(e);
+            this.logger.error(e);
+            return;
         }
 
-        return this.sendSensorStartResponse(data.sensorType, status);
+        return this.sendSensorStartResponse(data.sensorType, true);
     }
 
     public async onMessage(message: Message): Promise<void> {

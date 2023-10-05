@@ -14,6 +14,7 @@ import * as url from 'node:url';
 import { WebConfigCommuncationChannel } from './config-ipc';
 import { WebConfigMainMethod } from '@web-auto/electron-ipc-web-config';
 import { ElectronAndroidAutoInputServiceEvent } from './services/ElectronAndroidAutoInputService';
+import { getLogger } from '@web-auto/logging';
 
 export interface ElectronWindowBuilderAndroidAuto {
     server: AndroidAutoServer;
@@ -45,6 +46,8 @@ export interface ElectronWindowBuilderConfig {
 }
 
 export class ElectronWindowBuilder {
+    private logger = getLogger(this.constructor.name);
+
     public constructor(
         private config: ElectronWindowBuilderConfig,
         private androidAuto: ElectronWindowBuilderAndroidAuto | undefined,
@@ -52,7 +55,9 @@ export class ElectronWindowBuilder {
 
     public logDisplays(): void {
         const displays = screen.getAllDisplays();
-        console.log('Displays', displays);
+        this.logger.info('Displays', {
+            metadata: displays,
+        });
     }
 
     public createWebWindow(
@@ -134,7 +139,7 @@ export class ElectronWindowBuilder {
             }
 
             if (display === undefined) {
-                console.error(
+                this.logger.error(
                     `Failed to find display with id ${config.display}`,
                 );
             }
@@ -183,7 +188,9 @@ export class ElectronWindowBuilder {
                 this.createWebWindow(window, config);
                 break;
             default:
-                throw new Error(`Unknown app name ${config.app.name}`);
+                this.logger.error(`Unknown app name ${config.app.name}`);
+                window.destroy();
+                return;
         }
 
         const indexPath = require.resolve(`@web-auto/${config.app.name}`);
@@ -204,7 +211,12 @@ export class ElectronWindowBuilder {
             callback({ path: url });
         });
 
-        await window.loadURL(indexUrl);
+        try {
+            await window.loadURL(indexUrl);
+        } catch (e) {
+            this.logger.error(e);
+            return;
+        }
 
         if (this.config.openDevTools) {
             window.webContents.openDevTools();
@@ -213,7 +225,7 @@ export class ElectronWindowBuilder {
 
     public buildWindows(): void {
         for (const windowConfig of this.config.windows) {
-            this.buildWindow(windowConfig).catch((e) => console.log(e));
+            this.buildWindow(windowConfig).catch((e) => this.logger.error(e));
         }
     }
 }

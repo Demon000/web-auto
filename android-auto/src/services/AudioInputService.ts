@@ -38,7 +38,8 @@ export abstract class AudioInputService extends AVService {
         try {
             await this.inputOpen(data);
         } catch (e) {
-            console.log(e);
+            this.logger.error(e);
+            return;
         }
 
         this.sendInputOpenResponse();
@@ -70,7 +71,7 @@ export abstract class AudioInputService extends AVService {
 
     protected async sendInputOpenResponse(): Promise<void> {
         if (this.session === undefined) {
-            console.log(
+            this.logger.error(
                 'Cannot send input open response because session id is undefined',
             );
             return;

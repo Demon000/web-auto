@@ -22,7 +22,7 @@ export abstract class AudioOutputService extends AVOutputService {
                 return [AudioType.Enum.SPEECH, 1, 16000, 1024];
             default:
                 throw new Error(
-                    `Invalid channel id ${this.channelName} for audio service`,
+                    `Invalid channel id ${this.channelId} for audio service`,
                 );
         }
     }
