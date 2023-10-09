@@ -246,8 +246,4 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
             this.handleDisconnectedAoapDevice(device);
         }
     }
-
-    public stop(): void {
-        this.emitter.removeAllListeners();
-    }
 }

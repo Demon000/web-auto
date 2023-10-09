@@ -98,6 +98,4 @@ export class ElectronTcpDeviceHandler extends DeviceHandler {
     public stopWaitingForDevices(): void {}
 
     public disconnectDevices(): void {}
-
-    public stop(): void {}
 }
