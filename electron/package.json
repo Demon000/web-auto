@@ -10,8 +10,8 @@
     "start": "electron ./dist/main.js"
   },
   "devDependencies": {
-    "electron": "^27.0.0-beta.4",
     "@types/native-duplexpair": "^1.0.0",
+    "electron": "^27.0.0-beta.4",
     "eslint": "^8.46.0",
     "typescript": "^5.1.6"
   },
