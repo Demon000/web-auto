@@ -211,7 +211,7 @@ export class AndroidAutoServer {
                 }
                 buffer.appendBuffer(payload);
 
-                transport.send(buffer);
+                await transport.send(buffer);
             },
         );
 
