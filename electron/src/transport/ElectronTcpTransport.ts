@@ -20,7 +20,6 @@ export class ElectronTcpTransport extends Transport {
 
     public async deinit(): Promise<void> {
         this.socket.off('data', this.onData);
-        this.socket.destroy();
     }
 
     public async send(buffer: DataBuffer): Promise<void> {

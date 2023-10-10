@@ -1,8 +1,4 @@
-import {
-    DeviceHandler,
-    DeviceHandlerEvent,
-    Transport,
-} from '@web-auto/android-auto';
+import { DeviceHandler, DeviceHandlerEvent } from '@web-auto/android-auto';
 import { Socket } from 'node:net';
 import { ElectronTcpTransport } from './ElectronTcpTransport';
 import { getLogger } from '@web-auto/logging';
@@ -14,9 +10,24 @@ export interface ElectronTcpDeviceHandlerConfig {
 
 export class ElectronTcpDeviceHandler extends DeviceHandler {
     private logger = getLogger(this.constructor.name);
+    private ipTimeoutMap = new Map<string, NodeJS.Timeout>();
+    private ipSocketMap = new Map<string, Socket>();
 
     public constructor(private config: ElectronTcpDeviceHandlerConfig) {
         super();
+    }
+
+    private setIpTimeout(ip: string, fn: () => void): void {
+        const timeout = setTimeout(fn, this.config.retryMs);
+        this.ipTimeoutMap.set(ip, timeout);
+    }
+
+    private clearIpTimeout(ip: string): void {
+        const timeout = this.ipTimeoutMap.get(ip);
+        if (timeout !== undefined) {
+            clearTimeout(timeout);
+        }
+        this.ipTimeoutMap.delete(ip);
     }
 
     private connect(ip: string): void {
@@ -24,65 +35,51 @@ export class ElectronTcpDeviceHandler extends DeviceHandler {
 
         this.logger.info(`Connecting to IP ${ip}`);
 
-        let transport: Transport;
-
-        const retry = () => {
-            if (transport) {
-                this.emitter.emit(DeviceHandlerEvent.DISCONNECTED, transport);
-            }
-            socket.destroy();
-            this.connect(ip);
-        };
-
-        const retryLater = () => {
-            setTimeout(() => {
-                retry();
-            }, this.config.retryMs);
-        };
-
-        const timeoutId = setTimeout(() => {
-            /*
-             * Stop trying after retryMs, then restart.
-             */
+        /*
+         * Set a connection timeout since sockets can take a long time trying
+         * to connect.
+         * Once connected, or on error, this timeout is canceled.
+         */
+        this.setIpTimeout(ip, () => {
             if (socket.connecting) {
-                retry();
+                socket.destroy();
+                this.connect(ip);
             }
-        }, this.config.retryMs);
-
-        socket.once('timeout', () => {
-            retry();
         });
 
-        socket.once('end', () => {
-            retry();
+        socket.once('close', () => {
+            this.clearIpTimeout(ip);
+
+            this.setIpTimeout(ip, () => {
+                this.connect(ip);
+            });
         });
 
-        socket.once('error', (err: NodeJS.ErrnoException) => {
-            clearTimeout(timeoutId);
+        socket.once('error', (err) => {
+            this.clearIpTimeout(ip);
 
-            if (err.code === 'ECONNREFUSED' || err.code === 'EHOSTUNREACH') {
-                this.logger.error(
-                    `Connection refused, retrying in ${this.config.retryMs}ms`,
-                );
-                retryLater();
-                return;
-            } else if (err.code === 'ECONNRESET') {
-                this.logger.error(
-                    `Connection reset, retrying in ${this.config.retryMs}ms`,
-                );
-                retryLater();
-                return;
-            }
-
-            this.logger.error('Connection failed', err);
+            this.logger.error(`Connection failed to ${ip}`, {
+                metadata: err,
+            });
         });
 
         socket.once('connect', () => {
-            clearTimeout(timeoutId);
+            this.clearIpTimeout(ip);
+
+            this.ipSocketMap.set(ip, socket);
 
             this.logger.info(`Connected to IP ${ip}`);
 
-            transport = new ElectronTcpTransport(socket);
+            const transport = new ElectronTcpTransport(socket);
+
+            const disconnected = () => {
+                this.ipSocketMap.delete(ip);
+                this.emitter.emit(DeviceHandlerEvent.DISCONNECTED, transport);
+            };
+
+            socket.prependOnceListener('close', disconnected);
+            socket.prependOnceListener('error', disconnected);
+
             this.emitter.emit(DeviceHandlerEvent.CONNECTED, transport);
         });
 
@@ -95,7 +92,15 @@ export class ElectronTcpDeviceHandler extends DeviceHandler {
         }
     }
 
-    public stopWaitingForDevices(): void {}
+    public stopWaitingForDevices(): void {
+        for (const ip of this.ipTimeoutMap.keys()) {
+            this.clearIpTimeout(ip);
+        }
+    }
 
-    public disconnectDevices(): void {}
+    public disconnectDevices(): void {
+        for (const socket of this.ipSocketMap.values()) {
+            socket.destroy();
+        }
+    }
 }
