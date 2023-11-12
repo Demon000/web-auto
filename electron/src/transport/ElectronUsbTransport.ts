@@ -69,6 +69,8 @@ export class ElectronUsbTransport extends Transport {
     }
 
     public async deinit(): Promise<void> {
+        if (!this.device.opened) return;
+
         try {
             await this.device.releaseInterface(0);
             await this.device.close();
