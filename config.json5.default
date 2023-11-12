@@ -1,4 +1,7 @@
 {
+    logging: {
+        debug: false,
+    },
     androidAuto: {
         serverConfig: {
             serviceDiscovery: {
