@@ -200,8 +200,8 @@ export class AndroidAutoServer {
             messageInStream.parseBuffer(buffer);
         });
 
-        transport.emitter.on(TransportEvent.ERROR, (err) => {
-            this.logger.error(err);
+        transport.emitter.on(TransportEvent.ERROR, (e) => {
+            this.logger.error(e);
         });
 
         for (const service of allServices) {
