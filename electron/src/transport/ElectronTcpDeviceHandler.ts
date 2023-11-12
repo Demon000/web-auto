@@ -1,6 +1,6 @@
 import { DeviceHandler, DeviceHandlerEvent } from '@web-auto/android-auto';
 import { Socket } from 'node:net';
-import { ElectronTcpTransport } from './ElectronTcpTransport';
+import { ElectronSocketTransport } from './ElectronSocketTransport';
 import { getLogger } from '@web-auto/logging';
 
 export interface ElectronTcpDeviceHandlerConfig {
@@ -70,7 +70,7 @@ export class ElectronTcpDeviceHandler extends DeviceHandler {
 
             this.logger.info(`Connected to IP ${ip}`);
 
-            const transport = new ElectronTcpTransport(socket);
+            const transport = new ElectronSocketTransport(socket);
 
             const disconnected = () => {
                 this.ipSocketMap.delete(ip);

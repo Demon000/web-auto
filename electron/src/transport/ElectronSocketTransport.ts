@@ -2,7 +2,7 @@ import { Transport, TransportEvent } from '@web-auto/android-auto';
 import { DataBuffer } from '@web-auto/android-auto';
 import { Socket } from 'node:net';
 
-export class ElectronTcpTransport extends Transport {
+export class ElectronSocketTransport extends Transport {
     public constructor(private socket: Socket) {
         super();
 
