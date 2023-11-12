@@ -35,12 +35,16 @@ if (electronConfig.androidAuto !== undefined) {
         electronConfig.androidAuto.videoConfigs,
         electronConfig.androidAuto.touchScreenConfig,
     );
-    const server = new AndroidAutoServer(serviceFactory, [
-        new ElectronUsbDeviceHandler(),
-        new ElectronTcpDeviceHandler(
-            electronConfig.androidAuto.tcpDeviceHandlerConfig,
-        ),
-    ]);
+    const server = new AndroidAutoServer(
+        electronConfig.androidAuto.serverConfig,
+        serviceFactory,
+        [
+            new ElectronUsbDeviceHandler(),
+            new ElectronTcpDeviceHandler(
+                electronConfig.androidAuto.tcpDeviceHandlerConfig,
+            ),
+        ],
+    );
 
     androidAuto = {
         server,

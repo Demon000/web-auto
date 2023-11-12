@@ -1,5 +1,20 @@
 {
     androidAuto: {
+        serverConfig: {
+            serviceDiscovery: {
+                headUnitName: 'OpenAuto',
+                carModel: 'Universal',
+                carYear: '2018',
+                carSerial: '20180301',
+                leftHandDriveVehicle: false,
+                headunitManufacturer: 'f1x',
+                headunitModel: 'OpenAuto Autoapp',
+                swBuild: '1',
+                swVersion: '1.0',
+                canPlayNativeMediaDuringVr: false,
+                hideClock: false,
+            },
+        },
         videoConfigs: [
             {
                 videoResolution: '_1080p',

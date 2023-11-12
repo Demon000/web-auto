@@ -11,7 +11,10 @@ import { ControlServiceEvent } from './services/ControlService';
 import { Transport, TransportEvent } from './transport/Transport';
 
 import { ServiceFactory } from './services/ServiceFactory';
-import { ServiceDiscoveryResponse } from '@web-auto/android-auto-proto';
+import {
+    IServiceDiscoveryResponse,
+    ServiceDiscoveryResponse,
+} from '@web-auto/android-auto-proto';
 import { Service, ServiceEvent } from './services';
 import { DeviceHandler, DeviceHandlerEvent } from './transport/DeviceHandler';
 import { ChannelId } from './messenger/ChannelId';
@@ -32,12 +35,17 @@ type DeviceData = {
     services: Service[];
 };
 
+export interface AndroidAutoServerConfig {
+    serviceDiscovery: IServiceDiscoveryResponse;
+}
+
 export class AndroidAutoServer {
     private logger = getLogger(this.constructor.name);
     private deviceMap = new Map<Transport, DeviceData>();
     private started = false;
 
     public constructor(
+        private options: AndroidAutoServerConfig,
         private serviceFactory: ServiceFactory,
         private deviceHandlers: DeviceHandler[],
     ) {
@@ -73,19 +81,9 @@ export class AndroidAutoServer {
         const allServices = [...services, controlService];
 
         const sendServiceDiscoveryResponse = () => {
-            const data = ServiceDiscoveryResponse.create({
-                headUnitName: 'OpenAuto',
-                carModel: 'Universal',
-                carYear: '2018',
-                carSerial: '20180301',
-                leftHandDriveVehicle: false,
-                headunitManufacturer: 'f1x',
-                headunitModel: 'OpenAuto Autoapp',
-                swBuild: '1',
-                swVersion: '1.0',
-                canPlayNativeMediaDuringVr: false,
-                hideClock: false,
-            });
+            const data = ServiceDiscoveryResponse.create(
+                this.options.serviceDiscovery,
+            );
 
             for (const service of services) {
                 service.fillFeatures(data);
