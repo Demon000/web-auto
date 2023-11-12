@@ -74,6 +74,19 @@ export class DataBuffer {
         return new DataBuffer(size, undefined);
     }
 
+    public static fromMultiple(buffers: DataBuffer[]): DataBuffer {
+        let length = 0;
+        for (const partialBuffer of buffers) {
+            length += partialBuffer.size;
+        }
+
+        const buffer = DataBuffer.fromSize(length);
+        for (const partialBuffer of buffers) {
+            buffer.appendBuffer(partialBuffer);
+        }
+        return buffer;
+    }
+
     public static empty(): DataBuffer {
         return new DataBuffer(0, undefined);
     }

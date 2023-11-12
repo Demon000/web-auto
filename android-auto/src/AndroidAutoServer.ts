@@ -142,28 +142,11 @@ export class AndroidAutoServer {
         messageInStream.emitter.on(
             MessageInStreamEvent.MESSAGE_RECEIVED,
             async (payloads, frameHeader, totalSize) => {
-                const promises = [];
-                for (const payload of payloads) {
-                    if (
-                        frameHeader.encryptionType === EncryptionType.ENCRYPTED
-                    ) {
-                        try {
-                            promises.push(cryptor.decrypt(payload));
-                        } catch (err) {
-                            this.logger.error(err);
-                            return;
-                        }
-                    }
-                }
-
                 if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
-                    payloads = await Promise.all(promises);
+                    payloads = await cryptor.decryptMultiple(payloads);
                 }
 
-                const buffer = DataBuffer.fromSize(0);
-                for (const payload of payloads) {
-                    buffer.appendBuffer(payload);
-                }
+                const buffer = DataBuffer.fromMultiple(payloads);
 
                 if (totalSize !== 0 && totalSize !== buffer.size) {
                     this.logger.error(
