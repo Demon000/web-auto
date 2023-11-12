@@ -46,9 +46,7 @@
             height: 1080,
         },
         tcpDeviceHandlerConfig: {
-            ips: [
-                "192.168.0.103",
-            ],
+            ips: ['192.168.0.103'],
             retryMs: 10000,
         },
     },
