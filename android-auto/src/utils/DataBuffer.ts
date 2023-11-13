@@ -39,15 +39,10 @@ export class DataBuffer {
         buffer: DataBufferInputType,
         start?: number,
         end?: number,
-        copy?: boolean,
     ): DataBuffer {
         let actualBuffer;
 
-        if (copy === undefined) {
-            copy = false;
-        }
-
-        if (buffer instanceof Buffer && !copy) {
+        if (buffer instanceof Buffer) {
             actualBuffer = buffer;
         } else {
             actualBuffer = Buffer.from(buffer);
@@ -169,9 +164,9 @@ export class DataBuffer {
         return Long.fromBytesBE(numbers);
     }
 
-    public subarray(start?: number, end?: number, copy?: true): DataBuffer {
+    public subarray(start?: number, end?: number): DataBuffer {
         const data = this.data.subarray(start, end);
-        return DataBuffer.fromBuffer(data, undefined, undefined, copy);
+        return DataBuffer.fromBuffer(data);
     }
 
     public readBufferSize(): number {
@@ -220,10 +215,6 @@ export class DataBuffer {
         this.appendOffset += size;
 
         return this;
-    }
-
-    public duplicate(): DataBuffer {
-        return this.subarray(undefined, undefined, true);
     }
 
     public get size(): number {
