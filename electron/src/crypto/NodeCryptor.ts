@@ -44,7 +44,7 @@ export class NodeCryptor extends Cryptor {
     public init(): void {}
     public deinit(): void {}
 
-    public doHandshake(): boolean {
+    public isHandshakeComplete(): boolean {
         return this.connected;
     }
 

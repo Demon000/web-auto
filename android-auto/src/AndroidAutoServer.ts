@@ -110,7 +110,7 @@ export class AndroidAutoServer {
                     await cryptor.writeHandshakeBuffer(payload);
                 }
 
-                if (cryptor.doHandshake()) {
+                if (cryptor.isHandshakeComplete()) {
                     this.logger.debug('Auth completed');
 
                     await controlService.sendAuthComplete();
