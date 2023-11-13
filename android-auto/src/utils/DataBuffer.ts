@@ -55,7 +55,7 @@ export class DataBuffer {
             end = buffer.length;
         }
 
-        buffer = buffer.subarray(start, end);
+        actualBuffer = actualBuffer.subarray(start, end);
 
         /* Buffer should already contain data, seek buffer append to end. */
         return new DataBuffer(undefined, actualBuffer, end - start);
