@@ -62,7 +62,9 @@ export class DataBuffer {
     }
 
     public static fromDataView(view: DataView): DataBuffer {
-        return this.fromBuffer(Buffer.from(view.buffer, view.byteOffset));
+        return this.fromBuffer(
+            Buffer.from(view.buffer, view.byteOffset, view.byteLength),
+        );
     }
 
     public static fromSize(size: number): DataBuffer {
