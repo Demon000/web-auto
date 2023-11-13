@@ -1,7 +1,8 @@
 import { DeviceHandler, DeviceHandlerEvent } from '@web-auto/android-auto';
 import { WebUSB } from 'usb';
-import { ElectronUsbTransport } from './ElectronUsbTransport';
 import { getLogger } from '@web-auto/logging';
+import { ElectronUsbDuplex } from './ElectronUsbDuplex';
+import { ElectronDuplexTransport } from './ElectronDuplexTransport';
 
 enum StringType {
     MANUFACTURER,
@@ -18,16 +19,13 @@ const GOOGLE_AOAP_WITH_ADB_ID = 0x2d01;
 
 export class ElectronUsbDeviceHandler extends DeviceHandler {
     private logger = getLogger(this.constructor.name);
-
-    private deviceTransportMap = new Map<USBDevice, ElectronUsbTransport>();
     private usb;
+    private id = 0;
 
     public constructor() {
         super();
 
         this.handleConnectedDevice = this.handleConnectedDevice.bind(this);
-        this.handleDisconnectedDevice =
-            this.handleDisconnectedDevice.bind(this);
         this.usb = new WebUSB({
             allowAllDevices: true,
         });
@@ -122,7 +120,7 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
     }
 
     private async handleConnectedAoapDevice(device: USBDevice): Promise<void> {
-        this.logger.error(`Found device ${device.productName} with AA`);
+        this.logger.info(`Found device ${device.productName} with AA`);
 
         try {
             await device.open();
@@ -131,9 +129,24 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
             return;
         }
 
-        const transport = new ElectronUsbTransport(device);
-        this.deviceTransportMap.set(device, transport);
-        this.emitter.emit(DeviceHandlerEvent.CONNECTED, transport);
+        this.usb.addEventListener('disconnect', (event) => {
+            if (event.device !== device) {
+                return;
+            }
+
+            transport.disconnect();
+        });
+
+        let name = 'USB: ';
+        if (device.productName) {
+            name += device.productName;
+        } else {
+            name += this.id;
+        }
+
+        const duplex = new ElectronUsbDuplex(device);
+        const transport = new ElectronDuplexTransport(name, duplex);
+        this.emitter.emit(DeviceHandlerEvent.AVAILABLE, transport);
     }
 
     private async handleConnectedUnknownDevice(
@@ -184,17 +197,6 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         }
     }
 
-    private async handleDisconnectedAoapDevice(
-        device: USBDevice,
-    ): Promise<void> {
-        const transport = this.deviceTransportMap.get(device);
-        if (transport === undefined) {
-            return;
-        }
-
-        this.emitter.emit(DeviceHandlerEvent.DISCONNECTED, transport);
-    }
-
     private async handleConnectedDevice(
         event: USBConnectionEvent,
     ): Promise<void> {
@@ -206,20 +208,8 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         }
     }
 
-    private async handleDisconnectedDevice(
-        event: USBConnectionEvent,
-    ): Promise<void> {
-        const device = event.device;
-        if (!this.isDeviceAoap(device)) {
-            return;
-        }
-
-        this.handleDisconnectedAoapDevice(device);
-    }
-
     private async waitForDevicesAsync(): Promise<void> {
         this.usb.addEventListener('connect', this.handleConnectedDevice);
-        this.usb.addEventListener('disconnect', this.handleDisconnectedDevice);
 
         const aoapDevices = await this.usb.getDevices();
         for (const device of aoapDevices) {
@@ -235,15 +225,5 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
 
     public stopWaitingForDevices(): void {
         this.usb.removeEventListener('connect', this.handleConnectedDevice);
-        this.usb.removeEventListener(
-            'disconnect',
-            this.handleDisconnectedDevice,
-        );
-    }
-
-    public disconnectDevices(): void {
-        for (const device of this.deviceTransportMap.keys()) {
-            this.handleDisconnectedAoapDevice(device);
-        }
     }
 }

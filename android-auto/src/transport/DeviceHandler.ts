@@ -2,13 +2,11 @@ import EventEmitter from 'eventemitter3';
 import { Transport } from './Transport';
 
 export enum DeviceHandlerEvent {
-    CONNECTED,
-    DISCONNECTED,
+    AVAILABLE,
 }
 
 export interface DeviceHandlerEvents {
-    [DeviceHandlerEvent.CONNECTED]: (transport: Transport) => void;
-    [DeviceHandlerEvent.DISCONNECTED]: (transport: Transport) => void;
+    [DeviceHandlerEvent.AVAILABLE]: (transport: Transport) => void;
 }
 
 export abstract class DeviceHandler {
@@ -16,8 +14,4 @@ export abstract class DeviceHandler {
 
     public abstract waitForDevices(): void;
     public abstract stopWaitingForDevices(): void;
-    public abstract disconnectDevices(): void;
-    public stop(): void {
-        this.emitter.removeAllListeners();
-    }
 }

@@ -1,4 +1,3 @@
-import { Cryptor } from './crypto/Cryptor';
 import {
     MessageInStream,
     MessageInStreamEvent,
@@ -27,21 +26,13 @@ import { EncryptionType } from './messenger/EncryptionType';
 import { Message } from './messenger/Message';
 import { getLogger } from '@web-auto/logging';
 
-type DeviceData = {
-    transport: Transport;
-    cryptor: Cryptor;
-    messageInStream: MessageInStream;
-    messageOutStream: MessageOutStream;
-    services: Service[];
-};
-
 export interface AndroidAutoServerConfig {
     serviceDiscovery: IServiceDiscoveryResponse;
 }
 
 export class AndroidAutoServer {
     private logger = getLogger(this.constructor.name);
-    private deviceMap = new Map<Transport, DeviceData>();
+    private transports = new Map<string, Transport>();
     private started = false;
 
     public constructor(
@@ -50,17 +41,11 @@ export class AndroidAutoServer {
         private deviceHandlers: DeviceHandler[],
     ) {
         this.initDevice = this.initDevice.bind(this);
-        this.deinitDevice = this.deinitDevice.bind(this);
 
         for (const deviceHandler of this.deviceHandlers) {
             deviceHandler.emitter.on(
-                DeviceHandlerEvent.CONNECTED,
+                DeviceHandlerEvent.AVAILABLE,
                 this.initDevice,
-            );
-
-            deviceHandler.emitter.on(
-                DeviceHandlerEvent.DISCONNECTED,
-                this.deinitDevice,
             );
         }
     }
@@ -123,16 +108,7 @@ export class AndroidAutoServer {
             },
         );
 
-        this.deviceMap.set(transport, {
-            transport,
-            cryptor,
-            messageInStream,
-            messageOutStream,
-            services: allServices,
-        });
-
         const channelIdServiceMap = new Map<ChannelId, Service>();
-
         for (const service of allServices) {
             channelIdServiceMap.set(service.channelId, service);
         }
@@ -201,7 +177,21 @@ export class AndroidAutoServer {
         });
 
         transport.emitter.on(TransportEvent.ERROR, (e) => {
-            this.logger.error(e);
+            this.logger.error('Connection failed', {
+                metadata: e,
+            });
+        });
+
+        transport.emitter.once(TransportEvent.DISCONNECTED, () => {
+            this.transports.delete(transport.name);
+
+            for (const service of allServices) {
+                service.stop();
+            }
+
+            messageInStream.stop();
+            messageOutStream.stop();
+            cryptor.deinit();
         });
 
         for (const service of allServices) {
@@ -216,27 +206,13 @@ export class AndroidAutoServer {
             );
         }
 
-        await transport.init();
+        this.transports.set(transport.name, transport);
+
+        await transport.connect();
 
         for (const service of allServices) {
             await service.start();
         }
-    }
-
-    public async deinitDevice(transport: Transport): Promise<void> {
-        const deviceData = this.deviceMap.get(transport);
-        if (deviceData === undefined) {
-            return;
-        }
-
-        for (const service of deviceData.services) {
-            service.stop();
-        }
-
-        deviceData.messageInStream.stop();
-        deviceData.messageOutStream.stop();
-        deviceData.cryptor.deinit();
-        await deviceData.transport.deinit();
     }
 
     public async start(): Promise<void> {
@@ -258,8 +234,6 @@ export class AndroidAutoServer {
         this.started = false;
         for (const deviceHandler of this.deviceHandlers) {
             deviceHandler.stopWaitingForDevices();
-            deviceHandler.disconnectDevices();
-            deviceHandler.stop();
         }
     }
 }
