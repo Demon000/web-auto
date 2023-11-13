@@ -1,5 +1,4 @@
 import { DataBuffer } from '@/utils/DataBuffer';
-import { EncryptionType } from './EncryptionType';
 import { FrameHeader } from './FrameHeader';
 import { FrameType } from './FrameType';
 import { Message } from './Message';
