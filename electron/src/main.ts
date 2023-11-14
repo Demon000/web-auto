@@ -32,6 +32,7 @@ let androidAuto: ElectronWindowBuilderAndroidAuto | undefined;
 
 if (electronConfig.androidAuto !== undefined) {
     const serviceFactory = new ElectronAndroidAutoServiceFactory(
+        electronConfig.androidAuto.controlConfig,
         electronConfig.androidAuto.videoConfigs,
         electronConfig.androidAuto.touchScreenConfig,
     );

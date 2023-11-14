@@ -182,8 +182,20 @@ export class AndroidAutoServer {
             });
         });
 
+        controlService.extraEmitter.once(
+            ControlServiceEvent.PING_TIMEOUT,
+            () => {
+                this.logger.error(
+                    `Pinger timed out, disconnecting ${transport.name}`,
+                );
+                transport.disconnect();
+            },
+        );
+
         transport.emitter.once(TransportEvent.DISCONNECTED, () => {
             this.transports.delete(transport.name);
+
+            this.logger.error(`Disconnected ${transport.name}`);
 
             for (const service of allServices) {
                 service.stop();

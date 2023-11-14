@@ -18,6 +18,9 @@
                 hideClock: false,
             },
         },
+        controlConfig: {
+            pingTimeoutMs: 5000,
+        },
         videoConfigs: [
             {
                 videoResolution: '_1080p',

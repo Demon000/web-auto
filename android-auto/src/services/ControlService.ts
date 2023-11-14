@@ -20,14 +20,15 @@ import {
 import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { DataBuffer } from '@/utils/DataBuffer';
-import { microsecondsTime } from '@/utils/time';
 
-import { Service } from './Service';
+import { Service, ServiceEvent } from './Service';
 import { EventEmitter } from 'eventemitter3';
+import { Pinger, PingerEvent } from './Pinger';
 
 export enum ControlServiceEvent {
     HANDSHAKE = 'handshake',
     SERVICE_DISCOVERY_REQUEST = 'service-discovery-request',
+    PING_TIMEOUT = 'ping-timeout',
 }
 
 export interface ControlServiceEvents {
@@ -35,33 +36,28 @@ export interface ControlServiceEvents {
     [ControlServiceEvent.SERVICE_DISCOVERY_REQUEST]: (
         data: ServiceDiscoveryRequest,
     ) => void;
+    [ControlServiceEvent.PING_TIMEOUT]: () => void;
+}
+
+export interface ControlServiceConfig {
+    pingTimeoutMs: number;
 }
 
 export class ControlService extends Service {
     public extraEmitter = new EventEmitter<ControlServiceEvents>();
-    private pingTimeout?: NodeJS.Timeout;
 
-    public constructor() {
+    private pinger;
+
+    public constructor(private config: ControlServiceConfig) {
         super(ChannelId.CONTROL);
 
-        this.onPingTimeout = this.onPingTimeout.bind(this);
-    }
+        this.pinger = new Pinger(config.pingTimeoutMs);
 
-    public schedulePing(): void {
-        this.pingTimeout = setTimeout(this.onPingTimeout, 5000);
-    }
-
-    public cancelPing(): void {
-        clearTimeout(this.pingTimeout);
-    }
-
-    public async onPingTimeout(): Promise<void> {
-        await this.sendPingRequest();
-        this.schedulePing();
-    }
-
-    public async onPingResponse(_data: PingResponse): Promise<void> {
-        // TODO
+        this.sendPingRequest = this.sendPingRequest.bind(this);
+        this.pinger.emitter.on(PingerEvent.PING_REQUEST, this.sendPingRequest);
+        this.pinger.emitter.on(PingerEvent.PING_TIMEOUT, () => {
+            this.extraEmitter.emit(ControlServiceEvent.PING_TIMEOUT);
+        });
     }
 
     private async onVersionReponse(payload: DataBuffer): Promise<void> {
@@ -128,7 +124,7 @@ export class ControlService extends Service {
             case ControlMessage.Enum.PING_RESPONSE:
                 data = PingResponse.decode(bufferPayload);
                 this.printReceive(data);
-                await this.onPingResponse(data);
+                this.pinger.onPingResponse(data);
                 break;
             case ControlMessage.Enum.AUDIO_FOCUS_REQUEST:
                 data = AudioFocusRequest.decode(bufferPayload);
@@ -183,10 +179,7 @@ export class ControlService extends Service {
         );
     }
 
-    private async sendPingRequest(): Promise<void> {
-        const data = PingRequest.create({
-            timestamp: microsecondsTime(),
-        });
+    private async sendPingRequest(data: PingRequest): Promise<void> {
         this.printSend(data);
 
         const payload = DataBuffer.fromBuffer(
@@ -249,14 +242,14 @@ export class ControlService extends Service {
     }
 
     public async start(): Promise<void> {
-        this.schedulePing();
+        this.pinger.start();
 
         return this.sendVersionRequest();
     }
 
     public stop(): void {
         super.stop();
-        this.cancelPing();
+        this.pinger.stop();
     }
 
     protected fillChannelDescriptor(

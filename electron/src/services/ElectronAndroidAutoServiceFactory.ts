@@ -1,5 +1,6 @@
 import {
     ControlService,
+    ControlServiceConfig,
     DataBuffer,
     InputService,
     ServiceFactory,
@@ -38,6 +39,7 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
     >();
 
     public constructor(
+        private controlConfig: ControlServiceConfig,
         private videoConfigs: IVideoConfig[],
         private touchSreenConfig: ITouchConfig,
     ) {
@@ -52,7 +54,7 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
     }
 
     public buildControlService(): ControlService {
-        return new ControlService();
+        return new ControlService(this.controlConfig);
     }
 
     private buildVideoService(): VideoService {
