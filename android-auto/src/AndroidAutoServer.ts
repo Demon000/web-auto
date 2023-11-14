@@ -235,5 +235,8 @@ export class AndroidAutoServer {
         for (const deviceHandler of this.deviceHandlers) {
             deviceHandler.stopWaitingForDevices();
         }
+        for (const transport of this.transports.values()) {
+            transport.disconnect();
+        }
     }
 }
