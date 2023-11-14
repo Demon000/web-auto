@@ -1,9 +1,6 @@
 import {
     ControlService,
     DataBuffer,
-    DummyMediaStatusService,
-    DummyNavigationStatusService,
-    DummySensorService,
     InputService,
     ServiceFactory,
     VideoService,
@@ -30,6 +27,9 @@ import {
 import { ElectronAndroidAutoAudioOutputService } from './ElectronAndroidAutoAudioOutputService';
 import { ElectronAndroidAutoAudioInputService } from './ElectronAndroidAutoAudioInputService';
 import { NodeCryptor } from '@/crypto/NodeCryptor';
+import { DummySensorService } from './DummySensorService';
+import { DummyNavigationStatusService } from './DummyNavigationService';
+import { DummyMediaStatusService } from './DummyMediaStatusService';
 
 export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
     public emitter = new EventEmitter<

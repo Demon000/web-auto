@@ -1,22 +1,21 @@
-import { Sensor, SensorEvent } from '@/sensors';
+import { Sensor, SensorEvent } from '@web-auto/android-auto';
 import {
-    DrivingStatusNumber,
     SensorEventIndication,
     SensorType,
 } from '@web-auto/android-auto-proto';
 
-export class DummyDrivingStatusSensor extends Sensor {
+export class DummyNightDataSensor extends Sensor {
     public constructor() {
-        super(SensorType.Enum.DRIVING_STATUS);
+        super(SensorType.Enum.NIGHT_DATA);
     }
 
     public async start(): Promise<void> {}
 
     public emit(): void {
         const data = SensorEventIndication.create({
-            drivingStatus: [
+            nightMode: [
                 {
-                    status: DrivingStatusNumber.Enum.UNRESTRICTED,
+                    isNight: true,
                 },
             ],
         });

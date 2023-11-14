@@ -1,10 +1,10 @@
+import { MediaStatusService } from '@web-auto/android-auto';
 import {
     ChannelDescriptor,
     ChannelOpenRequest,
     MediaInfoChannelMetadataData,
     MediaInfoChannelPlaybackData,
 } from '@web-auto/android-auto-proto';
-import { MediaStatusService } from '@/services/MediaStatusService';
 
 export class DummyMediaStatusService extends MediaStatusService {
     protected async open(_data: ChannelOpenRequest): Promise<void> {

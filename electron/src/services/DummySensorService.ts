@@ -1,5 +1,6 @@
-import { SensorService } from '@/services';
-import { DummyDrivingStatusSensor, DummyNightDataSensor } from '@/dummy';
+import { DummyDrivingStatusSensor } from '@/sensors/DummyDrivingStatusSensor';
+import { DummyNightDataSensor } from '@/sensors/DummyNightDataSensor';
+import { SensorService } from '@web-auto/android-auto';
 import { ChannelOpenRequest } from '@web-auto/android-auto-proto';
 
 export class DummySensorService extends SensorService {

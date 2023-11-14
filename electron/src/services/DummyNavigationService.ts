@@ -1,3 +1,4 @@
+import { NavigationStatusService } from '@web-auto/android-auto';
 import {
     ChannelDescriptor,
     ChannelOpenRequest,
@@ -6,7 +7,6 @@ import {
     NavigationTurnEvent,
     NavigationTurnType,
 } from '@web-auto/android-auto-proto';
-import { NavigationStatusService } from '@/services/NavigationStatusService';
 
 export class DummyNavigationStatusService extends NavigationStatusService {
     protected async open(_data: ChannelOpenRequest): Promise<void> {
