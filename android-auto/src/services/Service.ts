@@ -48,7 +48,9 @@ export abstract class Service {
             await this.open(data);
             status = true;
         } catch (e) {
-            this.logger.error(e);
+            this.logger.error({
+                metadata: e,
+            });
             return;
         }
 

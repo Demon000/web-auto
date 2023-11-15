@@ -19,14 +19,18 @@ export abstract class AVOutputService extends AVService {
         try {
             await this.handleData(buffer);
         } catch (e) {
-            this.logger.error(e);
+            this.logger.error({
+                metadata: e,
+            });
             return;
         }
 
         try {
             await this.sendAvMediaAckIndication();
         } catch (e) {
-            this.logger.error(e);
+            this.logger.error({
+                metadata: e,
+            });
         }
     }
 
@@ -39,14 +43,18 @@ export abstract class AVOutputService extends AVService {
         try {
             await this.handleData(buffer, timestamp);
         } catch (e) {
-            this.logger.error(e);
+            this.logger.error({
+                metadata: e,
+            });
             return;
         }
 
         try {
             await this.sendAvMediaAckIndication();
         } catch (e) {
-            this.logger.error(e);
+            this.logger.error({
+                metadata: e,
+            });
         }
     }
 
@@ -56,7 +64,9 @@ export abstract class AVOutputService extends AVService {
         try {
             await this.channelStop(data);
         } catch (e) {
-            this.logger.error(e);
+            this.logger.error({
+                metadata: e,
+            });
         }
     }
 
@@ -68,7 +78,9 @@ export abstract class AVOutputService extends AVService {
         try {
             await this.channelStart(data);
         } catch (e) {
-            this.logger.error(e);
+            this.logger.error({
+                metadata: e,
+            });
         }
     }
 

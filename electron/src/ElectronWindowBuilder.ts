@@ -214,7 +214,9 @@ export class ElectronWindowBuilder {
         try {
             await window.loadURL(indexUrl);
         } catch (e) {
-            this.logger.error(e);
+            this.logger.error({
+                metadata: e,
+            });
             return;
         }
 
@@ -225,7 +227,11 @@ export class ElectronWindowBuilder {
 
     public buildWindows(): void {
         for (const windowConfig of this.config.windows) {
-            this.buildWindow(windowConfig).catch((e) => this.logger.error(e));
+            this.buildWindow(windowConfig).catch((e) =>
+                this.logger.error({
+                    metadata: e,
+                }),
+            );
         }
     }
 }

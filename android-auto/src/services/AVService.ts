@@ -23,7 +23,9 @@ export abstract class AVService extends Service {
             await this.setup(data);
             status = true;
         } catch (e) {
-            this.logger.error(e);
+            this.logger.error({
+                metadata: e,
+            });
             return;
         }
 

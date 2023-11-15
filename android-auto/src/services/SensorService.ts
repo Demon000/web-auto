@@ -52,7 +52,9 @@ export abstract class SensorService extends Service {
             sensor.emitter.on(SensorEvent.DATA, this.sendEventIndication);
             await sensor.start();
         } catch (e) {
-            this.logger.error(e);
+            this.logger.error({
+                metadata: e,
+            });
             return;
         }
 

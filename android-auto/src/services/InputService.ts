@@ -28,7 +28,9 @@ export abstract class InputService extends Service {
             await this.bind(data);
             status = true;
         } catch (e) {
-            this.logger.error(e);
+            this.logger.error({
+                metadata: e,
+            });
             return;
         }
 
