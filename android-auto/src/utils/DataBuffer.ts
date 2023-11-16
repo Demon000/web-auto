@@ -133,12 +133,10 @@ export class DataBuffer {
     }
 
     public appendUint64BELong(value: Long): this {
-        const size = 8;
         const numbers = value.toBytesBE();
         const buffer = Buffer.from(numbers);
         const data = DataBuffer.fromBuffer(buffer);
         this.appendBuffer(data);
-        this.readOffset += size;
         return this;
     }
 
