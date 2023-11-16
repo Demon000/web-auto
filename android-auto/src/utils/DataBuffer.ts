@@ -88,6 +88,17 @@ export class DataBuffer {
         return new DataBuffer(0, undefined);
     }
 
+    public align(n: number): this {
+        const offset = n - (this.appendOffset % n);
+        if (offset === n) {
+            return this;
+        }
+
+        this.appendResizeToFit(offset);
+        this.appendOffset += offset;
+        return this;
+    }
+
     public resize(size: number): void {
         const data = Buffer.allocUnsafe(size);
         this.data.copy(data);
