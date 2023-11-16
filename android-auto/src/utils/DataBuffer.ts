@@ -135,12 +135,35 @@ export class DataBuffer {
         return this.handleAppend(data, 1, this.data.writeUint8);
     }
 
+    public appendUint16LE(data: number): this {
+        return this.handleAppend(data, 2, this.data.writeUint16LE);
+    }
+    public appendInt16LE(data: number): this {
+        return this.handleAppend(data, 2, this.data.writeInt16LE);
+    }
+
     public appendUint16BE(data: number): this {
         return this.handleAppend(data, 2, this.data.writeUint16BE);
     }
 
+    public appendUint32LE(data: number): this {
+        return this.handleAppend(data, 4, this.data.writeUint32LE);
+    }
+
+    public appendInt32LE(data: number): this {
+        return this.handleAppend(data, 4, this.data.writeInt32LE);
+    }
+
     public appendUint32BE(data: number): this {
         return this.handleAppend(data, 4, this.data.writeUint32BE);
+    }
+
+    public appendUint64LELong(value: Long): this {
+        const numbers = value.toBytesLE();
+        const buffer = Buffer.from(numbers);
+        const data = DataBuffer.fromBuffer(buffer);
+        this.appendBuffer(data);
+        return this;
     }
 
     public appendUint64BELong(value: Long): this {
@@ -148,6 +171,38 @@ export class DataBuffer {
         const buffer = Buffer.from(numbers);
         const data = DataBuffer.fromBuffer(buffer);
         this.appendBuffer(data);
+        return this;
+    }
+
+    public appendUint64LE(value: bigint): this {
+        const size = 8;
+        this.appendResizeToFit(size);
+        this.data.writeBigUint64LE(value, this.appendOffset);
+        this.appendOffset += size;
+        return this;
+    }
+
+    public appendInt64LE(value: bigint): this {
+        const size = 8;
+        this.appendResizeToFit(size);
+        this.data.writeBigInt64LE(value, this.appendOffset);
+        this.appendOffset += size;
+        return this;
+    }
+
+    public appendUint64BE(value: bigint): this {
+        const size = 8;
+        this.appendResizeToFit(size);
+        this.data.writeBigUint64BE(value, this.appendOffset);
+        this.appendOffset += size;
+        return this;
+    }
+
+    public appendDoubleLE(value: number): this {
+        const size = 8;
+        this.appendResizeToFit(size);
+        this.data.writeDoubleLE(value, this.appendOffset);
+        this.appendOffset += size;
         return this;
     }
 
