@@ -4,6 +4,8 @@ import Long from 'long';
 export type DataBufferInputType = Buffer | Uint8Array;
 
 export class DataBuffer {
+    public static debug = false;
+
     private appendOffset;
     private readOffset;
 
@@ -27,11 +29,19 @@ export class DataBuffer {
         this.readOffset = readOffset;
 
         if (size !== undefined) {
-            this.data = Buffer.allocUnsafe(size);
+            this.data = DataBuffer.alloc(size);
         } else if (buffer !== undefined) {
             this.data = buffer;
         } else {
             assert(false);
+        }
+    }
+
+    private static alloc(size: number): Buffer {
+        if (DataBuffer.debug) {
+            return Buffer.alloc(size);
+        } else {
+            return Buffer.allocUnsafe(size);
         }
     }
 
@@ -100,7 +110,7 @@ export class DataBuffer {
     }
 
     public resize(size: number): void {
-        const data = Buffer.allocUnsafe(size);
+        const data = DataBuffer.alloc(size);
         this.data.copy(data);
         this.data = data;
     }
