@@ -101,7 +101,7 @@ export abstract class AudioInputService extends AVService {
         const payload = DataBuffer.empty();
         const timestamp = microsecondsTime();
 
-        payload.appendUint64BE(timestamp);
+        payload.appendUint64BELong(timestamp);
         payload.appendBuffer(buffer);
 
         await this.sendEncryptedSpecificMessage(

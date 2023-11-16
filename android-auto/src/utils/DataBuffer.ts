@@ -132,7 +132,7 @@ export class DataBuffer {
         return this.handleAppend(data, 4, this.data.writeUint32BE);
     }
 
-    public appendUint64BE(value: Long): this {
+    public appendUint64BELong(value: Long): this {
         const size = 8;
         const numbers = value.toBytesBE();
         const buffer = Buffer.from(numbers);
