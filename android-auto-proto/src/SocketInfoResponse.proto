@@ -1,0 +1,15 @@
+/* SPDX-License-Identifier: GPL-3.0+ */
+/*
+ *  This file is part of aasdk library project.
+ *  Copyright (C) 2018 f1x.studio (Michal Szwaj)
+ */
+
+syntax = "proto2";
+
+import "SocketInfoResponseStatusEnum.proto";
+
+message SocketInfoResponse {
+  optional string ip_address = 1;
+  optional int32 port = 2;
+  required SocketInfoResponseStatus.Enum status = 3;
+}

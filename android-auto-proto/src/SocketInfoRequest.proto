@@ -1,0 +1,6 @@
+syntax = "proto2";
+
+message SocketInfoRequest {
+  required string ip_address = 1;
+  optional uint32 port = 2;
+}
