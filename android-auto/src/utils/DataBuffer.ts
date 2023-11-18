@@ -98,25 +98,14 @@ export class DataBuffer {
         return new DataBuffer(0, undefined);
     }
 
-    private alignOffset(existingOffset: number, n: number): number {
-        const offset = n - (existingOffset % n);
-        if (offset === n) {
-            return 0;
-        }
-        return offset;
-    }
-
     public align(n: number): this {
-        const offset = this.alignOffset(this.appendOffset, n);
+        const offset = n - (this.appendOffset % n);
+        if (offset === n) {
+            return this;
+        }
 
         this.appendResizeToFit(offset);
         this.appendOffset += offset;
-        return this;
-    }
-
-    public alignRead(n: number): this {
-        const offset = this.alignOffset(this.readOffset, n);
-        this.readOffset += offset;
         return this;
     }
 
