@@ -288,12 +288,6 @@ export class DataBuffer {
         return this;
     }
 
-    public appendString(str: string): this {
-        const data = Buffer.from(str);
-        const buffer = DataBuffer.fromBuffer(data);
-        return this.appendBuffer(buffer);
-    }
-
     public get size(): number {
         return this.data.length;
     }
