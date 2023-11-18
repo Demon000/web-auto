@@ -20,7 +20,13 @@
     "async-mutex": "^0.4.0",
     "audify": "^1.8.2",
     "auto-config-loader": "^1.7.4",
+    "bluetooth-socket": "github:Demon000/node-bluetooth-socket#master",
+    "bluez": "github:Demon000/node-bluez#master",
     "native-duplexpair": "^1.0.0",
-    "tinyh264": "^0.0.7"
+    "tinyh264": "^0.0.7",
+    "usocket": "github:Demon000/usocket#master"
+  },
+  "overrides": {
+    "usocket": "github:Demon000/usocket#master"
   }
 }
