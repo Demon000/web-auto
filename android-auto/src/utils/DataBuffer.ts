@@ -151,6 +151,11 @@ export class DataBuffer {
         return this;
     }
 
+    public appendSeek(offset: number): this {
+        this.appendOffset = offset;
+        return this;
+    }
+
     public readUint8(): number {
         return this.handleRead(1, this.data.readUint8);
     }
