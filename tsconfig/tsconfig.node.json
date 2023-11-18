@@ -6,7 +6,7 @@
         "sourceMap": true,
         "esModuleInterop": true,
         "resolveJsonModule": true,
-        "module": "commonjs",
+        "module": "Node16",
         "types": ["node"],
         "plugins": [
             { "transform": "typescript-transform-paths" },
