@@ -153,8 +153,4 @@ export class MessageInStream {
             );
         }
     }
-
-    public stop(): void {
-        this.emitter.removeAllListeners();
-    }
 }

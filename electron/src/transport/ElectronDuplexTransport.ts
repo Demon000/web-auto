@@ -7,17 +7,11 @@ import { DataBuffer } from '@web-auto/android-auto';
 import { Duplex } from 'node:stream';
 
 export class ElectronDuplexTransport extends Transport {
-    public static id = 0;
-
-    public constructor(
-        name: string,
-        private socket: Duplex,
-    ) {
-        super(name);
-
+    public constructor(private socket: Duplex) {
+        super();
         this.onData = this.onData.bind(this);
         this.onError = this.onError.bind(this);
-        this.disconnect = this.disconnect.bind(this);
+        this.onClose = this.onClose.bind(this);
     }
 
     private onData(data: Buffer): void {
@@ -29,39 +23,33 @@ export class ElectronDuplexTransport extends Transport {
         this.emitter.emit(TransportEvent.ERROR, err);
     }
 
-    public async connect(): Promise<void> {
+    public connect(): void {
         if (this.state !== TransportState.AVAILABLE) {
             return;
         }
 
         this.socket.on('data', this.onData);
         this.socket.prependOnceListener('error', this.onError);
-        this.socket.prependOnceListener('close', this.disconnect);
+        this.socket.prependOnceListener('close', this.onClose);
+
         this.state = TransportState.CONNECTED;
     }
 
-    public async disconnect(): Promise<void> {
-        if (this.state !== TransportState.CONNECTED) {
-            return;
-        }
-
-        /*
-         * Deinit can be called when the socket has been closed,
-         * or it can be called to close the socket.
-         * Either way, unregister all events and destroy the socket
-         * if it is not destroyed already.
-         */
-        this.socket.off('close', this.disconnect);
+    private onClose(): void {
         this.socket.off('error', this.onError);
         this.socket.off('data', this.onData);
-
-        if (!this.socket.destroyed) {
-            this.socket.destroy();
-        }
 
         this.state = TransportState.DISCONNECTED;
 
         this.emitter.emit(TransportEvent.DISCONNECTED);
+    }
+
+    public disconnect(): void {
+        if (this.state !== TransportState.CONNECTED) {
+            return;
+        }
+
+        this.socket.destroy();
     }
 
     public async send(buffer: DataBuffer): Promise<void> {

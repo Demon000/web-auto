@@ -79,8 +79,4 @@ export class MessageOutStream {
             await this.sendSplitMessage(message, options, offset);
         }
     }
-
-    public stop(): void {
-        this.emitter.removeAllListeners();
-    }
 }

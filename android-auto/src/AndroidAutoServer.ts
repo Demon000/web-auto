@@ -7,7 +7,6 @@ import {
     MessageOutStreamEvent,
 } from './messenger/MessageOutStream';
 import { ControlServiceEvent } from './services/ControlService';
-import { Transport, TransportEvent } from './transport/Transport';
 
 import { ServiceFactory } from './services/ServiceFactory';
 import {
@@ -21,18 +20,25 @@ import {
     ANDROID_AUTO_CERTIFICATE,
     ANDROID_AUTO_PRIVATE_KEY,
 } from './crypto/keys';
-import { DataBuffer } from '.';
+import { DataBuffer, TransportEvent } from '.';
 import { EncryptionType } from './messenger/EncryptionType';
 import { Message } from './messenger/Message';
 import { getLogger } from '@web-auto/logging';
+import { Device, DeviceEvent } from './transport/Device';
+import assert from 'node:assert';
 
 export interface AndroidAutoServerConfig {
     serviceDiscovery: IServiceDiscoveryResponse;
 }
 
+export interface DeviceData {
+    services: Service[];
+}
+
 export class AndroidAutoServer {
     private logger = getLogger(this.constructor.name);
-    private transports = new Map<string, Transport>();
+    private nameDeviceMap = new Map<string, Device>();
+    private nameDeviceDataMap = new Map<string, DeviceData>();
     private started = false;
 
     public constructor(
@@ -40,23 +46,53 @@ export class AndroidAutoServer {
         private serviceFactory: ServiceFactory,
         private deviceHandlers: DeviceHandler[],
     ) {
-        this.initDevice = this.initDevice.bind(this);
+        this.onDeviceAvailable = this.onDeviceAvailable.bind(this);
+        this.onDeviceUnavailable = this.onDeviceUnavailable.bind(this);
 
         for (const deviceHandler of this.deviceHandlers) {
             deviceHandler.emitter.on(
                 DeviceHandlerEvent.AVAILABLE,
-                this.initDevice,
+                this.onDeviceAvailable,
+            );
+            deviceHandler.emitter.on(
+                DeviceHandlerEvent.UNAVAILABLE,
+                this.onDeviceUnavailable,
             );
         }
     }
 
-    public async initDevice(transport: Transport): Promise<void> {
+    public async onDeviceAvailable(device: Device): Promise<void> {
+        this.nameDeviceMap.set(device.name, device);
+
+        this.logger.info(`New available device ${device.name}`);
+
+        device.emitter.on(DeviceEvent.CONNECTED, () => {
+            this.onDeviceConnected(device);
+        });
+
+        try {
+            await device.connect();
+        } catch (e) {
+            this.logger.error(`Failed to connect to device ${device.name}`, {
+                metadata: e,
+            });
+        }
+    }
+
+    public async onDeviceConnected(device: Device): Promise<void> {
+        assert(device.transport !== undefined);
+        const transport = device.transport;
+
+        this.logger.info(`New connected device ${device.name}`);
+
+        device.emitter.on(DeviceEvent.DISCONNECTED, () => {
+            this.onDeviceDisconnected(device);
+        });
+
         const cryptor = this.serviceFactory.buildCryptor(
             ANDROID_AUTO_CERTIFICATE,
             ANDROID_AUTO_PRIVATE_KEY,
         );
-
-        cryptor.init();
 
         const messageInStream = new MessageInStream();
         const messageOutStream = new MessageOutStream();
@@ -186,25 +222,11 @@ export class AndroidAutoServer {
             ControlServiceEvent.PING_TIMEOUT,
             () => {
                 this.logger.error(
-                    `Pinger timed out, disconnecting ${transport.name}`,
+                    `Pinger timed out, disconnecting ${device.name}`,
                 );
-                transport.disconnect();
+                device.disconnect();
             },
         );
-
-        transport.emitter.once(TransportEvent.DISCONNECTED, () => {
-            this.transports.delete(transport.name);
-
-            this.logger.error(`Disconnected ${transport.name}`);
-
-            for (const service of allServices) {
-                service.stop();
-            }
-
-            messageInStream.stop();
-            messageOutStream.stop();
-            cryptor.deinit();
-        });
 
         for (const service of allServices) {
             service.emitter.on(
@@ -218,13 +240,31 @@ export class AndroidAutoServer {
             );
         }
 
-        this.transports.set(transport.name, transport);
-
-        await transport.connect();
+        this.nameDeviceDataMap.set(device.name, {
+            services: allServices,
+        });
 
         for (const service of allServices) {
             await service.start();
         }
+    }
+
+    public async onDeviceDisconnected(device: Device): Promise<void> {
+        const deviceData = this.nameDeviceDataMap.get(device.name);
+        assert(deviceData !== undefined);
+        const { services: allServices } = deviceData;
+
+        this.nameDeviceMap.delete(device.name);
+
+        this.logger.error(`Disconnected ${device.name}`);
+
+        for (const service of allServices) {
+            service.stop();
+        }
+    }
+
+    public onDeviceUnavailable(device: Device): void {
+        this.nameDeviceMap.delete(device.name);
     }
 
     public async start(): Promise<void> {
@@ -244,11 +284,13 @@ export class AndroidAutoServer {
         }
 
         this.started = false;
+
+        for (const device of this.nameDeviceMap.values()) {
+            device.disconnect();
+        }
+
         for (const deviceHandler of this.deviceHandlers) {
             deviceHandler.stopWaitingForDevices();
-        }
-        for (const transport of this.transports.values()) {
-            transport.disconnect();
         }
     }
 }

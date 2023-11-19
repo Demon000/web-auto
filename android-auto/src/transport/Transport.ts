@@ -25,9 +25,7 @@ export abstract class Transport {
 
     public state = TransportState.AVAILABLE;
 
-    public constructor(public name: string) {}
-
-    public abstract connect(): Promise<void>;
-    public abstract disconnect(): Promise<void>;
+    public abstract connect(): void;
+    public abstract disconnect(): void;
     public abstract send(buffer: DataBuffer): Promise<void>;
 }

@@ -50,7 +50,6 @@
         },
         tcpDeviceHandlerConfig: {
             ips: ['192.168.0.103'],
-            retryMs: 10000,
         },
     },
     electronWindowBuilder: {

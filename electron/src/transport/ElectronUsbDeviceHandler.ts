@@ -1,8 +1,11 @@
-import { DeviceHandler, DeviceHandlerEvent } from '@web-auto/android-auto';
+import {
+    Device,
+    DeviceHandler,
+    DeviceHandlerEvent,
+} from '@web-auto/android-auto';
 import { WebUSB } from 'usb';
 import { getLogger } from '@web-auto/logging';
-import { ElectronUsbDuplex } from './ElectronUsbDuplex';
-import { ElectronDuplexTransport } from './ElectronDuplexTransport';
+import { UsbDevice, usbDeviceName as name } from './UsbDevice';
 
 enum StringType {
     MANUFACTURER,
@@ -18,14 +21,16 @@ const GOOGLE_AOAP_WITHOUT_ADB_ID = 0x2d00;
 const GOOGLE_AOAP_WITH_ADB_ID = 0x2d01;
 
 export class ElectronUsbDeviceHandler extends DeviceHandler {
+    protected usbDeviceMap = new Map<USBDevice, Device>();
     private logger = getLogger(this.constructor.name);
     private usb;
-    private id = 0;
 
     public constructor() {
         super();
 
         this.handleConnectedDevice = this.handleConnectedDevice.bind(this);
+        this.handleDisconnectedDevice =
+            this.handleDisconnectedDevice.bind(this);
         this.usb = new WebUSB({
             allowAllDevices: true,
         });
@@ -119,34 +124,15 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         await this.start(device);
     }
 
-    private async handleConnectedAoapDevice(device: USBDevice): Promise<void> {
-        this.logger.info(`Found device ${device.productName} with AA`);
+    private async handleConnectedAoapDevice(
+        usbDevice: USBDevice,
+    ): Promise<void> {
+        this.logger.debug(`Found device ${name(usbDevice)} with AA`);
 
-        try {
-            await device.open();
-        } catch (e) {
-            this.logger.error(`Failed to open device ${device.productName}`);
-            return;
-        }
+        const device = new UsbDevice(usbDevice);
+        this.usbDeviceMap.set(usbDevice, device);
 
-        this.usb.addEventListener('disconnect', (event) => {
-            if (event.device !== device) {
-                return;
-            }
-
-            transport.disconnect();
-        });
-
-        let name = 'USB: ';
-        if (device.productName) {
-            name += device.productName;
-        } else {
-            name += this.id;
-        }
-
-        const duplex = new ElectronUsbDuplex(device);
-        const transport = new ElectronDuplexTransport(name, duplex);
-        this.emitter.emit(DeviceHandlerEvent.AVAILABLE, transport);
+        this.emitter.emit(DeviceHandlerEvent.AVAILABLE, device);
     }
 
     private async handleConnectedUnknownDevice(
@@ -155,51 +141,41 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         try {
             await device.open();
         } catch (e) {
-            this.logger.error(`Failed to open device ${device.productName}`);
+            this.logger.error(`Failed to open device ${name(device)}`);
             return;
         }
 
         try {
             await this.checkUsbDeviceSupportsAoap(device);
         } catch (e) {
-            this.logger.debug(
-                `Found device ${device.productName} without AOAP`,
-            );
+            this.logger.debug(`Found device ${name(device)} without AOAP`);
 
             try {
                 await device.close();
             } catch (e) {
-                this.logger.error(
-                    `Failed to close device ${device.productName}`,
-                );
+                this.logger.error(`Failed to close device ${name(device)}`);
                 return;
             }
             return;
         }
 
-        this.logger.info(`Found device ${device.productName} with AOAP`);
+        this.logger.debug(`Found device ${name(device)} with AOAP`);
 
         try {
             await this.startAndroidAutoAoap(device);
         } catch (e) {
-            this.logger.error(
-                `Failed to start AA on device ${device.productName}`,
-            );
+            this.logger.error(`Failed to start AA on device ${name(device)}`);
 
             try {
                 await device.close();
             } catch (e) {
-                this.logger.error(
-                    `Failed to close device ${device.productName}`,
-                );
+                this.logger.error(`Failed to close device ${name(device)}`);
                 return;
             }
         }
     }
 
-    private async handleConnectedDevice(
-        event: USBConnectionEvent,
-    ): Promise<void> {
+    private handleConnectedDevice(event: USBConnectionEvent): void {
         const device = event.device;
         if (this.isDeviceAoap(device)) {
             this.handleConnectedAoapDevice(device);
@@ -208,12 +184,31 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         }
     }
 
+    private handleDisconnectedDevice(event: USBConnectionEvent): void {
+        const usbDevice = event.device;
+        const device = this.usbDeviceMap.get(usbDevice);
+        if (device === undefined) {
+            return;
+        }
+
+        device.disconnect();
+
+        this.emitter.emit(DeviceHandlerEvent.UNAVAILABLE, device);
+
+        this.usbDeviceMap.delete(usbDevice);
+    }
+
     private async waitForDevicesAsync(): Promise<void> {
         this.usb.addEventListener('connect', this.handleConnectedDevice);
+        this.usb.addEventListener('disconnect', this.handleDisconnectedDevice);
 
         const aoapDevices = await this.usb.getDevices();
         for (const device of aoapDevices) {
-            if (!this.isDeviceAoap(device)) {
+            if (this.isDeviceAoap(device)) {
+                this.logger.error(
+                    `Device ${name(device)} already in AOAP mode`,
+                );
+            } else {
                 await this.handleConnectedUnknownDevice(device);
             }
         }
@@ -225,5 +220,9 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
 
     public stopWaitingForDevices(): void {
         this.usb.removeEventListener('connect', this.handleConnectedDevice);
+        this.usb.removeEventListener(
+            'disconnect',
+            this.handleDisconnectedDevice,
+        );
     }
 }

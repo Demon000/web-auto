@@ -1,12 +1,14 @@
 import EventEmitter from 'eventemitter3';
-import { Transport } from './Transport';
+import { Device } from './Device';
 
 export enum DeviceHandlerEvent {
-    AVAILABLE,
+    AVAILABLE = 'available',
+    UNAVAILABLE = 'unavailable',
 }
 
 export interface DeviceHandlerEvents {
-    [DeviceHandlerEvent.AVAILABLE]: (transport: Transport) => void;
+    [DeviceHandlerEvent.AVAILABLE]: (device: Device) => void;
+    [DeviceHandlerEvent.UNAVAILABLE]: (device: Device) => void;
 }
 
 export abstract class DeviceHandler {

@@ -5,8 +5,6 @@ export abstract class Cryptor {
         protected certificateBuffer: Buffer,
         protected privateKeyBuffer: Buffer,
     ) {}
-    public abstract init(): void;
-    public abstract deinit(): void;
 
     public abstract isHandshakeComplete(): boolean;
     public abstract readHandshakeBuffer(): Promise<DataBuffer>;

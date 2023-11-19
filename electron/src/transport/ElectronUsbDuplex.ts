@@ -55,7 +55,7 @@ export class ElectronUsbDuplex extends Duplex {
     }
 
     public _destroy(
-        err: Error | null,
+        _err: Error | null,
         callback: (err: Error | null) => void,
     ): void {
         this.destroyAsync()
