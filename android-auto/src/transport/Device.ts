@@ -1,6 +1,5 @@
 import EventEmitter from 'eventemitter3';
 import { Transport, TransportEvent } from './Transport';
-import assert from 'node:assert';
 
 export enum DeviceEvent {
     CONNECTED,

@@ -21,7 +21,7 @@ import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { DataBuffer } from '@/utils/DataBuffer';
 
-import { Service, ServiceEvent } from './Service';
+import { Service } from './Service';
 import { EventEmitter } from 'eventemitter3';
 import { Pinger, PingerEvent } from './Pinger';
 
