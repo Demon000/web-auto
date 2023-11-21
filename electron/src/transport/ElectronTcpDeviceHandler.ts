@@ -1,5 +1,4 @@
 import { DeviceHandler, DeviceHandlerEvent } from '@web-auto/android-auto';
-import { getLogger } from '@web-auto/logging';
 import { TcpDevice } from './TcpDevice';
 
 export interface ElectronTcpDeviceHandlerConfig {
@@ -7,8 +6,6 @@ export interface ElectronTcpDeviceHandlerConfig {
 }
 
 export class ElectronTcpDeviceHandler extends DeviceHandler {
-    protected logger = getLogger(this.constructor.name);
-
     public constructor(private config: ElectronTcpDeviceHandlerConfig) {
         super();
     }
