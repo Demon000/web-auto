@@ -10,11 +10,11 @@
       "electron-ipc-main",
       "electron-ipc-renderer",
       "electron-ipc-preload",
-      "electron-ipc-android-auto",
-      "electron-ipc-web-config",
       "android-auto-proto",
       "android-auto",
       "web-config",
+      "electron-ipc-android-auto",
+      "electron-ipc-web-config",
       "web",
       "electron"
     ]
