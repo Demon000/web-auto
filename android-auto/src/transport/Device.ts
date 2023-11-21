@@ -1,5 +1,7 @@
 import EventEmitter from 'eventemitter3';
 import { Transport, TransportEvent } from './Transport';
+import { getLogger } from '@web-auto/logging';
+import { Logger } from 'winston';
 
 export enum DeviceEvent {
     CONNECTED,
@@ -22,12 +24,15 @@ export abstract class Device {
     public transport?: Transport;
     public state = DeviceState.AVAILABLE;
     public name: string;
+    protected logger: Logger;
 
     public constructor(
         public prefix: string,
         public realName: string,
     ) {
         this.name = `${prefix}: ${realName}`;
+
+        this.logger = getLogger(`${this.constructor.name}@${this.realName}`);
     }
 
     public async handleConnect(transport: Transport): Promise<void> {
