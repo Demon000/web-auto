@@ -29,6 +29,7 @@ import assert from 'node:assert';
 
 export interface AndroidAutoServerConfig {
     serviceDiscovery: IServiceDiscoveryResponse;
+    deviceNameWhitelist?: string[];
 }
 
 export interface DeviceData {
@@ -69,6 +70,13 @@ export class AndroidAutoServer {
         device.emitter.on(DeviceEvent.CONNECTED, () => {
             this.onDeviceConnected(device);
         });
+
+        if (
+            this.options.deviceNameWhitelist !== undefined &&
+            !this.options.deviceNameWhitelist.includes(device.name)
+        ) {
+            return;
+        }
 
         try {
             await device.connect();
