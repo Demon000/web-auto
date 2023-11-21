@@ -4,7 +4,7 @@ import { Socket } from 'node:net';
 
 export class TcpDevice extends Device {
     public constructor(private ip: string) {
-        super(`TCP: ${ip}`);
+        super('TCP', ip);
     }
 
     public async connect(): Promise<void> {

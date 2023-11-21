@@ -21,8 +21,14 @@ export abstract class Device {
     public emitter = new EventEmitter<DeviceEvents>();
     public transport?: Transport;
     public state = DeviceState.AVAILABLE;
+    public name: string;
 
-    public constructor(public name: string) {}
+    public constructor(
+        public prefix: string,
+        public realName: string,
+    ) {
+        this.name = `${prefix}: ${realName}`;
+    }
 
     public async handleConnect(transport: Transport): Promise<void> {
         this.transport = transport;

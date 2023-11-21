@@ -18,7 +18,7 @@ export const usbDeviceName = (device: USBDevice) => {
 
 export class UsbDevice extends Device {
     public constructor(private device: USBDevice) {
-        super(`USB: ${usbDeviceName(device)}`);
+        super('USB', usbDeviceName(device));
     }
 
     public async connect(): Promise<void> {
