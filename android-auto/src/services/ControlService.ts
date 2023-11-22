@@ -24,6 +24,8 @@ import { DataBuffer } from '@/utils/DataBuffer';
 import { Service } from './Service';
 import { EventEmitter } from 'eventemitter3';
 import { Pinger, PingerEvent } from './Pinger';
+import Long from 'long';
+import assert from 'node:assert';
 
 export enum ControlServiceEvent {
     HANDSHAKE = 'handshake',
@@ -58,6 +60,11 @@ export class ControlService extends Service {
         this.pinger.emitter.on(PingerEvent.PING_TIMEOUT, () => {
             this.extraEmitter.emit(ControlServiceEvent.PING_TIMEOUT);
         });
+    }
+
+    public async onPingRequest(data: PingRequest): Promise<void> {
+        assert(data.timestamp instanceof Long);
+        await this.sendPingResponse(data.timestamp);
     }
 
     private async onVersionReponse(payload: DataBuffer): Promise<void> {
@@ -121,6 +128,11 @@ export class ControlService extends Service {
                 this.printReceive(data);
                 await this.onServiceDiscoveryRequest(data);
                 break;
+            case ControlMessage.Enum.PING_REQUEST:
+                data = PingRequest.decode(bufferPayload);
+                this.printReceive(data);
+                await this.onPingRequest(data);
+                break;
             case ControlMessage.Enum.PING_RESPONSE:
                 data = PingResponse.decode(bufferPayload);
                 this.printReceive(data);
@@ -141,6 +153,21 @@ export class ControlService extends Service {
         }
     }
 
+    private async sendPingResponse(timestamp: Long): Promise<void> {
+        const data = PingResponse.create({
+            timestamp,
+        });
+        this.printSend(data);
+
+        const payload = DataBuffer.fromBuffer(
+            PingResponse.encode(data).finish(),
+        );
+
+        return this.sendPlainSpecificMessage(
+            ControlMessage.Enum.PING_RESPONSE,
+            payload,
+        );
+    }
     private async sendVersionRequest(): Promise<void> {
         const payload = DataBuffer.fromSize(4)
             .appendUint16BE(1)
