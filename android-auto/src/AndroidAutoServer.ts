@@ -161,7 +161,18 @@ export class AndroidAutoServer {
             MessageInStreamEvent.MESSAGE_RECEIVED,
             async (payloads, frameHeader, totalSize) => {
                 if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
-                    payloads = await cryptor.decryptMultiple(payloads);
+                    try {
+                        payloads = await cryptor.decryptMultiple(payloads);
+                    } catch (err) {
+                        this.logger.error('Failed to decrypt', {
+                            metadata: {
+                                err,
+                                frameHeader,
+                                totalSize,
+                                payloads,
+                            },
+                        });
+                    }
                 }
 
                 const buffer = DataBuffer.fromMultiple(payloads);
@@ -200,7 +211,18 @@ export class AndroidAutoServer {
             MessageOutStreamEvent.MESSAGE_SENT,
             async (payload, frameHeader, totalSize) => {
                 if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
-                    payload = await cryptor.encrypt(payload);
+                    try {
+                        payload = await cryptor.encrypt(payload);
+                    } catch (err) {
+                        this.logger.error('Failed to encrypt', {
+                            metadata: {
+                                err,
+                                frameHeader,
+                                totalSize,
+                                payload,
+                            },
+                        });
+                    }
                 }
 
                 frameHeader.payloadSize = payload.size;
