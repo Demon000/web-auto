@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { inspect } from 'node:util';
-import { format, transports, loggers } from 'winston';
+import { format, transports, loggers, Logger } from 'winston';
 import { TransformableInfo } from 'logform';
 
 export const LOGGER_NAME = 'logger';
@@ -69,7 +69,7 @@ export const setConfig = (newConfig: LoggingConfig) => {
     config = newConfig;
 };
 
-export const getLogger = (label: string) => {
+export const getLogger = (label: string): Logger => {
     if (!loggers.has(label)) {
         loggers.add(label, {
             transports: [consoleTransport, fileTransport],
