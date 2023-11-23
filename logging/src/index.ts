@@ -17,7 +17,14 @@ const printfCommon = (i: TransformableInfoWithMetadata, colors: boolean) => {
     if (metadata !== undefined && Object.keys(metadata).length !== 0) {
         m =
             '\n' +
-            inspect(metadata, { showHidden: false, depth: null, colors });
+            inspect(metadata, {
+                sorted: true,
+                showHidden: false,
+                depth: null,
+                maxArrayLength: null,
+                maxStringLength: null,
+                colors,
+            });
     } else {
         m = '';
     }
