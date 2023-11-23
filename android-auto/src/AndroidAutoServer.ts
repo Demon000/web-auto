@@ -1,11 +1,3 @@
-import {
-    MessageInStream,
-    MessageInStreamEvent,
-} from './messenger/MessageInStream';
-import {
-    MessageOutStream,
-    MessageOutStreamEvent,
-} from './messenger/MessageOutStream';
 import { ControlServiceEvent } from './services/ControlService';
 
 import { ServiceFactory } from './services/ServiceFactory';
@@ -21,11 +13,14 @@ import {
     ANDROID_AUTO_PRIVATE_KEY,
 } from './crypto/keys';
 import { DataBuffer, TransportEvent } from '.';
-import { EncryptionType } from './messenger/EncryptionType';
-import { Message } from './messenger/Message';
 import { getLogger } from '@web-auto/logging';
 import { Device, DeviceEvent } from './transport/Device';
 import assert from 'node:assert';
+import { MessageAggregator } from './messenger/MessageAggregator';
+import { FrameCodec } from './messenger/FrameCodec';
+import { FrameData } from './messenger/FrameData';
+import { Message } from './messenger/Message';
+import { EncryptionType } from './messenger/EncryptionType';
 
 export interface AndroidAutoServerConfig {
     serviceDiscovery: IServiceDiscoveryResponse;
@@ -102,8 +97,8 @@ export class AndroidAutoServer {
             ANDROID_AUTO_PRIVATE_KEY,
         );
 
-        const messageInStream = new MessageInStream();
-        const messageOutStream = new MessageOutStream();
+        const frameCodec = new FrameCodec(cryptor);
+        const messageAggregator = new MessageAggregator();
 
         const services = this.serviceFactory.buildServices();
         const controlService = this.serviceFactory.buildControlService();
@@ -157,90 +152,80 @@ export class AndroidAutoServer {
             channelIdServiceMap.set(service.channelId, service);
         }
 
-        messageInStream.emitter.on(
-            MessageInStreamEvent.MESSAGE_RECEIVED,
-            async (payloads, frameHeader, totalSize) => {
-                if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
-                    try {
-                        payloads = await cryptor.decryptMultiple(payloads);
-                    } catch (err) {
-                        this.logger.error('Failed to decrypt', {
-                            metadata: {
-                                err,
-                                frameHeader,
-                                totalSize,
-                                payloads,
-                            },
-                        });
-                    }
-                }
+        const onReceiveMessage = async (message: Message) => {
+            const service = channelIdServiceMap.get(message.channelId);
+            if (service === undefined) {
+                this.logger.error(
+                    `Unhandled message with id ${message.messageId} ` +
+                        `on channel with id ${message.channelId}`,
+                    {
+                        metadata: message,
+                    },
+                );
+                return;
+            }
 
-                const buffer = DataBuffer.fromMultiple(payloads);
+            await service.onMessage(message);
+        };
 
-                if (totalSize !== 0 && totalSize !== buffer.size) {
-                    this.logger.error(
-                        `Received compound message for channel ${frameHeader.channelId} ` +
-                            `but size ${buffer.size} does not ` +
-                            `match total size ${totalSize}`,
-                    );
-                    return;
-                }
+        const onReceiveFrameData = async (frameData: FrameData) => {
+            const frameHeader = frameData.frameHeader;
 
-                const message = new Message({ rawPayload: buffer });
+            if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
+                frameData.payload = await cryptor.decrypt(frameData.payload);
+            }
 
-                const service = channelIdServiceMap.get(frameHeader.channelId);
-                if (service === undefined) {
-                    this.logger.error(
-                        `Unhandled message with id ${message.messageId} ` +
-                            `on channel with id ${frameHeader.channelId}`,
-                        {
-                            metadata: {
-                                payload: message.getPayload(),
-                                frameHeader,
-                            },
-                        },
-                    );
-                    return;
-                }
+            const message = messageAggregator.aggregate(frameData);
+            if (message === undefined) {
+                return;
+            }
 
-                await service.onMessage(message, frameHeader);
-            },
-        );
+            await onReceiveMessage(message);
+        };
 
-        messageOutStream.emitter.on(
-            MessageOutStreamEvent.MESSAGE_SENT,
-            async (payload, frameHeader, totalSize) => {
-                if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
-                    try {
-                        payload = await cryptor.encrypt(payload);
-                    } catch (err) {
-                        this.logger.error('Failed to encrypt', {
-                            metadata: {
-                                err,
-                                frameHeader,
-                                totalSize,
-                                payload,
-                            },
-                        });
-                    }
-                }
+        const onReceiveBuffer = async (buffer: DataBuffer) => {
+            const frameDatas = frameCodec.decodeBuffer(buffer);
 
-                frameHeader.payloadSize = payload.size;
+            for (const frameData of frameDatas) {
+                onReceiveFrameData(frameData);
+            }
+        };
 
-                const buffer = DataBuffer.empty();
-                buffer.appendBuffer(frameHeader.toBuffer());
-                if (totalSize !== 0) {
-                    buffer.appendUint32BE(totalSize);
-                }
-                buffer.appendBuffer(payload);
+        const onSendFrameData = async (frameData: FrameData) => {
+            const frameHeader = frameData.frameHeader;
+            let buffer;
 
-                await transport.send(buffer);
-            },
-        );
+            if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
+                frameData.payload = await cryptor.encrypt(frameData.payload);
+            }
 
-        transport.emitter.on(TransportEvent.DATA, (buffer) => {
-            messageInStream.parseBuffer(buffer);
-        });
+            try {
+                buffer = frameCodec.encodeFrameData(frameData);
+            } catch (err) {
+                this.logger.error('Failed to encode', {
+                    metadata: {
+                        err,
+                        frameData,
+                    },
+                });
+                return;
+            }
+
+            await transport.send(buffer);
+        };
+
+        const onSendMessage = async (
+            message: Message,
+            encryptionType: EncryptionType,
+        ) => {
+            const frameDatas = messageAggregator.split(message, encryptionType);
+
+            for (const frameData of frameDatas) {
+                await onSendFrameData(frameData);
+            }
+        };
+
+        transport.emitter.on(TransportEvent.DATA, onReceiveBuffer);
 
         transport.emitter.on(TransportEvent.ERROR, (e) => {
             this.logger.error('Connection failed', {
@@ -259,15 +244,7 @@ export class AndroidAutoServer {
         );
 
         for (const service of allServices) {
-            service.emitter.on(
-                ServiceEvent.MESSAGE_SENT,
-                (message, options) => {
-                    messageOutStream.send(message, {
-                        channelId: service.channelId,
-                        ...options,
-                    });
-                },
-            );
+            service.emitter.on(ServiceEvent.MESSAGE_SENT, onSendMessage);
         }
 
         this.nameDeviceDataMap.set(device.name, {

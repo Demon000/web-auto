@@ -12,13 +12,4 @@ export abstract class Cryptor {
 
     public abstract encrypt(buffer: DataBuffer): Promise<DataBuffer>;
     public abstract decrypt(buffer: DataBuffer): Promise<DataBuffer>;
-
-    public async decryptMultiple(buffers: DataBuffer[]): Promise<DataBuffer[]> {
-        const promises = [];
-        for (const buffer of buffers) {
-            promises.push(this.decrypt(buffer));
-        }
-
-        return Promise.all(promises);
-    }
 }

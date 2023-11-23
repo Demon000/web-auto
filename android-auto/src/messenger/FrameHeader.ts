@@ -27,26 +27,6 @@ export class FrameHeader {
         this.payloadSize = options.payloadSize;
     }
 
-    public static fromBuffer(buffer: DataBuffer): FrameHeader {
-        const firstByte = buffer.readUint8();
-        const secondByte = buffer.readUint8();
-
-        const channelId = firstByte;
-        const frameType = secondByte & FrameType.ATOMIC;
-        const encryptionType = secondByte & EncryptionType.ENCRYPTED;
-        const messageType = secondByte & MessageType.CONTROL;
-
-        const payloadSize = buffer.readUint16BE();
-
-        return new FrameHeader({
-            channelId,
-            frameType,
-            encryptionType,
-            messageType,
-            payloadSize,
-        });
-    }
-
     public toBuffer(): DataBuffer {
         const buffer = DataBuffer.fromSize(FrameHeader.getSizeOf());
 

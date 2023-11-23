@@ -4,6 +4,7 @@ import { Readable, Writable } from 'node:stream';
 import { connect } from 'node:tls';
 import { Mutex } from 'async-mutex';
 import { getLogger } from '@web-auto/logging';
+import assert from 'node:assert';
 
 export class NodeCryptor extends Cryptor {
     private logger = getLogger(this.constructor.name);
@@ -86,21 +87,29 @@ export class NodeCryptor extends Cryptor {
         buffer: DataBuffer,
     ): Promise<void> {
         return new Promise((resolve, reject) => {
-            writeable.write(buffer.data, (err) => {
+            const canWrite = writeable.write(buffer.data, (err) => {
                 if (err !== undefined && err !== null) {
                     return reject(err);
                 }
 
                 resolve();
             });
+            assert(canWrite);
         });
     }
 
     public async encrypt(buffer: DataBuffer): Promise<DataBuffer> {
         const release = await this.encryptMutex.acquire();
+        this.logger.debug('Encrypting buffer', {
+            metadata: buffer,
+        });
         try {
             await this.write(this.cleartext, buffer);
-            return await this.read(this.encrypted);
+            const encrypyedBuffer = await this.read(this.encrypted);
+            this.logger.debug('Encrypted buffer', {
+                metadata: encrypyedBuffer,
+            });
+            return encrypyedBuffer;
         } finally {
             release();
         }
@@ -108,9 +117,16 @@ export class NodeCryptor extends Cryptor {
 
     public async decrypt(buffer: DataBuffer): Promise<DataBuffer> {
         const release = await this.decryptMutex.acquire();
+        this.logger.debug('Decrypting buffer', {
+            metadata: buffer,
+        });
         try {
             await this.write(this.encrypted, buffer);
-            return await this.read(this.cleartext);
+            const decryptedBuffer = await this.read(this.cleartext);
+            this.logger.debug('Decrypted buffer', {
+                metadata: decryptedBuffer,
+            });
+            return decryptedBuffer;
         } finally {
             release();
         }

@@ -12,10 +12,6 @@ import {
 import { DataBuffer } from '@/utils/DataBuffer';
 import EventEmitter from 'eventemitter3';
 import { getLogger } from '@web-auto/logging';
-import { FrameHeader } from '@/messenger/FrameHeader';
-import { MessageSendOptions } from '@/messenger/MessageOutStream';
-
-export type ServiceMessageFrameOptions = Omit<MessageSendOptions, 'channelId'>;
 
 export enum ServiceEvent {
     MESSAGE_SENT = 'message-sent',
@@ -24,7 +20,7 @@ export enum ServiceEvent {
 export interface ServiceEvents {
     [ServiceEvent.MESSAGE_SENT]: (
         message: Message,
-        options: ServiceMessageFrameOptions,
+        encryptionType: EncryptionType,
     ) => void;
 }
 
@@ -116,16 +112,13 @@ export abstract class Service {
         }
     }
 
-    public async onMessage(
-        message: Message,
-        options: FrameHeader,
-    ): Promise<void> {
-        if (options.messageType === MessageType.CONTROL) {
+    public async onMessage(message: Message): Promise<void> {
+        if (message.messageType === MessageType.CONTROL) {
             await this.onControlMessage(message);
-        } else if (options.messageType === MessageType.SPECIFIC) {
+        } else if (message.messageType === MessageType.SPECIFIC) {
             await this.onSpecificMessageWrapper(message);
         } else {
-            this.logger.error(`Unhandled message type ${options.messageType}`);
+            this.logger.error(`Unhandled message type ${message.messageType}`);
         }
     }
 
@@ -149,52 +142,61 @@ export abstract class Service {
 
     public async sendMessage(
         message: Message,
-        options: ServiceMessageFrameOptions,
+        encryptionType: EncryptionType,
     ): Promise<void> {
-        this.emitter.emit(ServiceEvent.MESSAGE_SENT, message, options);
+        this.emitter.emit(ServiceEvent.MESSAGE_SENT, message, encryptionType);
     }
 
     public async sendMessageWithId(
         messageId: number,
         dataPayload: DataBuffer,
-        options: ServiceMessageFrameOptions,
+        messageType: MessageType,
+        encryptionType: EncryptionType,
     ): Promise<void> {
         const message = new Message({
             messageId,
             dataPayload,
+            messageType,
+            channelId: this.channelId,
         });
 
-        return this.sendMessage(message, options);
+        return this.sendMessage(message, encryptionType);
     }
 
     public async sendPlainSpecificMessage(
         messageId: number,
         payload: DataBuffer,
     ): Promise<void> {
-        return this.sendMessageWithId(messageId, payload, {
-            encryptionType: EncryptionType.PLAIN,
-            messageType: MessageType.SPECIFIC,
-        });
+        return this.sendMessageWithId(
+            messageId,
+            payload,
+            MessageType.SPECIFIC,
+            EncryptionType.PLAIN,
+        );
     }
 
     public async sendEncryptedSpecificMessage(
         messageId: number,
         payload: DataBuffer,
     ): Promise<void> {
-        return this.sendMessageWithId(messageId, payload, {
-            encryptionType: EncryptionType.ENCRYPTED,
-            messageType: MessageType.SPECIFIC,
-        });
+        return this.sendMessageWithId(
+            messageId,
+            payload,
+            MessageType.SPECIFIC,
+            EncryptionType.ENCRYPTED,
+        );
     }
 
     public async sendEncryptedControlMessage(
         messageId: number,
         payload: DataBuffer,
     ): Promise<void> {
-        return this.sendMessageWithId(messageId, payload, {
-            encryptionType: EncryptionType.ENCRYPTED,
-            messageType: MessageType.CONTROL,
-        });
+        return this.sendMessageWithId(
+            messageId,
+            payload,
+            MessageType.CONTROL,
+            EncryptionType.ENCRYPTED,
+        );
     }
 
     protected abstract fillChannelDescriptor(
