@@ -5,6 +5,7 @@ import { FrameHeader } from './FrameHeader';
 import { FrameType } from './FrameType';
 import EventEmitter from 'eventemitter3';
 import { MessageFrameOptions } from './MessageFrameOptions';
+import { getLogger } from '@web-auto/logging';
 
 type MessageData = {
     payloads: DataBuffer[];
@@ -30,11 +31,15 @@ export interface MessageInStreamEvents {
 }
 
 export class MessageInStream {
+    protected logger = getLogger(this.constructor.name);
+
     private messageMap = new Map<ChannelId, MessageData>();
 
     private receiveData?: ReceiveData;
 
     public emitter = new EventEmitter<MessageInStreamEvents>();
+
+    private lastMessageDecrypted = true;
 
     public async parseBuffer(buffer: DataBuffer): Promise<void> {
         if (this.receiveData) {
@@ -106,7 +111,15 @@ export class MessageInStream {
         const channelId = frameHeader.channelId;
         let messageData;
 
+        if (
+            !this.lastMessageDecrypted &&
+            frameType === (FrameType.FIRST | FrameType.LAST)
+        ) {
+            this.logger.error('THIS WILL FAIL');
+        }
+
         if (frameType & FrameType.FIRST && frameType & FrameType.LAST) {
+            this.lastMessageDecrypted = true;
             this.emitter.emit(
                 MessageInStreamEvent.MESSAGE_RECEIVED,
                 [payload],
@@ -145,12 +158,15 @@ export class MessageInStream {
         if (frameType === FrameType.LAST) {
             assert(messageData);
             this.messageMap.delete(channelId);
+            this.lastMessageDecrypted = true;
             this.emitter.emit(
                 MessageInStreamEvent.MESSAGE_RECEIVED,
                 messageData.payloads,
                 frameHeader,
                 messageData.totalSize,
             );
+        } else {
+            this.lastMessageDecrypted = false;
         }
     }
 }
