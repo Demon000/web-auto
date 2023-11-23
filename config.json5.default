@@ -51,6 +51,19 @@
         tcpDeviceHandlerConfig: {
             ips: ['192.168.0.103'],
         },
+        bluetoothDeviceHandlerConfig: {
+            socketInfo: {
+                ipAddress: '192.168.0.106',
+                port: 5000,
+            },
+            networkInfo: {
+                ssid: 'Wi-Fi Name',
+                securityMode: 'WPA2_PERSONAL',
+                apType: 'STATIC',
+                macAddr: '3A:AE:4A:AE:EA:A6',
+                psk: 'parolamea9',
+            },
+        },
     },
     electronWindowBuilder: {
         windows: [
