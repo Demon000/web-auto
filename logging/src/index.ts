@@ -65,7 +65,7 @@ const fileTransport = new transports.File({
 fileTransport.setMaxListeners(Infinity);
 
 export interface LoggingConfig {
-    debug: boolean;
+    debug: boolean | string[];
 }
 
 let config: LoggingConfig = {
@@ -78,9 +78,17 @@ export const setConfig = (newConfig: LoggingConfig) => {
 
 export const getLogger = (label: string): Logger => {
     if (!loggers.has(label)) {
+        let debug;
+
+        if (typeof config.debug === 'boolean') {
+            debug = config.debug;
+        } else {
+            debug = config.debug.includes(label);
+        }
+
         loggers.add(label, {
             transports: [consoleTransport, fileTransport],
-            level: config.debug ? 'debug' : 'info',
+            level: debug ? 'debug' : 'info',
             format: format.label({ label }),
         });
     }
