@@ -86,32 +86,13 @@ export class NodeCryptor extends Cryptor {
         buffer: DataBuffer,
     ): Promise<void> {
         return new Promise((resolve, reject) => {
-            let drainOccured = true;
-            let cbOccured = false;
-
-            const onDrainOrCb = () => {
-                if (drainOccured && cbOccured) {
-                    resolve();
-                }
-            };
-
-            const canWrite = writeable.write(buffer.data, (err) => {
+            writeable.write(buffer.data, (err) => {
                 if (err !== undefined && err !== null) {
                     return reject(err);
                 }
 
-                cbOccured = true;
-                onDrainOrCb();
+                resolve();
             });
-
-            if (!canWrite) {
-                drainOccured = false;
-
-                writeable.once('drain', () => {
-                    drainOccured = true;
-                    onDrainOrCb();
-                });
-            }
         });
     }
 
