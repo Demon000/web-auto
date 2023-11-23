@@ -25,6 +25,7 @@
     "bluez": "github:Demon000/node-bluez#master",
     "native-duplexpair": "^1.0.0",
     "tinyh264": "^0.0.7",
+    "usb": "^2.11.0",
     "usocket": "github:Demon000/usocket#master"
   },
   "overrides": {

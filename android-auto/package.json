@@ -13,7 +13,6 @@
   "dependencies": {
     "eventemitter3": "^5.0.1",
     "long": "^5.2.3",
-    "protobufjs": "^7.2.4",
-    "usb": "^2.9.0"
+    "protobufjs": "^7.2.4"
   }
 }
