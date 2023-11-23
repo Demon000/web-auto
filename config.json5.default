@@ -5,13 +5,13 @@
     androidAuto: {
         serverConfig: {
             serviceDiscovery: {
-                headUnitName: 'OpenAuto',
+                headUnitName: 'WebAuto',
                 carModel: 'Universal',
                 carYear: '2018',
                 carSerial: '20180301',
                 leftHandDriveVehicle: false,
-                headunitManufacturer: 'f1x',
-                headunitModel: 'OpenAuto Autoapp',
+                headunitManufacturer: 'WebAuto',
+                headunitModel: 'WebAuto Headunit',
                 swBuild: '1',
                 swVersion: '1.0',
                 canPlayNativeMediaDuringVr: false,
