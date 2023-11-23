@@ -35,7 +35,7 @@ export abstract class NavigationStatusService extends Service {
         await this.handleTurn(data);
     }
 
-    public async onMessage(message: Message): Promise<void> {
+    public async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -56,7 +56,9 @@ export abstract class NavigationStatusService extends Service {
                 await this.onTurn(data);
                 break;
             default:
-                await super.onMessage(message);
+                return super.onSpecificMessage(message);
         }
+
+        return true;
     }
 }

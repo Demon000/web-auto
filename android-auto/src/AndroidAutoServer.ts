@@ -203,7 +203,7 @@ export class AndroidAutoServer {
                     return;
                 }
 
-                service.onMessage(message);
+                await service.onMessage(message, frameHeader);
             },
         );
 

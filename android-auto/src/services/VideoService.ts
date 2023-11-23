@@ -16,7 +16,7 @@ export abstract class VideoService extends AVOutputService {
         super(ChannelId.VIDEO);
     }
 
-    public async onMessage(message: Message): Promise<void> {
+    public async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -27,8 +27,10 @@ export abstract class VideoService extends AVOutputService {
                 await this.onVideoFocusRequest(data);
                 break;
             default:
-                await super.onMessage(message);
+                return await super.onSpecificMessage(message);
         }
+
+        return true;
     }
 
     protected abstract focus(data: VideoFocusRequest): Promise<void>;

@@ -32,7 +32,7 @@ export abstract class AVService extends Service {
         return this.sendSetupResponse(status);
     }
 
-    public async onMessage(message: Message): Promise<void> {
+    public async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -43,8 +43,10 @@ export abstract class AVService extends Service {
                 await this.onSetupRequest(data);
                 break;
             default:
-                await super.onMessage(message);
+                return super.onSpecificMessage(message);
         }
+
+        return true;
     }
 
     protected abstract setup(data: AVChannelSetupRequest): Promise<void>;

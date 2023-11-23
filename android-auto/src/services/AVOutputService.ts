@@ -84,7 +84,7 @@ export abstract class AVOutputService extends AVService {
         }
     }
 
-    public async onMessage(message: Message): Promise<void> {
+    public async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         const payload = message.getPayload();
         let data;
@@ -109,8 +109,10 @@ export abstract class AVOutputService extends AVService {
                 await this.onStopIndication(data);
                 break;
             default:
-                await super.onMessage(message);
+                return super.onSpecificMessage(message);
         }
+
+        return true;
     }
 
     protected abstract channelStart(

@@ -111,7 +111,7 @@ export class ControlService extends Service {
         return this.sendNavigationFocusResponse(2);
     }
 
-    public async onMessage(message: Message): Promise<void> {
+    public async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         const payload = message.getPayload();
         let data;
@@ -149,8 +149,10 @@ export class ControlService extends Service {
                 await this.onNavigationFocusRequest(data);
                 break;
             default:
-                await super.onMessage(message);
+                return super.onSpecificMessage(message);
         }
+
+        return true;
     }
 
     private async sendPingResponse(timestamp: Long): Promise<void> {

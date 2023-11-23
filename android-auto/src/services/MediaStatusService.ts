@@ -34,7 +34,7 @@ export abstract class MediaStatusService extends Service {
         await this.handlePlayback(data);
     }
 
-    public async onMessage(message: Message): Promise<void> {
+    public async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -50,7 +50,9 @@ export abstract class MediaStatusService extends Service {
                 await this.onPlayback(data);
                 break;
             default:
-                await super.onMessage(message);
+                return super.onSpecificMessage(message);
         }
+
+        return true;
     }
 }

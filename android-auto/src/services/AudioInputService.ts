@@ -51,7 +51,7 @@ export abstract class AudioInputService extends AVService {
         _data: AVMediaAckIndication,
     ): Promise<void> {}
 
-    public async onMessage(message: Message): Promise<void> {
+    public async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -67,8 +67,10 @@ export abstract class AudioInputService extends AVService {
                 await this.onAckIndication(data);
                 break;
             default:
-                await super.onMessage(message);
+                return super.onSpecificMessage(message);
         }
+
+        return true;
     }
 
     protected async sendInputOpenResponse(): Promise<void> {

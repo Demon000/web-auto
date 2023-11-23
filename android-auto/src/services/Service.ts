@@ -79,7 +79,7 @@ export abstract class Service {
         });
     }
 
-    public async onMessage(message: Message): Promise<void> {
+    protected async onControlMessage(message: Message): Promise<void> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -91,11 +91,40 @@ export abstract class Service {
                 break;
             default:
                 this.logger.error(
-                    `Unhandled message with id ${message.messageId}`,
+                    `Unhandled control message with id ${message.messageId}`,
                     {
                         metadata: message.getPayload(),
                     },
                 );
+        }
+    }
+
+    protected async onSpecificMessage(_message: Message): Promise<boolean> {
+        return false;
+    }
+
+    private async onSpecificMessageWrapper(message: Message): Promise<void> {
+        const handled = await this.onSpecificMessage(message);
+        if (!handled) {
+            this.logger.error(
+                `Unhandled specific message with id ${message.messageId}`,
+                {
+                    metadata: message.getPayload(),
+                },
+            );
+        }
+    }
+
+    public async onMessage(
+        message: Message,
+        options: ServiceMessageFrameOptions,
+    ): Promise<void> {
+        if (options.messageType === MessageType.CONTROL) {
+            await this.onControlMessage(message);
+        } else if (options.messageType === MessageType.SPECIFIC) {
+            await this.onSpecificMessageWrapper(message);
+        } else {
+            this.logger.error(`Unhandled message type ${options.messageType}`);
         }
     }
 

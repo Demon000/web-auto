@@ -37,7 +37,7 @@ export abstract class InputService extends Service {
         return this.sendBindingResponse(status);
     }
 
-    public async onMessage(message: Message): Promise<void> {
+    public async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data: BindingRequest;
 
@@ -48,8 +48,10 @@ export abstract class InputService extends Service {
                 await this.onBindingRequest(data);
                 break;
             default:
-                await super.onMessage(message);
+                return super.onSpecificMessage(message);
         }
+
+        return true;
     }
 
     protected async sendBindingResponse(status: boolean): Promise<void> {
