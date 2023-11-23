@@ -105,7 +105,7 @@ export class MessageInStream {
         const channelId = frameHeader.channelId;
         let messageData;
 
-        if (frameType & FrameType.FIRST && frameType & FrameType.LAST) {
+        if (frameType === FrameType.ATOMIC) {
             this.emitter.emit(
                 MessageInStreamEvent.MESSAGE_RECEIVED,
                 [payload],

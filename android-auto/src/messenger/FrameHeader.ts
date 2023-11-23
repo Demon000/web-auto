@@ -32,7 +32,7 @@ export class FrameHeader {
         const secondByte = buffer.readUint8();
 
         const channelId = firstByte;
-        const frameType = secondByte & (FrameType.FIRST | FrameType.LAST);
+        const frameType = secondByte & FrameType.ATOMIC;
         const encryptionType = secondByte & EncryptionType.ENCRYPTED;
         const messageType = secondByte & MessageType.CONTROL;
 
