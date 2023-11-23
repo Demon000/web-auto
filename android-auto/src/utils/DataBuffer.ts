@@ -167,6 +167,14 @@ export class DataBuffer {
     }
 
     public subarray(start?: number, end?: number): DataBuffer {
+        if (end !== undefined) {
+            if (end > this.data.length) {
+                throw new Error(
+                    'Subarray read out of bounds, start: ' +
+                        `${start}, end: ${end}, size: ${this.data.length}`,
+                );
+            }
+        }
         const data = this.data.subarray(start, end);
         return DataBuffer.fromBuffer(data);
     }
