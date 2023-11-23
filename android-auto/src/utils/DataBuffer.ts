@@ -180,7 +180,7 @@ export class DataBuffer {
     }
 
     public readBufferSize(): number {
-        return this.appendOffset - this.readOffset;
+        return this.size - this.readOffset;
     }
 
     public readBuffer(size?: number): DataBuffer {
