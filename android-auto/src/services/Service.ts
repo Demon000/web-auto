@@ -14,7 +14,7 @@ import { DataBuffer } from '@/utils/DataBuffer';
 import EventEmitter from 'eventemitter3';
 import { getLogger } from '@web-auto/logging';
 
-export type ServiceSendMessageOptions = Omit<MessageFrameOptions, 'channelId'>;
+export type ServiceMessageFrameOptions = Omit<MessageFrameOptions, 'channelId'>;
 
 export enum ServiceEvent {
     MESSAGE_SENT = 'message-sent',
@@ -23,7 +23,7 @@ export enum ServiceEvent {
 export interface ServiceEvents {
     [ServiceEvent.MESSAGE_SENT]: (
         message: Message,
-        options: ServiceSendMessageOptions,
+        options: ServiceMessageFrameOptions,
     ) => void;
 }
 
@@ -120,7 +120,7 @@ export abstract class Service {
 
     public async sendMessage(
         message: Message,
-        options: ServiceSendMessageOptions,
+        options: ServiceMessageFrameOptions,
     ): Promise<void> {
         this.emitter.emit(ServiceEvent.MESSAGE_SENT, message, options);
     }
@@ -128,7 +128,7 @@ export abstract class Service {
     public async sendMessageWithId(
         messageId: number,
         dataPayload: DataBuffer,
-        options: ServiceSendMessageOptions,
+        options: ServiceMessageFrameOptions,
     ): Promise<void> {
         const message = new Message({
             messageId,
