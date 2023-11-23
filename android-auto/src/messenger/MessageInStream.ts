@@ -4,7 +4,6 @@ import { ChannelId } from './ChannelId';
 import { FrameHeader } from './FrameHeader';
 import { FrameType } from './FrameType';
 import EventEmitter from 'eventemitter3';
-import { MessageFrameOptions } from './MessageFrameOptions';
 
 type MessageData = {
     payloads: DataBuffer[];
@@ -24,7 +23,7 @@ export enum MessageInStreamEvent {
 export interface MessageInStreamEvents {
     [MessageInStreamEvent.MESSAGE_RECEIVED]: (
         payloads: DataBuffer[],
-        options: MessageFrameOptions,
+        frameHeader: FrameHeader,
         totalSize: number,
     ) => void;
 }

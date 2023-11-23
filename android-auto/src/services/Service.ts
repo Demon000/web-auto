@@ -1,6 +1,5 @@
 import { EncryptionType } from '@/messenger/EncryptionType';
 import { Message } from '@/messenger/Message';
-import { MessageFrameOptions } from '@/messenger/MessageFrameOptions';
 import { MessageType } from '@/messenger/MessageType';
 import {
     ChannelDescriptor,
@@ -13,8 +12,10 @@ import {
 import { DataBuffer } from '@/utils/DataBuffer';
 import EventEmitter from 'eventemitter3';
 import { getLogger } from '@web-auto/logging';
+import { FrameHeader } from '@/messenger/FrameHeader';
+import { MessageSendOptions } from '@/messenger/MessageOutStream';
 
-export type ServiceMessageFrameOptions = Omit<MessageFrameOptions, 'channelId'>;
+export type ServiceMessageFrameOptions = Omit<MessageSendOptions, 'channelId'>;
 
 export enum ServiceEvent {
     MESSAGE_SENT = 'message-sent',
@@ -117,7 +118,7 @@ export abstract class Service {
 
     public async onMessage(
         message: Message,
-        options: ServiceMessageFrameOptions,
+        options: FrameHeader,
     ): Promise<void> {
         if (options.messageType === MessageType.CONTROL) {
             await this.onControlMessage(message);

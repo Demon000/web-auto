@@ -2,8 +2,10 @@ import { DataBuffer } from '@/utils/DataBuffer';
 import { FrameHeader } from './FrameHeader';
 import { FrameType } from './FrameType';
 import { Message } from './Message';
-import { MessageFrameOptions } from './MessageFrameOptions';
 import EventEmitter from 'eventemitter3';
+import { EncryptionType } from './EncryptionType';
+import { MessageType } from './MessageType';
+import { ChannelId } from './ChannelId';
 
 const MAX_FRAME_PAYLOAD_SIZE = 0x4000;
 
@@ -19,19 +21,25 @@ export interface MessageOutStreamEvents {
     ) => void;
 }
 
+export interface MessageSendOptions {
+    channelId: ChannelId;
+    encryptionType: EncryptionType;
+    messageType: MessageType;
+}
+
 export class MessageOutStream {
     public emitter = new EventEmitter<MessageOutStreamEvents>();
 
     public async send(
         message: Message,
-        options: MessageFrameOptions,
+        options: MessageSendOptions,
     ): Promise<void> {
         return this.sendSplitMessage(message, options, 0);
     }
 
     private async sendSplitMessage(
         message: Message,
-        options: MessageFrameOptions,
+        options: MessageSendOptions,
         offset: number,
     ): Promise<void> {
         let remainingSize = message.payload.size - offset;
