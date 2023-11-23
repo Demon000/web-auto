@@ -100,7 +100,7 @@ export class NodeCryptor extends Cryptor {
         const release = await this.encryptMutex.acquire();
         try {
             await this.write(this.cleartext, buffer);
-            return this.read(this.encrypted);
+            return await this.read(this.encrypted);
         } finally {
             release();
         }
@@ -110,7 +110,7 @@ export class NodeCryptor extends Cryptor {
         const release = await this.decryptMutex.acquire();
         try {
             await this.write(this.encrypted, buffer);
-            return this.read(this.cleartext);
+            return await this.read(this.cleartext);
         } finally {
             release();
         }
