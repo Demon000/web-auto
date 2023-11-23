@@ -91,8 +91,7 @@ export abstract class Service {
                 break;
             default:
                 this.logger.error(
-                    `Unhandled message with id ${message.messageId} ` +
-                        `on service ${this.constructor.name}`,
+                    `Unhandled message with id ${message.messageId}`,
                     {
                         metadata: message.getPayload(),
                     },
