@@ -1,25 +1,22 @@
 import { ElectronWindowBuilderAndroidAuto } from './ElectronWindowBuilder';
-import { autoConf } from 'auto-config-loader';
-import { ElectronConfig } from './config';
 import { ElectronAndroidAutoServiceFactory } from './services/ElectronAndroidAutoServiceFactory';
 import { AndroidAutoServer, DeviceHandler } from '@web-auto/android-auto';
-import assert from 'node:assert';
 import { ElectronUsbDeviceHandler } from './transport/ElectronUsbDeviceHandler';
 import { ElectronTcpDeviceHandler } from './transport/ElectronTcpDeviceHandler';
 import { ElectronBluetoothDeviceHandler } from './transport/bluetooth/ElectronBluetoothDeviceHandler';
 import { getLogger, setConfig } from '@web-auto/logging';
+import { lilconfigSync } from 'lilconfig';
+import JSON5 from 'json5';
 
-const electronConfig = autoConf<ElectronConfig>('web-auto', {
-    searchPlaces: ['../config.json5'],
-    default: {
-        logging: {
-            debug: true,
-        },
-        electronWindowBuilder: {
-            windows: [],
+const electronConfig = lilconfigSync('web-auto', {
+    loaders: {
+        '.json5': (_filepath, content) => {
+            console.log(content);
+            return JSON5.parse(content);
         },
     },
-});
+    searchPlaces: ['config.json5'],
+}).search()?.config;
 
 setConfig(electronConfig.logging);
 
