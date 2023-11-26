@@ -35,7 +35,9 @@ if (electronConfig.androidAuto !== undefined) {
     );
 
     const deviceHandlers: DeviceHandler[] = [
-        new ElectronUsbDeviceHandler(),
+        new ElectronUsbDeviceHandler(
+            electronConfig.androidAuto.usbDeviceHandlerConfig,
+        ),
         new ElectronTcpDeviceHandler(
             electronConfig.androidAuto.tcpDeviceHandlerConfig,
         ),
@@ -48,6 +50,7 @@ if (electronConfig.androidAuto !== undefined) {
             ),
         );
     }
+
     const server = new AndroidAutoServer(
         electronConfig.androidAuto.serverConfig,
         serviceFactory,
@@ -58,11 +61,6 @@ if (electronConfig.androidAuto !== undefined) {
         server,
         serviceFactory,
     };
-
-    process.on('exit', () => {
-        assert(server);
-        server.stop();
-    });
 }
 
 /*
@@ -102,16 +100,36 @@ const electronWindowBuilder = new ElectronWindowBuilder(
     androidAuto,
 );
 
-app.whenReady().then(() => {
-    electronWindowBuilder.logDisplays();
+app.whenReady()
+    .then(() => {
+        electronWindowBuilder.logDisplays();
 
-    electronWindowBuilder.buildWindows();
+        electronWindowBuilder.buildWindows();
 
-    app.on('activate', function () {
-        if (BrowserWindow.getAllWindows().length === 0) {
-            electronWindowBuilder.buildWindows();
-        }
+        app.on('activate', function () {
+            if (BrowserWindow.getAllWindows().length === 0) {
+                electronWindowBuilder.buildWindows();
+            }
+        });
+    })
+    .catch((err) => {
+        console.error(err);
     });
+
+let cleanupRan = false;
+app.on('before-quit', async (event) => {
+    if (cleanupRan) {
+        return;
+    }
+
+    event.preventDefault();
+
+    if (androidAuto !== undefined) {
+        await androidAuto.server.stop();
+    }
+
+    cleanupRan = true;
+    app.quit();
 });
 
 app.on('window-all-closed', () => {

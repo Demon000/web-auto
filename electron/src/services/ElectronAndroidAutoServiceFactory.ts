@@ -77,7 +77,7 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
 
         videoService.extraEmitter.on(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP,
-            onVideoStart,
+            onVideoStop,
         );
 
         const onVideoData = (buffer: DataBuffer) => {
@@ -118,7 +118,7 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
         );
 
         const onTouchEvent = (data: ITouchEvent) => {
-            inputService.sendTouchEvent(data);
+            void inputService.sendTouchEvent(data);
         };
 
         this.emitter.on(

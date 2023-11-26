@@ -2,21 +2,27 @@ import EventEmitter from 'eventemitter3';
 import { Transport, TransportEvent } from './Transport';
 import { getLogger } from '@web-auto/logging';
 import { Logger } from 'winston';
+import assert from 'node:assert';
 
 export enum DeviceEvent {
-    CONNECTED,
-    DISCONNECTED,
+    DISCONNECTED = 'disconnected',
 }
 
 export enum DeviceState {
-    AVAILABLE,
-    CONNECTED,
-    DISCONNECTED,
+    AVAILABLE = 'available',
+    CONNECTING = 'connecting',
+    CONNECTED = 'connected',
+    DISCONNECTING = 'disconnecting',
+    DISCONNECTED = 'disconnected',
 }
 
 export interface DeviceEvents {
-    [DeviceEvent.CONNECTED]: () => void;
     [DeviceEvent.DISCONNECTED]: () => void;
+}
+
+export enum DeviceDisconnectReason {
+    TRANSPORT = 'transport-disconnected',
+    USER = 'user-requested',
 }
 
 export abstract class Device {
@@ -29,35 +35,87 @@ export abstract class Device {
     public constructor(
         public prefix: string,
         public realName: string,
+        private canReconnect: boolean,
     ) {
         this.name = `${prefix}: ${realName}`;
 
         this.logger = getLogger(`${this.constructor.name}@${this.realName}`);
+
+        this.onTransportDisconnect = this.onTransportDisconnect.bind(this);
     }
 
-    public async handleConnect(transport: Transport): Promise<void> {
-        this.transport = transport;
+    protected abstract connectImpl(): Promise<Transport>;
+    protected async handleDisconnect(_reason: string): Promise<void> {}
 
-        transport.emitter.once(TransportEvent.DISCONNECTED, () => {
-            this.emitter.emit(DeviceEvent.DISCONNECTED);
-        });
+    public async connect(): Promise<Transport> {
+        if (this.state !== DeviceState.AVAILABLE) {
+            this.logger.error(
+                `Tried to connect while device has state ${this.state}`,
+            );
+            throw new Error('Device not availalbe');
+        }
 
-        transport.connect();
+        this.state = DeviceState.CONNECTING;
+
+        this.transport = await this.connectImpl();
+
+        this.transport.emitter.once(
+            TransportEvent.DISCONNECTED,
+            this.onTransportDisconnect,
+        );
+
+        await this.transport.connect();
 
         this.state = DeviceState.CONNECTED;
 
-        this.emitter.emit(DeviceEvent.CONNECTED);
+        return this.transport;
     }
 
-    public abstract connect(): Promise<void>;
+    protected async onTransportDisconnect(): Promise<void> {
+        await this.disconnect(DeviceDisconnectReason.TRANSPORT);
+    }
 
-    public disconnect(): void {
+    public async disconnect(reason?: string): Promise<void> {
+        if (reason === undefined) {
+            reason = DeviceDisconnectReason.USER;
+        }
+
+        this.logger.info(`Disconnecting with reason ${reason}`);
+
         if (this.state !== DeviceState.CONNECTED) {
+            this.logger.error(
+                `Tried to disconnect while device has state ${this.state}`,
+            );
             return;
         }
 
-        this.transport?.disconnect();
+        this.state = DeviceState.DISCONNECTING;
 
-        this.state = DeviceState.DISCONNECTED;
+        assert(this.transport !== undefined);
+        this.transport.emitter.off(
+            TransportEvent.DISCONNECTED,
+            this.onTransportDisconnect,
+        );
+
+        if (reason !== DeviceDisconnectReason.TRANSPORT) {
+            this.logger.info('Disconnecting transport');
+            await this.transport.disconnect();
+            this.logger.info('Disconnected transport');
+        }
+
+        this.transport = undefined;
+        await this.handleDisconnect(reason);
+
+        if (this.canReconnect) {
+            this.logger.info('Device can reconnect, set state to available');
+            this.state = DeviceState.AVAILABLE;
+        } else {
+            this.logger.info('Device cannot reconnect, set state to available');
+            this.state = DeviceState.DISCONNECTED;
+        }
+
+        if (reason !== DeviceDisconnectReason.USER) {
+            this.emitter.emit(DeviceEvent.DISCONNECTED);
+        }
     }
 }

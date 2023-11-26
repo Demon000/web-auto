@@ -4,6 +4,7 @@ import EventEmitter from 'eventemitter3';
 
 export enum BluetoothProfileEvent {
     CONNECTED = 'connected',
+    ERROR = 'error',
     DISCONNECTED = 'disconnected',
 }
 
@@ -32,6 +33,10 @@ export class BluetoothProfile implements Profile {
         _options: Record<string, any>,
     ): Promise<void> {
         const address = await device.Address();
+
+        /*
+         * Open the socket automatically just to handle close events.
+         */
         const socket = new BluetoothSocket(fd);
 
         /*

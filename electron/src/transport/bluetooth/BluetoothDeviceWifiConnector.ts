@@ -1,7 +1,11 @@
 import { getLogger } from '@web-auto/logging';
 import { EventEmitter } from 'eventemitter3';
-import { DataBuffer } from '@web-auto/android-auto';
-import { BluetoothMessageType } from './BluetoothMessageType';
+import {
+    BluetoothMessage,
+    BluetoothMessageCodec,
+    BluetoothMessageType,
+    DataBuffer,
+} from '@web-auto/android-auto';
 import {
     ConnectStatusMessage,
     NetworkInfo,
@@ -27,8 +31,8 @@ interface InternalEvents {
 const TIMEOUT = 20000;
 
 export class BluetoothDeviceWifiConnector {
+    private codec = new BluetoothMessageCodec();
     private internalEmitter = new EventEmitter<InternalEvents>();
-    private timeout?: NodeJS.Timeout;
     private bluetoothSocket?: Duplex;
     protected logger: Logger;
 
@@ -39,49 +43,10 @@ export class BluetoothDeviceWifiConnector {
         this.logger = getLogger(`${this.constructor.name}@${this.name}`);
 
         this.onData = this.onData.bind(this);
-        this.onTimeout = this.onTimeout.bind(this);
         this.onStatus = this.onStatus.bind(this);
-        this.onFail = this.onFail.bind(this);
-    }
-
-    private attachOnData(): void {
-        assert(this.bluetoothSocket !== undefined);
-        this.bluetoothSocket.on('data', this.onData);
-    }
-
-    private detachOnData(): void {
-        assert(this.bluetoothSocket !== undefined);
-        this.bluetoothSocket.off('data', this.onData);
-    }
-
-    private startTimeout(): void {
-        this.timeout = setTimeout(this.onTimeout, TIMEOUT);
-    }
-
-    private stopTimeout(): void {
-        clearTimeout(this.timeout);
-    }
-
-    private onTimeout(): void {
-        this.detachOnData();
-
-        this.internalEmitter.emit(
-            InternalEvent.CONNECTION_FAIL,
-            new Error('Timed out'),
-        );
-    }
-
-    private onFail(err: Error): void {
-        this.detachOnData();
-        this.stopTimeout();
-
-        this.internalEmitter.emit(InternalEvent.CONNECTION_FAIL, err);
     }
 
     private onStatus(data: ConnectStatusMessage): void {
-        this.detachOnData();
-        this.stopTimeout();
-
         if (data.status === 0) {
             this.internalEmitter.emit(InternalEvent.CONNECTION_SUCCESS);
         } else {
@@ -96,52 +61,18 @@ export class BluetoothDeviceWifiConnector {
         }
     }
 
-    public onError(err: Error): void {
-        this.logger.debug('Error', {
-            metadata: err,
-        });
-    }
-
-    public payloadToData(
-        type: BluetoothMessageType,
-        payload: DataBuffer,
-    ): DataBuffer {
-        const buffer = DataBuffer.empty();
-
-        buffer.appendUint16BE(payload.size);
-        buffer.appendUint16BE(type);
-        buffer.appendBuffer(payload);
-
-        return buffer;
-    }
-
-    public dataToPayload(
-        buffer: DataBuffer,
-    ): [BluetoothMessageType, DataBuffer] {
-        const size = buffer.readUint16BE();
-        const type = buffer.readUint16BE();
-        const payload = buffer.readBuffer(size);
-        return [type, payload];
-    }
-
-    public async sendMessage(
-        type: BluetoothMessageType,
-        payload: DataBuffer,
-    ): Promise<void> {
+    public async sendMessage(message: BluetoothMessage): Promise<void> {
         return new Promise((resolve, reject) => {
             assert(this.bluetoothSocket !== undefined);
 
             this.logger.debug('Send encoded message', {
-                metadata: {
-                    type: BluetoothMessageType[type],
-                    payload,
-                },
+                metadata: message,
             });
 
-            const buffer = this.payloadToData(type, payload);
+            const buffer = this.codec.encodeMessage(message);
 
             this.logger.debug('Send data', {
-                metadata: buffer.data,
+                metadata: buffer,
             });
 
             this.bluetoothSocket.write(buffer.data, undefined, (err) => {
@@ -166,10 +97,12 @@ export class BluetoothDeviceWifiConnector {
             },
         });
 
-        await this.sendMessage(
+        const message = new BluetoothMessage(
             BluetoothMessageType.SOCKET_INFO_REQUEST,
             DataBuffer.fromBuffer(SocketInfoRequest.encode(data).finish()),
         );
+
+        await this.sendMessage(message);
     }
 
     public async sendNetworkInfoResponse(): Promise<void> {
@@ -184,10 +117,12 @@ export class BluetoothDeviceWifiConnector {
             },
         });
 
-        await this.sendMessage(
+        const message = new BluetoothMessage(
             BluetoothMessageType.NETWORK_INFO_RESPONSE,
             DataBuffer.fromBuffer(NetworkInfo.encode(data).finish()),
         );
+
+        await this.sendMessage(message);
     }
 
     public async onNetworkInfoRequest(): Promise<void> {
@@ -201,84 +136,84 @@ export class BluetoothDeviceWifiConnector {
         }
     }
 
-    public async onMessage(
-        type: BluetoothMessageType,
-        payload: DataBuffer,
-    ): Promise<void> {
+    public async onMessage(message: BluetoothMessage): Promise<void> {
         let data;
 
         this.logger.debug('Receive message', {
-            metadata: {
-                type: BluetoothMessageType[type],
-                payload,
-            },
+            metadata: message,
         });
 
-        switch (type) {
+        switch (message.type) {
             case BluetoothMessageType.NETWORK_INFO_REQUEST:
-                this.onNetworkInfoRequest();
+                await this.onNetworkInfoRequest();
                 break;
             case BluetoothMessageType.SOCKET_INFO_RESPONSE:
-                data = SocketInfoResponse.decode(payload.data);
+                data = SocketInfoResponse.decode(message.payload.data);
                 this.logger.debug('Receive decoded message', {
-                    metadata: {
-                        type: BluetoothMessageType[type],
-                        data,
-                    },
+                    metadata: data,
                 });
                 break;
             case BluetoothMessageType.CONNECT_STATUS:
-                data = ConnectStatusMessage.decode(payload.data);
+                data = ConnectStatusMessage.decode(message.payload.data);
                 this.logger.debug('Receive decoded message', {
-                    metadata: {
-                        type: BluetoothMessageType[type],
-                        data,
-                    },
+                    metadata: data,
                 });
                 this.onStatus(data);
                 break;
             default:
-                this.logger.error('Receive unhandled message', {
-                    metadata: {
-                        type: BluetoothMessageType[type],
-                        payload,
-                    },
-                });
+                this.logger.error('Receive unhandled message');
                 break;
         }
     }
 
-    private async onData(data: Buffer): Promise<void> {
+    private async onData(buffer: Buffer): Promise<void> {
         this.logger.debug('Receive data', {
-            metadata: data,
+            metadata: buffer,
         });
 
-        const buffer = DataBuffer.fromBuffer(data);
-
-        while (buffer.readBufferSize()) {
-            const [type, payload] = this.dataToPayload(buffer);
-            await this.onMessage(type, payload);
+        const messages = this.codec.decodeBuffer(buffer);
+        for (const message of messages) {
+            await this.onMessage(message);
         }
     }
 
     public connect(socket: Duplex): Promise<void> {
         this.bluetoothSocket = socket;
 
-        this.attachOnData();
-        this.startTimeout();
+        const timeout = setTimeout(() => {
+            this.internalEmitter.emit(
+                InternalEvent.CONNECTION_FAIL,
+                new Error('Timed out'),
+            );
+        }, TIMEOUT);
 
-        return new Promise((resolve, reject) => {
+        const cleanup = () => {
+            socket.off('data', this.onData);
+            this.internalEmitter.removeAllListeners();
+            clearTimeout(timeout);
+        };
+
+        return new Promise<void>((resolve, reject) => {
             this.internalEmitter.once(InternalEvent.CONNECTION_FAIL, (err) => {
-                this.internalEmitter.removeAllListeners();
                 reject(err);
             });
 
             this.internalEmitter.once(InternalEvent.CONNECTION_SUCCESS, () => {
-                this.internalEmitter.removeAllListeners();
                 resolve();
             });
 
-            this.sendSocketInfoRequest().catch(this.onFail);
-        });
+            socket.on('data', this.onData);
+
+            this.sendSocketInfoRequest().catch((err) => {
+                reject(err);
+            });
+        })
+            .then(() => {
+                cleanup();
+            })
+            .catch((err) => {
+                cleanup();
+                throw err;
+            });
     }
 }

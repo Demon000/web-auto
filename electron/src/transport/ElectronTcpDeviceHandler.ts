@@ -15,11 +15,9 @@ export class ElectronTcpDeviceHandler extends DeviceHandler {
         this.emitter.emit(DeviceHandlerEvent.AVAILABLE, device);
     }
 
-    public waitForDevices(): void {
+    public async waitForDevices(): Promise<void> {
         for (const ip of this.config.ips) {
             this.makeDeviceAvailable(ip);
         }
     }
-
-    public stopWaitingForDevices(): void {}
 }

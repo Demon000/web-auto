@@ -51,13 +51,13 @@ export class ElectronUsbDuplex extends Duplex {
         if (this.interfaceClaimed) {
             await this.device.releaseInterface(0);
         }
-        await this.device.close();
     }
 
     public _destroy(
         _err: Error | null,
         callback: (err: Error | null) => void,
     ): void {
+        console.log(new Error());
         this.destroyAsync()
             .then(() => {
                 callback(null);
@@ -124,7 +124,7 @@ export class ElectronUsbDuplex extends Duplex {
         }
 
         if (result.data.byteLength === 0) {
-            this.readAsync();
+            void this.readAsync();
             return;
         }
 
@@ -138,6 +138,6 @@ export class ElectronUsbDuplex extends Duplex {
     }
 
     public _read() {
-        this.readAsync();
+        void this.readAsync();
     }
 }

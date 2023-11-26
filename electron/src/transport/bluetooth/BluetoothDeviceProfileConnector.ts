@@ -1,133 +1,107 @@
 import { EventEmitter } from 'eventemitter3';
-import { Device as BluezDevice } from 'bluez';
-import { BluetoothProfile, BluetoothProfileEvent } from './BluetoothProfile';
 import { Duplex } from 'node:stream';
-import { getLogger } from '@web-auto/logging';
-import { Logger } from 'winston';
+import assert from 'node:assert';
+import BluetoothSocket from 'bluetooth-socket';
 
 enum InternalEvent {
     CONNECTION_SUCCESS,
     CONNECTION_FAIL,
+    DISCONNECTION_SUCCESS,
+    DISCONNECTION_FAIL,
 }
 
 interface InternalEvents {
     [InternalEvent.CONNECTION_SUCCESS]: (socket: Duplex) => void;
     [InternalEvent.CONNECTION_FAIL]: (err: Error) => void;
-}
-
-export enum BluetoothDeviceProfileConnectorEvent {
-    DISCONNECTED,
-}
-
-export interface BluetoothDeviceProfileConnectorEvents {
-    [BluetoothDeviceProfileConnectorEvent.DISCONNECTED]: () => void;
+    [InternalEvent.DISCONNECTION_SUCCESS]: () => void;
+    [InternalEvent.DISCONNECTION_FAIL]: (err: Error) => void;
 }
 
 const TIMEOUT = 10000;
 
 export class BluetoothDeviceProfileConnector {
-    public emitter = new EventEmitter<BluetoothDeviceProfileConnectorEvents>();
     private internalEmitter = new EventEmitter<InternalEvents>();
-    private timeout?: NodeJS.Timeout;
-    protected logger: Logger;
+    private socket?: Duplex;
 
-    public constructor(
-        private device: BluezDevice,
-        private profile: BluetoothProfile,
-        private address: string,
-        private name: string,
-    ) {
-        this.onTimeout = this.onTimeout.bind(this);
-        this.onFail = this.onFail.bind(this);
-        this.onConnect = this.onConnect.bind(this);
-        this.onDisconnect = this.onDisconnect.bind(this);
-
-        this.logger = getLogger(`${this.constructor.name}@${this.name}`);
-    }
-
-    private attachOnConnect(): void {
-        this.profile.emitter.once(
-            BluetoothProfileEvent.CONNECTED,
-            this.onConnect,
-        );
-    }
-
-    private detachOnConnect(): void {
-        this.profile.emitter.off(
-            BluetoothProfileEvent.CONNECTED,
-            this.onConnect,
-        );
-    }
-
-    private startTimeout(): void {
-        this.timeout = setTimeout(this.onTimeout, TIMEOUT);
-    }
-
-    private stopTimeout(): void {
-        clearTimeout(this.timeout);
-    }
-
-    private onTimeout(): void {
-        this.detachOnConnect();
-
-        this.internalEmitter.emit(
-            InternalEvent.CONNECTION_FAIL,
-            new Error('Timed out'),
-        );
-    }
-
-    private onFail(err: Error): void {
-        this.detachOnConnect();
-        this.stopTimeout();
-
-        this.internalEmitter.emit(InternalEvent.CONNECTION_FAIL, err);
-    }
-
-    private onConnect(address: string, socket: Duplex): void {
-        if (this.address !== address) {
-            return;
-        }
-
-        this.stopTimeout();
-
-        this.logger.debug('Bluetooth profile connected');
-
-        this.profile.emitter.once(
-            BluetoothProfileEvent.DISCONNECTED,
-            this.onDisconnect,
-        );
+    public onConnect(socket: BluetoothSocket): void {
+        assert(this.socket === undefined);
+        this.socket = socket;
 
         this.internalEmitter.emit(InternalEvent.CONNECTION_SUCCESS, socket);
     }
 
-    private onDisconnect(address: string): void {
-        if (address !== this.address) {
-            return;
-        }
+    public async onDisconnect(): Promise<void> {
+        assert(this.socket !== undefined);
+        this.socket = undefined;
 
-        this.logger.debug('Bluetooth profile disconnected');
-        this.emitter.emit(BluetoothDeviceProfileConnectorEvent.DISCONNECTED);
+        this.internalEmitter.emit(InternalEvent.DISCONNECTION_SUCCESS);
     }
 
     public async connect(): Promise<Duplex> {
-        this.attachOnConnect();
-        this.startTimeout();
+        if (this.socket !== undefined) {
+            return this.socket;
+        }
 
-        return new Promise((resolve, reject) => {
-            this.internalEmitter.once(InternalEvent.CONNECTION_FAIL, (err) => {
-                this.internalEmitter.removeAllListeners();
-                reject(err);
-            });
+        const timeout = setTimeout(() => {
+            this.internalEmitter.emit(
+                InternalEvent.CONNECTION_FAIL,
+                new Error('Timed out'),
+            );
+        }, TIMEOUT);
+
+        const cleanup = () => {
+            this.internalEmitter.removeAllListeners();
+            clearTimeout(timeout);
+        };
+
+        return new Promise<Duplex>((resolve, reject) => {
+            this.internalEmitter.once(InternalEvent.CONNECTION_FAIL, reject);
 
             this.internalEmitter.once(
                 InternalEvent.CONNECTION_SUCCESS,
-                (socket) => {
-                    this.internalEmitter.removeAllListeners();
-                    resolve(socket);
-                },
+                resolve,
+            );
+        })
+            .then((socket) => {
+                cleanup();
+                return socket;
+            })
+            .catch((err) => {
+                cleanup();
+                throw err;
+            });
+    }
+
+    public async disconnect(): Promise<void> {
+        const timeout = setTimeout(() => {
+            this.internalEmitter.emit(
+                InternalEvent.DISCONNECTION_FAIL,
+                new Error('Timed out'),
+            );
+        }, TIMEOUT);
+
+        const cleanup = () => {
+            this.internalEmitter.removeAllListeners();
+            clearTimeout(timeout);
+        };
+
+        return new Promise<void>((resolve, reject) => {
+            this.internalEmitter.once(InternalEvent.DISCONNECTION_FAIL, reject);
+
+            this.internalEmitter.once(
+                InternalEvent.DISCONNECTION_SUCCESS,
+                resolve,
             );
 
-            this.device.Connect().catch(this.onFail);
-        });
+            assert(this.socket !== undefined);
+            this.socket.destroy();
+        })
+            .then(() => {
+                cleanup();
+            })
+            .catch((err) => {
+                cleanup();
+                throw err;
+            });
     }
 }

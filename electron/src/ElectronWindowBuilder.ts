@@ -81,8 +81,8 @@ export class ElectronWindowBuilder {
             },
         );
 
-        androidAutoChannel.on(AndroidAutoMainMethod.START, () => {
-            androidAuto.server.start();
+        androidAutoChannel.on(AndroidAutoMainMethod.START, async () => {
+            await androidAuto.server.start();
         });
 
         webConfigChannel.handle(WebConfigMainMethod.CONFIG, () => {

@@ -14,70 +14,42 @@ interface InternalEvents {
     [InternalEvent.CONNECTION_FAIL]: (err: Error) => void;
 }
 
-export enum BluetoothDeviceTcpConnectorEvent {
-    DISCONNECTED,
-}
-
-export interface BluetoothDeviceTcpConnectorEvents {
-    [BluetoothDeviceTcpConnectorEvent.DISCONNECTED]: () => void;
-}
-
 const TIMEOUT = 10000;
 
 export class BluetoothDeviceTcpConnector {
-    public emitter = new EventEmitter<BluetoothDeviceTcpConnectorEvents>();
     private internalEmitter = new EventEmitter<InternalEvents>();
-    private timeout?: NodeJS.Timeout;
     protected logger: Logger;
 
     public constructor(
         private tcpServer: Server,
         private name: string,
     ) {
-        this.onTimeout = this.onTimeout.bind(this);
-        this.onConnect = this.onConnect.bind(this);
-
         this.logger = getLogger(`${this.constructor.name}@${this.name}`);
+
+        this.onConnect = this.onConnect.bind(this);
     }
 
-    private attachOnConnect(): void {
-        this.tcpServer.once('connection', this.onConnect);
-    }
-
-    private detachOnConnect(): void {
-        this.tcpServer.off('connection', this.onConnect);
-    }
-
-    private startTimeout(): void {
-        this.timeout = setTimeout(this.onTimeout, TIMEOUT);
-    }
-
-    private stopTimeout(): void {
-        clearTimeout(this.timeout);
-    }
-
-    private onTimeout(): void {
-        this.detachOnConnect();
-
-        this.internalEmitter.emit(
-            InternalEvent.CONNECTION_FAIL,
-            new Error('Timed out'),
-        );
-    }
-
-    private onConnect(socket: Socket): void {
-        this.stopTimeout();
-
+    public onConnect(socket: Socket): void {
         this.logger.debug('TCP socket connected');
 
         this.internalEmitter.emit(InternalEvent.CONNECTION_SUCCESS, socket);
     }
 
     public async connect(): Promise<Duplex> {
-        this.attachOnConnect();
-        this.startTimeout();
+        const timeout = setTimeout(() => {
+            this.internalEmitter.emit(
+                InternalEvent.CONNECTION_FAIL,
+                new Error('Timed out'),
+            );
+        }, TIMEOUT);
 
-        return new Promise((resolve, reject) => {
+        const cleanup = () => {
+            this.internalEmitter.removeAllListeners();
+            clearTimeout(timeout);
+            this.tcpServer.off('connection', this.onConnect);
+        };
+
+        return new Promise<Duplex>((resolve, reject) => {
             this.internalEmitter.once(InternalEvent.CONNECTION_FAIL, (err) => {
                 this.internalEmitter.removeAllListeners();
                 reject(err);
@@ -90,6 +62,16 @@ export class BluetoothDeviceTcpConnector {
                     resolve(socket);
                 },
             );
-        });
+
+            this.tcpServer.once('connection', this.onConnect);
+        })
+            .then((socket) => {
+                cleanup();
+                return socket;
+            })
+            .catch((err) => {
+                cleanup();
+                throw err;
+            });
     }
 }

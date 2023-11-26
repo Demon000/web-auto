@@ -11,8 +11,12 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 
-router.replace({
-    name: 'home',
-});
+router
+    .replace({
+        name: 'home',
+    })
+    .catch((err) => {
+        console.error(err);
+    });
 
 app.mount('#app');

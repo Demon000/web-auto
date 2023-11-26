@@ -51,6 +51,9 @@
         tcpDeviceHandlerConfig: {
             ips: ['192.168.0.103'],
         },
+        usbDeviceHandlerConfig: {
+            ignoredDevices: [[0x1462, 0x7c94]],
+        },
         bluetoothDeviceHandlerConfig: {
             socketInfo: {
                 ipAddress: '192.168.0.106',

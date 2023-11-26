@@ -9,9 +9,9 @@ export enum TransportState {
 }
 
 export enum TransportEvent {
-    DATA,
-    ERROR,
-    DISCONNECTED,
+    DATA = 'data',
+    ERROR = 'error',
+    DISCONNECTED = 'disconnected',
 }
 
 export interface TransportEvents {
@@ -25,7 +25,7 @@ export abstract class Transport {
 
     public state = TransportState.AVAILABLE;
 
-    public abstract connect(): void;
-    public abstract disconnect(): void;
+    public abstract connect(): Promise<void>;
+    public abstract disconnect(): Promise<void>;
     public abstract send(buffer: DataBuffer): Promise<void>;
 }

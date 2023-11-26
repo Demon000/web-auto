@@ -16,7 +16,7 @@ import Long from 'long';
 
 export enum ElectronAndroidAutoVideoServiceEvent {
     STOP = 'stop',
-    VIDEO_START = 'start',
+    VIDEO_START = 'video-start',
     VIDEO_DATA = 'video-data',
     VIDEO_STOP = 'video-stop',
 }

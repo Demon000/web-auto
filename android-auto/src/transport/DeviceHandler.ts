@@ -14,6 +14,6 @@ export interface DeviceHandlerEvents {
 export abstract class DeviceHandler {
     public emitter = new EventEmitter<DeviceHandlerEvents>();
 
-    public abstract waitForDevices(): void;
-    public abstract stopWaitingForDevices(): void;
+    public abstract waitForDevices(): Promise<void>;
+    public async stopWaitingForDevices(): Promise<void> {}
 }

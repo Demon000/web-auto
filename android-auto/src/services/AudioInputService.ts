@@ -44,7 +44,7 @@ export abstract class AudioInputService extends AVService {
             return;
         }
 
-        this.sendInputOpenResponse();
+        await this.sendInputOpenResponse();
     }
 
     protected async onAckIndication(

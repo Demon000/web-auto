@@ -30,8 +30,8 @@ export class ElectronAndroidAutoAudioInputService extends AudioInputService {
             this.sampleRate(),
             this.chunkSize(),
             this.constructor.name,
-            (data) => {
-                this.sendAvMediaWithTimestampIndication(
+            async (data) => {
+                void this.sendAvMediaWithTimestampIndication(
                     DataBuffer.fromBuffer(data),
                 );
             },

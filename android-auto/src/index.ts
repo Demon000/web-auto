@@ -5,3 +5,4 @@ export * from './transport';
 export * from './messenger';
 export * from './utils';
 export * from './crypto';
+export * from './bluetooth';

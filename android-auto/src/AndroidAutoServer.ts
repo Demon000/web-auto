@@ -1,40 +1,19 @@
-import { ControlServiceEvent } from './services/ControlService';
-
 import { ServiceFactory } from './services/ServiceFactory';
-import {
-    IServiceDiscoveryResponse,
-    ServiceDiscoveryResponse,
-} from '@web-auto/android-auto-proto';
-import { Service, ServiceEvent } from './services';
+import { IServiceDiscoveryResponse } from '@web-auto/android-auto-proto';
 import { DeviceHandler, DeviceHandlerEvent } from './transport/DeviceHandler';
-import { ChannelId } from './messenger/ChannelId';
-import {
-    ANDROID_AUTO_CERTIFICATE,
-    ANDROID_AUTO_PRIVATE_KEY,
-} from './crypto/keys';
-import { DataBuffer, TransportEvent } from '.';
 import { getLogger } from '@web-auto/logging';
-import { Device, DeviceEvent } from './transport/Device';
-import assert from 'node:assert';
-import { MessageAggregator } from './messenger/MessageAggregator';
-import { FrameCodec } from './messenger/FrameCodec';
-import { FrameData } from './messenger/FrameData';
-import { Message } from './messenger/Message';
-import { EncryptionType } from './messenger/EncryptionType';
+import { Device } from './transport/Device';
+import { AndroidAutoDevice, AndroidAutoDeviceEvent } from './AndroidAutoDevice';
 
 export interface AndroidAutoServerConfig {
     serviceDiscovery: IServiceDiscoveryResponse;
     deviceNameWhitelist?: string[];
 }
 
-export interface DeviceData {
-    services: Service[];
-}
-
 export class AndroidAutoServer {
     private logger = getLogger(this.constructor.name);
     private nameDeviceMap = new Map<string, Device>();
-    private nameDeviceDataMap = new Map<string, DeviceData>();
+    private nameAndroidAutoMap = new Map<string, AndroidAutoDevice>();
     private started = false;
 
     public constructor(
@@ -44,6 +23,8 @@ export class AndroidAutoServer {
     ) {
         this.onDeviceAvailable = this.onDeviceAvailable.bind(this);
         this.onDeviceUnavailable = this.onDeviceUnavailable.bind(this);
+        this.onAndroidAutoDisconnected =
+            this.onAndroidAutoDisconnected.bind(this);
 
         for (const deviceHandler of this.deviceHandlers) {
             deviceHandler.emitter.on(
@@ -62,10 +43,6 @@ export class AndroidAutoServer {
 
         this.logger.info(`New available device ${device.name}`);
 
-        device.emitter.on(DeviceEvent.CONNECTED, () => {
-            this.onDeviceConnected(device);
-        });
-
         if (
             this.options.deviceNameWhitelist !== undefined &&
             !this.options.deviceNameWhitelist.includes(device.name)
@@ -73,205 +50,49 @@ export class AndroidAutoServer {
             return;
         }
 
+        await this.connectDevice(device);
+    }
+
+    public onDeviceUnavailable(device: Device): void {
+        this.logger.info(`Device ${device.name} no longer available`);
+
+        this.nameDeviceMap.delete(device.name);
+    }
+
+    public async connectDevice(device: Device): Promise<void> {
+        const androidAutoDevice = new AndroidAutoDevice(
+            this.options,
+            this.serviceFactory,
+            device,
+        );
+
+        this.logger.info(`Connecting device ${device.name}`);
         try {
-            await device.connect();
+            await androidAutoDevice.connect();
         } catch (e) {
             this.logger.error(`Failed to connect to device ${device.name}`, {
                 metadata: e,
             });
+            return;
         }
-    }
+        this.logger.info(`Connected device ${device.name}`);
 
-    public async onDeviceConnected(device: Device): Promise<void> {
-        assert(device.transport !== undefined);
-        const transport = device.transport;
-
-        this.logger.info(`New connected device ${device.name}`);
-
-        device.emitter.on(DeviceEvent.DISCONNECTED, () => {
-            this.onDeviceDisconnected(device);
-        });
-
-        const cryptor = this.serviceFactory.buildCryptor(
-            ANDROID_AUTO_CERTIFICATE,
-            ANDROID_AUTO_PRIVATE_KEY,
-        );
-
-        const frameCodec = new FrameCodec(cryptor);
-        const messageAggregator = new MessageAggregator();
-
-        const services = this.serviceFactory.buildServices();
-        const controlService = this.serviceFactory.buildControlService();
-        const allServices = [...services, controlService];
-
-        const sendServiceDiscoveryResponse = () => {
-            const data = ServiceDiscoveryResponse.create(
-                this.options.serviceDiscovery,
-            );
-
-            for (const service of services) {
-                service.fillFeatures(data);
-            }
-
-            controlService.sendDiscoveryResponse(data);
-        };
-
-        controlService.extraEmitter.once(
-            ControlServiceEvent.SERVICE_DISCOVERY_REQUEST,
-            (data) => {
-                this.logger.info(
-                    `Discovery request, brand: ${data.deviceBrand}, device name ${data.deviceName}`,
-                );
-
-                sendServiceDiscoveryResponse();
-            },
-        );
-
-        controlService.extraEmitter.on(
-            ControlServiceEvent.HANDSHAKE,
-            async (payload) => {
-                if (payload !== undefined) {
-                    await cryptor.writeHandshakeBuffer(payload);
-                }
-
-                if (cryptor.isHandshakeComplete()) {
-                    this.logger.debug('Auth completed');
-
-                    await controlService.sendAuthComplete();
-                } else {
-                    this.logger.debug('Continue handshake');
-
-                    const payload = await cryptor.readHandshakeBuffer();
-                    await controlService.sendHandshake(payload);
-                }
-            },
-        );
-
-        const channelIdServiceMap = new Map<ChannelId, Service>();
-        for (const service of allServices) {
-            channelIdServiceMap.set(service.channelId, service);
-        }
-
-        const onReceiveMessage = async (message: Message) => {
-            const service = channelIdServiceMap.get(message.channelId);
-            if (service === undefined) {
-                this.logger.error(
-                    `Unhandled message with id ${message.messageId} ` +
-                        `on channel with id ${message.channelId}`,
-                    {
-                        metadata: message,
-                    },
-                );
-                return;
-            }
-
-            await service.onMessage(message);
-        };
-
-        const onReceiveFrameData = async (frameData: FrameData) => {
-            const frameHeader = frameData.frameHeader;
-
-            if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
-                frameData.payload = await cryptor.decrypt(frameData.payload);
-            }
-
-            const message = messageAggregator.aggregate(frameData);
-            if (message === undefined) {
-                return;
-            }
-
-            await onReceiveMessage(message);
-        };
-
-        const onReceiveBuffer = async (buffer: DataBuffer) => {
-            const frameDatas = frameCodec.decodeBuffer(buffer);
-
-            for (const frameData of frameDatas) {
-                onReceiveFrameData(frameData);
-            }
-        };
-
-        const onSendFrameData = async (frameData: FrameData) => {
-            const frameHeader = frameData.frameHeader;
-            let buffer;
-
-            if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
-                frameData.payload = await cryptor.encrypt(frameData.payload);
-            }
-
-            try {
-                buffer = frameCodec.encodeFrameData(frameData);
-            } catch (err) {
-                this.logger.error('Failed to encode', {
-                    metadata: {
-                        err,
-                        frameData,
-                    },
-                });
-                return;
-            }
-
-            await transport.send(buffer);
-        };
-
-        const onSendMessage = async (
-            message: Message,
-            encryptionType: EncryptionType,
-        ) => {
-            const frameDatas = messageAggregator.split(message, encryptionType);
-
-            for (const frameData of frameDatas) {
-                await onSendFrameData(frameData);
-            }
-        };
-
-        transport.emitter.on(TransportEvent.DATA, onReceiveBuffer);
-
-        transport.emitter.on(TransportEvent.ERROR, (e) => {
-            this.logger.error('Connection failed', {
-                metadata: e,
-            });
-        });
-
-        controlService.extraEmitter.once(
-            ControlServiceEvent.PING_TIMEOUT,
+        androidAutoDevice.emitter.on(
+            AndroidAutoDeviceEvent.DISCONNECTED,
             () => {
-                this.logger.error(
-                    `Pinger timed out, disconnecting ${device.name}`,
-                );
-                device.disconnect();
+                this.onAndroidAutoDisconnected(androidAutoDevice);
             },
         );
 
-        for (const service of allServices) {
-            service.emitter.on(ServiceEvent.MESSAGE_SENT, onSendMessage);
-        }
-
-        this.nameDeviceDataMap.set(device.name, {
-            services: allServices,
-        });
-
-        for (const service of allServices) {
-            await service.start();
-        }
+        this.nameAndroidAutoMap.set(device.name, androidAutoDevice);
     }
 
-    public async onDeviceDisconnected(device: Device): Promise<void> {
-        const deviceData = this.nameDeviceDataMap.get(device.name);
-        assert(deviceData !== undefined);
-        const { services: allServices } = deviceData;
+    private onAndroidAutoDisconnected(
+        androidAutoDevice: AndroidAutoDevice,
+    ): void {
+        this.logger.info(`Disconnected ${androidAutoDevice.device.name}`);
 
-        this.nameDeviceMap.delete(device.name);
-
-        this.logger.error(`Disconnected ${device.name}`);
-
-        for (const service of allServices) {
-            service.stop();
-        }
-    }
-
-    public onDeviceUnavailable(device: Device): void {
-        this.nameDeviceMap.delete(device.name);
+        this.nameAndroidAutoMap.delete(androidAutoDevice.device.name);
     }
 
     public async start(): Promise<void> {
@@ -279,25 +100,47 @@ export class AndroidAutoServer {
             return;
         }
 
+        this.logger.info('Server starting');
+
         for (const deviceHandler of this.deviceHandlers) {
-            deviceHandler.waitForDevices();
+            try {
+                await deviceHandler.waitForDevices();
+            } catch (err) {
+                this.logger.error('Failed to start waiting for devices', {
+                    metadata: err,
+                });
+            }
         }
+
+        this.logger.info('Server started');
+
         this.started = true;
     }
 
-    public stop(): void {
+    public async stop(): Promise<void> {
         if (!this.started) {
             return;
         }
 
+        this.logger.info('Server stopping');
+
         this.started = false;
 
-        for (const device of this.nameDeviceMap.values()) {
-            device.disconnect();
+        for (const androidAutoDevice of this.nameAndroidAutoMap.values()) {
+            await androidAutoDevice.disconnect();
         }
+        this.nameAndroidAutoMap.clear();
 
         for (const deviceHandler of this.deviceHandlers) {
-            deviceHandler.stopWaitingForDevices();
+            try {
+                await deviceHandler.stopWaitingForDevices();
+            } catch (err) {
+                this.logger.error('Failed to stop waiting for devices', {
+                    metadata: err,
+                });
+            }
         }
+
+        this.logger.info('Server stopped');
     }
 }

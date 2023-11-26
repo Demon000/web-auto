@@ -19,12 +19,17 @@ let marginWidth = 0;
 let marginVertical = 0;
 let marginHorizontal = 0;
 
-webConfigChannel.invoke(WebConfigMainMethod.CONFIG).then((config) => {
-    marginHeight = config.androidAuto?.video?.marginHeight ?? 0;
-    marginWidth = config.androidAuto?.video?.marginWidth ?? 0;
-    marginVertical = Math.floor(marginHeight / 2);
-    marginHorizontal = Math.floor(marginWidth / 2);
-});
+webConfigChannel
+    .invoke(WebConfigMainMethod.CONFIG)
+    .then((config) => {
+        marginHeight = config.androidAuto?.video?.marginHeight ?? 0;
+        marginWidth = config.androidAuto?.video?.marginWidth ?? 0;
+        marginVertical = Math.floor(marginHeight / 2);
+        marginHorizontal = Math.floor(marginWidth / 2);
+    })
+    .catch((err) => {
+        console.error(err);
+    });
 
 const canvasRef: Ref<HTMLCanvasElement | undefined> = ref(undefined);
 let canvasSize: { width: number; height: number } = { width: 0, height: 0 };
