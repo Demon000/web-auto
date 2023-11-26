@@ -34,6 +34,10 @@ export class BluetoothDeviceProfileConnector {
         assert(this.socket !== undefined);
         this.socket = undefined;
 
+        this.internalEmitter.emit(
+            InternalEvent.CONNECTION_FAIL,
+            new Error('Bluetooth disconnected'),
+        );
         this.internalEmitter.emit(InternalEvent.DISCONNECTION_SUCCESS);
     }
 

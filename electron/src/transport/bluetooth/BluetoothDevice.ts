@@ -69,7 +69,10 @@ export class BluetoothDevice extends Device {
             await this.disconnect(
                 BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE,
             );
-        } else if (this.state === DeviceState.DISCONNECTING) {
+        } else if (
+            this.state === DeviceState.DISCONNECTING ||
+            this.state === DeviceState.CONNECTING
+        ) {
             /*
              * The profile connector is waiting for disconnection event.
              */
