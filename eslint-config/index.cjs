@@ -57,5 +57,7 @@ module.exports = {
         ],
 
         '@typescript-eslint/explicit-member-accessibility': 'error',
+
+        '@typescript-eslint/no-floating-promises': 'error',
     },
 };
