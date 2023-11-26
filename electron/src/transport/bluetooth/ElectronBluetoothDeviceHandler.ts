@@ -66,7 +66,7 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
     }
 
     private async onDeviceRemoved(address: string): Promise<void> {
-        this.logger.error(`Bluetooth device removed ${address}`);
+        this.logger.debug(`Bluetooth device removed ${address}`);
         const device = this.addressDeviceMap.get(address);
         if (device === undefined) {
             return;
@@ -81,7 +81,7 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         address: string,
         socket: Duplex,
     ): Promise<void> {
-        this.logger.info(
+        this.logger.debug(
             `Received bluetooth profile connection from device ${address}`,
         );
         const device = this.addressDeviceMap.get(address);
