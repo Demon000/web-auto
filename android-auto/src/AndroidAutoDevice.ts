@@ -9,7 +9,7 @@ import {
 } from './crypto/keys';
 import { FrameCodec } from './messenger/FrameCodec';
 import { MessageAggregator } from './messenger/MessageAggregator';
-import { ControlService, ControlServiceEvent } from './services/ControlService';
+import { ControlService } from './services/ControlService';
 import { Service, ServiceEvent } from './services/Service';
 import { ServiceFactory } from './services/ServiceFactory';
 import { Device, DeviceEvent } from './transport/Device';
@@ -26,18 +26,12 @@ import { FrameData } from './messenger/FrameData';
 import { EncryptionType } from './messenger/EncryptionType';
 import assert from 'node:assert';
 import { Message } from './messenger/Message';
-import EventEmitter from 'eventemitter3';
-
-export enum AndroidAutoDeviceEvent {
-    DISCONNECTED = 'disconnected',
-}
 
 export interface AndroidAutoDeviceEvents {
-    [AndroidAutoDeviceEvent.DISCONNECTED]: () => void;
+    onDisconnected: (device: AndroidAutoDevice) => Promise<void>;
 }
 
 export class AndroidAutoDevice {
-    public emitter = new EventEmitter<AndroidAutoDeviceEvents>();
     private cryptor: Cryptor;
     private frameCodec: FrameCodec;
     private messageAggregator: MessageAggregator;
@@ -52,13 +46,13 @@ export class AndroidAutoDevice {
         private options: AndroidAutoServerConfig,
         private serviceFactory: ServiceFactory,
         public device: Device,
+        private events: AndroidAutoDeviceEvents,
     ) {
         this.logger = getLogger(
             `${this.constructor.name}@${this.device.realName}`,
         );
 
-        this.onServiceDiscoveryRequest =
-            this.onServiceDiscoveryRequest.bind(this);
+        this.onDiscoveryRequest = this.onDiscoveryRequest.bind(this);
         this.onHandshake = this.onHandshake.bind(this);
         this.onReceiveBuffer = this.onReceiveBuffer.bind(this);
         this.onPingTimeout = this.onPingTimeout.bind(this);
@@ -74,7 +68,11 @@ export class AndroidAutoDevice {
         this.messageAggregator = new MessageAggregator();
 
         this.services = this.serviceFactory.buildServices();
-        this.controlService = this.serviceFactory.buildControlService();
+        this.controlService = this.serviceFactory.buildControlService({
+            onDiscoveryRequest: this.onDiscoveryRequest,
+            onHandshake: this.onHandshake,
+            onPingTimeout: this.onPingTimeout,
+        });
         this.allServices = [...this.services, this.controlService];
 
         for (const service of this.allServices) {
@@ -88,25 +86,10 @@ export class AndroidAutoDevice {
             this.onDeviceDisconnected,
         );
 
-        this.controlService.extraEmitter.once(
-            ControlServiceEvent.SERVICE_DISCOVERY_REQUEST,
-            this.onServiceDiscoveryRequest,
-        );
-
-        this.controlService.extraEmitter.on(
-            ControlServiceEvent.HANDSHAKE,
-            this.onHandshake,
-        );
-
         assert(this.transport !== undefined);
         this.transport.emitter.on(TransportEvent.DATA, this.onReceiveBuffer);
 
         this.transport.emitter.on(TransportEvent.ERROR, this.onTransportError);
-
-        this.controlService.extraEmitter.once(
-            ControlServiceEvent.PING_TIMEOUT,
-            this.onPingTimeout,
-        );
 
         for (const service of this.allServices) {
             service.emitter.on(ServiceEvent.MESSAGE_SENT, this.onSendMessage);
@@ -119,25 +102,10 @@ export class AndroidAutoDevice {
             this.onDeviceDisconnected,
         );
 
-        this.controlService.extraEmitter.off(
-            ControlServiceEvent.SERVICE_DISCOVERY_REQUEST,
-            this.onServiceDiscoveryRequest,
-        );
-
-        this.controlService.extraEmitter.off(
-            ControlServiceEvent.HANDSHAKE,
-            this.onHandshake,
-        );
-
         assert(this.transport !== undefined);
         this.transport.emitter.off(TransportEvent.DATA, this.onReceiveBuffer);
 
         this.transport.emitter.off(TransportEvent.ERROR, this.onTransportError);
-
-        this.controlService.extraEmitter.off(
-            ControlServiceEvent.PING_TIMEOUT,
-            this.onPingTimeout,
-        );
 
         for (const service of this.allServices) {
             service.emitter.off(ServiceEvent.MESSAGE_SENT, this.onSendMessage);
@@ -162,7 +130,7 @@ export class AndroidAutoDevice {
         await this.controlService.sendDiscoveryResponse(data);
     }
 
-    private async onServiceDiscoveryRequest(
+    private async onDiscoveryRequest(
         data: ServiceDiscoveryRequest,
     ): Promise<void> {
         this.logger.info(
@@ -319,7 +287,7 @@ export class AndroidAutoDevice {
         }
 
         if (emitEvent) {
-            this.emitter.emit(AndroidAutoDeviceEvent.DISCONNECTED);
+            await this.events.onDisconnected(this);
         }
     }
 }

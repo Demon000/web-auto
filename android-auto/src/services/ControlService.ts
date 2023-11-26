@@ -22,23 +22,14 @@ import { Message } from '@/messenger/Message';
 import { DataBuffer } from '@/utils/DataBuffer';
 
 import { Service } from './Service';
-import { EventEmitter } from 'eventemitter3';
-import { Pinger, PingerEvent } from './Pinger';
+import { Pinger } from './Pinger';
 import Long from 'long';
 import assert from 'node:assert';
 
-export enum ControlServiceEvent {
-    HANDSHAKE = 'handshake',
-    SERVICE_DISCOVERY_REQUEST = 'service-discovery-request',
-    PING_TIMEOUT = 'ping-timeout',
-}
-
 export interface ControlServiceEvents {
-    [ControlServiceEvent.HANDSHAKE]: (payload?: DataBuffer) => void;
-    [ControlServiceEvent.SERVICE_DISCOVERY_REQUEST]: (
-        data: ServiceDiscoveryRequest,
-    ) => void;
-    [ControlServiceEvent.PING_TIMEOUT]: () => void;
+    onHandshake: (payload?: DataBuffer) => Promise<void>;
+    onDiscoveryRequest: (data: ServiceDiscoveryRequest) => Promise<void>;
+    onPingTimeout: () => Promise<void>;
 }
 
 export interface ControlServiceConfig {
@@ -46,20 +37,20 @@ export interface ControlServiceConfig {
 }
 
 export class ControlService extends Service {
-    public extraEmitter = new EventEmitter<ControlServiceEvents>();
-
     private pinger;
 
-    public constructor(private config: ControlServiceConfig) {
+    public constructor(
+        private config: ControlServiceConfig,
+        private events: ControlServiceEvents,
+    ) {
         super(ChannelId.CONTROL);
 
-        this.pinger = new Pinger(config.pingTimeoutMs);
+        this.pinger = new Pinger(config.pingTimeoutMs, {
+            onPingTimeout: this.events.onPingTimeout,
+            onPingRequest: this.onPingRequest,
+        });
 
         this.sendPingRequest = this.sendPingRequest.bind(this);
-        this.pinger.emitter.on(PingerEvent.PING_REQUEST, this.sendPingRequest);
-        this.pinger.emitter.on(PingerEvent.PING_TIMEOUT, () => {
-            this.extraEmitter.emit(ControlServiceEvent.PING_TIMEOUT);
-        });
     }
 
     public async onPingRequest(data: PingRequest): Promise<void> {
@@ -80,20 +71,7 @@ export class ControlService extends Service {
             `Major: ${majorCode}, minor: ${mainorCode}, status: ${status}`,
         );
 
-        await this.onHandshake();
-    }
-
-    private async onHandshake(payload?: DataBuffer): Promise<void> {
-        this.extraEmitter.emit(ControlServiceEvent.HANDSHAKE, payload);
-    }
-
-    private async onServiceDiscoveryRequest(
-        data: ServiceDiscoveryRequest,
-    ): Promise<void> {
-        this.extraEmitter.emit(
-            ControlServiceEvent.SERVICE_DISCOVERY_REQUEST,
-            data,
-        );
+        await this.events.onHandshake();
     }
 
     private async onAudioFocusRequest(data: AudioFocusRequest): Promise<void> {
@@ -121,12 +99,12 @@ export class ControlService extends Service {
                 await this.onVersionReponse(payload);
                 break;
             case ControlMessage.Enum.SSL_HANDSHAKE:
-                await this.onHandshake(payload);
+                await this.events.onHandshake(payload);
                 break;
             case ControlMessage.Enum.SERVICE_DISCOVERY_REQUEST:
                 data = ServiceDiscoveryRequest.decode(bufferPayload);
                 this.printReceive(data);
-                await this.onServiceDiscoveryRequest(data);
+                await this.events.onDiscoveryRequest(data);
                 break;
             case ControlMessage.Enum.PING_REQUEST:
                 data = PingRequest.decode(bufferPayload);

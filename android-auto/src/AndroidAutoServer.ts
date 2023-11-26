@@ -3,7 +3,7 @@ import { IServiceDiscoveryResponse } from '@web-auto/android-auto-proto';
 import { DeviceHandler, DeviceHandlerEvent } from './transport/DeviceHandler';
 import { getLogger } from '@web-auto/logging';
 import { Device } from './transport/Device';
-import { AndroidAutoDevice, AndroidAutoDeviceEvent } from './AndroidAutoDevice';
+import { AndroidAutoDevice } from './AndroidAutoDevice';
 
 export interface AndroidAutoServerConfig {
     serviceDiscovery: IServiceDiscoveryResponse;
@@ -64,6 +64,9 @@ export class AndroidAutoServer {
             this.options,
             this.serviceFactory,
             device,
+            {
+                onDisconnected: this.onAndroidAutoDisconnected,
+            },
         );
 
         this.logger.info(`Connecting device ${device.name}`);
@@ -77,19 +80,12 @@ export class AndroidAutoServer {
         }
         this.logger.info(`Connected device ${device.name}`);
 
-        androidAutoDevice.emitter.on(
-            AndroidAutoDeviceEvent.DISCONNECTED,
-            () => {
-                this.onAndroidAutoDisconnected(androidAutoDevice);
-            },
-        );
-
         this.nameAndroidAutoMap.set(device.name, androidAutoDevice);
     }
 
-    private onAndroidAutoDisconnected(
+    private async onAndroidAutoDisconnected(
         androidAutoDevice: AndroidAutoDevice,
-    ): void {
+    ): Promise<void> {
         this.logger.info(`Disconnected ${androidAutoDevice.device.name}`);
 
         this.nameAndroidAutoMap.delete(androidAutoDevice.device.name);

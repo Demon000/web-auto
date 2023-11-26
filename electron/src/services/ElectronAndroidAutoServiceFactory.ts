@@ -1,6 +1,7 @@
 import {
     ControlService,
     ControlServiceConfig,
+    ControlServiceEvents,
     DataBuffer,
     InputService,
     ServiceFactory,
@@ -53,8 +54,8 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
         return new NodeCryptor(certificateBuffer, privateKeyBuffer);
     }
 
-    public buildControlService(): ControlService {
-        return new ControlService(this.controlConfig);
+    public buildControlService(events: ControlServiceEvents): ControlService {
+        return new ControlService(this.controlConfig, events);
     }
 
     private buildVideoService(): VideoService {

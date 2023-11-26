@@ -1,27 +1,22 @@
 import { PingRequest, PingResponse } from '@web-auto/android-auto-proto';
-import EventEmitter from 'eventemitter3';
 import assert from 'node:assert';
 import { microToMilli, milliTime, milliToMicro } from '@/utils/time';
 
-export enum PingerEvent {
-    PING_REQUEST = 'ping-request',
-    PING_TIMEOUT = 'ping-timeout',
-}
-
 export interface PingerEvents {
-    [PingerEvent.PING_REQUEST]: (request: PingRequest) => void;
-    [PingerEvent.PING_TIMEOUT]: () => void;
+    onPingRequest: (request: PingRequest) => Promise<void>;
+    onPingTimeout: () => Promise<void>;
 }
 
 export class Pinger {
-    public emitter = new EventEmitter<PingerEvents>();
-
     private pingTimeout?: NodeJS.Timeout;
     private pingReceivedTime?: number;
     private pingSentTime?: number;
     private started = false;
 
-    public constructor(private pingTimeoutMs: number) {
+    public constructor(
+        private pingTimeoutMs: number,
+        private events: PingerEvents,
+    ) {
         this.onPingTimeout = this.onPingTimeout.bind(this);
     }
 
@@ -47,7 +42,7 @@ export class Pinger {
             this.pingReceivedTime - this.pingSentTime > this.pingTimeoutMs;
 
         if (isFirstPing || isTimeoutPing) {
-            this.emitter.emit(PingerEvent.PING_TIMEOUT);
+            await this.events.onPingTimeout();
             return;
         }
 
@@ -59,7 +54,7 @@ export class Pinger {
             timestamp: milliToMicro(this.pingSentTime),
         });
 
-        this.emitter.emit(PingerEvent.PING_REQUEST, data);
+        await this.events.onPingRequest(data);
         this.schedulePingTimeout();
     }
 
