@@ -11,7 +11,6 @@ import JSON5 from 'json5';
 const electronConfig = lilconfigSync('web-auto', {
     loaders: {
         '.json5': (_filepath, content) => {
-            console.log(content);
             return JSON5.parse(content);
         },
     },
