@@ -103,7 +103,7 @@ export abstract class Device {
         this.logger.info(`Disconnecting with reason ${reason}`);
 
         if (this.state !== DeviceState.CONNECTED) {
-            this.logger.error(
+            this.logger.info(
                 `Tried to disconnect while device has state ${this.state}`,
             );
             return;
