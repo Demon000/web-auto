@@ -17,11 +17,11 @@ export class ElectronUsbDuplex extends Duplex {
             device.configuration.interfaces[0].alternate.endpoints;
         for (const endpoint of endpoints) {
             if (endpoint.direction == 'in') {
-                inEndpoint = endpoint as USBEndpoint;
+                inEndpoint = endpoint;
             }
 
             if (endpoint.direction == 'out') {
-                outEndpoint = endpoint as USBEndpoint;
+                outEndpoint = endpoint;
             }
 
             if (inEndpoint && outEndpoint) {
