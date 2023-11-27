@@ -43,11 +43,10 @@ export class BluetoothDeviceWifiConnector {
         this.logger = getLogger(`${this.constructor.name}@${this.name}`);
 
         this.onData = this.onData.bind(this);
-        this.onStatus = this.onStatus.bind(this);
     }
 
     private onStatus(data: ConnectStatusMessage): void {
-        if (data.status === 0) {
+        if (data.status === SocketInfoResponseStatus.Enum.STATUS_SUCCESS) {
             this.internalEmitter.emit(InternalEvent.CONNECTION_SUCCESS);
         } else {
             this.internalEmitter.emit(
