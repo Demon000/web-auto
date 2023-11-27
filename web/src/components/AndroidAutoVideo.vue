@@ -120,6 +120,8 @@ onMounted(() => {
     });
 
     androidAutoChannel.on(AndroidAutoRendererMethod.VIDEO_STOP, () => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
         assert(decoder !== undefined);
 
         decoder.emitter.off(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
