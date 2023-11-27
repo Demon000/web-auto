@@ -57,7 +57,6 @@ export class ElectronUsbDuplex extends Duplex {
         _err: Error | null,
         callback: (err: Error | null) => void,
     ): void {
-        console.log(new Error());
         this.destroyAsync()
             .then(() => {
                 callback(null);
