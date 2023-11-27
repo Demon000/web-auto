@@ -113,9 +113,7 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         const aoapDevices = await this.usb.getDevices();
         for (const device of aoapDevices) {
             if (this.isDeviceAoap(device)) {
-                this.logger.error(
-                    `Device ${name(device)} already in AOAP mode`,
-                );
+                await this.handleConnectedAoapDevice(device);
             } else {
                 await this.connectUnknownDevice(device);
             }
