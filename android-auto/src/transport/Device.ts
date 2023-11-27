@@ -54,6 +54,14 @@ export abstract class Device {
         this.emitter.emit(DeviceEvent.STATE_UPDATED, this);
     }
 
+    protected resetState(): void {
+        if (this.canReconnect) {
+            this.setState(DeviceState.AVAILABLE);
+        } else {
+            this.setState(DeviceState.DISCONNECTED);
+        }
+    }
+
     public async connect(): Promise<Transport> {
         if (this.state !== DeviceState.AVAILABLE) {
             this.logger.error(
@@ -64,7 +72,12 @@ export abstract class Device {
 
         this.setState(DeviceState.CONNECTING);
 
-        this.transport = await this.connectImpl();
+        try {
+            this.transport = await this.connectImpl();
+        } catch (err) {
+            this.resetState();
+            throw err;
+        }
 
         this.transport.emitter.once(
             TransportEvent.DISCONNECTED,
@@ -113,13 +126,7 @@ export abstract class Device {
         this.transport = undefined;
         await this.handleDisconnect(reason);
 
-        if (this.canReconnect) {
-            this.logger.info('Device can reconnect, set state to available');
-            this.setState(DeviceState.AVAILABLE);
-        } else {
-            this.logger.info('Device cannot reconnect, set state to available');
-            this.setState(DeviceState.DISCONNECTED);
-        }
+        this.resetState();
 
         if (reason !== (DeviceDisconnectReason.USER as string)) {
             this.emitter.emit(DeviceEvent.DISCONNECTED);
