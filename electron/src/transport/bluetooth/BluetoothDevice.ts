@@ -109,8 +109,6 @@ export class BluetoothDevice extends Device {
             await this.device.Pair();
         }
 
-        const bluetoothSocketPromise = this.profileConnector.connect();
-
         this.logger.info('Connecting to Bluetooth device');
         await this.device.Connect();
         this.logger.info('Connected to Bluetooth device');
@@ -118,7 +116,7 @@ export class BluetoothDevice extends Device {
         let bluetoothSocket;
         try {
             this.logger.info('Connecting to Bluetooth profile');
-            bluetoothSocket = await bluetoothSocketPromise;
+            bluetoothSocket = await this.profileConnector.connect();
             this.logger.info('Connected to Bluetooth profile');
         } catch (err) {
             this.logger.error('Failed to connect to Bluetooth profile', {
@@ -127,8 +125,6 @@ export class BluetoothDevice extends Device {
             await this.disconnectBluetooth();
             throw err;
         }
-
-        const tcpSocketPromise = this.tcpConnector.connect();
 
         try {
             this.logger.info('Connecting to WiFi');
@@ -145,7 +141,7 @@ export class BluetoothDevice extends Device {
 
         try {
             this.logger.info('Waiting for TCP connection');
-            this.tcpSocket = await tcpSocketPromise;
+            this.tcpSocket = await this.tcpConnector.connect();
             this.logger.info('TCP connection received');
         } catch (err) {
             this.logger.error('Failed to receive TCP connection', {
