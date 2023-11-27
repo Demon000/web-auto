@@ -40,16 +40,12 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         assert(this.tcpServer !== undefined);
 
         const bluezDevice = await this.adapter.getDevice(address);
-        let name: string | undefined;
 
+        let name;
         try {
             name = await bluezDevice.Name();
         } catch (err) {
-            // do nothing
-        }
-
-        if (name === undefined) {
-            name = address;
+            return;
         }
 
         const needsPair = !props.Paired;
