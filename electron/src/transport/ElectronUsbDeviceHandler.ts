@@ -1,5 +1,6 @@
 import {
     Device,
+    DeviceDisconnectReason,
     DeviceHandler,
     DeviceHandlerEvent,
 } from '@web-auto/android-auto';
@@ -94,7 +95,7 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
             return;
         }
 
-        await device.disconnect();
+        await device.disconnect(DeviceDisconnectReason.TRANSPORT);
 
         this.emitter.emit(DeviceHandlerEvent.UNAVAILABLE, device);
 
