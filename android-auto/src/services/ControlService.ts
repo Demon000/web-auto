@@ -61,7 +61,7 @@ export class ControlService extends Service {
     private async onVersionReponse(payload: DataBuffer): Promise<void> {
         const majorCode = payload.readUint16BE();
         const mainorCode = payload.readUint16BE();
-        const status = payload.readUint16BE();
+        const status = payload.readUint16BE() as VersionResponseStatus.Enum;
         if (status === VersionResponseStatus.Enum.MISMATCH) {
             this.logger.error('Mismatched verion');
             return;
@@ -92,9 +92,10 @@ export class ControlService extends Service {
     public async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         const payload = message.getPayload();
+        const messageId = message.messageId as ControlMessage.Enum;
         let data;
 
-        switch (message.messageId) {
+        switch (messageId) {
             case ControlMessage.Enum.VERSION_RESPONSE:
                 await this.onVersionReponse(payload);
                 break;

@@ -104,7 +104,7 @@ export abstract class Device {
             this.onTransportDisconnect,
         );
 
-        if (reason !== DeviceDisconnectReason.TRANSPORT) {
+        if (reason !== (DeviceDisconnectReason.TRANSPORT as string)) {
             this.logger.info('Disconnecting transport');
             await this.transport.disconnect();
             this.logger.info('Disconnected transport');
@@ -121,7 +121,7 @@ export abstract class Device {
             this.setState(DeviceState.DISCONNECTED);
         }
 
-        if (reason !== DeviceDisconnectReason.USER) {
+        if (reason !== (DeviceDisconnectReason.USER as string)) {
             this.emitter.emit(DeviceEvent.DISCONNECTED);
         }
     }
