@@ -30,7 +30,7 @@ export class BluetoothDevice extends Device {
         private needsPair: boolean,
         name: string,
     ) {
-        super('BT', name, true);
+        super('BT', name);
 
         this.profileConnector = new BluetoothDeviceProfileConnector();
 

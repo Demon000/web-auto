@@ -37,7 +37,6 @@ export abstract class Device {
     public constructor(
         public prefix: string,
         public realName: string,
-        private canReconnect: boolean,
     ) {
         this.name = `${prefix}: ${realName}`;
 
@@ -54,14 +53,6 @@ export abstract class Device {
         this.emitter.emit(DeviceEvent.STATE_UPDATED, this);
     }
 
-    protected resetState(): void {
-        if (this.canReconnect) {
-            this.setState(DeviceState.AVAILABLE);
-        } else {
-            this.setState(DeviceState.DISCONNECTED);
-        }
-    }
-
     public async connect(): Promise<Transport> {
         if (this.state !== DeviceState.AVAILABLE) {
             this.logger.error(
@@ -75,7 +66,7 @@ export abstract class Device {
         try {
             this.transport = await this.connectImpl();
         } catch (err) {
-            this.resetState();
+            this.setState(DeviceState.AVAILABLE);
             throw err;
         }
 
@@ -139,7 +130,7 @@ export abstract class Device {
             });
         }
 
-        this.resetState();
+        this.setState(DeviceState.AVAILABLE);
 
         if (reason !== (DeviceDisconnectReason.USER as string)) {
             this.emitter.emit(DeviceEvent.DISCONNECTED);
