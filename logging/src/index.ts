@@ -14,7 +14,7 @@ type TransformableInfoWithMetadata = TransformableInfo & {
 const printfCommon = (i: TransformableInfoWithMetadata, colors: boolean) => {
     const { timestamp, level, label, message, metadata } = i;
     let m;
-    if (metadata !== undefined && Object.keys(metadata).length !== 0) {
+    if (metadata !== undefined) {
         m =
             '\n' +
             inspect(metadata, {
