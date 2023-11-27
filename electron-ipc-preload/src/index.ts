@@ -19,7 +19,7 @@ const composeElectronName = (
     eventName: string,
 ): string => {
     return composeName(
-        window.webContents.id.toString(),
+        window.webContents.id!.toString(),
         channelName,
         eventName,
     );
