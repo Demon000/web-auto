@@ -119,8 +119,15 @@ export abstract class Device {
 
         if (reason !== (DeviceDisconnectReason.TRANSPORT as string)) {
             this.logger.info('Disconnecting transport');
-            await this.transport.disconnect();
-            this.logger.info('Disconnected transport');
+            try {
+                await this.transport.disconnect();
+
+                this.logger.info('Disconnected transport');
+            } catch (err) {
+                this.logger.error('Failed to disconnect transport', {
+                    metadata: err,
+                });
+            }
         }
 
         this.transport = undefined;
