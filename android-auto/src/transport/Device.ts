@@ -131,7 +131,13 @@ export abstract class Device {
         }
 
         this.transport = undefined;
-        await this.handleDisconnect(reason);
+        try {
+            await this.handleDisconnect(reason);
+        } catch (err) {
+            this.logger.error('Failed to handle disconnect', {
+                metadata: err,
+            });
+        }
 
         this.resetState();
 
