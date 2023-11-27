@@ -1,4 +1,8 @@
-import { Device, Transport } from '@web-auto/android-auto';
+import {
+    Device,
+    DeviceDisconnectReason,
+    Transport,
+} from '@web-auto/android-auto';
 import { ElectronUsbDuplex } from './ElectronUsbDuplex';
 import { ElectronDuplexTransport } from './ElectronDuplexTransport';
 
@@ -18,7 +22,7 @@ export const usbDeviceName = (device: USBDevice) => {
 
 export class UsbDevice extends Device {
     public constructor(private device: USBDevice) {
-        super('USB', usbDeviceName(device), false);
+        super('USB', usbDeviceName(device), true);
     }
 
     public async connectImpl(): Promise<Transport> {
@@ -30,13 +34,10 @@ export class UsbDevice extends Device {
         return transport;
     }
 
-    private async closeDevice(): Promise<void> {
-        if (this.device.opened) {
-            await this.device.close();
+    protected async handleDisconnect(reason: string): Promise<void> {
+        switch (reason) {
+            case DeviceDisconnectReason.USER:
+                await this.device.reset();
         }
-    }
-
-    protected async handleDisconnect(): Promise<void> {
-        await this.closeDevice();
     }
 }
