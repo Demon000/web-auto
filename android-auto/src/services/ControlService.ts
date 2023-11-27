@@ -45,12 +45,12 @@ export class ControlService extends Service {
     ) {
         super(ChannelId.CONTROL);
 
+        this.sendPingRequest = this.sendPingRequest.bind(this);
+
         this.pinger = new Pinger(config.pingTimeoutMs, {
             onPingTimeout: this.events.onPingTimeout,
-            onPingRequest: this.onPingRequest,
+            onPingRequest: this.sendPingRequest,
         });
-
-        this.sendPingRequest = this.sendPingRequest.bind(this);
     }
 
     public async onPingRequest(data: PingRequest): Promise<void> {
