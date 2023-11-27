@@ -1,12 +1,17 @@
 import { BrowserWindow, screen, session } from 'electron';
 import { ElectronAndroidAutoServiceFactory } from './services/ElectronAndroidAutoServiceFactory';
-import { AndroidAutoServer, DataBuffer } from '@web-auto/android-auto';
+import {
+    AndroidAutoServer,
+    AndroidAutoserverEvent,
+    DataBuffer,
+} from '@web-auto/android-auto';
 import path from 'node:path';
 import assert from 'node:assert';
 import { AndroidAutoCommuncationChannel } from './android-auto-ipc';
 import {
     AndroidAutoMainMethod,
     AndroidAutoRendererMethod,
+    IDevice,
 } from '@web-auto/electron-ipc-android-auto';
 import { ElectronAndroidAutoVideoServiceEvent } from './services/ElectronAndroidAutoVideoService';
 import { WebConfig } from '@web-auto/web-config';
@@ -109,6 +114,27 @@ export class ElectronWindowBuilder {
                 androidAutoChannel.send(
                     AndroidAutoRendererMethod.VIDEO_DATA,
                     buffer.data,
+                );
+            },
+        );
+
+        androidAuto.server.emitter.on(
+            AndroidAutoserverEvent.DEVICES_UPDATED,
+            (devices) => {
+                const ipcDevices: IDevice[] = [];
+
+                for (const device of devices) {
+                    ipcDevices.push({
+                        name: device.name,
+                        prefix: device.prefix,
+                        realName: device.realName,
+                        state: device.state,
+                    });
+                }
+
+                androidAutoChannel.send(
+                    AndroidAutoRendererMethod.DEVICES_UPDATED,
+                    ipcDevices,
                 );
             },
         );

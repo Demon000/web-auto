@@ -18,7 +18,7 @@ export enum DeviceState {
 }
 
 export interface DeviceEvents {
-    [DeviceEvent.STATE_UPDATED]: () => void;
+    [DeviceEvent.STATE_UPDATED]: (device: Device) => void;
     [DeviceEvent.DISCONNECTED]: () => void;
 }
 
@@ -51,7 +51,7 @@ export abstract class Device {
 
     protected setState(state: DeviceState): void {
         this.state = state;
-        this.emitter.emit(DeviceEvent.STATE_UPDATED);
+        this.emitter.emit(DeviceEvent.STATE_UPDATED, this);
     }
 
     public async connect(): Promise<Transport> {
