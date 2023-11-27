@@ -26,6 +26,9 @@ wireRendererMethods<AndroidAutoRendererMethods>(ANDROID_AUTO_CHANNEL_NAME, [
 wireMainMethods<AndroidAutoMainMethods>(ANDROID_AUTO_CHANNEL_NAME, [
     AndroidAutoMainMethod.START,
     AndroidAutoMainMethod.SEND_INPUT_SERVICE_TOUCH,
+]);
+
+wireMainPromiseMethods<AndroidAutoMainMethods>(ANDROID_AUTO_CHANNEL_NAME, [
     AndroidAutoMainMethod.CONNECT_DEVICE,
     AndroidAutoMainMethod.DISCONNECT_DEVICE,
 ]);

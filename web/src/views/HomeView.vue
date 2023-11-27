@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import AndroidAutoVideo from '@/components/AndroidAutoVideo.vue';
+import AndroidAutoDeviceSelector from '@/components/AndroidAutoDeviceSelector.vue';
 </script>
 
 <template>
     <main>
+        <AndroidAutoDeviceSelector></AndroidAutoDeviceSelector>
         <AndroidAutoVideo></AndroidAutoVideo>
     </main>
 </template>

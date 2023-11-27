@@ -44,6 +44,6 @@ export interface AndroidAutoMainMethods {
     [AndroidAutoMainMethod.SEND_INPUT_SERVICE_TOUCH]: (
         data: AndroidAutoTouchEvent,
     ) => void;
-    [AndroidAutoMainMethod.CONNECT_DEVICE]: (name: string) => void;
-    [AndroidAutoMainMethod.DISCONNECT_DEVICE]: (name: string) => void;
+    [AndroidAutoMainMethod.CONNECT_DEVICE]: (name: string) => Promise<void>;
+    [AndroidAutoMainMethod.DISCONNECT_DEVICE]: (name: string) => Promise<void>;
 }

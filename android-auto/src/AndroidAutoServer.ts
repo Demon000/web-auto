@@ -112,6 +112,19 @@ export class AndroidAutoServer {
         this.nameAndroidAutoMap.set(device.name, androidAutoDevice);
     }
 
+    private async disconnectDevice(device: Device): Promise<void> {
+        const androidAutoDevice = this.nameAndroidAutoMap.get(device.name);
+        if (androidAutoDevice === undefined) {
+            throw new Error(
+                `Device ${device.name} does not have a ` +
+                    'valid android auto session',
+            );
+        }
+
+        await androidAutoDevice.disconnect();
+        await this.onAndroidAutoDisconnected(androidAutoDevice);
+    }
+
     public async connectDeviceName(name: string): Promise<void> {
         const device = this.nameDeviceMap.get(name);
         if (device === undefined) {
@@ -119,6 +132,15 @@ export class AndroidAutoServer {
         }
 
         await this.connectDevice(device);
+    }
+
+    public async disconnectDeviceName(name: string): Promise<void> {
+        const device = this.nameDeviceMap.get(name);
+        if (device === undefined) {
+            throw new Error(`Unknown device ${name}`);
+        }
+
+        await this.disconnectDevice(device);
     }
 
     private async onAndroidAutoDisconnected(

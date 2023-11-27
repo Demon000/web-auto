@@ -136,13 +136,6 @@ onMounted(() => {
         decoder = undefined;
     });
 
-    androidAutoChannel.on(
-        AndroidAutoRendererMethod.DEVICES_UPDATED,
-        (devices) => {
-            console.log(devices);
-        },
-    );
-
     androidAutoChannel.send(AndroidAutoMainMethod.START);
 });
 

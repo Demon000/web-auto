@@ -132,10 +132,31 @@ export class ElectronWindowBuilder {
                     });
                 }
 
-                androidAutoChannel.send(
-                    AndroidAutoRendererMethod.DEVICES_UPDATED,
-                    ipcDevices,
-                );
+                try {
+                    androidAutoChannel.send(
+                        AndroidAutoRendererMethod.DEVICES_UPDATED,
+                        ipcDevices,
+                    );
+                } catch (err) {
+                    this.logger.error({
+                        metadata: err,
+                    });
+                }
+            },
+        );
+
+        androidAutoChannel.handle(
+            AndroidAutoMainMethod.CONNECT_DEVICE,
+            async (name: string) => {
+                console.trace(name);
+                await androidAuto.server.connectDeviceName(name);
+            },
+        );
+
+        androidAutoChannel.handle(
+            AndroidAutoMainMethod.DISCONNECT_DEVICE,
+            async (name: string) => {
+                await androidAuto.server.disconnectDeviceName(name);
             },
         );
     }
