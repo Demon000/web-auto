@@ -5,6 +5,7 @@ import { Logger } from 'winston';
 import assert from 'node:assert';
 
 export enum DeviceEvent {
+    STATE_UPDATED = 'state-updated',
     DISCONNECTED = 'disconnected',
 }
 
@@ -17,6 +18,7 @@ export enum DeviceState {
 }
 
 export interface DeviceEvents {
+    [DeviceEvent.STATE_UPDATED]: () => void;
     [DeviceEvent.DISCONNECTED]: () => void;
 }
 
@@ -47,6 +49,11 @@ export abstract class Device {
     protected abstract connectImpl(): Promise<Transport>;
     protected async handleDisconnect(_reason: string): Promise<void> {}
 
+    protected setState(state: DeviceState): void {
+        this.state = state;
+        this.emitter.emit(DeviceEvent.STATE_UPDATED);
+    }
+
     public async connect(): Promise<Transport> {
         if (this.state !== DeviceState.AVAILABLE) {
             this.logger.error(
@@ -55,7 +62,7 @@ export abstract class Device {
             throw new Error('Device not availalbe');
         }
 
-        this.state = DeviceState.CONNECTING;
+        this.setState(DeviceState.CONNECTING);
 
         this.transport = await this.connectImpl();
 
@@ -66,7 +73,7 @@ export abstract class Device {
 
         await this.transport.connect();
 
-        this.state = DeviceState.CONNECTED;
+        this.setState(DeviceState.CONNECTED);
 
         return this.transport;
     }
@@ -89,7 +96,7 @@ export abstract class Device {
             return;
         }
 
-        this.state = DeviceState.DISCONNECTING;
+        this.setState(DeviceState.DISCONNECTING);
 
         assert(this.transport !== undefined);
         this.transport.emitter.off(
@@ -108,10 +115,10 @@ export abstract class Device {
 
         if (this.canReconnect) {
             this.logger.info('Device can reconnect, set state to available');
-            this.state = DeviceState.AVAILABLE;
+            this.setState(DeviceState.AVAILABLE);
         } else {
             this.logger.info('Device cannot reconnect, set state to available');
-            this.state = DeviceState.DISCONNECTED;
+            this.setState(DeviceState.DISCONNECTED);
         }
 
         if (reason !== DeviceDisconnectReason.USER) {
