@@ -148,7 +148,6 @@ export class ElectronWindowBuilder {
         androidAutoChannel.handle(
             AndroidAutoMainMethod.CONNECT_DEVICE,
             async (name: string) => {
-                console.trace(name);
                 await androidAuto.server.connectDeviceName(name);
             },
         );
