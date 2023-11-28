@@ -17,7 +17,7 @@ interface InternalEvents {
     [InternalEvent.DISCONNECTION_FAIL]: (err: Error) => void;
 }
 
-const TIMEOUT = 30000;
+const TIMEOUT = 20000;
 
 export class BluetoothDeviceProfileConnector {
     private internalEmitter = new EventEmitter<InternalEvents>();

@@ -34,18 +34,10 @@ export class BluetoothProfile implements Profile {
     ): Promise<void> {
         const address = await device.Address();
 
-        console.log(`NewConnection: ${address}`, device, fd);
-
         /*
          * Open the socket automatically just to handle close events.
          */
-        let socket;
-        try {
-            socket = new BluetoothSocket(fd);
-        } catch (err) {
-            console.log(err);
-            return;
-        }
+        const socket = new BluetoothSocket(fd);
 
         /*
          * RequestDisconnection is only called if the stack initiates the
