@@ -77,7 +77,7 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         address: string,
         socket: Duplex,
     ): Promise<void> {
-        this.logger.debug(
+        this.logger.info(
             `Received bluetooth profile connection from device ${address}`,
         );
         const device = this.addressDeviceMap.get(address);
