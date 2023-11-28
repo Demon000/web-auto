@@ -35,12 +35,12 @@ if (electronConfig.androidAuto !== undefined) {
     );
 
     const deviceHandlers: DeviceHandler[] = [
-        new ElectronUsbDeviceHandler(
-            electronConfig.androidAuto.usbDeviceHandlerConfig,
-        ),
-        new ElectronTcpDeviceHandler(
-            electronConfig.androidAuto.tcpDeviceHandlerConfig,
-        ),
+        // new ElectronUsbDeviceHandler(
+        //     electronConfig.androidAuto.usbDeviceHandlerConfig,
+        // ),
+        // new ElectronTcpDeviceHandler(
+        //     electronConfig.androidAuto.tcpDeviceHandlerConfig,
+        // ),
     ];
 
     if (electronConfig.androidAuto.bluetoothDeviceHandlerConfig !== undefined) {
