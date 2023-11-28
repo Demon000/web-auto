@@ -28,7 +28,6 @@ export class BluetoothDevice extends Device {
         private config: ElectronBluetoothDeviceHandlerConfig,
         private device: BluezDevice,
         tcpServer: Server,
-        private needsPair: boolean,
         name: string,
     ) {
         super('BT', name);
@@ -119,7 +118,8 @@ export class BluetoothDevice extends Device {
     }
 
     public async connectImpl(): Promise<Transport> {
-        if (this.needsPair) {
+        const paired = await this.device.Paired();
+        if (!paired) {
             await this.device.Pair();
         }
 

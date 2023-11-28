@@ -48,12 +48,10 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
             return;
         }
 
-        const needsPair = !props.Paired;
         const device = new BluetoothDevice(
             this.config,
             bluezDevice,
             this.tcpServer,
-            needsPair,
             name,
         );
         this.addressDeviceMap.set(address, device);
