@@ -66,6 +66,9 @@ export abstract class Device {
         try {
             this.transport = await this.connectImpl();
         } catch (err) {
+            this.logger.error('Failed to connect', {
+                metadata: err,
+            });
             this.setState(DeviceState.AVAILABLE);
             throw err;
         }
