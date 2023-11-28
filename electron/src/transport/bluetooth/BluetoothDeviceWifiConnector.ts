@@ -105,7 +105,7 @@ export class BluetoothDeviceWifiConnector {
     }
 
     public async sendNetworkInfoResponse(): Promise<void> {
-        const data = NetworkInfo.create(this.config.networkInfo);
+        const data = NetworkInfo.fromObject(this.config.networkInfo);
 
         this.logger.debug('Send message', {
             metadata: {
