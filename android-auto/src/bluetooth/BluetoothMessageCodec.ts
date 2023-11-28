@@ -23,10 +23,6 @@ export class BluetoothMessageCodec {
     }
 
     public decodeBuffer(data: Buffer): BluetoothMessage[] {
-        this.logger.debug('Receive data', {
-            metadata: data,
-        });
-
         const buffer = DataBuffer.fromBuffer(data);
 
         const messages = [];
