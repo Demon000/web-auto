@@ -51,9 +51,12 @@ export abstract class SensorService extends Service {
             const sensor = this.getSensor(data.sensorType);
             sensor.emitter.on(SensorEvent.DATA, this.sendEventIndication);
             await sensor.start();
-        } catch (e) {
-            this.logger.error({
-                metadata: e,
+        } catch (err) {
+            this.logger.error('Failed to start sensor', {
+                metadata: {
+                    data,
+                    err,
+                },
             });
             return;
         }

@@ -18,9 +18,12 @@ export abstract class AVOutputService extends AVService {
     protected async onAvMediaIndication(buffer: DataBuffer): Promise<void> {
         try {
             await this.handleData(buffer);
-        } catch (e) {
-            this.logger.error({
-                metadata: e,
+        } catch (err) {
+            this.logger.error('Failed to handle data', {
+                metadata: {
+                    buffer,
+                    err,
+                },
             });
             return;
         }
@@ -28,7 +31,7 @@ export abstract class AVOutputService extends AVService {
         try {
             await this.sendAvMediaAckIndication();
         } catch (e) {
-            this.logger.error({
+            this.logger.error('Failed to send ack', {
                 metadata: e,
             });
         }
@@ -42,9 +45,13 @@ export abstract class AVOutputService extends AVService {
 
         try {
             await this.handleData(buffer, timestamp);
-        } catch (e) {
-            this.logger.error({
-                metadata: e,
+        } catch (err) {
+            this.logger.error('Failed to handle data', {
+                metadata: {
+                    buffer,
+                    timestamp,
+                    err,
+                },
             });
             return;
         }
@@ -52,7 +59,7 @@ export abstract class AVOutputService extends AVService {
         try {
             await this.sendAvMediaAckIndication();
         } catch (e) {
-            this.logger.error({
+            this.logger.error('Failed to send ack', {
                 metadata: e,
             });
         }
@@ -63,9 +70,12 @@ export abstract class AVOutputService extends AVService {
     ): Promise<void> {
         try {
             await this.channelStop(data);
-        } catch (e) {
-            this.logger.error({
-                metadata: e,
+        } catch (err) {
+            this.logger.error('Failed to stop channel', {
+                metadata: {
+                    data,
+                    err,
+                },
             });
         }
     }
@@ -77,9 +87,12 @@ export abstract class AVOutputService extends AVService {
 
         try {
             await this.channelStart(data);
-        } catch (e) {
-            this.logger.error({
-                metadata: e,
+        } catch (err) {
+            this.logger.error('Failed to start channel', {
+                metadata: {
+                    data,
+                    err,
+                },
             });
         }
     }

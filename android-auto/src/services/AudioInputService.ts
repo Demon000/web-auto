@@ -37,9 +37,12 @@ export abstract class AudioInputService extends AVService {
     ): Promise<void> {
         try {
             await this.inputOpen(data);
-        } catch (e) {
-            this.logger.error({
-                metadata: e,
+        } catch (err) {
+            this.logger.error('Failed to open input', {
+                metadata: {
+                    data,
+                    err,
+                },
             });
             return;
         }

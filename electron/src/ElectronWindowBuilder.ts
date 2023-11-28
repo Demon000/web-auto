@@ -138,7 +138,7 @@ export class ElectronWindowBuilder {
                         ipcDevices,
                     );
                 } catch (err) {
-                    this.logger.error({
+                    this.logger.error('Cannot send updated devices', {
                         metadata: err,
                     });
                 }
@@ -260,7 +260,7 @@ export class ElectronWindowBuilder {
         try {
             await window.loadURL(indexUrl);
         } catch (e) {
-            this.logger.error({
+            this.logger.error('Cannot load window URL', {
                 metadata: e,
             });
             return;
@@ -274,8 +274,11 @@ export class ElectronWindowBuilder {
     public buildWindows(): void {
         for (const windowConfig of this.config.windows) {
             this.buildWindow(windowConfig).catch((e) =>
-                this.logger.error({
-                    metadata: e,
+                this.logger.error('Failed to build window with config', {
+                    metadata: {
+                        config: windowConfig,
+                        err: e,
+                    },
                 }),
             );
         }

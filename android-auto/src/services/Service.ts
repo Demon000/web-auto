@@ -44,9 +44,12 @@ export abstract class Service {
         try {
             await this.open(data);
             status = true;
-        } catch (e) {
-            this.logger.error({
-                metadata: e,
+        } catch (err) {
+            this.logger.error('Failed to open channel', {
+                metadata: {
+                    data,
+                    err,
+                },
             });
             return;
         }

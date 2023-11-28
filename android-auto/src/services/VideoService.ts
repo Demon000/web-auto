@@ -49,9 +49,12 @@ export abstract class VideoService extends AVOutputService {
     ): Promise<void> {
         try {
             await this.focus(data);
-        } catch (e) {
-            this.logger.error({
-                metadata: e,
+        } catch (err) {
+            this.logger.error('Failed to focus video', {
+                metadata: {
+                    data,
+                    err,
+                },
             });
             return;
         }
