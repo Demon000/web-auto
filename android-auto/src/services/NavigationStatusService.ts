@@ -8,11 +8,11 @@ import {
 import { Message } from '@/messenger/Message';
 import { ChannelId } from '@/messenger/ChannelId';
 
-import { Service } from './Service';
+import { Service, ServiceEvents } from './Service';
 
 export abstract class NavigationStatusService extends Service {
-    public constructor() {
-        super(ChannelId.NAVIGATION);
+    public constructor(protected events: ServiceEvents) {
+        super(ChannelId.NAVIGATION, events);
     }
 
     protected abstract handleStatus(data: NavigationStatus): Promise<void>;

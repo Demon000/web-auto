@@ -11,12 +11,12 @@ import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { DataBuffer } from '@/utils/DataBuffer';
 
-import { Service } from './Service';
+import { Service, ServiceEvents } from './Service';
 import { microsecondsTime } from '@/utils/time';
 
 export abstract class InputService extends Service {
-    public constructor() {
-        super(ChannelId.INPUT);
+    public constructor(protected events: ServiceEvents) {
+        super(ChannelId.INPUT, events);
     }
 
     protected abstract bind(data: BindingRequest): Promise<void>;

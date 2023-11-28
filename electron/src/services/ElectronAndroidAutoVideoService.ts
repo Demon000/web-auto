@@ -10,7 +10,11 @@ import {
     VideoConfig,
     VideoFocusRequest,
 } from '@web-auto/android-auto-proto';
-import { DataBuffer, VideoService } from '@web-auto/android-auto';
+import {
+    DataBuffer,
+    ServiceEvents,
+    VideoService,
+} from '@web-auto/android-auto';
 import EventEmitter from 'eventemitter3';
 import Long from 'long';
 
@@ -36,8 +40,11 @@ export class ElectronAndroidAutoVideoService extends VideoService {
 
     private videoConfigs: IVideoConfig[] = [];
 
-    public constructor(videoConfigs: IVideoConfig[]) {
-        super();
+    public constructor(
+        videoConfigs: IVideoConfig[],
+        protected events: ServiceEvents,
+    ) {
+        super(events);
 
         for (const videoConfig of videoConfigs) {
             this.videoConfigs.push(VideoConfig.fromObject(videoConfig));

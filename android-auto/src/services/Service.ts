@@ -10,31 +10,25 @@ import {
     Status,
 } from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
-import EventEmitter from 'eventemitter3';
 import { getLogger } from '@web-auto/logging';
 
-export enum ServiceEvent {
-    MESSAGE_SENT = 'message-sent',
-}
-
 export interface ServiceEvents {
-    [ServiceEvent.MESSAGE_SENT]: (
+    onMessageSent: (
         message: Message,
         encryptionType: EncryptionType,
-    ) => void;
+    ) => Promise<void>;
 }
 
 export abstract class Service {
     protected logger = getLogger(this.constructor.name);
 
-    public emitter = new EventEmitter<ServiceEvents>();
-
-    public constructor(public channelId: number) {}
+    public constructor(
+        public channelId: number,
+        protected events: ServiceEvents,
+    ) {}
 
     public async start(): Promise<void> {}
-    public stop(): void {
-        this.emitter.removeAllListeners();
-    }
+    public stop(): void {}
 
     protected async onChannelOpenRequest(
         data: ChannelOpenRequest,
@@ -143,13 +137,6 @@ export abstract class Service {
         );
     }
 
-    public async sendMessage(
-        message: Message,
-        encryptionType: EncryptionType,
-    ): Promise<void> {
-        this.emitter.emit(ServiceEvent.MESSAGE_SENT, message, encryptionType);
-    }
-
     public async sendMessageWithId(
         messageId: number,
         dataPayload: DataBuffer,
@@ -163,7 +150,7 @@ export abstract class Service {
             channelId: this.channelId,
         });
 
-        return this.sendMessage(message, encryptionType);
+        return this.events.onMessageSent(message, encryptionType);
     }
 
     public async sendPlainSpecificMessage(

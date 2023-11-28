@@ -1,7 +1,7 @@
 import { Cryptor } from '@/crypto/Cryptor';
 
 import { ControlService, ControlServiceEvents } from './ControlService';
-import { Service } from './Service';
+import { Service, ServiceEvents } from './Service';
 
 export abstract class ServiceFactory {
     public abstract buildCryptor(
@@ -11,5 +11,5 @@ export abstract class ServiceFactory {
     public abstract buildControlService(
         events: ControlServiceEvents,
     ): ControlService;
-    public abstract buildServices(): Service[];
+    public abstract buildServices(events: ServiceEvents): Service[];
 }

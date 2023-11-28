@@ -4,6 +4,7 @@ import {
     ControlServiceEvents,
     DataBuffer,
     InputService,
+    ServiceEvents,
     ServiceFactory,
     VideoService,
 } from '@web-auto/android-auto';
@@ -58,9 +59,10 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
         return new ControlService(this.controlConfig, events);
     }
 
-    private buildVideoService(): VideoService {
+    private buildVideoService(events: ServiceEvents): VideoService {
         const videoService = new ElectronAndroidAutoVideoService(
             this.videoConfigs,
+            events,
         );
 
         const onVideoStart = () => {
@@ -113,9 +115,10 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
 
         return videoService;
     }
-    private buildInputService(): InputService {
+    private buildInputService(events: ServiceEvents): InputService {
         const inputService = new ElectronAndroidAutoInputService(
             this.touchSreenConfig,
+            events,
         );
 
         const onTouchEvent = (data: ITouchEvent) => {
@@ -139,19 +142,28 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
 
         return inputService;
     }
-    public buildServices(): Service[] {
-        const videoService = this.buildVideoService();
-        const inputService = this.buildInputService();
+    public buildServices(events: ServiceEvents): Service[] {
+        const videoService = this.buildVideoService(events);
+        const inputService = this.buildInputService(events);
 
         const services: Service[] = [
-            new ElectronAndroidAutoAudioInputService(),
-            new ElectronAndroidAutoAudioOutputService(ChannelId.MEDIA_AUDIO),
-            new ElectronAndroidAutoAudioOutputService(ChannelId.SPEECH_AUDIO),
-            new ElectronAndroidAutoAudioOutputService(ChannelId.SYSTEM_AUDIO),
-            new DummySensorService(),
+            new ElectronAndroidAutoAudioInputService(events),
+            new ElectronAndroidAutoAudioOutputService(
+                ChannelId.MEDIA_AUDIO,
+                events,
+            ),
+            new ElectronAndroidAutoAudioOutputService(
+                ChannelId.SPEECH_AUDIO,
+                events,
+            ),
+            new ElectronAndroidAutoAudioOutputService(
+                ChannelId.SYSTEM_AUDIO,
+                events,
+            ),
+            new DummySensorService(events),
             videoService,
-            new DummyNavigationStatusService(),
-            new DummyMediaStatusService(),
+            new DummyNavigationStatusService(events),
+            new DummyMediaStatusService(events),
             inputService,
         ];
 

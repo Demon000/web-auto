@@ -10,10 +10,11 @@ import { Message } from '@/messenger/Message';
 import { DataBuffer } from '@/utils/DataBuffer';
 
 import { AVOutputService } from './AVOutputService';
+import { ServiceEvents } from './Service';
 
 export abstract class VideoService extends AVOutputService {
-    public constructor() {
-        super(ChannelId.VIDEO);
+    public constructor(protected events: ServiceEvents) {
+        super(ChannelId.VIDEO, events);
     }
 
     public async onSpecificMessage(message: Message): Promise<boolean> {

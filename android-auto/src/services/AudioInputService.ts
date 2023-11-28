@@ -12,10 +12,11 @@ import { ChannelDescriptor } from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { AVService } from './AVService';
 import { microsecondsTime } from '@/utils/time';
+import { ServiceEvents } from './Service';
 
 export abstract class AudioInputService extends AVService {
-    public constructor() {
-        super(ChannelId.AV_INPUT);
+    public constructor(protected events: ServiceEvents) {
+        super(ChannelId.AV_INPUT, events);
     }
 
     protected channelCount(): number {

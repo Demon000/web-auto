@@ -10,7 +10,7 @@ import {
 import { FrameCodec } from './messenger/FrameCodec';
 import { MessageAggregator } from './messenger/MessageAggregator';
 import { ControlService } from './services/ControlService';
-import { Service, ServiceEvent } from './services/Service';
+import { Service } from './services/Service';
 import { ServiceFactory } from './services/ServiceFactory';
 import { Device, DeviceEvent } from './transport/Device';
 import {
@@ -67,11 +67,14 @@ export class AndroidAutoDevice {
         this.frameCodec = new FrameCodec(this.cryptor);
         this.messageAggregator = new MessageAggregator();
 
-        this.services = this.serviceFactory.buildServices();
+        this.services = this.serviceFactory.buildServices({
+            onMessageSent: this.onSendMessage,
+        });
         this.controlService = this.serviceFactory.buildControlService({
             onDiscoveryRequest: this.onDiscoveryRequest,
             onHandshake: this.onHandshake,
             onPingTimeout: this.onPingTimeout,
+            onMessageSent: this.onSendMessage,
         });
         this.allServices = [...this.services, this.controlService];
 
@@ -90,10 +93,6 @@ export class AndroidAutoDevice {
         this.transport.emitter.on(TransportEvent.DATA, this.onReceiveBuffer);
 
         this.transport.emitter.on(TransportEvent.ERROR, this.onTransportError);
-
-        for (const service of this.allServices) {
-            service.emitter.on(ServiceEvent.MESSAGE_SENT, this.onSendMessage);
-        }
     }
 
     private detachEventListeners(): void {
@@ -106,10 +105,6 @@ export class AndroidAutoDevice {
         this.transport.emitter.off(TransportEvent.DATA, this.onReceiveBuffer);
 
         this.transport.emitter.off(TransportEvent.ERROR, this.onTransportError);
-
-        for (const service of this.allServices) {
-            service.emitter.off(ServiceEvent.MESSAGE_SENT, this.onSendMessage);
-        }
     }
 
     private onTransportError(e: Error): void {

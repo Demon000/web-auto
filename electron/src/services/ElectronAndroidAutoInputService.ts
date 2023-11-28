@@ -1,4 +1,4 @@
-import { InputService } from '@web-auto/android-auto';
+import { InputService, ServiceEvents } from '@web-auto/android-auto';
 import {
     ChannelOpenRequest,
     BindingRequest,
@@ -26,8 +26,8 @@ export class ElectronAndroidAutoInputService extends InputService {
 
     private touchScreenConfig: ITouchConfig;
 
-    public constructor(touchScreenConfig: ITouchConfig) {
-        super();
+    public constructor(touchScreenConfig: ITouchConfig, events: ServiceEvents) {
+        super(events);
 
         this.touchScreenConfig = TouchConfig.fromObject(touchScreenConfig);
 

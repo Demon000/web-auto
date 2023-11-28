@@ -7,11 +7,11 @@ import {
 import { Message } from '@/messenger/Message';
 import { ChannelId } from '@/messenger/ChannelId';
 
-import { Service } from './Service';
+import { Service, ServiceEvents } from './Service';
 
 export abstract class MediaStatusService extends Service {
-    public constructor() {
-        super(ChannelId.MEDIA_STATUS);
+    public constructor(protected events: ServiceEvents) {
+        super(ChannelId.MEDIA_STATUS, events);
     }
 
     protected abstract handleMetadata(

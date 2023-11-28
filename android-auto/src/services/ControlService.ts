@@ -21,12 +21,12 @@ import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { DataBuffer } from '@/utils/DataBuffer';
 
-import { Service } from './Service';
+import { Service, ServiceEvents } from './Service';
 import { Pinger } from './Pinger';
 import Long from 'long';
 import assert from 'node:assert';
 
-export interface ControlServiceEvents {
+export interface ControlServiceEvents extends ServiceEvents {
     onHandshake: (payload?: DataBuffer) => Promise<void>;
     onDiscoveryRequest: (data: ServiceDiscoveryRequest) => Promise<void>;
     onPingTimeout: () => Promise<void>;
@@ -41,9 +41,9 @@ export class ControlService extends Service {
 
     public constructor(
         private config: ControlServiceConfig,
-        private events: ControlServiceEvents,
+        protected events: ControlServiceEvents,
     ) {
-        super(ChannelId.CONTROL);
+        super(ChannelId.CONTROL, events);
 
         this.sendPingRequest = this.sendPingRequest.bind(this);
 

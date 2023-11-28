@@ -9,10 +9,14 @@ import {
 import { DataBuffer } from '@/utils/DataBuffer';
 import { AVService } from './AVService';
 import Long from 'long';
+import { ServiceEvents } from './Service';
 
 export abstract class AVOutputService extends AVService {
-    public constructor(channelId: ChannelId) {
-        super(channelId);
+    public constructor(
+        channelId: ChannelId,
+        protected events: ServiceEvents,
+    ) {
+        super(channelId, events);
     }
 
     protected async onAvMediaIndication(buffer: DataBuffer): Promise<void> {

@@ -6,10 +6,14 @@ import {
 } from '@web-auto/android-auto-proto';
 import { ChannelDescriptor } from '@web-auto/android-auto-proto';
 import { AVOutputService } from './AVOutputService';
+import { ServiceEvents } from './Service';
 
 export abstract class AudioOutputService extends AVOutputService {
-    public constructor(channelId: ChannelId) {
-        super(channelId);
+    public constructor(
+        channelId: ChannelId,
+        protected events: ServiceEvents,
+    ) {
+        super(channelId, events);
     }
 
     protected channelConfig(): [AudioType.Enum, number, number, number] {

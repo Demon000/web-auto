@@ -7,13 +7,16 @@ import {
     AVChannelSetupStatus,
 } from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
-import { Service } from './Service';
+import { Service, ServiceEvents } from './Service';
 
 export abstract class AVService extends Service {
     protected session?: number;
 
-    public constructor(channelId: ChannelId) {
-        super(channelId);
+    public constructor(
+        channelId: ChannelId,
+        protected events: ServiceEvents,
+    ) {
+        super(channelId, events);
     }
 
     protected async onSetupRequest(data: AVChannelSetupRequest): Promise<void> {

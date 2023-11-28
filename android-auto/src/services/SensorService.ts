@@ -14,11 +14,14 @@ import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { Sensor, SensorEvent } from '@/sensors/Sensor';
 import { DataBuffer } from '@/utils/DataBuffer';
-import { Service } from './Service';
+import { Service, ServiceEvents } from './Service';
 
 export abstract class SensorService extends Service {
-    public constructor(protected sensors: Sensor[]) {
-        super(ChannelId.SENSOR);
+    public constructor(
+        protected sensors: Sensor[],
+        protected events: ServiceEvents,
+    ) {
+        super(ChannelId.SENSOR, events);
 
         this.sendEventIndication = this.sendEventIndication.bind(this);
     }
