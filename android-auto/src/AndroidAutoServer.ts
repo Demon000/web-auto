@@ -23,7 +23,7 @@ export class AndroidAutoServer {
     public emitter = new EventEmitter<AndroidAutoServerEvents>();
     private logger = getLogger(this.constructor.name);
     private nameDeviceMap = new Map<string, Device>();
-    private nameAndroidAutoMap = new Map<string, AndroidAutoDevice>();
+    private activeAndroidAutoDevice?: AndroidAutoDevice;
     private started = false;
 
     public constructor(
@@ -32,6 +32,7 @@ export class AndroidAutoServer {
         private deviceHandlers: DeviceHandler[],
     ) {
         this.onDeviceAvailable = this.onDeviceAvailable.bind(this);
+        this.onDeviceSelfConnect = this.onDeviceSelfConnect.bind(this);
         this.onDeviceStateUpdated = this.onDeviceStateUpdated.bind(this);
         this.onDeviceUnavailable = this.onDeviceUnavailable.bind(this);
         this.onAndroidAutoDisconnected =
@@ -54,6 +55,14 @@ export class AndroidAutoServer {
         this.emitter.emit(AndroidAutoserverEvent.DEVICES_UPDATED, devices);
     }
 
+    private async onDeviceSelfConnect(device: Device): Promise<void> {
+        if (this.activeAndroidAutoDevice !== undefined) {
+            return;
+        }
+
+        await this.connectDevice(device);
+    }
+
     private onDeviceAvailable(device: Device): void {
         this.nameDeviceMap.set(device.name, device);
 
@@ -62,6 +71,10 @@ export class AndroidAutoServer {
         this.emitDevicesUpdated();
 
         device.emitter.on(DeviceEvent.STATE_UPDATED, this.onDeviceStateUpdated);
+        device.emitter.on(
+            DeviceEvent.SELF_CONNECT_REQUESTED,
+            this.onDeviceSelfConnect,
+        );
     }
 
     private onDeviceStateUpdated(_device: Device): void {
@@ -73,6 +86,10 @@ export class AndroidAutoServer {
 
         this.nameDeviceMap.delete(device.name);
 
+        device.emitter.off(
+            DeviceEvent.SELF_CONNECT_REQUESTED,
+            this.onDeviceSelfConnect,
+        );
         device.emitter.off(
             DeviceEvent.STATE_UPDATED,
             this.onDeviceStateUpdated,
@@ -89,6 +106,10 @@ export class AndroidAutoServer {
             throw new Error(`Device ${device.name} is not whitelisted`);
         }
 
+        if (this.activeAndroidAutoDevice !== undefined) {
+            return;
+        }
+
         const androidAutoDevice = new AndroidAutoDevice(
             this.options,
             this.serviceFactory,
@@ -99,30 +120,32 @@ export class AndroidAutoServer {
         );
 
         this.logger.info(`Connecting device ${device.name}`);
+        this.activeAndroidAutoDevice = androidAutoDevice;
         try {
             await androidAutoDevice.connect();
         } catch (e) {
+            this.activeAndroidAutoDevice = undefined;
             this.logger.error(`Failed to connect to device ${device.name}`, {
                 metadata: e,
             });
             return;
         }
         this.logger.info(`Connected device ${device.name}`);
-
-        this.nameAndroidAutoMap.set(device.name, androidAutoDevice);
     }
 
     private async disconnectDevice(device: Device): Promise<void> {
-        const androidAutoDevice = this.nameAndroidAutoMap.get(device.name);
-        if (androidAutoDevice === undefined) {
+        if (
+            this.activeAndroidAutoDevice === undefined ||
+            this.activeAndroidAutoDevice.device !== device
+        ) {
             throw new Error(
                 `Device ${device.name} does not have a ` +
                     'valid android auto session',
             );
         }
 
-        await androidAutoDevice.disconnect();
-        await this.onAndroidAutoDisconnected(androidAutoDevice);
+        await this.activeAndroidAutoDevice.disconnect();
+        await this.onAndroidAutoDisconnected(this.activeAndroidAutoDevice);
     }
 
     public async connectDeviceName(name: string): Promise<void> {
@@ -147,8 +170,7 @@ export class AndroidAutoServer {
         androidAutoDevice: AndroidAutoDevice,
     ): Promise<void> {
         this.logger.info(`Disconnected ${androidAutoDevice.device.name}`);
-
-        this.nameAndroidAutoMap.delete(androidAutoDevice.device.name);
+        this.activeAndroidAutoDevice = undefined;
     }
 
     public async start(): Promise<void> {
@@ -182,10 +204,9 @@ export class AndroidAutoServer {
 
         this.started = false;
 
-        for (const androidAutoDevice of this.nameAndroidAutoMap.values()) {
-            await androidAutoDevice.disconnect();
+        if (this.activeAndroidAutoDevice !== undefined) {
+            await this.activeAndroidAutoDevice.disconnect();
         }
-        this.nameAndroidAutoMap.clear();
 
         for (const deviceHandler of this.deviceHandlers) {
             try {

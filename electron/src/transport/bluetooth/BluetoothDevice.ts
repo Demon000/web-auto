@@ -1,6 +1,7 @@
 import {
     Device,
     DeviceDisconnectReason,
+    DeviceEvent,
     DeviceState,
     Transport,
 } from '@web-auto/android-auto';
@@ -57,7 +58,8 @@ export class BluetoothDevice extends Device {
              */
             this.profileConnector.onConnect(socket);
 
-            await this.connect();
+            this.setState(DeviceState.SELF_CONNECTING);
+            this.emitter.emit(DeviceEvent.SELF_CONNECT_REQUESTED, this);
         }
     }
 
@@ -70,13 +72,25 @@ export class BluetoothDevice extends Device {
                 BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE,
             );
         } else if (
-            this.state === DeviceState.DISCONNECTING ||
-            this.state === DeviceState.CONNECTING
-        ) {
             /*
              * The profile connector is waiting for disconnection event.
              */
+            this.state === DeviceState.DISCONNECTING ||
+            /*
+             * The disconnection event will cancel the connection event.
+             */
+            this.state === DeviceState.CONNECTING
+        ) {
             await this.profileConnector.onDisconnect();
+        } else if (
+            /*
+             * The connection event previously fired on its own triggering a self
+             * connection, but the self connection has not been accepted.
+             */
+            this.state === DeviceState.SELF_CONNECTING
+        ) {
+            await this.profileConnector.onDisconnect();
+            this.setState(DeviceState.AVAILABLE);
         }
     }
 

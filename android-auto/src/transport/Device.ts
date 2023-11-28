@@ -5,6 +5,7 @@ import { Logger } from 'winston';
 import assert from 'node:assert';
 
 export enum DeviceEvent {
+    SELF_CONNECT_REQUESTED = 'self-connect-requested',
     STATE_UPDATED = 'state-updated',
     DISCONNECTED = 'disconnected',
 }
@@ -12,12 +13,14 @@ export enum DeviceEvent {
 export enum DeviceState {
     AVAILABLE = 'available',
     CONNECTING = 'connecting',
+    SELF_CONNECTING = 'self-connecting',
     CONNECTED = 'connected',
     DISCONNECTING = 'disconnecting',
     DISCONNECTED = 'disconnected',
 }
 
 export interface DeviceEvents {
+    [DeviceEvent.SELF_CONNECT_REQUESTED]: (device: Device) => void;
     [DeviceEvent.STATE_UPDATED]: (device: Device) => void;
     [DeviceEvent.DISCONNECTED]: () => void;
 }
@@ -54,7 +57,10 @@ export abstract class Device {
     }
 
     public async connect(): Promise<Transport> {
-        if (this.state !== DeviceState.AVAILABLE) {
+        if (
+            this.state !== DeviceState.AVAILABLE &&
+            this.state !== DeviceState.SELF_CONNECTING
+        ) {
             this.logger.error(
                 `Tried to connect while device has state ${this.state}`,
             );
