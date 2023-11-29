@@ -172,7 +172,19 @@ export class AndroidAutoDevice {
         const frameHeader = frameData.frameHeader;
 
         if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
-            frameData.payload = await this.cryptor.decrypt(frameData.payload);
+            try {
+                frameData.payload = await this.cryptor.decrypt(
+                    frameData.payload,
+                );
+            } catch (err) {
+                this.logger.error('Failed to decrypt', {
+                    metadata: {
+                        frameData,
+                        err,
+                    },
+                });
+                return;
+            }
         }
 
         const message = this.messageAggregator.aggregate(frameData);
