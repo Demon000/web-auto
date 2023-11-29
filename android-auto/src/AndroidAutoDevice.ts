@@ -168,7 +168,9 @@ export class AndroidAutoDevice {
         await service.onMessage(message);
     }
 
-    private async onReceiveFrameData(frameData: FrameData): Promise<void> {
+    private async onReceiveFrameData(
+        frameData: FrameData,
+    ): Promise<Message | undefined> {
         const frameHeader = frameData.frameHeader;
 
         if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
@@ -183,23 +185,28 @@ export class AndroidAutoDevice {
                         err,
                     },
                 });
-                return;
+                return undefined;
             }
         }
 
-        const message = this.messageAggregator.aggregate(frameData);
-        if (message === undefined) {
-            return;
-        }
-
-        await this.onReceiveMessage(message);
+        return this.messageAggregator.aggregate(frameData);
     }
 
     private async onReceiveBuffer(buffer: DataBuffer): Promise<void> {
         const frameDatas = this.frameCodec.decodeBuffer(buffer);
 
+        const messages = [];
         for (const frameData of frameDatas) {
-            await this.onReceiveFrameData(frameData);
+            const message = await this.onReceiveFrameData(frameData);
+            if (message === undefined) {
+                continue;
+            }
+
+            messages.push(message);
+        }
+
+        for (const message of messages) {
+            await this.onReceiveMessage(message);
         }
     }
 
