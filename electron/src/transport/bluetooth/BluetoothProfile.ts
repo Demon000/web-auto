@@ -2,18 +2,9 @@ import BluetoothSocket from 'bluetooth-socket';
 import { Device, Profile, ProfileOptions } from 'bluez';
 import EventEmitter from 'eventemitter3';
 
-export enum BluetoothProfileEvent {
-    CONNECTED = 'connected',
-    ERROR = 'error',
-    DISCONNECTED = 'disconnected',
-}
-
 export interface BluetoothProfileEvents {
-    [BluetoothProfileEvent.CONNECTED]: (
-        address: string,
-        socket: BluetoothSocket,
-    ) => void;
-    [BluetoothProfileEvent.DISCONNECTED]: (address: string) => void;
+    onConnected: (address: string, socket: BluetoothSocket) => Promise<void>;
+    onDisconnected: (address: string) => Promise<void>;
 }
 
 export class BluetoothProfile implements Profile {
@@ -22,7 +13,11 @@ export class BluetoothProfile implements Profile {
     public UUID: string;
     public ProfileOptions: Partial<ProfileOptions>;
 
-    public constructor(uuid: string, options: Partial<ProfileOptions>) {
+    public constructor(
+        uuid: string,
+        options: Partial<ProfileOptions>,
+        private events: BluetoothProfileEvents,
+    ) {
         this.UUID = uuid;
         this.ProfileOptions = options;
     }
@@ -44,10 +39,10 @@ export class BluetoothProfile implements Profile {
          * disconnection, not if the remote end does it.
          * Listen to the close event.
          */
-        socket.once('close', () => {
-            this.emitter.emit(BluetoothProfileEvent.DISCONNECTED, address);
+        socket.once('close', async () => {
+            await this.events.onDisconnected(address);
         });
 
-        this.emitter.emit(BluetoothProfileEvent.CONNECTED, address, socket);
+        await this.events.onConnected(address, socket);
     }
 }

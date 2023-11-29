@@ -1,4 +1,4 @@
-import { BluetoothProfile } from './BluetoothProfile';
+import { BluetoothProfile, BluetoothProfileEvents } from './BluetoothProfile';
 
 export const ANDROID_AUTO_UUID = '4de17a00-52cb-11e6-bdf4-0800200c9a66';
 
@@ -28,13 +28,7 @@ export enum BluetoothProtocolUuid {
 
 const hex = (n: number, pad = 4) => `0x${n.toString(16).padStart(pad, '0')}`;
 
-export class AndroidAutoProfile extends BluetoothProfile {
-    public constructor() {
-        super(ANDROID_AUTO_UUID, {
-            Name: 'AA Wireless',
-            Role: 'server',
-            Channel: ANDROID_AUTO_RFCOMM_CHANNEL,
-            ServiceRecord: `<?xml version="1.0"?>
+const ANDROID_AUTO_SERVICE_RECORD = `<?xml version="1.0"?>
 <record>
     <attribute id="${hex(BluetoothServiceInfoUuid.SERVICE_CLASSS_IDS)}">
         <sequence>
@@ -79,8 +73,19 @@ export class AndroidAutoProfile extends BluetoothProfile {
     <attribute id="${hex(BluetoothServiceInfoUuid.SERVICE_PROVIDER)}">
         <text value="WebAuto" encoding="normal"/>
     </attribute>
-</record>
-            `,
-        });
+</record>`;
+
+export class AndroidAutoProfile extends BluetoothProfile {
+    public constructor(events: BluetoothProfileEvents) {
+        super(
+            ANDROID_AUTO_UUID,
+            {
+                Name: 'AA Wireless',
+                Role: 'server',
+                Channel: ANDROID_AUTO_RFCOMM_CHANNEL,
+                ServiceRecord: ANDROID_AUTO_SERVICE_RECORD,
+            },
+            events,
+        );
     }
 }

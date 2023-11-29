@@ -8,14 +8,13 @@ import { ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceH
 import net from 'node:net';
 import { getLogger } from '@web-auto/logging';
 import { Duplex } from 'node:stream';
-import { BluetoothProfileEvent } from './BluetoothProfile';
 
 const AA_OBJECT_PATH = '/com/aa/aa';
 
 export class ElectronBluetoothDeviceHandler extends DeviceHandler {
     private logger = getLogger(this.constructor.name);
     protected addressDeviceMap = new Map<string, BluetoothDevice>();
-    private androidAutoProfile = new AndroidAutoProfile();
+    private androidAutoProfile: AndroidAutoProfile;
     private bus?: dbus.MessageBus;
     private bluetooth?: Bluez;
     private adapter?: Adapter;
@@ -28,6 +27,11 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         this.onDeviceRemoved = this.onDeviceRemoved.bind(this);
         this.onProfileConnected = this.onProfileConnected.bind(this);
         this.onProfileDisconnected = this.onProfileDisconnected.bind(this);
+
+        this.androidAutoProfile = new AndroidAutoProfile({
+            onConnected: this.onProfileConnected,
+            onDisconnected: this.onProfileDisconnected,
+        });
     }
 
     private async onDeviceAdded(address: string): Promise<void> {
@@ -130,14 +134,6 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         this.logger.info('Initialized Bluetooth');
 
         this.logger.info('Registering Android Auto Bluetooth profile');
-        this.androidAutoProfile.emitter.on(
-            BluetoothProfileEvent.CONNECTED,
-            this.onProfileConnected,
-        );
-        this.androidAutoProfile.emitter.on(
-            BluetoothProfileEvent.DISCONNECTED,
-            this.onProfileDisconnected,
-        );
         await this.bluetooth.registerProfile(
             this.androidAutoProfile,
             AA_OBJECT_PATH,
@@ -189,14 +185,6 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
 
         if (this.bluetooth !== undefined) {
             this.logger.info('Unregistering Android Auto Bluetooth profile');
-            this.androidAutoProfile.emitter.off(
-                BluetoothProfileEvent.CONNECTED,
-                this.onProfileConnected,
-            );
-            this.androidAutoProfile.emitter.off(
-                BluetoothProfileEvent.DISCONNECTED,
-                this.onProfileDisconnected,
-            );
             await this.bluetooth.unregisterProfile(AA_OBJECT_PATH);
             this.logger.info('Unregistered Android Auto Bluetooth profile');
         }
