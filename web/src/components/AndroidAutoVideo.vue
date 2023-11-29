@@ -183,11 +183,86 @@ const onCanvasClick = (event: MouseEvent) => {
         data,
     );
 };
+
+const pointerMap = new Map<number, true>();
+
+const sendPointerEvent = (event: PointerEvent) => {
+    let touchAction;
+
+    switch (event.type) {
+        case 'pointerdown':
+            touchAction = TouchAction.Enum.POINTER_DOWN;
+            break;
+        case 'pointermove':
+            touchAction = TouchAction.Enum.DRAG;
+            break;
+        case 'pointerup':
+        case 'pointercancel':
+        case 'pointerout':
+        case 'pointerleave':
+            touchAction = TouchAction.Enum.POINTER_UP;
+            break;
+    }
+
+    if (touchAction === undefined) {
+        console.error('Unhandled event', event);
+        return;
+    }
+
+    const [x, y] = translateCanvasPosition(event.x, event.y);
+    androidAutoChannel.send(AndroidAutoMainMethod.SEND_INPUT_SERVICE_TOUCH, {
+        event: {
+            touchAction,
+            actionIndex: null,
+            touchLocation: [
+                {
+                    x,
+                    y,
+                    pointerId: event.pointerId,
+                },
+            ],
+        },
+    });
+};
+
+const onPointerDown = (event: PointerEvent) => {
+    if (pointerMap.has(event.pointerId)) {
+        return;
+    }
+
+    pointerMap.set(event.pointerId, true);
+
+    sendPointerEvent(event);
+};
+const onPointerMove = (event: PointerEvent) => {
+    if (!pointerMap.has(event.pointerId)) {
+        return;
+    }
+
+    sendPointerEvent(event);
+};
+const onPointerUp = (event: PointerEvent) => {
+    if (!pointerMap.has(event.pointerId)) {
+        return;
+    }
+
+    sendPointerEvent(event);
+
+    pointerMap.delete(event.pointerId);
+};
 </script>
 
 <template>
     <div class="android-auto-video">
-        <canvas ref="canvasRef" @click="onCanvasClick"></canvas>
+        <canvas
+            ref="canvasRef"
+            @pointerdown="onPointerDown"
+            @pointermove="onPointerMove"
+            @pointerup="onPointerUp"
+            @pointercancel="onPointerUp"
+            @pointerout="onPointerUp"
+            @pointerleave="onPointerUp"
+        ></canvas>
     </div>
 </template>
 
@@ -197,6 +272,8 @@ canvas {
     height: 100%;
     display: block;
     object-fit: v-bind('canvasObjectFit');
+    touch-action: none;
+    user-select: none;
     background: #000;
 }
 </style>
