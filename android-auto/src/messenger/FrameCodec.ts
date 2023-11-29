@@ -15,15 +15,15 @@ export class FrameCodec {
     public constructor(private cryptor: Cryptor) {}
 
     public encodeFrameData(frameData: FrameData): DataBuffer {
-        this.logger.debug('Encode frame data', {
-            metadata: frameData,
-        });
-
         const frameHeader = frameData.frameHeader;
         const totalSize = frameData.totalSize;
         const payload = frameData.payload;
 
         frameHeader.payloadSize = payload.size;
+
+        this.logger.debug('Encode frame data', {
+            metadata: frameData,
+        });
 
         const buffer = DataBuffer.empty();
         buffer.appendBuffer(frameHeader.toBuffer());
