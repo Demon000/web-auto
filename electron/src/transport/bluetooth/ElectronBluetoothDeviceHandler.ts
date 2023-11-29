@@ -1,6 +1,5 @@
 import Bluez, { Adapter } from 'bluez';
 import dbus from 'dbus-next';
-import { OrgBluezDevice1Props } from 'bluez/dist/dbus';
 import assert from 'node:assert';
 import { DeviceHandler, DeviceHandlerEvent } from '@web-auto/android-auto';
 import { BluetoothDevice } from './BluetoothDevice';
@@ -31,10 +30,7 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         this.onProfileDisconnected = this.onProfileDisconnected.bind(this);
     }
 
-    private async onDeviceAdded(
-        address: string,
-        props: Partial<OrgBluezDevice1Props>,
-    ): Promise<void> {
+    private async onDeviceAdded(address: string): Promise<void> {
         this.logger.info(`Bluetooth device added ${address}`);
         assert(this.adapter !== undefined);
         assert(this.tcpServer !== undefined);
@@ -172,7 +168,7 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
                 continue;
             }
 
-            await this.onDeviceAdded(props.Address, props);
+            await this.onDeviceAdded(props.Address);
         }
         this.logger.info('Finished processing paired devices');
 
