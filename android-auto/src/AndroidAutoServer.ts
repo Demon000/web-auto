@@ -89,7 +89,7 @@ export class AndroidAutoServer {
             ANDROID_AUTO_PRIVATE_KEY,
         );
 
-        this.frameCodec = new FrameCodec(this.cryptor);
+        this.frameCodec = new FrameCodec();
         this.messageAggregator = new MessageAggregator();
 
         this.services = this.serviceFactory.buildServices({

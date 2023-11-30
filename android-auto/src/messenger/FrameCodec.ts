@@ -1,18 +1,14 @@
 import { getLogger } from '@web-auto/logging';
-import { Cryptor, DataBuffer } from '..';
+import { DataBuffer } from '../utils/DataBuffer';
 import { EncryptionType } from './EncryptionType';
 import { FrameData } from './FrameData';
 import { FrameHeader } from './FrameHeader';
 import { FrameType } from './FrameType';
 import { MessageType } from './MessageType';
-import { Mutex } from 'async-mutex';
 
 export class FrameCodec {
     protected logger = getLogger(this.constructor.name);
-    protected decodeMutex = new Mutex();
     private buffer?: DataBuffer;
-
-    public constructor(private cryptor: Cryptor) {}
 
     public encodeFrameData(frameData: FrameData): DataBuffer {
         const frameHeader = frameData.frameHeader;
