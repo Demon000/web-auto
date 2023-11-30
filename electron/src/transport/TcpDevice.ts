@@ -1,13 +1,21 @@
-import { Device, Transport } from '@web-auto/android-auto';
+import {
+    Device,
+    DeviceEvents,
+    Transport,
+    TransportEvents,
+} from '@web-auto/android-auto';
 import { ElectronDuplexTransport } from './ElectronDuplexTransport';
 import { Socket } from 'node:net';
 
 export class TcpDevice extends Device {
-    public constructor(private ip: string) {
-        super('TCP', ip);
+    public constructor(
+        private ip: string,
+        events: DeviceEvents,
+    ) {
+        super('TCP', ip, events);
     }
 
-    public async connectImpl(): Promise<Transport> {
+    public async connectImpl(events: TransportEvents): Promise<Transport> {
         return new Promise((resolve, reject) => {
             const socket = new Socket();
 
@@ -24,7 +32,7 @@ export class TcpDevice extends Device {
                  */
                 socket.off('error', onSocketError);
 
-                const transport = new ElectronDuplexTransport(socket);
+                const transport = new ElectronDuplexTransport(socket, events);
 
                 resolve(transport);
             });

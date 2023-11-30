@@ -6,6 +6,9 @@ export abstract class Cryptor {
         protected privateKeyBuffer: Buffer,
     ) {}
 
+    public abstract start(): Promise<void>;
+    public abstract stop(): Promise<void>;
+
     public abstract isHandshakeComplete(): boolean;
     public abstract readHandshakeBuffer(): Promise<DataBuffer>;
     public abstract writeHandshakeBuffer(buffer: DataBuffer): Promise<void>;

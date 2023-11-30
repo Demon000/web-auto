@@ -1,8 +1,8 @@
 import {
     ControlService,
-    ControlServiceConfig,
     ControlServiceEvents,
-    DataBuffer,
+    DeviceHandler,
+    DeviceHandlerEvents,
     InputService,
     ServiceEvents,
     ServiceFactory,
@@ -17,11 +17,7 @@ import {
     ElectronAndroidAutoVideoServiceEvents,
 } from './ElectronAndroidAutoVideoService';
 import EventEmitter from 'eventemitter3';
-import {
-    ITouchConfig,
-    ITouchEvent,
-    IVideoConfig,
-} from '@web-auto/android-auto-proto';
+import { ITouchEvent } from '@web-auto/android-auto-proto';
 import {
     ElectronAndroidAutoInputService,
     ElectronAndroidAutoInputServiceEvent,
@@ -33,6 +29,10 @@ import { NodeCryptor } from '@/crypto/NodeCryptor';
 import { DummySensorService } from './DummySensorService';
 import { DummyNavigationStatusService } from './DummyNavigationService';
 import { DummyMediaStatusService } from './DummyMediaStatusService';
+import { AndroidAutoConfig } from '@/config';
+import { ElectronUsbDeviceHandler } from '@/transport/ElectronUsbDeviceHandler';
+import { ElectronTcpDeviceHandler } from '@/transport/ElectronTcpDeviceHandler';
+import { ElectronBluetoothDeviceHandler } from '@/transport/bluetooth/ElectronBluetoothDeviceHandler';
 
 export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
     public emitter = new EventEmitter<
@@ -40,12 +40,32 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
         | ElectronAndroidAutoInputServiceEvents
     >();
 
-    public constructor(
-        private controlConfig: ControlServiceConfig,
-        private videoConfigs: IVideoConfig[],
-        private touchSreenConfig: ITouchConfig,
-    ) {
+    public constructor(private androidAutoConfig: AndroidAutoConfig) {
         super();
+    }
+
+    public buildDeviceHandlers(events: DeviceHandlerEvents): DeviceHandler[] {
+        const deviceHandlers: DeviceHandler[] = [
+            new ElectronUsbDeviceHandler(
+                this.androidAutoConfig.usbDeviceHandlerConfig,
+                events,
+            ),
+            new ElectronTcpDeviceHandler(
+                this.androidAutoConfig.tcpDeviceHandlerConfig,
+                events,
+            ),
+        ];
+
+        if (this.androidAutoConfig.bluetoothDeviceHandlerConfig !== undefined) {
+            deviceHandlers.push(
+                new ElectronBluetoothDeviceHandler(
+                    this.androidAutoConfig.bluetoothDeviceHandlerConfig,
+                    events,
+                ),
+            );
+        }
+
+        return deviceHandlers;
     }
 
     public buildCryptor(
@@ -56,59 +76,39 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
     }
 
     public buildControlService(events: ControlServiceEvents): ControlService {
-        return new ControlService(this.controlConfig, events);
+        return new ControlService(this.androidAutoConfig.controlConfig, events);
     }
 
     private buildVideoService(events: ServiceEvents): VideoService {
         const videoService = new ElectronAndroidAutoVideoService(
-            this.videoConfigs,
+            this.androidAutoConfig.videoConfigs,
             events,
         );
 
-        const onVideoStart = () => {
-            this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_START);
-        };
-
-        const onVideoStop = () => {
-            this.emitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP);
-        };
-
         videoService.extraEmitter.on(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
-            onVideoStart,
+            () => {
+                this.emitter.emit(
+                    ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
+                );
+            },
         );
 
         videoService.extraEmitter.on(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP,
-            onVideoStop,
+            () => {
+                this.emitter.emit(
+                    ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP,
+                );
+            },
         );
-
-        const onVideoData = (buffer: DataBuffer) => {
-            this.emitter.emit(
-                ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
-                buffer,
-            );
-        };
 
         videoService.extraEmitter.on(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
-            onVideoData,
-        );
-
-        videoService.extraEmitter.once(
-            ElectronAndroidAutoVideoServiceEvent.STOP,
-            () => {
-                videoService.extraEmitter.off(
-                    ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
-                    onVideoStart,
-                );
-                videoService.extraEmitter.off(
+            (buffer) => {
+                this.emitter.emit(
                     ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
-                    onVideoData,
-                );
-                videoService.extraEmitter.off(
-                    ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP,
-                    onVideoStop,
+                    buffer,
                 );
             },
         );
@@ -117,26 +117,14 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
     }
     private buildInputService(events: ServiceEvents): InputService {
         const inputService = new ElectronAndroidAutoInputService(
-            this.touchSreenConfig,
+            this.androidAutoConfig.touchScreenConfig,
             events,
         );
 
-        const onTouchEvent = (data: ITouchEvent) => {
-            void inputService.sendTouchEvent(data);
-        };
-
         this.emitter.on(
             ElectronAndroidAutoInputServiceEvent.TOUCH,
-            onTouchEvent,
-        );
-
-        inputService.extraEmitter.once(
-            ElectronAndroidAutoInputServiceEvent.STOP,
-            () => {
-                this.emitter.off(
-                    ElectronAndroidAutoInputServiceEvent.TOUCH,
-                    onTouchEvent,
-                );
+            (data: ITouchEvent) => {
+                void inputService.sendTouchEvent(data);
             },
         );
 

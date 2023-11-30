@@ -2,7 +2,7 @@ import {
     Device,
     DeviceDisconnectReason,
     DeviceHandler,
-    DeviceHandlerEvent,
+    DeviceHandlerEvents,
 } from '@web-auto/android-auto';
 import { WebUSB } from 'usb';
 import { getLogger } from '@web-auto/logging';
@@ -25,8 +25,11 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
     private usb;
     private aoapConnector: UsbAoapConnector;
 
-    public constructor(private config?: ElectronUsbDeviceHandlerConfig) {
-        super();
+    public constructor(
+        private config: ElectronUsbDeviceHandlerConfig,
+        events: DeviceHandlerEvents,
+    ) {
+        super(events);
 
         this.handleConnectedDevice = this.handleConnectedDevice.bind(this);
         this.handleDisconnectedDevice =
@@ -50,10 +53,10 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
     ): Promise<void> {
         this.logger.debug(`Found device ${name(usbDevice)} with AA`);
 
-        const device = new UsbDevice(usbDevice);
+        const device = new UsbDevice(usbDevice, this.getDeviceEvents());
         this.usbDeviceMap.set(usbDevice, device);
 
-        this.emitter.emit(DeviceHandlerEvent.AVAILABLE, device);
+        await this.events.onDeviceAvailable(device);
     }
 
     private async connectUnknownDevice(device: USBDevice): Promise<void> {
@@ -97,7 +100,7 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
 
         await device.disconnect(DeviceDisconnectReason.TRANSPORT);
 
-        this.emitter.emit(DeviceHandlerEvent.UNAVAILABLE, device);
+        await this.events.onDeviceAvailable(device);
 
         this.usbDeviceMap.delete(usbDevice);
     }

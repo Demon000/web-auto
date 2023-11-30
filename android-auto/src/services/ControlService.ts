@@ -28,7 +28,7 @@ import assert from 'node:assert';
 
 export interface ControlServiceEvents extends ServiceEvents {
     onHandshake: (payload?: DataBuffer) => Promise<void>;
-    onDiscoveryRequest: (data: ServiceDiscoveryRequest) => Promise<void>;
+    onServiceDiscoveryRequest: (data: ServiceDiscoveryRequest) => Promise<void>;
     onPingTimeout: () => Promise<void>;
 }
 
@@ -105,7 +105,7 @@ export class ControlService extends Service {
             case ControlMessage.Enum.SERVICE_DISCOVERY_REQUEST:
                 data = ServiceDiscoveryRequest.decode(bufferPayload);
                 this.printReceive(data);
-                await this.events.onDiscoveryRequest(data);
+                await this.events.onServiceDiscoveryRequest(data);
                 break;
             case ControlMessage.Enum.PING_REQUEST:
                 data = PingRequest.decode(bufferPayload);

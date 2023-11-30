@@ -1,7 +1,9 @@
 import {
     Device,
     DeviceDisconnectReason,
+    DeviceEvents,
     Transport,
+    TransportEvents,
 } from '@web-auto/android-auto';
 import { ElectronUsbDuplex } from './ElectronUsbDuplex';
 import { ElectronDuplexTransport } from './ElectronDuplexTransport';
@@ -21,15 +23,18 @@ export const usbDeviceName = (device: USBDevice) => {
 };
 
 export class UsbDevice extends Device {
-    public constructor(private device: USBDevice) {
-        super('USB', usbDeviceName(device));
+    public constructor(
+        private device: USBDevice,
+        events: DeviceEvents,
+    ) {
+        super('USB', usbDeviceName(device), events);
     }
 
-    public async connectImpl(): Promise<Transport> {
+    public async connectImpl(events: TransportEvents): Promise<Transport> {
         await this.device.open();
 
         const duplex = new ElectronUsbDuplex(this.device);
-        const transport = new ElectronDuplexTransport(duplex);
+        const transport = new ElectronDuplexTransport(duplex, events);
 
         return transport;
     }

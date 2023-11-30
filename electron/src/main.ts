@@ -1,9 +1,6 @@
 import { ElectronWindowBuilderAndroidAuto } from './ElectronWindowBuilder';
 import { ElectronAndroidAutoServiceFactory } from './services/ElectronAndroidAutoServiceFactory';
-import { AndroidAutoServer, DeviceHandler } from '@web-auto/android-auto';
-import { ElectronUsbDeviceHandler } from './transport/ElectronUsbDeviceHandler';
-import { ElectronTcpDeviceHandler } from './transport/ElectronTcpDeviceHandler';
-import { ElectronBluetoothDeviceHandler } from './transport/bluetooth/ElectronBluetoothDeviceHandler';
+import { AndroidAutoServer } from '@web-auto/android-auto';
 import { getLogger, setConfig } from '@web-auto/logging';
 import { lilconfigSync } from 'lilconfig';
 import JSON5 from 'json5';
@@ -36,32 +33,12 @@ let androidAuto: ElectronWindowBuilderAndroidAuto | undefined;
 
 if (electronConfig.androidAuto !== undefined) {
     const serviceFactory = new ElectronAndroidAutoServiceFactory(
-        electronConfig.androidAuto.controlConfig,
-        electronConfig.androidAuto.videoConfigs,
-        electronConfig.androidAuto.touchScreenConfig,
+        electronConfig.androidAuto,
     );
-
-    const deviceHandlers: DeviceHandler[] = [
-        new ElectronUsbDeviceHandler(
-            electronConfig.androidAuto.usbDeviceHandlerConfig,
-        ),
-        new ElectronTcpDeviceHandler(
-            electronConfig.androidAuto.tcpDeviceHandlerConfig,
-        ),
-    ];
-
-    if (electronConfig.androidAuto.bluetoothDeviceHandlerConfig !== undefined) {
-        deviceHandlers.push(
-            new ElectronBluetoothDeviceHandler(
-                electronConfig.androidAuto.bluetoothDeviceHandlerConfig,
-            ),
-        );
-    }
 
     const server = new AndroidAutoServer(
         electronConfig.androidAuto.serverConfig,
         serviceFactory,
-        deviceHandlers,
     );
 
     androidAuto = {

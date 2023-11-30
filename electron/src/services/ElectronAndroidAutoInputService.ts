@@ -40,7 +40,6 @@ export class ElectronAndroidAutoInputService extends InputService {
     public stop(): void {
         super.stop();
         this.extraEmitter.emit(ElectronAndroidAutoInputServiceEvent.STOP);
-        this.extraEmitter.removeAllListeners();
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {}

@@ -1,7 +1,7 @@
 import Bluez, { Adapter } from 'bluez';
 import dbus from 'dbus-next';
 import assert from 'node:assert';
-import { DeviceHandler, DeviceHandlerEvent } from '@web-auto/android-auto';
+import { DeviceHandler, DeviceHandlerEvents } from '@web-auto/android-auto';
 import { BluetoothDevice } from './BluetoothDevice';
 import { AndroidAutoProfile } from './AndroidAutoProfile';
 import { ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig';
@@ -20,8 +20,11 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
     private adapter?: Adapter;
     private tcpServer?: net.Server;
 
-    public constructor(private config: ElectronBluetoothDeviceHandlerConfig) {
-        super();
+    public constructor(
+        private config: ElectronBluetoothDeviceHandlerConfig,
+        events: DeviceHandlerEvents,
+    ) {
+        super(events);
 
         this.onDeviceAdded = this.onDeviceAdded.bind(this);
         this.onDeviceRemoved = this.onDeviceRemoved.bind(this);
@@ -53,10 +56,11 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
             bluezDevice,
             this.tcpServer,
             name,
+            this.getDeviceEvents(),
         );
         this.addressDeviceMap.set(address, device);
 
-        this.emitter.emit(DeviceHandlerEvent.AVAILABLE, device);
+        await this.events.onDeviceAvailable(device);
     }
 
     private async onDeviceRemoved(address: string): Promise<void> {
@@ -66,7 +70,7 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
             return;
         }
 
-        this.emitter.emit(DeviceHandlerEvent.UNAVAILABLE, device);
+        await this.events.onDeviceUnavailable(device);
 
         this.addressDeviceMap.delete(address);
     }

@@ -1,9 +1,10 @@
 import {
     Device,
     DeviceDisconnectReason,
-    DeviceEvent,
+    DeviceEvents,
     DeviceState,
     Transport,
+    TransportEvents,
 } from '@web-auto/android-auto';
 import { Device as BluezDevice } from 'bluez';
 import { ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig';
@@ -29,8 +30,9 @@ export class BluetoothDevice extends Device {
         private device: BluezDevice,
         tcpServer: Server,
         name: string,
+        events: DeviceEvents,
     ) {
-        super('BT', name);
+        super('BT', name, events);
 
         this.profileConnector = new BluetoothDeviceProfileConnector();
 
@@ -50,6 +52,13 @@ export class BluetoothDevice extends Device {
              */
             this.profileConnector.onConnect(socket);
         } else if (this.state === DeviceState.AVAILABLE) {
+            await this.setState(DeviceState.SELF_CONNECTING);
+
+            const canConnect = await this.events.onSelfConnect(this);
+            if (!canConnect) {
+                return;
+            }
+
             /*
              * Device connected itself. Set the bluetooth socket inside the
              * profile connector. Then start the connection process.
@@ -57,8 +66,7 @@ export class BluetoothDevice extends Device {
              */
             this.profileConnector.onConnect(socket);
 
-            this.setState(DeviceState.SELF_CONNECTING);
-            this.emitter.emit(DeviceEvent.SELF_CONNECT_REQUESTED, this);
+            await this.connect();
         }
     }
 
@@ -89,7 +97,7 @@ export class BluetoothDevice extends Device {
             this.state === DeviceState.SELF_CONNECTING
         ) {
             await this.profileConnector.onDisconnect();
-            this.setState(DeviceState.AVAILABLE);
+            await this.setState(DeviceState.AVAILABLE);
         }
     }
 
@@ -117,7 +125,7 @@ export class BluetoothDevice extends Device {
         }
     }
 
-    public async connectImpl(): Promise<Transport> {
+    public async connectImpl(events: TransportEvents): Promise<Transport> {
         const paired = await this.device.Paired();
         if (!paired) {
             await this.device.Pair();
@@ -166,6 +174,6 @@ export class BluetoothDevice extends Device {
             throw err;
         }
 
-        return new ElectronDuplexTransport(this.tcpSocket);
+        return new ElectronDuplexTransport(this.tcpSocket, events);
     }
 }

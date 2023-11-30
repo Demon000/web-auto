@@ -1,4 +1,4 @@
-import { DeviceHandler, DeviceHandlerEvent } from '@web-auto/android-auto';
+import { DeviceHandler, DeviceHandlerEvents } from '@web-auto/android-auto';
 import { TcpDevice } from './TcpDevice';
 
 export interface ElectronTcpDeviceHandlerConfig {
@@ -6,18 +6,21 @@ export interface ElectronTcpDeviceHandlerConfig {
 }
 
 export class ElectronTcpDeviceHandler extends DeviceHandler {
-    public constructor(private config: ElectronTcpDeviceHandlerConfig) {
-        super();
+    public constructor(
+        private config: ElectronTcpDeviceHandlerConfig,
+        events: DeviceHandlerEvents,
+    ) {
+        super(events);
     }
 
-    protected makeDeviceAvailable(ip: string): void {
-        const device = new TcpDevice(ip);
-        this.emitter.emit(DeviceHandlerEvent.AVAILABLE, device);
+    protected async makeDeviceAvailable(ip: string): Promise<void> {
+        const device = new TcpDevice(ip, this.getDeviceEvents());
+        await this.events.onDeviceAvailable(device);
     }
 
     public async waitForDevices(): Promise<void> {
         for (const ip of this.config.ips) {
-            this.makeDeviceAvailable(ip);
+            await this.makeDeviceAvailable(ip);
         }
     }
 }

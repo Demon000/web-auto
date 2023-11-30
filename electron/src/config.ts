@@ -7,6 +7,7 @@ import {
     ControlServiceConfig,
 } from '@web-auto/android-auto';
 import { ElectronBluetoothDeviceHandlerConfig } from './transport/bluetooth/ElectronBluetoothDeviceHandlerConfig';
+import { ElectronUsbDeviceHandlerConfig } from './transport/ElectronUsbDeviceHandler';
 
 export interface AndroidAutoConfig {
     serverConfig: AndroidAutoServerConfig;
@@ -14,6 +15,7 @@ export interface AndroidAutoConfig {
     videoConfigs: IVideoConfig[];
     touchScreenConfig: ITouchConfig;
     tcpDeviceHandlerConfig: ElectronTcpDeviceHandlerConfig;
+    usbDeviceHandlerConfig: ElectronUsbDeviceHandlerConfig;
     bluetoothDeviceHandlerConfig?: ElectronBluetoothDeviceHandlerConfig;
 }
 

@@ -1,26 +1,50 @@
 import {
     Transport,
-    TransportEvent,
+    TransportEvents,
     TransportState,
 } from '@web-auto/android-auto';
 import { DataBuffer } from '@web-auto/android-auto';
 import { Duplex } from 'node:stream';
 
 export class ElectronDuplexTransport extends Transport {
-    public constructor(private socket: Duplex) {
-        super();
+    public constructor(
+        private socket: Duplex,
+        events: TransportEvents,
+    ) {
+        super(events);
+
         this.onData = this.onData.bind(this);
         this.onError = this.onError.bind(this);
         this.onClose = this.onClose.bind(this);
     }
 
-    private onData(data: Buffer): void {
+    private async onData(data: Buffer): Promise<void> {
         const buffer = DataBuffer.fromBuffer(data);
-        this.emitter.emit(TransportEvent.DATA, buffer);
+        await this.events.onData(buffer);
     }
 
-    private onError(err: Error): void {
-        this.emitter.emit(TransportEvent.ERROR, err);
+    private async onError(err: Error): Promise<void> {
+        await this.events.onError(err);
+    }
+
+    private detachEvents(): void {
+        this.socket.off('error', this.onError);
+        this.socket.off('data', this.onData);
+        this.socket.off('close', this.onClose);
+    }
+
+    private attachEvents(): void {
+        this.socket.on('data', this.onData);
+        this.socket.on('error', this.onError);
+        this.socket.on('close', this.onClose);
+    }
+
+    private async onClose(): Promise<void> {
+        this.detachEvents();
+
+        this.state = TransportState.DISCONNECTED;
+
+        await this.events.onDisconnected();
     }
 
     public async connect(): Promise<void> {
@@ -28,20 +52,9 @@ export class ElectronDuplexTransport extends Transport {
             return;
         }
 
-        this.socket.on('data', this.onData);
-        this.socket.on('error', this.onError);
-        this.socket.once('close', this.onClose);
+        this.attachEvents();
 
         this.state = TransportState.CONNECTED;
-    }
-
-    private onClose(): void {
-        this.socket.off('error', this.onError);
-        this.socket.off('data', this.onData);
-
-        this.state = TransportState.DISCONNECTED;
-
-        this.emitter.emit(TransportEvent.DISCONNECTED);
     }
 
     public async disconnect(): Promise<void> {

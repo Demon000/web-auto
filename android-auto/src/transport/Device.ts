@@ -1,14 +1,8 @@
-import EventEmitter from 'eventemitter3';
-import { Transport, TransportEvent } from './Transport';
+import { Transport, TransportEvents } from './Transport';
 import { getLogger } from '@web-auto/logging';
 import { Logger } from 'winston';
 import assert from 'node:assert';
-
-export enum DeviceEvent {
-    SELF_CONNECT_REQUESTED = 'self-connect-requested',
-    STATE_UPDATED = 'state-updated',
-    DISCONNECTED = 'disconnected',
-}
+import { DataBuffer } from '@/utils/DataBuffer';
 
 export enum DeviceState {
     AVAILABLE = 'available',
@@ -20,9 +14,13 @@ export enum DeviceState {
 }
 
 export interface DeviceEvents {
-    [DeviceEvent.SELF_CONNECT_REQUESTED]: (device: Device) => void;
-    [DeviceEvent.STATE_UPDATED]: (device: Device) => void;
-    [DeviceEvent.DISCONNECTED]: () => void;
+    onStateUpdated: (device: Device) => Promise<void>;
+    onSelfConnect: (device: Device) => Promise<boolean>;
+    onConnected: (device: Device) => Promise<void>;
+    onDisconnect: (device: Device) => Promise<void>;
+    onDisconnected: (device: Device) => Promise<void>;
+    onTransportData: (device: Device, buffer: DataBuffer) => Promise<void>;
+    onTransportError: (device: Device, err: Error) => Promise<void>;
 }
 
 export enum DeviceDisconnectReason {
@@ -31,7 +29,6 @@ export enum DeviceDisconnectReason {
 }
 
 export abstract class Device {
-    public emitter = new EventEmitter<DeviceEvents>();
     public transport?: Transport;
     public state = DeviceState.AVAILABLE;
     public name: string;
@@ -40,20 +37,23 @@ export abstract class Device {
     public constructor(
         public prefix: string,
         public realName: string,
+        protected events: DeviceEvents,
     ) {
         this.name = `${prefix}: ${realName}`;
 
         this.logger = getLogger(`${this.constructor.name}@${this.realName}`);
 
-        this.onTransportDisconnect = this.onTransportDisconnect.bind(this);
+        this.onTransportData = this.onTransportData.bind(this);
+        this.onTransportError = this.onTransportError.bind(this);
+        this.onTransportDisconnected = this.onTransportDisconnected.bind(this);
     }
 
-    protected abstract connectImpl(): Promise<Transport>;
+    protected abstract connectImpl(events: TransportEvents): Promise<Transport>;
     protected async handleDisconnect(_reason: string): Promise<void> {}
 
-    protected setState(state: DeviceState): void {
+    protected async setState(state: DeviceState): Promise<void> {
         this.state = state;
-        this.emitter.emit(DeviceEvent.STATE_UPDATED, this);
+        await this.events.onStateUpdated(this);
     }
 
     public async connect(): Promise<Transport> {
@@ -67,31 +67,40 @@ export abstract class Device {
             throw new Error('Device not availalbe');
         }
 
-        this.setState(DeviceState.CONNECTING);
+        await this.setState(DeviceState.CONNECTING);
 
         try {
-            this.transport = await this.connectImpl();
+            this.transport = await this.connectImpl({
+                onData: this.onTransportData,
+                onError: this.onTransportError,
+                onDisconnected: this.onTransportDisconnected,
+            });
         } catch (err) {
             this.logger.error('Failed to connect', {
                 metadata: err,
             });
-            this.setState(DeviceState.AVAILABLE);
+            await this.setState(DeviceState.AVAILABLE);
             throw err;
         }
 
-        this.transport.emitter.once(
-            TransportEvent.DISCONNECTED,
-            this.onTransportDisconnect,
-        );
-
         await this.transport.connect();
 
-        this.setState(DeviceState.CONNECTED);
+        await this.setState(DeviceState.CONNECTED);
+
+        await this.events.onConnected(this);
 
         return this.transport;
     }
 
-    protected async onTransportDisconnect(): Promise<void> {
+    protected async onTransportData(data: DataBuffer): Promise<void> {
+        await this.events.onTransportData(this, data);
+    }
+
+    protected async onTransportError(err: Error): Promise<void> {
+        await this.events.onTransportError(this, err);
+    }
+
+    protected async onTransportDisconnected(): Promise<void> {
         await this.disconnect(DeviceDisconnectReason.TRANSPORT);
     }
 
@@ -109,13 +118,11 @@ export abstract class Device {
             return;
         }
 
-        this.setState(DeviceState.DISCONNECTING);
+        await this.events.onDisconnect(this);
+
+        await this.setState(DeviceState.DISCONNECTING);
 
         assert(this.transport !== undefined);
-        this.transport.emitter.off(
-            TransportEvent.DISCONNECTED,
-            this.onTransportDisconnect,
-        );
 
         if (reason !== (DeviceDisconnectReason.TRANSPORT as string)) {
             this.logger.info('Disconnecting transport');
@@ -139,10 +146,8 @@ export abstract class Device {
             });
         }
 
-        this.setState(DeviceState.AVAILABLE);
+        await this.events.onDisconnected(this);
 
-        if (reason !== (DeviceDisconnectReason.USER as string)) {
-            this.emitter.emit(DeviceEvent.DISCONNECTED);
-        }
+        await this.setState(DeviceState.AVAILABLE);
     }
 }

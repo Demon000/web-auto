@@ -1,5 +1,3 @@
-import EventEmitter from 'eventemitter3';
-
 import { DataBuffer } from '@/utils/DataBuffer';
 
 export enum TransportState {
@@ -8,22 +6,16 @@ export enum TransportState {
     DISCONNECTED,
 }
 
-export enum TransportEvent {
-    DATA = 'data',
-    ERROR = 'error',
-    DISCONNECTED = 'disconnected',
-}
-
 export interface TransportEvents {
-    [TransportEvent.DATA]: (data: DataBuffer) => void;
-    [TransportEvent.ERROR]: (err: Error) => void;
-    [TransportEvent.DISCONNECTED]: () => void;
+    onData: (data: DataBuffer) => Promise<void>;
+    onError: (err: Error) => Promise<void>;
+    onDisconnected: () => Promise<void>;
 }
 
 export abstract class Transport {
-    public emitter = new EventEmitter<TransportEvents>();
-
     public state = TransportState.AVAILABLE;
+
+    public constructor(protected events: TransportEvents) {}
 
     public abstract connect(): Promise<void>;
     public abstract disconnect(): Promise<void>;

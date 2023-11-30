@@ -1,7 +1,7 @@
 import { Cryptor, DataBuffer } from '@web-auto/android-auto';
 import DuplexPair from 'native-duplexpair';
-import { Readable, Writable } from 'node:stream';
-import { connect } from 'node:tls';
+import { Duplex, Readable, Writable } from 'node:stream';
+import { TLSSocket, connect } from 'node:tls';
 import { Mutex } from 'async-mutex';
 import { getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
@@ -10,10 +10,9 @@ export class NodeCryptor extends Cryptor {
     private logger = getLogger(this.constructor.name);
 
     private connected = false;
-    private cleartext;
-    private encrypted;
+    private cleartext?: TLSSocket;
+    private encrypted?: Duplex;
 
-    private duplexPair: DuplexPair;
     private encryptMutex = new Mutex();
     private decryptMutex = new Mutex();
 
@@ -22,35 +21,56 @@ export class NodeCryptor extends Cryptor {
         protected privateKeyBuffer: Buffer,
     ) {
         super(certificateBuffer, privateKeyBuffer);
+    }
+    public async start(): Promise<void> {
+        assert(this.cleartext === undefined);
+        assert(this.encrypted === undefined);
 
-        this.duplexPair = new DuplexPair();
+        const pair = new DuplexPair();
+
         this.cleartext = connect({
-            socket: this.duplexPair.socket1,
+            socket: pair.socket1,
             key: this.privateKeyBuffer,
             cert: this.certificateBuffer,
             rejectUnauthorized: false,
             enableTrace: true,
         });
-        this.encrypted = this.duplexPair.socket2;
+
+        this.encrypted = pair.socket2;
 
         this.cleartext.once('secureConnect', () => {
+            if (this.cleartext === undefined) {
+                this.logger.error('Connected after stop');
+                return;
+            }
+
             const cipher = this.cleartext.getCipher();
             this.logger.debug(
                 `Connected, cipher: ${cipher.name} ${cipher.version}`,
             );
+
             this.connected = true;
         });
     }
+    public async stop(): Promise<void> {
+        assert(this.cleartext !== undefined);
+        assert(this.encrypted !== undefined);
 
+        this.cleartext = undefined;
+        this.encrypted = undefined;
+        this.connected = false;
+    }
     public isHandshakeComplete(): boolean {
         return this.connected;
     }
 
     public async readHandshakeBuffer(): Promise<DataBuffer> {
+        assert(this.encrypted !== undefined);
         return await this.read(this.encrypted);
     }
 
     public async writeHandshakeBuffer(buffer: DataBuffer): Promise<void> {
+        assert(this.encrypted !== undefined);
         await this.write(this.encrypted, buffer);
     }
 
@@ -99,6 +119,9 @@ export class NodeCryptor extends Cryptor {
     }
 
     public async encrypt(buffer: DataBuffer): Promise<DataBuffer> {
+        assert(this.cleartext !== undefined);
+        assert(this.encrypted !== undefined);
+
         const release = await this.encryptMutex.acquire();
         this.logger.debug('Encrypting buffer', {
             metadata: buffer,
@@ -116,6 +139,9 @@ export class NodeCryptor extends Cryptor {
     }
 
     public async decrypt(buffer: DataBuffer): Promise<DataBuffer> {
+        assert(this.cleartext !== undefined);
+        assert(this.encrypted !== undefined);
+
         const release = await this.decryptMutex.acquire();
         this.logger.debug('Decrypting buffer', {
             metadata: buffer,

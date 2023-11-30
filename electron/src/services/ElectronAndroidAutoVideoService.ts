@@ -19,7 +19,6 @@ import EventEmitter from 'eventemitter3';
 import Long from 'long';
 
 export enum ElectronAndroidAutoVideoServiceEvent {
-    STOP = 'stop',
     VIDEO_START = 'video-start',
     VIDEO_DATA = 'video-data',
     VIDEO_STOP = 'video-stop',
@@ -28,7 +27,6 @@ export enum ElectronAndroidAutoVideoServiceEvent {
 export interface ElectronAndroidAutoVideoServiceEvents {
     [ElectronAndroidAutoVideoServiceEvent.VIDEO_START]: () => void;
     [ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP]: () => void;
-    [ElectronAndroidAutoVideoServiceEvent.STOP]: () => void;
     [ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA]: (
         buffer: DataBuffer,
     ) => void;
@@ -59,9 +57,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
 
     public stop(): void {
         super.stop();
-        this.extraEmitter.emit(ElectronAndroidAutoVideoServiceEvent.STOP);
         this.extraEmitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP);
-        this.extraEmitter.removeAllListeners();
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {
