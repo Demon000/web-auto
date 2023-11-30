@@ -136,7 +136,7 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
         const services: Service[] = [
             new ElectronAndroidAutoAudioInputService(events),
             new ElectronAndroidAutoAudioOutputService(
-                AudioType.Enum.NONE,
+                AudioType.Enum.MEDIA,
                 events,
             ),
             new ElectronAndroidAutoAudioOutputService(
