@@ -73,6 +73,10 @@ export abstract class InputService extends Service {
     }
 
     public async sendTouchEvent(touchEvent: ITouchEvent): Promise<void> {
+        if (!this.started) {
+            return;
+        }
+
         const data = InputEventIndication.create({
             timestamp: microsecondsTime(),
             touchEvent,

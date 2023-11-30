@@ -272,6 +272,8 @@ export class ControlService extends Service {
     }
 
     public async start(): Promise<void> {
+        await super.start();
+
         this.pinger.start();
 
         return this.sendVersionRequest();

@@ -50,6 +50,8 @@ export class ElectronAndroidAutoVideoService extends VideoService {
     }
 
     public async start(): Promise<void> {
+        await super.start();
+
         this.extraEmitter.emit(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
         );

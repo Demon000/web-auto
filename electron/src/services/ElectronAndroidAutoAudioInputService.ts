@@ -44,8 +44,8 @@ export class ElectronAndroidAutoAudioInputService extends AudioInputService {
     }
 
     public async stop(): Promise<void> {
-        this.rtaudio.closeStream();
         await super.stop();
+        this.rtaudio.closeStream();
     }
 
     protected async inputOpen(data: AVInputOpenRequest): Promise<void> {

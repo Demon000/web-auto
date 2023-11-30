@@ -11,6 +11,7 @@ import {
 } from '@web-auto/android-auto-proto';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { getLogger } from '@web-auto/logging';
+import assert from 'node:assert';
 
 export interface ServiceEvents {
     onMessageSent: (
@@ -25,10 +26,20 @@ export abstract class Service {
     protected logger = getLogger(this.constructor.name);
 
     public serviceId = Service.nextServiceId++;
+    protected started = false;
+
     public constructor(protected events: ServiceEvents) {}
 
-    public async start(): Promise<void> {}
-    public async stop(): Promise<void> {}
+    public async start(): Promise<void> {
+        assert(!this.started);
+
+        this.started = true;
+    }
+    public async stop(): Promise<void> {
+        assert(this.started);
+
+        this.started = false;
+    }
 
     protected async onChannelOpenRequest(
         data: ChannelOpenRequest,
