@@ -201,7 +201,7 @@ export abstract class Service {
 
     public fillFeatures(response: ServiceDiscoveryResponse): void {
         const channelDescriptor = ChannelDescriptor.create();
-        channelDescriptor.serviceId = this.serviceId;
+        channelDescriptor.channelId = this.serviceId;
 
         this.fillChannelDescriptor(channelDescriptor);
 
