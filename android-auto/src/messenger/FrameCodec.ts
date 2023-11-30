@@ -45,7 +45,7 @@ export class FrameCodec {
         const firstByte = buffer.readUint8();
         const secondByte = buffer.readUint8();
 
-        const channelId = firstByte;
+        const serviceId = firstByte;
         const frameType = secondByte & FrameType.ATOMIC;
         const encryptionType = secondByte & EncryptionType.ENCRYPTED;
         const messageType = secondByte & MessageType.CONTROL;
@@ -53,7 +53,7 @@ export class FrameCodec {
         const payloadSize = buffer.readUint16BE();
 
         return new FrameHeader({
-            channelId,
+            serviceId,
             frameType,
             encryptionType,
             messageType,

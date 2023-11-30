@@ -20,7 +20,7 @@ const MAX_FRAME_PAYLOAD_SIZE = 0x4000;
 
 export class MessageAggregator {
     private logger = getLogger(this.constructor.name);
-    private channelIdAggregatorMap = new Map<number, AggregatorData>();
+    private serviceIdAggregatorMap = new Map<number, AggregatorData>();
 
     public aggregate(frameData: FrameData): Message | undefined {
         this.logger.debug('Aggregate frame data', {
@@ -33,7 +33,7 @@ export class MessageAggregator {
         if (frameHeader.frameType === FrameType.ATOMIC) {
             const message = new Message({
                 rawPayload: payload,
-                channelId: frameHeader.channelId,
+                serviceId: frameHeader.serviceId,
                 messageType: frameHeader.messageType,
             });
             this.logger.debug('Atomic message', {
@@ -41,7 +41,7 @@ export class MessageAggregator {
             });
             return message;
         } else if (frameHeader.frameType === FrameType.FIRST) {
-            assert(!this.channelIdAggregatorMap.has(frameHeader.channelId));
+            assert(!this.serviceIdAggregatorMap.has(frameHeader.serviceId));
 
             const data = {
                 frameHeader,
@@ -52,12 +52,12 @@ export class MessageAggregator {
                 metadata: data,
             });
 
-            this.channelIdAggregatorMap.set(frameHeader.channelId, data);
+            this.serviceIdAggregatorMap.set(frameHeader.serviceId, data);
         } else if (
             frameHeader.frameType === FrameType.MIDDLE ||
             frameHeader.frameType === FrameType.LAST
         ) {
-            const data = this.channelIdAggregatorMap.get(frameHeader.channelId);
+            const data = this.serviceIdAggregatorMap.get(frameHeader.serviceId);
             assert(data !== undefined);
             data.payload.appendBuffer(payload);
             this.logger.debug('Adding frame data to aggregated data', {
@@ -70,17 +70,17 @@ export class MessageAggregator {
             if (frameHeader.frameType === FrameType.LAST) {
                 if (totalSize !== 0 && totalSize !== payload.size) {
                     this.logger.error(
-                        `Received compound message for channel ${frameHeader.channelId} ` +
+                        `Received compound message for service ${frameHeader.serviceId} ` +
                             `but size ${data.payload.size} does not ` +
                             `match total size ${totalSize}`,
                     );
                 }
 
-                this.channelIdAggregatorMap.delete(frameHeader.channelId);
+                this.serviceIdAggregatorMap.delete(frameHeader.serviceId);
 
                 const message = new Message({
                     rawPayload: data.payload,
-                    channelId: data.frameHeader.channelId,
+                    serviceId: data.frameHeader.serviceId,
                     messageType: data.frameHeader.messageType,
                 });
                 this.logger.debug('Aggregated message', {
@@ -116,7 +116,7 @@ export class MessageAggregator {
         const payload = message.getRawPayload().subarray(offset, offset + size);
 
         const frameHeader = new FrameHeader({
-            channelId: message.channelId,
+            serviceId: message.serviceId,
             encryptionType,
             messageType: message.messageType,
             frameType,

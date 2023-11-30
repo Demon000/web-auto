@@ -44,7 +44,7 @@ export class ControlService extends Service {
     ) {
         super(events);
 
-        assert(this.channelId === 0);
+        assert(this.serviceId === 0);
 
         this.sendPingRequest = this.sendPingRequest.bind(this);
 

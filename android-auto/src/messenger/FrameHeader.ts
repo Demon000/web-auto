@@ -4,7 +4,7 @@ import { FrameType } from './FrameType';
 import { MessageType } from './MessageType';
 
 export type FrameHeaderOptions = {
-    channelId: number;
+    serviceId: number;
     frameType: FrameType;
     encryptionType: EncryptionType;
     messageType: MessageType;
@@ -12,14 +12,14 @@ export type FrameHeaderOptions = {
 };
 
 export class FrameHeader {
-    public readonly channelId: number;
+    public readonly serviceId: number;
     public readonly frameType: FrameType;
     public readonly encryptionType: EncryptionType;
     public readonly messageType: MessageType;
     public payloadSize: number;
 
     public constructor(options: FrameHeaderOptions) {
-        this.channelId = options.channelId;
+        this.serviceId = options.serviceId;
         this.frameType = options.frameType;
         this.encryptionType = options.encryptionType;
         this.messageType = options.messageType;
@@ -29,7 +29,7 @@ export class FrameHeader {
     public toBuffer(): DataBuffer {
         const buffer = DataBuffer.fromSize(FrameHeader.getSizeOf());
 
-        const firstByte = this.channelId;
+        const firstByte = this.serviceId;
         const secondByte =
             this.frameType | this.encryptionType | this.messageType;
 

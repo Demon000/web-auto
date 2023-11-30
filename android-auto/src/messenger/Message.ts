@@ -4,19 +4,19 @@ import { MessageType } from './MessageType';
 export type MessageOptions =
     | {
           dataPayload?: DataBuffer;
-          channelId: number;
+          serviceId: number;
           messageType: MessageType;
           messageId: number;
       }
     | {
           rawPayload: DataBuffer;
-          channelId: number;
+          serviceId: number;
           messageType: MessageType;
       };
 
 export class Message {
     public messageType: MessageType;
-    public channelId: number;
+    public serviceId: number;
     public messageId: number;
     public payload: DataBuffer;
 
@@ -39,7 +39,7 @@ export class Message {
             }
         }
         this.messageType = options.messageType;
-        this.channelId = options.channelId;
+        this.serviceId = options.serviceId;
     }
 
     public getPayload(): DataBuffer {

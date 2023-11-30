@@ -49,7 +49,7 @@ export class AndroidAutoServer {
     private services: Service[];
     private controlService: ControlService;
     private allServices: Service[];
-    private channelIdServiceMap = new Map<number, Service>();
+    private serviceIdServiceMap = new Map<number, Service>();
     private deviceHandlers: DeviceHandler[];
 
     public constructor(
@@ -105,7 +105,7 @@ export class AndroidAutoServer {
         this.allServices = [...this.services, this.controlService];
 
         for (const service of this.allServices) {
-            this.channelIdServiceMap.set(service.channelId, service);
+            this.serviceIdServiceMap.set(service.serviceId, service);
         }
     }
 
@@ -231,11 +231,11 @@ export class AndroidAutoServer {
     }
 
     private async onReceiveMessage(message: Message): Promise<void> {
-        const service = this.channelIdServiceMap.get(message.channelId);
+        const service = this.serviceIdServiceMap.get(message.serviceId);
         if (service === undefined) {
             this.logger.error(
                 `Unhandled message with id ${message.messageId} ` +
-                    `on channel with id ${message.channelId}`,
+                    `on service with id ${message.serviceId}`,
                 {
                     metadata: message,
                 },

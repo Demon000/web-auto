@@ -20,11 +20,11 @@ export interface ServiceEvents {
 }
 
 export abstract class Service {
-    public static nextChannelId = 0;
+    public static nextServiceId = 0;
 
     protected logger = getLogger(this.constructor.name);
 
-    public channelId = Service.nextChannelId++;
+    public serviceId = Service.nextServiceId++;
     public constructor(protected events: ServiceEvents) {}
 
     public async start(): Promise<void> {}
@@ -147,7 +147,7 @@ export abstract class Service {
             messageId,
             dataPayload,
             messageType,
-            channelId: this.channelId,
+            serviceId: this.serviceId,
         });
 
         try {
@@ -201,7 +201,7 @@ export abstract class Service {
 
     public fillFeatures(response: ServiceDiscoveryResponse): void {
         const channelDescriptor = ChannelDescriptor.create();
-        channelDescriptor.channelId = this.channelId;
+        channelDescriptor.serviceId = this.serviceId;
 
         this.fillChannelDescriptor(channelDescriptor);
 
