@@ -8,6 +8,11 @@ import { getLogger, setConfig } from '@web-auto/logging';
 import { lilconfigSync } from 'lilconfig';
 import JSON5 from 'json5';
 
+import { app, BrowserWindow } from 'electron';
+import { ElectronWindowBuilder } from './ElectronWindowBuilder';
+import { assert } from 'typia';
+import { ElectronConfig } from './config';
+
 const electronConfig = lilconfigSync('web-auto', {
     loaders: {
         '.json5': (_filepath, content) => {
@@ -16,6 +21,8 @@ const electronConfig = lilconfigSync('web-auto', {
     },
     searchPlaces: ['config.json5'],
 }).search()?.config;
+
+assert<ElectronConfig>(electronConfig);
 
 setConfig(electronConfig.logging);
 
@@ -91,9 +98,6 @@ if (androidAuto !== undefined) {
     androidAuto.server.start();
 }
 */
-
-import { app, BrowserWindow } from 'electron';
-import { ElectronWindowBuilder } from './ElectronWindowBuilder';
 
 const electronWindowBuilder = new ElectronWindowBuilder(
     electronConfig.electronWindowBuilder,

@@ -23,25 +23,22 @@
         },
         videoConfigs: [
             {
-                videoResolution: '_1080p',
-                videoFps: '_60',
-                marginHeight: 280,
-                marginWidth: 0,
-                dpi: 140,
-            },
-            {
-                videoResolution: '_720p',
-                videoFps: '_60',
+                // _480p = 1
+                // _720p = 2
+                // _1080p = 3
+                // _1440p = 4
+                // _2160p = 5
+                // _720p_p = 6
+                // _1080p_p = 7
+                // _1440p_p = 8
+                // _2160p_p = 9
+                videoResolution: 3,
+                // _30 = 1
+                // _60 = 2
+                videoFps: 2,
                 marginHeight: 0,
                 marginWidth: 0,
-                dpi: 140,
-            },
-            {
-                videoResolution: '_480p',
-                videoFps: '_60',
-                marginHeight: 0,
-                marginWidth: 0,
-                dpi: 140,
+                dpi: 240,
             },
         ],
         touchScreenConfig: {
@@ -61,8 +58,19 @@
             },
             networkInfo: {
                 ssid: 'Wi-Fi Name',
-                securityMode: 'WPA2_PERSONAL',
-                apType: 'STATIC',
+                // OPEN = 1
+                // WEP_64 = 2
+                // WEP_128 = 3
+                // WPA_PERSONAL = 4
+                // WPA2_PERSONAL = 8
+                // WPA_WPA2_PERSONAL = 12
+                // WPA_ENTERPRISE = 20
+                // WPA2_ENTERPRISE = 24
+                // WPA_WPA2_ENTERPRISE = 28
+                securityMode: 8,
+                // STATIC = 0
+                // DYNAMIC = 1
+                apType: 0,
                 macAddr: '3A:AE:4A:AE:EA:A6',
                 psk: 'parolamea9',
             },
@@ -71,6 +79,7 @@
     electronWindowBuilder: {
         windows: [
             {
+                name: 'Main Window',
                 display: {
                     id: 4693741488312405,
                 },
