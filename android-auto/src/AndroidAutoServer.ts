@@ -48,7 +48,6 @@ export class AndroidAutoServer {
     private messageAggregator: MessageAggregator;
     private services: Service[];
     private controlService: ControlService;
-    private allServices: Service[];
     private serviceIdServiceMap = new Map<number, Service>();
     private deviceHandlers: DeviceHandler[];
 
@@ -91,10 +90,6 @@ export class AndroidAutoServer {
         this.frameCodec = new FrameCodec();
         this.messageAggregator = new MessageAggregator();
 
-        this.services = this.serviceFactory.buildServices({
-            onMessageSent: this.onSendMessage,
-        });
-
         this.controlService = this.serviceFactory.buildControlService({
             onServiceDiscoveryRequest: this.onServiceDiscoveryRequest,
             onHandshake: this.onHandshake,
@@ -102,9 +97,15 @@ export class AndroidAutoServer {
             onPingTimeout: this.onPingTimeout,
         });
 
-        this.allServices = [...this.services, this.controlService];
+        this.services = this.serviceFactory.buildServices({
+            onMessageSent: this.onSendMessage,
+        });
 
-        for (const service of this.allServices) {
+        this.serviceIdServiceMap.set(
+            this.controlService.serviceId,
+            this.controlService,
+        );
+        for (const service of this.services) {
             this.serviceIdServiceMap.set(service.serviceId, service);
         }
     }
@@ -371,9 +372,10 @@ export class AndroidAutoServer {
         this.frameCodec.start();
         await this.cryptor.start();
 
-        for (const service of this.allServices) {
+        for (const service of this.services) {
             await service.start();
         }
+        await this.controlService.start();
     }
 
     private async onDeviceDisconnect(device: Device): Promise<void> {
@@ -385,8 +387,9 @@ export class AndroidAutoServer {
             return;
         }
 
-        for (const service of this.allServices) {
-            service.stop();
+        await this.controlService.stop();
+        for (const service of this.services) {
+            await service.stop();
         }
 
         await this.cryptor.stop();
