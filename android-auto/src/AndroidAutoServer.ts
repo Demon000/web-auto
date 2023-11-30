@@ -369,6 +369,7 @@ export class AndroidAutoServer {
 
         this.logger.info(`Connected device ${device.name}`);
 
+        this.frameCodec.start();
         await this.cryptor.start();
 
         for (const service of this.allServices) {
@@ -390,6 +391,7 @@ export class AndroidAutoServer {
         }
 
         await this.cryptor.stop();
+        this.frameCodec.stop();
     }
 
     private async onDeviceDisconnected(device: Device): Promise<void> {

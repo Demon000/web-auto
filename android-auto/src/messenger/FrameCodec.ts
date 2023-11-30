@@ -10,6 +10,12 @@ export class FrameCodec {
     protected logger = getLogger(this.constructor.name);
     private buffer?: DataBuffer;
 
+    public start() {}
+
+    public stop() {
+        this.buffer = undefined;
+    }
+
     public encodeFrameData(frameData: FrameData): DataBuffer {
         const frameHeader = frameData.frameHeader;
         const totalSize = frameData.totalSize;
