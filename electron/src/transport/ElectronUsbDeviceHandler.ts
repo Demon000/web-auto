@@ -93,6 +93,24 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         }
     }
 
+    private async handleAlreadyConnectedAoapDevice(
+        device: USBDevice,
+    ): Promise<void> {
+        try {
+            await device.open();
+            await device.reset();
+            await device.close();
+        } catch (err) {
+            this.logger.error(
+                `Failed to reset already connected device ${name(device)}`,
+                {
+                    metadata: err,
+                },
+            );
+            return;
+        }
+    }
+
     private async handleDisconnectedDevice(
         event: USBConnectionEvent,
     ): Promise<void> {
@@ -126,7 +144,7 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         const aoapDevices = await this.usb.getDevices();
         for (const device of aoapDevices) {
             if (this.isDeviceAoap(device)) {
-                await this.handleConnectedAoapDevice(device);
+                await this.handleAlreadyConnectedAoapDevice(device);
             } else {
                 await this.connectUnknownDevice(device);
             }
