@@ -1,6 +1,5 @@
 import BluetoothSocket from 'bluetooth-socket';
 import { Device, Profile, ProfileOptions } from 'bluez';
-import EventEmitter from 'eventemitter3';
 
 export interface BluetoothProfileEvents {
     onConnected: (address: string, socket: BluetoothSocket) => Promise<void>;
@@ -8,8 +7,6 @@ export interface BluetoothProfileEvents {
 }
 
 export class BluetoothProfile implements Profile {
-    public emitter = new EventEmitter<BluetoothProfileEvents>();
-
     public UUID: string;
     public ProfileOptions: Partial<ProfileOptions>;
 
