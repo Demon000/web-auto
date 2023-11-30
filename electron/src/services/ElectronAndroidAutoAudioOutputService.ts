@@ -51,9 +51,9 @@ export class ElectronAndroidAutoAudioOutputService extends AudioOutputService {
         this.rtaudio.stop();
     }
 
-    public stop(): void {
+    public async stop(): Promise<void> {
         this.rtaudio.closeStream();
-        super.stop();
+        await super.stop();
     }
 
     protected async handleData(

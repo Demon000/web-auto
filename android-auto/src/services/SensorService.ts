@@ -11,18 +11,24 @@ import {
 } from '@web-auto/android-auto-proto';
 
 import { Message } from '@/messenger/Message';
-import { Sensor, SensorEvent } from '@/sensors/Sensor';
+import { Sensor, SensorEvents } from '@/sensors/Sensor';
 import { DataBuffer } from '@/utils/DataBuffer';
 import { Service, ServiceEvents } from './Service';
 
 export abstract class SensorService extends Service {
-    public constructor(
-        protected sensors: Sensor[],
-        protected events: ServiceEvents,
-    ) {
+    protected sensors: Sensor[];
+    public constructor(protected events: ServiceEvents) {
         super(events);
 
         this.sendEventIndication = this.sendEventIndication.bind(this);
+
+        this.sensors = this.buildSensors({
+            onData: this.sendEventIndication,
+        });
+    }
+
+    protected buildSensors(_events: SensorEvents): Sensor[] {
+        return [];
     }
 
     protected findSensor(sensorType: SensorType.Enum): Sensor | undefined {
@@ -51,7 +57,6 @@ export abstract class SensorService extends Service {
     ): Promise<void> {
         try {
             const sensor = this.getSensor(data.sensorType);
-            sensor.emitter.on(SensorEvent.DATA, this.sendEventIndication);
             await sensor.start();
         } catch (err) {
             this.logger.error('Failed to start sensor', {
@@ -102,7 +107,7 @@ export abstract class SensorService extends Service {
         );
 
         const sensor = this.getSensor(sensorType);
-        sensor.emit();
+        await sensor.emit();
     }
 
     protected async sendEventIndication(
@@ -132,5 +137,11 @@ export abstract class SensorService extends Service {
         channelDescriptor.sensorChannel = SensorChannel.create({
             sensors,
         });
+    }
+
+    public async stop(): Promise<void> {
+        for (const sensor of this.sensors) {
+            await sensor.stop();
+        }
     }
 }

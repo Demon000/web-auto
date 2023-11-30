@@ -1,23 +1,21 @@
-import EventEmitter from 'eventemitter3';
 import {
     SensorEventIndication,
     SensorType,
 } from '@web-auto/android-auto-proto';
 
-export enum SensorEvent {
-    DATA,
-}
-
 export interface SensorEvents {
-    [SensorEvent.DATA]: (data: SensorEventIndication) => void;
+    onData: (data: SensorEventIndication) => Promise<void>;
 }
 
 export abstract class Sensor {
-    public emitter = new EventEmitter<SensorEvents>();
+    public constructor(
+        public readonly type: SensorType.Enum,
+        protected events: SensorEvents,
+    ) {}
 
-    public constructor(public readonly type: SensorType.Enum) {}
+    public async start(): Promise<void> {}
 
-    public abstract start(): Promise<void>;
+    public async stop(): Promise<void> {}
 
-    public abstract emit(): void;
+    public abstract emit(): Promise<void>;
 }

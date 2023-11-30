@@ -28,7 +28,7 @@ export abstract class Service {
     public constructor(protected events: ServiceEvents) {}
 
     public async start(): Promise<void> {}
-    public stop(): void {}
+    public async stop(): Promise<void> {}
 
     protected async onChannelOpenRequest(
         data: ChannelOpenRequest,

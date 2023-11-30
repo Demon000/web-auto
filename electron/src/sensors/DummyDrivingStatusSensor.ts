@@ -1,4 +1,4 @@
-import { Sensor, SensorEvent } from '@web-auto/android-auto';
+import { Sensor, SensorEvents } from '@web-auto/android-auto';
 import {
     DrivingStatusNumber,
     SensorEventIndication,
@@ -6,13 +6,11 @@ import {
 } from '@web-auto/android-auto-proto';
 
 export class DummyDrivingStatusSensor extends Sensor {
-    public constructor() {
-        super(SensorType.Enum.DRIVING_STATUS);
+    public constructor(events: SensorEvents) {
+        super(SensorType.Enum.DRIVING_STATUS, events);
     }
 
-    public async start(): Promise<void> {}
-
-    public emit(): void {
+    public async emit(): Promise<void> {
         const data = SensorEventIndication.create({
             drivingStatus: [
                 {
@@ -20,6 +18,7 @@ export class DummyDrivingStatusSensor extends Sensor {
                 },
             ],
         });
-        this.emitter.emit(SensorEvent.DATA, data);
+
+        await this.events.onData(data);
     }
 }

@@ -1,17 +1,15 @@
-import { Sensor, SensorEvent } from '@web-auto/android-auto';
+import { Sensor, SensorEvents } from '@web-auto/android-auto';
 import {
     SensorEventIndication,
     SensorType,
 } from '@web-auto/android-auto-proto';
 
 export class DummyNightDataSensor extends Sensor {
-    public constructor() {
-        super(SensorType.Enum.NIGHT_DATA);
+    public constructor(events: SensorEvents) {
+        super(SensorType.Enum.NIGHT_DATA, events);
     }
 
-    public async start(): Promise<void> {}
-
-    public emit(): void {
+    public async emit(): Promise<void> {
         const data = SensorEventIndication.create({
             nightMode: [
                 {
@@ -19,6 +17,7 @@ export class DummyNightDataSensor extends Sensor {
                 },
             ],
         });
-        this.emitter.emit(SensorEvent.DATA, data);
+
+        await this.events.onData(data);
     }
 }

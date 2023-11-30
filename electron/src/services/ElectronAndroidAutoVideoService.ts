@@ -55,8 +55,8 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         );
     }
 
-    public stop(): void {
-        super.stop();
+    public async stop(): Promise<void> {
+        await super.stop();
         this.extraEmitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP);
     }
 

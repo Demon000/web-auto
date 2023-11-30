@@ -37,8 +37,8 @@ export class ElectronAndroidAutoInputService extends InputService {
         );
     }
 
-    public stop(): void {
-        super.stop();
+    public async stop(): Promise<void> {
+        await super.stop();
         this.extraEmitter.emit(ElectronAndroidAutoInputServiceEvent.STOP);
     }
 

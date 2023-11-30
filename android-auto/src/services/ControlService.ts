@@ -277,8 +277,8 @@ export class ControlService extends Service {
         return this.sendVersionRequest();
     }
 
-    public stop(): void {
-        super.stop();
+    public async stop(): Promise<void> {
+        await super.stop();
         this.pinger.stop();
     }
 
