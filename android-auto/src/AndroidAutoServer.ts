@@ -370,12 +370,20 @@ export class AndroidAutoServer {
         this.logger.info(`Connected device ${device.name}`);
 
         this.frameCodec.start();
-        await this.cryptor.start();
 
+        this.logger.info('Starting cryptor');
+        await this.cryptor.start();
+        this.logger.info('Started cryptor');
+
+        this.logger.info('Starting services');
         for (const service of this.services) {
             await service.start();
         }
+        this.logger.info('Started services');
+
+        this.logger.info('Starting control service');
         await this.controlService.start();
+        this.logger.info('Started control service');
     }
 
     private async onDeviceDisconnect(device: Device): Promise<void> {
@@ -387,12 +395,19 @@ export class AndroidAutoServer {
             return;
         }
 
+        this.logger.info('Stopping control service');
         await this.controlService.stop();
+        this.logger.info('Stopped control service');
+        this.logger.info('Stopping services');
         for (const service of this.services) {
             await service.stop();
         }
+        this.logger.info('Stopped services');
 
+        this.logger.info('Stopping cryptor');
         await this.cryptor.stop();
+        this.logger.info('Stopped cryptor');
+
         this.frameCodec.stop();
     }
 
