@@ -8,11 +8,16 @@
         "resolveJsonModule": true,
         "module": "Node16",
         "types": ["node"],
+        "strictNullChecks": true,
+        "strict": true,
         "plugins": [
             { "transform": "typescript-transform-paths" },
             {
                 "transform": "typescript-transform-paths",
                 "afterDeclarations": true
+            },
+            {
+                "transform": "typia/lib/transform"
             }
         ]
     }
