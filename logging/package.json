@@ -10,13 +10,9 @@
     "types": "./dist/index.d.ts"
   },
   "scripts": {
-    "build": "tspc --project tsconfig.esm.json && tspc --project tsconfig.cjs.json",
+    "build": "tsc --project tsconfig.esm.json && tsc --project tsconfig.cjs.json",
     "clean": "tsc --build --clean",
     "lint": "eslint --fix ."
-  },
-  "devDependencies": {
-    "eslint": "^8.46.0",
-    "typescript": "^5.1.6"
   },
   "dependencies": {
     "winston": "^3.10.0"

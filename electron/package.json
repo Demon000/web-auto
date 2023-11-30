@@ -4,17 +4,11 @@
   "author": "Demon000",
   "license": "GPL-3.0",
   "scripts": {
-    "build": "tspc",
+    "build": "tsc",
     "clean": "tsc --build --clean",
     "lint": "eslint --fix .",
-    "start": "electron ./dist/main.js"
-  },
-  "devDependencies": {
-    "@electron/rebuild": "^3.3.0",
-    "@types/native-duplexpair": "^1.0.0",
-    "electron": "^27.1.2",
-    "eslint": "^8.46.0",
-    "typescript": "^5.1.6"
+    "start": "electron ./dist/main.js",
+    "prepare": "electron-rebuild -o bluetooth-socket && electron-rebuild -o usocket"
   },
   "dependencies": {
     "@rushstack/eslint-patch": "^1.3.3",
