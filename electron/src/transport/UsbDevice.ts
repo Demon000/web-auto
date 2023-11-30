@@ -34,6 +34,7 @@ export class UsbDevice extends Device {
         await this.device.open();
 
         const duplex = new ElectronUsbDuplex(this.device);
+        await duplex.claimInterface();
         const transport = new ElectronDuplexTransport(duplex, events);
 
         return transport;

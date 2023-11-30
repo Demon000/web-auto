@@ -67,8 +67,6 @@ export class ElectronUsbDuplex extends Duplex {
     }
 
     private async writeAsync(buffer: Buffer): Promise<void> {
-        await this.claimInterface();
-
         const result = await this.device.transferOut(
             this.outEndpoint.endpointNumber,
             buffer,
@@ -99,8 +97,6 @@ export class ElectronUsbDuplex extends Duplex {
     }
 
     private async readAsync(): Promise<void> {
-        await this.claimInterface();
-
         let result;
         try {
             result = await this.device.transferIn(
