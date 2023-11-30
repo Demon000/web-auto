@@ -17,7 +17,6 @@ import {
     VersionResponseStatus,
 } from '@web-auto/android-auto-proto';
 
-import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { DataBuffer } from '@/utils/DataBuffer';
 
@@ -43,7 +42,9 @@ export class ControlService extends Service {
         private config: ControlServiceConfig,
         protected events: ControlServiceEvents,
     ) {
-        super(ChannelId.CONTROL, events);
+        super(events);
+
+        assert(this.channelId === 0);
 
         this.sendPingRequest = this.sendPingRequest.bind(this);
 

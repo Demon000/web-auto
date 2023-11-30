@@ -1,23 +1,22 @@
 import { DataBuffer } from '@/utils/DataBuffer';
 import { MessageType } from './MessageType';
-import { ChannelId } from '.';
 
 export type MessageOptions =
     | {
           dataPayload?: DataBuffer;
-          channelId: ChannelId;
+          channelId: number;
           messageType: MessageType;
           messageId: number;
       }
     | {
           rawPayload: DataBuffer;
-          channelId: ChannelId;
+          channelId: number;
           messageType: MessageType;
       };
 
 export class Message {
     public messageType: MessageType;
-    public channelId: ChannelId;
+    public channelId: number;
     public messageId: number;
     public payload: DataBuffer;
 

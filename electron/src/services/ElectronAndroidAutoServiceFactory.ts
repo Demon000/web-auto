@@ -10,14 +10,13 @@ import {
 } from '@web-auto/android-auto';
 import { Service } from '@web-auto/android-auto';
 import { Cryptor } from '@web-auto/android-auto';
-import { ChannelId } from '@web-auto/android-auto';
 import {
     ElectronAndroidAutoVideoService,
     ElectronAndroidAutoVideoServiceEvent,
     ElectronAndroidAutoVideoServiceEvents,
 } from './ElectronAndroidAutoVideoService';
 import EventEmitter from 'eventemitter3';
-import { ITouchEvent } from '@web-auto/android-auto-proto';
+import { AudioType, ITouchEvent } from '@web-auto/android-auto-proto';
 import {
     ElectronAndroidAutoInputService,
     ElectronAndroidAutoInputServiceEvent,
@@ -137,15 +136,15 @@ export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
         const services: Service[] = [
             new ElectronAndroidAutoAudioInputService(events),
             new ElectronAndroidAutoAudioOutputService(
-                ChannelId.MEDIA_AUDIO,
+                AudioType.Enum.NONE,
                 events,
             ),
             new ElectronAndroidAutoAudioOutputService(
-                ChannelId.SPEECH_AUDIO,
+                AudioType.Enum.SPEECH,
                 events,
             ),
             new ElectronAndroidAutoAudioOutputService(
-                ChannelId.SYSTEM_AUDIO,
+                AudioType.Enum.SYSTEM,
                 events,
             ),
             new DummySensorService(events),

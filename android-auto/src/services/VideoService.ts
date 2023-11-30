@@ -5,7 +5,6 @@ import {
     VideoFocusRequest,
 } from '@web-auto/android-auto-proto';
 
-import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { DataBuffer } from '@/utils/DataBuffer';
 
@@ -14,7 +13,7 @@ import { ServiceEvents } from './Service';
 
 export abstract class VideoService extends AVOutputService {
     public constructor(protected events: ServiceEvents) {
-        super(ChannelId.VIDEO, events);
+        super(events);
     }
 
     public async onSpecificMessage(message: Message): Promise<boolean> {

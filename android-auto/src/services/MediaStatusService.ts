@@ -5,13 +5,12 @@ import {
 } from '@web-auto/android-auto-proto';
 
 import { Message } from '@/messenger/Message';
-import { ChannelId } from '@/messenger/ChannelId';
 
 import { Service, ServiceEvents } from './Service';
 
 export abstract class MediaStatusService extends Service {
     public constructor(protected events: ServiceEvents) {
-        super(ChannelId.MEDIA_STATUS, events);
+        super(events);
     }
 
     protected abstract handleMetadata(

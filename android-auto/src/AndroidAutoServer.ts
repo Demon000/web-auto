@@ -17,7 +17,6 @@ import { MessageAggregator } from './messenger/MessageAggregator';
 import { Cryptor } from './crypto/Cryptor';
 import { Service } from './services/Service';
 import { ControlService } from './services/ControlService';
-import { ChannelId } from './messenger/ChannelId';
 import assert from 'node:assert';
 import { FrameData } from './messenger/FrameData';
 import { EncryptionType } from './messenger/EncryptionType';
@@ -50,7 +49,7 @@ export class AndroidAutoServer {
     private services: Service[];
     private controlService: ControlService;
     private allServices: Service[];
-    private channelIdServiceMap = new Map<ChannelId, Service>();
+    private channelIdServiceMap = new Map<number, Service>();
     private deviceHandlers: DeviceHandler[];
 
     public constructor(

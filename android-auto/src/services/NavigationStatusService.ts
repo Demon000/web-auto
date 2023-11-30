@@ -6,13 +6,12 @@ import {
 } from '@web-auto/android-auto-proto';
 
 import { Message } from '@/messenger/Message';
-import { ChannelId } from '@/messenger/ChannelId';
 
 import { Service, ServiceEvents } from './Service';
 
 export abstract class NavigationStatusService extends Service {
     public constructor(protected events: ServiceEvents) {
-        super(ChannelId.NAVIGATION, events);
+        super(events);
     }
 
     protected abstract handleStatus(data: NavigationStatus): Promise<void>;

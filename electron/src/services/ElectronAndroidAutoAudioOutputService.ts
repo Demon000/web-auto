@@ -1,6 +1,5 @@
 import {
     AudioOutputService,
-    ChannelId,
     DataBuffer,
     ServiceEvents,
 } from '@web-auto/android-auto';
@@ -8,6 +7,7 @@ import {
     AVChannelSetupRequest,
     AVChannelStartIndication,
     AVChannelStopIndication,
+    AudioType,
     ChannelOpenRequest,
 } from '@web-auto/android-auto-proto';
 import { RtAudio, RtAudioFormat } from 'audify';
@@ -16,8 +16,8 @@ import Long from 'long';
 export class ElectronAndroidAutoAudioOutputService extends AudioOutputService {
     private rtaudio: RtAudio;
 
-    public constructor(channelId: ChannelId, events: ServiceEvents) {
-        super(channelId, events);
+    public constructor(audioType: AudioType.Enum, events: ServiceEvents) {
+        super(audioType, events);
 
         this.rtaudio = new RtAudio();
     }

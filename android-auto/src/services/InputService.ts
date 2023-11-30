@@ -7,7 +7,6 @@ import {
     Status,
 } from '@web-auto/android-auto-proto';
 
-import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { DataBuffer } from '@/utils/DataBuffer';
 
@@ -16,7 +15,7 @@ import { microsecondsTime } from '@/utils/time';
 
 export abstract class InputService extends Service {
     public constructor(protected events: ServiceEvents) {
-        super(ChannelId.INPUT, events);
+        super(events);
     }
 
     protected abstract bind(data: BindingRequest): Promise<void>;

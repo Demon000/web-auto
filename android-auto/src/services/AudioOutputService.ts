@@ -1,4 +1,3 @@
-import { ChannelId } from '@/messenger/ChannelId';
 import {
     AVChannel,
     AVStreamType,
@@ -10,41 +9,35 @@ import { ServiceEvents } from './Service';
 
 export abstract class AudioOutputService extends AVOutputService {
     public constructor(
-        channelId: ChannelId,
+        private audioType: AudioType.Enum,
         protected events: ServiceEvents,
     ) {
-        super(channelId, events);
+        super(events);
     }
 
-    protected channelConfig(): [AudioType.Enum, number, number, number] {
-        switch (this.channelId) {
-            case ChannelId.MEDIA_AUDIO:
-                return [AudioType.Enum.MEDIA, 2, 48000, 2048];
-            case ChannelId.SYSTEM_AUDIO:
-                return [AudioType.Enum.SYSTEM, 1, 16000, 1024];
-            case ChannelId.SPEECH_AUDIO:
-                return [AudioType.Enum.SPEECH, 1, 16000, 1024];
+    protected channelConfig(): [number, number, number] {
+        switch (this.audioType) {
+            case AudioType.Enum.MEDIA:
+                return [2, 48000, 2048];
+            case AudioType.Enum.SYSTEM:
+                return [1, 16000, 1024];
+            case AudioType.Enum.SPEECH:
+                return [1, 16000, 1024];
             default:
-                throw new Error(
-                    `Invalid channel id ${this.channelId} for audio service`,
-                );
+                throw new Error(`Unhandled audio type ${this.audioType}`);
         }
     }
 
-    protected audioType(): number {
+    protected channelCount(): number {
         return this.channelConfig()[0];
     }
 
-    protected channelCount(): number {
+    protected sampleRate(): number {
         return this.channelConfig()[1];
     }
 
-    protected sampleRate(): number {
-        return this.channelConfig()[2];
-    }
-
     protected chunkSize(): number {
-        return this.channelConfig()[3];
+        return this.channelConfig()[2];
     }
 
     protected fillChannelDescriptor(
@@ -52,7 +45,7 @@ export abstract class AudioOutputService extends AVOutputService {
     ): void {
         channelDescriptor.avChannel = AVChannel.create({
             streamType: AVStreamType.Enum.AUDIO,
-            audioType: this.audioType(),
+            audioType: this.audioType,
             availableWhileInCall: true,
             audioConfigs: [
                 {

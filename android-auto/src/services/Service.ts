@@ -20,12 +20,12 @@ export interface ServiceEvents {
 }
 
 export abstract class Service {
+    public static nextChannelId = 0;
+
     protected logger = getLogger(this.constructor.name);
 
-    public constructor(
-        public channelId: number,
-        protected events: ServiceEvents,
-    ) {}
+    public channelId = Service.nextChannelId++;
+    public constructor(protected events: ServiceEvents) {}
 
     public async start(): Promise<void> {}
     public stop(): void {}

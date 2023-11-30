@@ -1,4 +1,3 @@
-import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import {
     AVChannelMessage,
@@ -12,11 +11,8 @@ import { Service, ServiceEvents } from './Service';
 export abstract class AVService extends Service {
     protected session?: number;
 
-    public constructor(
-        channelId: ChannelId,
-        protected events: ServiceEvents,
-    ) {
-        super(channelId, events);
+    public constructor(protected events: ServiceEvents) {
+        super(events);
     }
 
     protected async onSetupRequest(data: AVChannelSetupRequest): Promise<void> {

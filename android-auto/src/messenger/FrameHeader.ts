@@ -1,11 +1,10 @@
 import { DataBuffer } from '@/utils/DataBuffer';
-import { ChannelId } from './ChannelId';
 import { EncryptionType } from './EncryptionType';
 import { FrameType } from './FrameType';
 import { MessageType } from './MessageType';
 
 export type FrameHeaderOptions = {
-    channelId: ChannelId;
+    channelId: number;
     frameType: FrameType;
     encryptionType: EncryptionType;
     messageType: MessageType;
@@ -13,7 +12,7 @@ export type FrameHeaderOptions = {
 };
 
 export class FrameHeader {
-    public readonly channelId: ChannelId;
+    public readonly channelId: number;
     public readonly frameType: FrameType;
     public readonly encryptionType: EncryptionType;
     public readonly messageType: MessageType;

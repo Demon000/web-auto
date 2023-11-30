@@ -10,7 +10,6 @@ import {
     Status,
 } from '@web-auto/android-auto-proto';
 
-import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import { Sensor, SensorEvent } from '@/sensors/Sensor';
 import { DataBuffer } from '@/utils/DataBuffer';
@@ -21,7 +20,7 @@ export abstract class SensorService extends Service {
         protected sensors: Sensor[],
         protected events: ServiceEvents,
     ) {
-        super(ChannelId.SENSOR, events);
+        super(events);
 
         this.sendEventIndication = this.sendEventIndication.bind(this);
     }

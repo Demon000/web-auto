@@ -1,4 +1,3 @@
-import { ChannelId } from '@/messenger/ChannelId';
 import { Message } from '@/messenger/Message';
 import {
     AVChannelMessage,
@@ -12,11 +11,8 @@ import Long from 'long';
 import { ServiceEvents } from './Service';
 
 export abstract class AVOutputService extends AVService {
-    public constructor(
-        channelId: ChannelId,
-        protected events: ServiceEvents,
-    ) {
-        super(channelId, events);
+    public constructor(protected events: ServiceEvents) {
+        super(events);
     }
 
     protected async onAvMediaIndication(buffer: DataBuffer): Promise<void> {
