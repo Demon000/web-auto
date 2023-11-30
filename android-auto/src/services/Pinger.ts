@@ -1,6 +1,7 @@
 import { PingRequest, PingResponse } from '@web-auto/android-auto-proto';
 import assert from 'node:assert';
 import { microToMilli, milliTime, milliToMicro } from '@/utils/time';
+import { getLogger } from '@web-auto/logging';
 
 export interface PingerEvents {
     onPingRequest: (request: PingRequest) => Promise<void>;
@@ -8,6 +9,7 @@ export interface PingerEvents {
 }
 
 export class Pinger {
+    protected logger = getLogger(this.constructor.name);
     private pingTimeout?: NodeJS.Timeout;
     private pingReceivedTime?: number;
     private pingSentTime?: number;
@@ -42,7 +44,13 @@ export class Pinger {
             this.pingReceivedTime - this.pingSentTime > this.pingTimeoutMs;
 
         if (isFirstPing || isTimeoutPing) {
-            await this.events.onPingTimeout();
+            try {
+                await this.events.onPingTimeout();
+            } catch (err) {
+                this.logger.error('Failed to emit ping timeout event', {
+                    metadata: err,
+                });
+            }
             return;
         }
 
@@ -54,7 +62,13 @@ export class Pinger {
             timestamp: milliToMicro(this.pingSentTime),
         });
 
-        await this.events.onPingRequest(data);
+        try {
+            await this.events.onPingRequest(data);
+        } catch (err) {
+            this.logger.error('Failed to emit ping request event', {
+                metadata: err,
+            });
+        }
         this.schedulePingTimeout();
     }
 

@@ -53,10 +53,16 @@ export abstract class Device {
 
     protected async setState(state: DeviceState): Promise<void> {
         this.state = state;
-        await this.events.onStateUpdated(this);
+        try {
+            await this.events.onStateUpdated(this);
+        } catch (err) {
+            this.logger.error('Failed to emit state updated event', {
+                metadata: err,
+            });
+        }
     }
 
-    public async connect(): Promise<Transport> {
+    public async connect(): Promise<void> {
         if (
             this.state !== DeviceState.AVAILABLE &&
             this.state !== DeviceState.SELF_CONNECTING
@@ -87,9 +93,13 @@ export abstract class Device {
 
         await this.setState(DeviceState.CONNECTED);
 
-        await this.events.onConnected(this);
-
-        return this.transport;
+        try {
+            await this.events.onConnected(this);
+        } catch (err) {
+            this.logger.error('Failed to emit connected event', {
+                metadata: err,
+            });
+        }
     }
 
     protected async onTransportData(data: DataBuffer): Promise<void> {
@@ -118,7 +128,13 @@ export abstract class Device {
             return;
         }
 
-        await this.events.onDisconnect(this);
+        try {
+            await this.events.onDisconnect(this);
+        } catch (err) {
+            this.logger.error('Failed to emit disconnect event', {
+                metadata: err,
+            });
+        }
 
         await this.setState(DeviceState.DISCONNECTING);
 
@@ -146,7 +162,13 @@ export abstract class Device {
             });
         }
 
-        await this.events.onDisconnected(this);
+        try {
+            await this.events.onDisconnected(this);
+        } catch (err) {
+            this.logger.error('Failed to emit disconnected event', {
+                metadata: err,
+            });
+        }
 
         await this.setState(DeviceState.AVAILABLE);
     }

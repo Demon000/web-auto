@@ -71,7 +71,13 @@ export class ControlService extends Service {
             `Major: ${majorCode}, minor: ${mainorCode}, status: ${status}`,
         );
 
-        await this.events.onHandshake();
+        try {
+            await this.events.onHandshake();
+        } catch (err) {
+            this.logger.error('Failed to emit handshake event', {
+                metadata: err,
+            });
+        }
     }
 
     private async onAudioFocusRequest(data: AudioFocusRequest): Promise<void> {
@@ -100,12 +106,27 @@ export class ControlService extends Service {
                 await this.onVersionReponse(payload);
                 break;
             case ControlMessage.Enum.SSL_HANDSHAKE:
-                await this.events.onHandshake(payload);
+                try {
+                    await this.events.onHandshake(payload);
+                } catch (err) {
+                    this.logger.error('Failed to emit handshake event', {
+                        metadata: err,
+                    });
+                }
                 break;
             case ControlMessage.Enum.SERVICE_DISCOVERY_REQUEST:
                 data = ServiceDiscoveryRequest.decode(bufferPayload);
                 this.printReceive(data);
-                await this.events.onServiceDiscoveryRequest(data);
+                try {
+                    await this.events.onServiceDiscoveryRequest(data);
+                } catch (err) {
+                    this.logger.error(
+                        'Failed to emit service discovery request event',
+                        {
+                            metadata: err,
+                        },
+                    );
+                }
                 break;
             case ControlMessage.Enum.PING_REQUEST:
                 data = PingRequest.decode(bufferPayload);

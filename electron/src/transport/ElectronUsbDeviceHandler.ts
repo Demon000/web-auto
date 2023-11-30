@@ -5,7 +5,6 @@ import {
     DeviceHandlerEvents,
 } from '@web-auto/android-auto';
 import { WebUSB } from 'usb';
-import { getLogger } from '@web-auto/logging';
 import { UsbDevice, usbDeviceName as name } from './UsbDevice';
 import { UsbAoapConnector } from './UsbAoapConnector';
 
@@ -21,7 +20,6 @@ export interface ElectronUsbDeviceHandlerConfig {
 
 export class ElectronUsbDeviceHandler extends DeviceHandler {
     protected usbDeviceMap = new Map<USBDevice, Device>();
-    private logger = getLogger(this.constructor.name);
     private usb;
     private aoapConnector: UsbAoapConnector;
 
@@ -56,7 +54,13 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         const device = new UsbDevice(usbDevice, this.getDeviceEvents());
         this.usbDeviceMap.set(usbDevice, device);
 
-        await this.events.onDeviceAvailable(device);
+        try {
+            await this.events.onDeviceAvailable(device);
+        } catch (err) {
+            this.logger.error('Failed to emit device available event', {
+                metadata: err,
+            });
+        }
     }
 
     private async connectUnknownDevice(device: USBDevice): Promise<void> {
@@ -100,7 +104,13 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
 
         await device.disconnect(DeviceDisconnectReason.TRANSPORT);
 
-        await this.events.onDeviceAvailable(device);
+        try {
+            await this.events.onDeviceUnavailable(device);
+        } catch (err) {
+            this.logger.error('Failed to emit device unavailable event', {
+                metadata: err,
+            });
+        }
 
         this.usbDeviceMap.delete(usbDevice);
     }

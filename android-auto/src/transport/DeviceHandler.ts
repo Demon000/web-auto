@@ -1,3 +1,4 @@
+import { getLogger } from '@web-auto/logging';
 import { DataBuffer } from '..';
 import { Device, DeviceEvents } from './Device';
 
@@ -19,6 +20,8 @@ export interface DeviceHandlerEvents {
 }
 
 export abstract class DeviceHandler {
+    protected logger = getLogger(this.constructor.name);
+
     public constructor(protected events: DeviceHandlerEvents) {}
 
     protected getDeviceEvents(): DeviceEvents {

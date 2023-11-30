@@ -54,7 +54,16 @@ export class BluetoothDevice extends Device {
         } else if (this.state === DeviceState.AVAILABLE) {
             await this.setState(DeviceState.SELF_CONNECTING);
 
-            const canConnect = await this.events.onSelfConnect(this);
+            let canConnect = false;
+
+            try {
+                canConnect = await this.events.onSelfConnect(this);
+            } catch (err) {
+                this.logger.error('Failed to emit self connect event', {
+                    metadata: err,
+                });
+            }
+
             if (!canConnect) {
                 return;
             }

@@ -15,7 +15,13 @@ export class ElectronTcpDeviceHandler extends DeviceHandler {
 
     protected async makeDeviceAvailable(ip: string): Promise<void> {
         const device = new TcpDevice(ip, this.getDeviceEvents());
-        await this.events.onDeviceAvailable(device);
+        try {
+            await this.events.onDeviceAvailable(device);
+        } catch (err) {
+            this.logger.error('Failed to emit device available event', {
+                metadata: err,
+            });
+        }
     }
 
     public async waitForDevices(): Promise<void> {

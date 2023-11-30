@@ -6,13 +6,11 @@ import { BluetoothDevice } from './BluetoothDevice';
 import { AndroidAutoProfile } from './AndroidAutoProfile';
 import { ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig';
 import net from 'node:net';
-import { getLogger } from '@web-auto/logging';
 import { Duplex } from 'node:stream';
 
 const AA_OBJECT_PATH = '/com/aa/aa';
 
 export class ElectronBluetoothDeviceHandler extends DeviceHandler {
-    private logger = getLogger(this.constructor.name);
     protected addressDeviceMap = new Map<string, BluetoothDevice>();
     private androidAutoProfile: AndroidAutoProfile;
     private bus?: dbus.MessageBus;
@@ -60,7 +58,13 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         );
         this.addressDeviceMap.set(address, device);
 
-        await this.events.onDeviceAvailable(device);
+        try {
+            await this.events.onDeviceAvailable(device);
+        } catch (err) {
+            this.logger.error('Failed to emit device available event', {
+                metadata: err,
+            });
+        }
     }
 
     private async onDeviceRemoved(address: string): Promise<void> {
@@ -70,7 +74,13 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
             return;
         }
 
-        await this.events.onDeviceUnavailable(device);
+        try {
+            await this.events.onDeviceUnavailable(device);
+        } catch (err) {
+            this.logger.error('Failed to emit device unavailable event', {
+                metadata: err,
+            });
+        }
 
         this.addressDeviceMap.delete(address);
     }

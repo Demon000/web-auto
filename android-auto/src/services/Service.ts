@@ -150,7 +150,13 @@ export abstract class Service {
             channelId: this.channelId,
         });
 
-        return this.events.onMessageSent(message, encryptionType);
+        try {
+            await this.events.onMessageSent(message, encryptionType);
+        } catch (err) {
+            this.logger.error('Failed to emit message sent event', {
+                metadata: err,
+            });
+        }
     }
 
     public async sendPlainSpecificMessage(
