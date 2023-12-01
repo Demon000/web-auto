@@ -37,6 +37,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         new EventEmitter<ElectronAndroidAutoVideoServiceEvents>();
 
     private videoConfigs: IVideoConfig[] = [];
+    private lastTime: [number, number] = [0, 0];
 
     public constructor(
         videoConfigs: IVideoConfig[],
@@ -88,6 +89,11 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         buffer: DataBuffer,
         _timestamp?: Long,
     ): Promise<void> {
+        const nowTime = process.hrtime();
+        const diffTime = process.hrtime(this.lastTime);
+        this.lastTime = nowTime;
+        const latency = (diffTime[0] * 1000000000 + diffTime[1]) / 1000000;
+        this.logger.info(`Video latency in ms: ${latency}`);
         this.extraEmitter.emit(
             ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
             buffer,
