@@ -121,8 +121,6 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
             return;
         }
 
-        await device.disconnect(DeviceDisconnectReason.TRANSPORT);
-
         try {
             await this.events.onDeviceUnavailable(device);
         } catch (err) {
