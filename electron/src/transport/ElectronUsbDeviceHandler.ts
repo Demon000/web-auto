@@ -16,6 +16,7 @@ type IgnoredDevice = [number, number];
 
 export interface ElectronUsbDeviceHandlerConfig {
     ignoredDevices?: IgnoredDevice[];
+    handleAlreadyConnectedDevices?: boolean;
 }
 
 export class ElectronUsbDeviceHandler extends DeviceHandler {
@@ -144,7 +145,16 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         const aoapDevices = await this.usb.getDevices();
         for (const device of aoapDevices) {
             if (this.isDeviceAoap(device)) {
-                await this.handleAlreadyConnectedAoapDevice(device);
+                if (
+                    this.config.handleAlreadyConnectedDevices !== undefined &&
+                    this.config.handleAlreadyConnectedDevices
+                ) {
+                    await this.handleAlreadyConnectedAoapDevice(device);
+                } else {
+                    this.logger.info(
+                        `Ignoring ${name(device)} already in AOAP mode`,
+                    );
+                }
             } else {
                 await this.connectUnknownDevice(device);
             }

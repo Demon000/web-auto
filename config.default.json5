@@ -50,6 +50,7 @@
         },
         usbDeviceHandlerConfig: {
             ignoredDevices: [[0x1462, 0x7c94]],
+            handleAlreadyConnectedDevices: true,
         },
         bluetoothDeviceHandlerConfig: {
             socketInfo: {
