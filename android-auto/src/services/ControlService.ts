@@ -276,7 +276,12 @@ export class ControlService extends Service {
 
         this.pinger.start();
 
-        return this.sendVersionRequest();
+        try {
+            await this.sendVersionRequest();
+        } catch (err) {
+            this.pinger.stop();
+            throw err;
+        }
     }
 
     public async stop(): Promise<void> {
