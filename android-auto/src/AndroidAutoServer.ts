@@ -325,7 +325,7 @@ export class AndroidAutoServer {
         if (this.connectedDevice !== undefined) {
             this.logger.error(
                 `Cannot accept self connection from ${device.name}, ` +
-                    `${this.connectDevice.name} already connected`,
+                    `${this.connectedDevice.name} already connected`,
             );
 
             return false;
@@ -360,7 +360,7 @@ export class AndroidAutoServer {
         if (this.connectedDevice !== undefined) {
             this.logger.error(
                 `Cannot connect ${device.name}, ` +
-                    `device ${this.connectDevice.name} already connected`,
+                    `device ${this.connectedDevice.name} already connected`,
             );
             return;
         }
@@ -443,7 +443,7 @@ export class AndroidAutoServer {
         if (this.connectedDevice !== undefined) {
             this.logger.error(
                 `Cannot connect to ${device.name}, ` +
-                    `${this.connectDevice.name} already connected`,
+                    `${this.connectedDevice.name} already connected`,
             );
             return;
         }
