@@ -83,16 +83,27 @@ export class ElectronUsbDuplex extends Duplex {
         callback: (err: Error | null) => void,
     ): void {
         if (!(chunk instanceof Buffer)) {
-            this.destroy(new Error('Chunk is not a buffer'));
+            callback(new Error('Chunk is not a buffer'));
             return;
         }
 
+        let callbackCalled = false;
+        const timeout = setTimeout(() => {
+            callbackCalled = true;
+            callback(new Error('Transfer timed out'));
+        }, 5000);
+
         this.writeAsync(chunk)
             .then(() => {
+                if (callbackCalled) return;
                 callback(null);
             })
             .catch((err) => {
+                if (callbackCalled) return;
                 callback(err);
+            })
+            .finally(() => {
+                clearTimeout(timeout);
             });
     }
 
