@@ -155,35 +155,6 @@ const translateCanvasPosition = (x: number, y: number): [number, number] => {
     return [Math.round(translatedPoint.x), Math.round(translatedPoint.y)];
 };
 
-const onCanvasClick = (event: MouseEvent) => {
-    const [x, y] = translateCanvasPosition(event.x, event.y);
-
-    let data = {
-        event: {
-            touchAction: TouchAction.Enum.PRESS,
-            actionIndex: null,
-            touchLocation: [
-                {
-                    x,
-                    y,
-                    pointerId: 0,
-                },
-            ],
-        },
-    };
-    androidAutoChannel.send(
-        AndroidAutoMainMethod.SEND_INPUT_SERVICE_TOUCH,
-        data,
-    );
-
-    data.event.touchAction = TouchAction.Enum.RELEASE;
-
-    androidAutoChannel.send(
-        AndroidAutoMainMethod.SEND_INPUT_SERVICE_TOUCH,
-        data,
-    );
-};
-
 const pointerMap = new Map<number, true>();
 
 const sendPointerEvent = (event: PointerEvent) => {
