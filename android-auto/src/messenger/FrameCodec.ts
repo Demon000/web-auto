@@ -1,10 +1,7 @@
 import { getLogger } from '@web-auto/logging';
 import { DataBuffer } from '../utils/DataBuffer.js';
-import { EncryptionType } from './EncryptionType.js';
 import { type FrameData } from './FrameData.js';
-import { FrameHeader } from './FrameHeader.js';
-import { FrameType } from './FrameType.js';
-import { MessageType } from './MessageType.js';
+import { FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
 
 export class FrameCodec {
     protected logger = getLogger(this.constructor.name);
@@ -16,22 +13,31 @@ export class FrameCodec {
         this.buffer = undefined;
     }
 
+    public encodeFrameHeader(
+        frameheader: FrameHeader,
+        buffer: DataBuffer,
+    ): void {
+        buffer.appendUint8(frameheader.serviceId);
+        buffer.appendUint8(frameheader.flags);
+        buffer.appendUint16BE(frameheader.payloadSize);
+    }
+
     public encodeFrameData(frameData: FrameData): DataBuffer {
         const frameHeader = frameData.frameHeader;
         const totalSize = frameData.totalSize;
         const payload = frameData.payload;
-
-        frameHeader.payloadSize = payload.size;
 
         this.logger.debug('Encode frame data', {
             metadata: frameData,
         });
 
         const buffer = DataBuffer.empty();
-        buffer.appendBuffer(frameHeader.toBuffer());
+        this.encodeFrameHeader(frameHeader, buffer);
+
         if (totalSize !== 0) {
             buffer.appendUint32BE(totalSize);
         }
+
         buffer.appendBuffer(payload);
 
         this.logger.debug('Encoded buffer', {
@@ -46,17 +52,13 @@ export class FrameCodec {
         const secondByte = buffer.readUint8();
 
         const serviceId = firstByte;
-        const frameType = secondByte & FrameType.ATOMIC;
-        const encryptionType = secondByte & EncryptionType.ENCRYPTED;
-        const messageType = secondByte & MessageType.CONTROL;
+        const flags = secondByte;
 
         const payloadSize = buffer.readUint16BE();
 
         return new FrameHeader({
             serviceId,
-            frameType,
-            encryptionType,
-            messageType,
+            flags,
             payloadSize,
         });
     }
@@ -69,7 +71,10 @@ export class FrameCodec {
         const frameHeader = this.decodeFrameHeader(buffer);
 
         let totalSize = 0;
-        if (frameHeader.frameType === FrameType.FIRST) {
+        if (
+            frameHeader.flags & FrameHeaderFlags.FIRST &&
+            !(frameHeader.flags & FrameHeaderFlags.LAST)
+        ) {
             totalSize = this.decodeTotalSize(buffer);
         }
 

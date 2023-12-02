@@ -1,22 +1,15 @@
 import { DataBuffer } from '../utils/DataBuffer.js';
-import { MessageType } from './MessageType.js';
 
 export type MessageOptions =
     | {
           dataPayload?: DataBuffer;
-          serviceId: number;
-          messageType: MessageType;
           messageId: number;
       }
     | {
           rawPayload: DataBuffer;
-          serviceId: number;
-          messageType: MessageType;
       };
 
 export class Message {
-    public messageType: MessageType;
-    public serviceId: number;
     public messageId: number;
     public payload: DataBuffer;
 
@@ -38,8 +31,6 @@ export class Message {
                 this.payload.appendBuffer(options.dataPayload);
             }
         }
-        this.messageType = options.messageType;
-        this.serviceId = options.serviceId;
     }
 
     public getPayload(): DataBuffer {

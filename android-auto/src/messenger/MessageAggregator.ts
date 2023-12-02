@@ -1,10 +1,8 @@
 import { DataBuffer } from '../utils/DataBuffer.js';
-import { FrameHeader } from './FrameHeader.js';
+import { FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
 import { getLogger } from '@web-auto/logging';
 import { Message } from './Message.js';
-import { FrameType } from './FrameType.js';
 import assert from 'node:assert';
-import { EncryptionType } from './EncryptionType.js';
 import { type FrameData } from './FrameData.js';
 
 interface AggregatorData {
@@ -30,17 +28,18 @@ export class MessageAggregator {
         const payload = frameData.payload;
         const totalSize = frameData.totalSize;
 
-        if (frameHeader.frameType === FrameType.ATOMIC) {
+        if (
+            frameHeader.flags & FrameHeaderFlags.FIRST &&
+            frameHeader.flags & FrameHeaderFlags.LAST
+        ) {
             const message = new Message({
                 rawPayload: payload,
-                serviceId: frameHeader.serviceId,
-                messageType: frameHeader.messageType,
             });
             this.logger.debug('Atomic message', {
                 metadata: message,
             });
             return message;
-        } else if (frameHeader.frameType === FrameType.FIRST) {
+        } else if (frameHeader.flags & FrameHeaderFlags.FIRST) {
             assert(!this.serviceIdAggregatorMap.has(frameHeader.serviceId));
 
             const data = {
@@ -53,12 +52,10 @@ export class MessageAggregator {
             });
 
             this.serviceIdAggregatorMap.set(frameHeader.serviceId, data);
-        } else if (
-            frameHeader.frameType === FrameType.MIDDLE ||
-            frameHeader.frameType === FrameType.LAST
-        ) {
+        } else {
             const data = this.serviceIdAggregatorMap.get(frameHeader.serviceId);
             assert(data !== undefined);
+
             data.payload.appendBuffer(payload);
             this.logger.debug('Adding frame data to aggregated data', {
                 metadata: {
@@ -67,7 +64,7 @@ export class MessageAggregator {
                 },
             });
 
-            if (frameHeader.frameType === FrameType.LAST) {
+            if (frameHeader.flags & FrameHeaderFlags.LAST) {
                 if (totalSize !== 0 && totalSize !== payload.size) {
                     this.logger.error(
                         `Received compound message for service ${frameHeader.serviceId} ` +
@@ -80,8 +77,6 @@ export class MessageAggregator {
 
                 const message = new Message({
                     rawPayload: data.payload,
-                    serviceId: data.frameHeader.serviceId,
-                    messageType: data.frameHeader.messageType,
                 });
                 this.logger.debug('Aggregated message', {
                     metadata: message,
@@ -94,8 +89,10 @@ export class MessageAggregator {
     }
 
     private splitOne(
+        serviceId: number,
         message: Message,
-        encryptionType: EncryptionType,
+        isEncrypted: boolean,
+        isControl: boolean,
         context: SplitMessageContext,
     ): FrameData {
         const offset = message.payload.size - context.remainingSize;
@@ -105,26 +102,33 @@ export class MessageAggregator {
         }
         context.remainingSize -= size;
 
-        let frameType = 0;
+        let flags: FrameHeaderFlags = 0;
+        if (isEncrypted) {
+            flags |= FrameHeaderFlags.ENCRYPTED;
+        }
+        if (isControl) {
+            flags |= FrameHeaderFlags.CONTROL;
+        }
         if (offset === 0) {
-            frameType |= FrameType.FIRST;
+            flags |= FrameHeaderFlags.FIRST;
         }
         if (context.remainingSize === 0) {
-            frameType |= FrameType.LAST;
+            flags |= FrameHeaderFlags.LAST;
         }
 
         const payload = message.getRawPayload().subarray(offset, offset + size);
 
         const frameHeader = new FrameHeader({
-            serviceId: message.serviceId,
-            encryptionType,
-            messageType: message.messageType,
-            frameType,
+            serviceId,
+            flags,
             payloadSize: 0,
         });
 
         let totalSize = 0;
-        if (frameType === FrameType.FIRST) {
+        if (
+            flags & FrameHeaderFlags.FIRST &&
+            !(flags & FrameHeaderFlags.LAST)
+        ) {
             totalSize = message.getRawPayload().size;
         }
 
@@ -136,13 +140,14 @@ export class MessageAggregator {
     }
 
     public split(
+        serviceId: number,
         message: Message,
-        encryptionType: EncryptionType,
+        isEncrypted: boolean,
+        isControl: boolean,
     ): FrameData[] {
         this.logger.debug('Split message', {
             metadata: {
                 message,
-                encryptionType,
             },
         });
         const context = {
@@ -151,7 +156,13 @@ export class MessageAggregator {
         const frameDatas: FrameData[] = [];
 
         while (context.remainingSize !== 0) {
-            const frameData = this.splitOne(message, encryptionType, context);
+            const frameData = this.splitOne(
+                serviceId,
+                message,
+                isEncrypted,
+                isControl,
+                context,
+            );
             this.logger.debug('Split frame', {
                 metadata: frameData,
             });

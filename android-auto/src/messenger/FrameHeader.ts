@@ -1,46 +1,25 @@
-import { DataBuffer } from '../utils/DataBuffer.js';
-import { EncryptionType } from './EncryptionType.js';
-import { FrameType } from './FrameType.js';
-import { MessageType } from './MessageType.js';
+export enum FrameHeaderFlags {
+    NONE = 0,
+    FIRST = 1 << 0,
+    LAST = 1 << 1,
+    CONTROL = 1 << 2,
+    ENCRYPTED = 1 << 3,
+}
 
 export type FrameHeaderOptions = {
     serviceId: number;
-    frameType: FrameType;
-    encryptionType: EncryptionType;
-    messageType: MessageType;
+    flags: FrameHeaderFlags;
     payloadSize: number;
 };
 
 export class FrameHeader {
-    public readonly serviceId: number;
-    public readonly frameType: FrameType;
-    public readonly encryptionType: EncryptionType;
-    public readonly messageType: MessageType;
-    public payloadSize: number;
+    public readonly serviceId;
+    public readonly flags;
+    public payloadSize;
 
     public constructor(options: FrameHeaderOptions) {
         this.serviceId = options.serviceId;
-        this.frameType = options.frameType;
-        this.encryptionType = options.encryptionType;
-        this.messageType = options.messageType;
+        this.flags = options.flags;
         this.payloadSize = options.payloadSize;
-    }
-
-    public toBuffer(): DataBuffer {
-        const buffer = DataBuffer.fromSize(FrameHeader.getSizeOf());
-
-        const firstByte = this.serviceId;
-        const secondByte =
-            this.frameType | this.encryptionType | this.messageType;
-
-        buffer.appendUint8(firstByte);
-        buffer.appendUint8(secondByte);
-        buffer.appendUint16BE(this.payloadSize);
-
-        return buffer;
-    }
-
-    public static getSizeOf(): number {
-        return 1 + 1 + 2;
     }
 }

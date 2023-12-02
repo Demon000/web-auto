@@ -1,6 +1,4 @@
-import { EncryptionType } from '../messenger/EncryptionType.js';
 import { Message } from '../messenger/Message.js';
-import { MessageType } from '../messenger/MessageType.js';
 import {
     ChannelDescriptor,
     ChannelOpenRequest,
@@ -15,8 +13,10 @@ import assert from 'node:assert';
 
 export interface ServiceEvents {
     onMessageSent: (
+        serviceId: number,
         message: Message,
-        encryptionType: EncryptionType,
+        isEncrypted: boolean,
+        isControl: boolean,
     ) => Promise<void>;
 }
 
@@ -84,7 +84,7 @@ export abstract class Service {
         });
     }
 
-    protected async onControlMessage(message: Message): Promise<void> {
+    public async onControlMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -95,39 +95,14 @@ export abstract class Service {
                 await this.onChannelOpenRequest(data);
                 break;
             default:
-                this.logger.error(
-                    `Unhandled control message with id ${message.messageId}`,
-                    {
-                        metadata: message.getPayload(),
-                    },
-                );
+                return false;
         }
+
+        return true;
     }
 
-    protected async onSpecificMessage(_message: Message): Promise<boolean> {
+    public async onSpecificMessage(_message: Message): Promise<boolean> {
         return false;
-    }
-
-    private async onSpecificMessageWrapper(message: Message): Promise<void> {
-        const handled = await this.onSpecificMessage(message);
-        if (!handled) {
-            this.logger.error(
-                `Unhandled specific message with id ${message.messageId}`,
-                {
-                    metadata: message.getPayload(),
-                },
-            );
-        }
-    }
-
-    public async onMessage(message: Message): Promise<void> {
-        if (message.messageType === MessageType.CONTROL) {
-            await this.onControlMessage(message);
-        } else if (message.messageType === MessageType.SPECIFIC) {
-            await this.onSpecificMessageWrapper(message);
-        } else {
-            this.logger.error(`Unhandled message type ${message.messageType}`);
-        }
     }
 
     protected abstract open(data: ChannelOpenRequest): Promise<void>;
@@ -151,18 +126,21 @@ export abstract class Service {
     public async sendMessageWithId(
         messageId: number,
         dataPayload: DataBuffer,
-        messageType: MessageType,
-        encryptionType: EncryptionType,
+        isEncrypted: boolean,
+        isControl: boolean,
     ): Promise<void> {
         const message = new Message({
             messageId,
             dataPayload,
-            messageType,
-            serviceId: this.serviceId,
         });
 
         try {
-            await this.events.onMessageSent(message, encryptionType);
+            await this.events.onMessageSent(
+                this.serviceId,
+                message,
+                isEncrypted,
+                isControl,
+            );
         } catch (err) {
             this.logger.error('Failed to emit message sent event', {
                 metadata: err,
@@ -174,36 +152,21 @@ export abstract class Service {
         messageId: number,
         payload: DataBuffer,
     ): Promise<void> {
-        return this.sendMessageWithId(
-            messageId,
-            payload,
-            MessageType.SPECIFIC,
-            EncryptionType.PLAIN,
-        );
+        return this.sendMessageWithId(messageId, payload, false, false);
     }
 
     public async sendEncryptedSpecificMessage(
         messageId: number,
         payload: DataBuffer,
     ): Promise<void> {
-        return this.sendMessageWithId(
-            messageId,
-            payload,
-            MessageType.SPECIFIC,
-            EncryptionType.ENCRYPTED,
-        );
+        return this.sendMessageWithId(messageId, payload, true, false);
     }
 
     public async sendEncryptedControlMessage(
         messageId: number,
         payload: DataBuffer,
     ): Promise<void> {
-        return this.sendMessageWithId(
-            messageId,
-            payload,
-            MessageType.CONTROL,
-            EncryptionType.ENCRYPTED,
-        );
+        return this.sendMessageWithId(messageId, payload, true, true);
     }
 
     protected abstract fillChannelDescriptor(

@@ -19,9 +19,9 @@ import { Service } from './services/Service.js';
 import { ControlService } from './services/ControlService.js';
 import assert from 'node:assert';
 import { type FrameData } from './messenger/FrameData.js';
-import { EncryptionType } from './messenger/EncryptionType.js';
 import { Message } from './messenger/Message.js';
 import { DataBuffer } from './utils/DataBuffer.js';
+import { FrameHeaderFlags } from './messenger/FrameHeader.js';
 
 export interface AndroidAutoServerConfig {
     serviceDiscovery: IServiceDiscoveryResponse;
@@ -130,9 +130,11 @@ export class AndroidAutoServer {
         const frameHeader = frameData.frameHeader;
         let buffer;
 
-        if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
+        if (frameHeader.flags & FrameHeaderFlags.ENCRYPTED) {
             frameData.payload = await this.cryptor.encrypt(frameData.payload);
         }
+
+        frameHeader.payloadSize = frameData.payload.size;
 
         try {
             buffer = this.frameCodec.encodeFrameData(frameData);
@@ -164,12 +166,16 @@ export class AndroidAutoServer {
     }
 
     private async onSendMessage(
+        serviceId: number,
         message: Message,
-        encryptionType: EncryptionType,
+        isEncrypted: boolean,
+        isControl: boolean,
     ): Promise<void> {
         const frameDatas = this.messageAggregator.split(
+            serviceId,
             message,
-            encryptionType,
+            isEncrypted,
+            isControl,
         );
 
         for (const frameData of frameDatas) {
@@ -231,12 +237,16 @@ export class AndroidAutoServer {
         await this.disconnectDevice(this.connectedDevice);
     }
 
-    private async onReceiveMessage(message: Message): Promise<void> {
-        const service = this.serviceIdServiceMap.get(message.serviceId);
+    private async onReceiveMessage(
+        serviceId: number,
+        message: Message,
+        isControl: boolean,
+    ): Promise<void> {
+        const service = this.serviceIdServiceMap.get(serviceId);
         if (service === undefined) {
             this.logger.error(
                 `Unhandled message with id ${message.messageId} ` +
-                    `on service with id ${message.serviceId}`,
+                    `on service with id ${serviceId}`,
                 {
                     metadata: message,
                 },
@@ -244,7 +254,24 @@ export class AndroidAutoServer {
             return;
         }
 
-        await service.onMessage(message);
+        let handled;
+        if (isControl) {
+            handled = await service.onControlMessage(message);
+        } else {
+            handled = await service.onSpecificMessage(message);
+        }
+
+        if (!handled) {
+            const tag = isControl ? 'control' : 'specific';
+
+            this.logger.error(
+                `Unhandled ${tag} message with id ${message.messageId} ` +
+                    `on service with id ${serviceId}`,
+                {
+                    metadata: message.getPayload(),
+                },
+            );
+        }
     }
 
     private async onReceiveFrameData(
@@ -252,7 +279,7 @@ export class AndroidAutoServer {
     ): Promise<Message | undefined> {
         const frameHeader = frameData.frameHeader;
 
-        if (frameHeader.encryptionType === EncryptionType.ENCRYPTED) {
+        if (frameHeader.flags & FrameHeaderFlags.ENCRYPTED) {
             try {
                 frameData.payload = await this.cryptor.decrypt(
                     frameData.payload,
@@ -285,18 +312,22 @@ export class AndroidAutoServer {
 
         const frameDatas = this.frameCodec.decodeBuffer(buffer);
 
-        const messages = [];
+        const messages: [number, Message, boolean][] = [];
         for (const frameData of frameDatas) {
             const message = await this.onReceiveFrameData(frameData);
             if (message === undefined) {
                 continue;
             }
 
-            messages.push(message);
+            messages.push([
+                frameData.frameHeader.serviceId,
+                message,
+                !!(frameData.frameHeader.flags & FrameHeaderFlags.CONTROL),
+            ]);
         }
 
         for (const message of messages) {
-            await this.onReceiveMessage(message);
+            await this.onReceiveMessage(message[0], message[1], message[2]);
         }
     }
     private async onDeviceTransportError(
