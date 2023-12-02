@@ -1,4 +1,4 @@
-import { RendererCommuncationChannel } from '@web-auto/electron-ipc-renderer';
+import { RendererCommuncationChannel } from '@web-auto/electron-ipc/renderer.js';
 import {
     WEB_CONFIG_CHANNEL_NAME,
     type WebConfigMainMethods,

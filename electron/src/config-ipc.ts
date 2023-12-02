@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron';
-import { MainCommuncationChannel } from '@web-auto/electron-ipc-main';
+import { MainCommuncationChannel } from '@web-auto/electron-ipc/main.js';
 import {
     WEB_CONFIG_CHANNEL_NAME,
     type WebConfigMainMethods,

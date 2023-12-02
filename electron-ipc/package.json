@@ -4,9 +4,11 @@
   "author": "Demon000",
   "license": "GPL-3.0",
   "type": "module",
+  "types": "./dist/esm/index.d.ts",
   "exports": {
-    "import": "./dist/esm/index.js",
-    "types": "./dist/esm/index.d.ts"
+    "./main.js": "./dist/esm/main.js",
+    "./preload.js": "./dist/esm/preload.js",
+    "./renderer.js": "./dist/esm/renderer.js"
   },
   "scripts": {
     "build": "tsc",

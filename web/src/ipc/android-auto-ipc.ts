@@ -1,4 +1,4 @@
-import { RendererCommuncationChannel } from '@web-auto/electron-ipc-renderer';
+import { RendererCommuncationChannel } from '@web-auto/electron-ipc/renderer.js';
 import {
     ANDROID_AUTO_CHANNEL_NAME,
     type AndroidAutoMainMethods,

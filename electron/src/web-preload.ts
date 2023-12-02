@@ -2,7 +2,7 @@ import {
     wireMainMethods,
     wireMainPromiseMethods,
     wireRendererMethods,
-} from '@web-auto/electron-ipc-preload';
+} from '@web-auto/electron-ipc/preload.js';
 import {
     ANDROID_AUTO_CHANNEL_NAME,
     AndroidAutoMainMethod,

@@ -5,7 +5,7 @@ import {
     COMMUNICATION_CHANNEL_GET_WEB_CONTENTS_ID,
     composeName,
     type MethodsMap,
-} from '@web-auto/electron-ipc';
+} from './common.js';
 import { contextBridge, ipcRenderer } from 'electron';
 
 export const window = {
