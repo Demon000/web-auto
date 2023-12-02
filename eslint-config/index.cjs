@@ -2,6 +2,8 @@ module.exports = {
     ignorePatterns: ['dist', '.eslintrc.cjs'],
     extends: ['eslint:recommended'],
     rules: {
+        'no-undef': 'off',
+
         'linebreak-style': ['error', 'unix'],
 
         indent: 'off',
