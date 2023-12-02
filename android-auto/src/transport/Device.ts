@@ -42,10 +42,6 @@ export abstract class Device {
         this.name = `${prefix}: ${realName}`;
 
         this.logger = getLogger(`${this.constructor.name}@${this.realName}`);
-
-        this.onTransportData = this.onTransportData.bind(this);
-        this.onTransportError = this.onTransportError.bind(this);
-        this.onTransportDisconnected = this.onTransportDisconnected.bind(this);
     }
 
     protected abstract connectImpl(events: TransportEvents): Promise<Transport>;
@@ -77,9 +73,9 @@ export abstract class Device {
 
         try {
             this.transport = await this.connectImpl({
-                onData: this.onTransportData,
-                onError: this.onTransportError,
-                onDisconnected: this.onTransportDisconnected,
+                onData: this.onTransportData.bind(this),
+                onError: this.onTransportError.bind(this),
+                onDisconnected: this.onTransportDisconnected.bind(this),
             });
         } catch (err) {
             this.logger.error('Failed to connect', {

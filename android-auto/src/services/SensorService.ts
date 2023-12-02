@@ -20,10 +20,8 @@ export abstract class SensorService extends Service {
     public constructor(protected events: ServiceEvents) {
         super(events);
 
-        this.sendEventIndication = this.sendEventIndication.bind(this);
-
         this.sensors = this.buildSensors({
-            onData: this.sendEventIndication,
+            onData: this.sendEventIndication.bind(this),
         });
     }
 

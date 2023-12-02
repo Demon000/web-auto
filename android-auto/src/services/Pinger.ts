@@ -2,6 +2,7 @@ import { PingRequest, PingResponse } from '@web-auto/android-auto-proto';
 import assert from 'node:assert';
 import { microToMilli, milliTime, milliToMicro } from '../utils/time.js';
 import { getLogger } from '@web-auto/logging';
+import Long from 'long';
 
 export interface PingerEvents {
     onPingRequest: (request: PingRequest) => Promise<void>;
@@ -73,6 +74,7 @@ export class Pinger {
     }
 
     public onPingResponse(data: PingResponse): void {
+        assert(Long.isLong(data.timestamp));
         this.pingReceivedTime = microToMilli(data.timestamp);
     }
 

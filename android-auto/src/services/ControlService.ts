@@ -46,11 +46,9 @@ export class ControlService extends Service {
 
         assert(this.serviceId === 0);
 
-        this.sendPingRequest = this.sendPingRequest.bind(this);
-
         this.pinger = new Pinger(config.pingTimeoutMs, {
             onPingTimeout: this.events.onPingTimeout,
-            onPingRequest: this.sendPingRequest,
+            onPingRequest: this.sendPingRequest.bind(this),
         });
     }
 

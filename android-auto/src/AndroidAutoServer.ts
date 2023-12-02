@@ -55,31 +55,16 @@ export class AndroidAutoServer {
         private options: AndroidAutoServerConfig,
         private serviceFactory: ServiceFactory,
     ) {
-        this.onDeviceAvailable = this.onDeviceAvailable.bind(this);
-        this.onDeviceSelfConnect = this.onDeviceSelfConnect.bind(this);
-        this.onDeviceStateUpdated = this.onDeviceStateUpdated.bind(this);
-        this.onDeviceConnected = this.onDeviceConnected.bind(this);
-        this.onDeviceTransportData = this.onDeviceTransportData.bind(this);
-        this.onDeviceTransportError = this.onDeviceTransportError.bind(this);
-        this.onDeviceDisconnect = this.onDeviceDisconnect.bind(this);
-        this.onDeviceDisconnected = this.onDeviceDisconnected.bind(this);
-        this.onDeviceUnavailable = this.onDeviceUnavailable.bind(this);
-        this.onSendMessage = this.onSendMessage.bind(this);
-        this.onServiceDiscoveryRequest =
-            this.onServiceDiscoveryRequest.bind(this);
-        this.onHandshake = this.onHandshake.bind(this);
-        this.onPingTimeout = this.onPingTimeout.bind(this);
-
         this.deviceHandlers = this.serviceFactory.buildDeviceHandlers({
-            onDeviceAvailable: this.onDeviceAvailable,
-            onDeviceStateUpdated: this.onDeviceStateUpdated,
-            onDeviceSelfConnect: this.onDeviceSelfConnect,
-            onDeviceConnected: this.onDeviceConnected,
-            onDeviceDisconnect: this.onDeviceDisconnect,
-            onDeviceDisconnected: this.onDeviceDisconnected,
-            onDeviceUnavailable: this.onDeviceUnavailable,
-            onDeviceTransportData: this.onDeviceTransportData,
-            onDeviceTransportError: this.onDeviceTransportError,
+            onDeviceAvailable: this.onDeviceAvailable.bind(this),
+            onDeviceStateUpdated: this.onDeviceStateUpdated.bind(this),
+            onDeviceSelfConnect: this.onDeviceSelfConnect.bind(this),
+            onDeviceConnected: this.onDeviceConnected.bind(this),
+            onDeviceDisconnect: this.onDeviceDisconnect.bind(this),
+            onDeviceDisconnected: this.onDeviceDisconnected.bind(this),
+            onDeviceUnavailable: this.onDeviceUnavailable.bind(this),
+            onDeviceTransportData: this.onDeviceTransportData.bind(this),
+            onDeviceTransportError: this.onDeviceTransportError.bind(this),
         });
 
         this.cryptor = this.serviceFactory.buildCryptor(
@@ -91,14 +76,15 @@ export class AndroidAutoServer {
         this.messageAggregator = new MessageAggregator();
 
         this.controlService = this.serviceFactory.buildControlService({
-            onServiceDiscoveryRequest: this.onServiceDiscoveryRequest,
-            onHandshake: this.onHandshake,
-            onMessageSent: this.onSendMessage,
-            onPingTimeout: this.onPingTimeout,
+            onServiceDiscoveryRequest:
+                this.onServiceDiscoveryRequest.bind(this),
+            onHandshake: this.onHandshake.bind(this),
+            onMessageSent: this.onSendMessage.bind(this),
+            onPingTimeout: this.onPingTimeout.bind(this),
         });
 
         this.services = this.serviceFactory.buildServices({
-            onMessageSent: this.onSendMessage,
+            onMessageSent: this.onSendMessage.bind(this),
         });
 
         this.serviceIdServiceMap.set(

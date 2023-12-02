@@ -190,9 +190,9 @@ export class ElectronWindowBuilder {
             }
 
             if (display === undefined) {
-                this.logger.error(
-                    `Failed to find display with id ${config.display}`,
-                );
+                this.logger.error('Failed to find display', {
+                    metadata: config.display,
+                });
             }
         }
         if (display === undefined) {
