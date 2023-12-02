@@ -10,7 +10,7 @@ export interface PingerEvents {
 
 export class Pinger {
     protected logger = getLogger(this.constructor.name);
-    private pingTimeout?: NodeJS.Timeout;
+    private pingTimeout?: ReturnType<typeof setTimeout>;
     private pingReceivedTime?: number;
     private pingSentTime?: number;
     private started = false;
