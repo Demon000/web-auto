@@ -6,16 +6,13 @@
         "sourceMap": true,
         "esModuleInterop": true,
         "resolveJsonModule": true,
-        "module": "Node16",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
         "types": ["node"],
         "strictNullChecks": true,
         "strict": true,
+        "verbatimModuleSyntax": true,
         "plugins": [
-            { "transform": "typescript-transform-paths" },
-            {
-                "transform": "typescript-transform-paths",
-                "afterDeclarations": true
-            },
             {
                 "transform": "typia/lib/transform"
             }

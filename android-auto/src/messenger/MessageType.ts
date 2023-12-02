@@ -1,4 +1,4 @@
-import { bit } from '@/utils/bits';
+import { bit } from '../utils/bits.js';
 
 export enum MessageType {
     SPECIFIC = 0,

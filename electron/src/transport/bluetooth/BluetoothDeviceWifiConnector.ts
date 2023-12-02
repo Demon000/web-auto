@@ -16,7 +16,7 @@ import {
 import assert from 'node:assert';
 import { Duplex } from 'node:stream';
 import { Logger } from 'winston';
-import { ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig';
+import { type ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig.js';
 
 enum InternalEvent {
     CONNECTION_SUCCESS,

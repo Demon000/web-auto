@@ -4,9 +4,9 @@ import {
     MediaInfoChannelPlaybackData,
 } from '@web-auto/android-auto-proto';
 
-import { Message } from '@/messenger/Message';
+import { Message } from '../messenger/Message.js';
 
-import { Service, ServiceEvents } from './Service';
+import { Service, type ServiceEvents } from './Service.js';
 
 export abstract class MediaStatusService extends Service {
     public constructor(protected events: ServiceEvents) {

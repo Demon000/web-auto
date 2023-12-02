@@ -1,4 +1,4 @@
-import { WebConfig } from '@web-auto/web-config';
+import { type WebConfig } from '@web-auto/web-config';
 
 export const WEB_CONFIG_CHANNEL_NAME = 'config';
 

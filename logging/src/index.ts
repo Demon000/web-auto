@@ -1,9 +1,14 @@
 import { join } from 'node:path';
 import { inspect } from 'node:util';
 import { format, transports, loggers, Logger } from 'winston';
-import { TransformableInfo } from 'logform';
+import { type TransformableInfo } from 'logform';
 
 export const LOGGER_NAME = 'logger';
+
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 type TransformableInfoWithMetadata = TransformableInfo & {
     metadata: {

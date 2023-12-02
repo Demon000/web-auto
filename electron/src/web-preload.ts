@@ -6,14 +6,14 @@ import {
 import {
     ANDROID_AUTO_CHANNEL_NAME,
     AndroidAutoMainMethod,
-    AndroidAutoMainMethods,
+    type AndroidAutoMainMethods,
     AndroidAutoRendererMethod,
-    AndroidAutoRendererMethods,
+    type AndroidAutoRendererMethods,
 } from '@web-auto/electron-ipc-android-auto';
 import {
     WEB_CONFIG_CHANNEL_NAME,
     WebConfigMainMethod,
-    WebConfigMainMethods,
+    type WebConfigMainMethods,
 } from '@web-auto/electron-ipc-web-config';
 
 wireRendererMethods<AndroidAutoRendererMethods>(ANDROID_AUTO_CHANNEL_NAME, [

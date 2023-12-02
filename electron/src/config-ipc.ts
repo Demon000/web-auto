@@ -2,8 +2,8 @@ import { BrowserWindow } from 'electron';
 import { MainCommuncationChannel } from '@web-auto/electron-ipc-main';
 import {
     WEB_CONFIG_CHANNEL_NAME,
-    WebConfigMainMethods,
-    WebConfigRendererMethods,
+    type WebConfigMainMethods,
+    type WebConfigRendererMethods,
 } from '@web-auto/electron-ipc-web-config';
 
 export class WebConfigCommuncationChannel extends MainCommuncationChannel<

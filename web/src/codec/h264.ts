@@ -1,4 +1,4 @@
-import { NaluSodbBitReader, annexBSplitNalu } from './nalu';
+import { NaluSodbBitReader, annexBSplitNalu } from './nalu.js';
 
 // From https://developer.android.com/reference/android/media/MediaCodecInfo.CodecProfileLevel
 export enum AndroidAvcProfile {

@@ -1,5 +1,5 @@
 import { EventEmitter } from 'eventemitter3';
-import { h264ParseConfiguration } from './h264';
+import { h264ParseConfiguration } from './h264.js';
 
 function toHex(value: number) {
     return value.toString(16).padStart(2, '0').toUpperCase();

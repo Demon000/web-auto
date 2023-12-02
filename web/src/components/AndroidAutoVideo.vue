@@ -3,14 +3,14 @@ import {
     H264WebCodecsDecoder,
     H264WebCodecsDecoderEvent,
     type VideoDimensions,
-} from '@/codec/H264WebCodecsDecoder';
-import { androidAutoChannel } from '@/ipc/channels';
-import { webConfigChannel } from '@/ipc/channels';
+} from '../codec/H264WebCodecsDecoder';
+import { androidAutoChannel } from '../ipc/channels.js';
+import { webConfigChannel } from '../ipc/channels.js';
 import { AndroidAutoMainMethod } from '@web-auto/electron-ipc-android-auto';
 import { AndroidAutoRendererMethod } from '@web-auto/electron-ipc-android-auto';
 import { onMounted, ref, type Ref } from 'vue';
 import { transformFittedPoint } from 'object-fit-math';
-import { type FitMode } from 'object-fit-math/dist/types';
+import type { FitMode } from 'object-fit-math/dist/types.d.ts';
 import { TouchAction } from '@web-auto/android-auto-proto';
 import { WebConfigMainMethod } from '@web-auto/electron-ipc-web-config';
 

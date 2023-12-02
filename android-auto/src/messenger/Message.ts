@@ -1,5 +1,5 @@
-import { DataBuffer } from '@/utils/DataBuffer';
-import { MessageType } from './MessageType';
+import { DataBuffer } from '../utils/DataBuffer.js';
+import { MessageType } from './MessageType.js';
 
 export type MessageOptions =
     | {

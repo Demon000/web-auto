@@ -1,18 +1,18 @@
 import {
     Device,
     DeviceDisconnectReason,
-    DeviceEvents,
+    type DeviceEvents,
     DeviceState,
     Transport,
-    TransportEvents,
+    type TransportEvents,
 } from '@web-auto/android-auto';
 import { Device as BluezDevice } from 'bluez';
-import { ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig';
-import { BluetoothDeviceProfileConnector } from './BluetoothDeviceProfileConnector';
-import { BluetoothDeviceWifiConnector } from './BluetoothDeviceWifiConnector';
+import { type ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig.js';
+import { BluetoothDeviceProfileConnector } from './BluetoothDeviceProfileConnector.js';
+import { BluetoothDeviceWifiConnector } from './BluetoothDeviceWifiConnector.js';
 import { Server } from 'node:net';
-import { BluetoothDeviceTcpConnector } from './BluetoothDeviceTcpConnector';
-import { ElectronDuplexTransport } from '../ElectronDuplexTransport';
+import { BluetoothDeviceTcpConnector } from './BluetoothDeviceTcpConnector.js';
+import { ElectronDuplexTransport } from '../ElectronDuplexTransport.js';
 import { Duplex } from 'node:stream';
 
 enum BluetoothDeviceDisconnectReason {

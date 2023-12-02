@@ -1,6 +1,6 @@
 import { getLogger } from '@web-auto/logging';
-import { DataBuffer } from '..';
-import { Device, DeviceEvents } from './Device';
+import { DataBuffer } from '../index.js';
+import { Device, type DeviceEvents } from './Device.js';
 
 export interface DeviceHandlerEvents {
     onDeviceAvailable: (device: Device) => Promise<void>;

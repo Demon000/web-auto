@@ -1,6 +1,6 @@
-import { EncryptionType } from '@/messenger/EncryptionType';
-import { Message } from '@/messenger/Message';
-import { MessageType } from '@/messenger/MessageType';
+import { EncryptionType } from '../messenger/EncryptionType.js';
+import { Message } from '../messenger/Message.js';
+import { MessageType } from '../messenger/MessageType.js';
 import {
     ChannelDescriptor,
     ChannelOpenRequest,
@@ -9,7 +9,7 @@ import {
     ServiceDiscoveryResponse,
     Status,
 } from '@web-auto/android-auto-proto';
-import { DataBuffer } from '@/utils/DataBuffer';
+import { DataBuffer } from '../utils/DataBuffer.js';
 import { getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
 

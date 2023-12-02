@@ -3,10 +3,7 @@
     "include": ["src/**/*"],
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./dist",
-        "baseUrl": ".",
-        "paths": {
-            "@/*": ["./src/*"]
-        }
+        "outDir": "./dist/esm",
+        "baseUrl": "."
     }
 }

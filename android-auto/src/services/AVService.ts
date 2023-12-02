@@ -1,12 +1,12 @@
-import { Message } from '@/messenger/Message';
+import { Message } from '../messenger/Message.js';
 import {
     AVChannelMessage,
     AVChannelSetupRequest,
     AVChannelSetupResponse,
     AVChannelSetupStatus,
 } from '@web-auto/android-auto-proto';
-import { DataBuffer } from '@/utils/DataBuffer';
-import { Service, ServiceEvents } from './Service';
+import { DataBuffer } from '../utils/DataBuffer.js';
+import { Service, type ServiceEvents } from './Service.js';
 
 export abstract class AVService extends Service {
     protected session?: number;

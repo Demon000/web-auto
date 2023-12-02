@@ -1,4 +1,7 @@
-import { INetworkInfo, ISocketInfoRequest } from '@web-auto/android-auto-proto';
+import {
+    type INetworkInfo,
+    type ISocketInfoRequest,
+} from '@web-auto/android-auto-proto';
 
 export interface ElectronBluetoothDeviceHandlerConfig {
     networkInfo: INetworkInfo;

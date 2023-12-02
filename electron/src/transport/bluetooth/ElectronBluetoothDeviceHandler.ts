@@ -1,10 +1,13 @@
-import Bluez, { Adapter } from 'bluez';
+import { Bluez, Adapter } from 'bluez';
 import dbus from 'dbus-next';
 import assert from 'node:assert';
-import { DeviceHandler, DeviceHandlerEvents } from '@web-auto/android-auto';
-import { BluetoothDevice } from './BluetoothDevice';
-import { AndroidAutoProfile } from './AndroidAutoProfile';
-import { ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig';
+import {
+    DeviceHandler,
+    type DeviceHandlerEvents,
+} from '@web-auto/android-auto';
+import { BluetoothDevice } from './BluetoothDevice.js';
+import { AndroidAutoProfile } from './AndroidAutoProfile.js';
+import { type ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig.js';
 import net from 'node:net';
 import { Duplex } from 'node:stream';
 
@@ -126,7 +129,9 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         );
 
         this.tcpServer = net
-            .createServer()
+            .createServer({
+                noDelay: true,
+            })
             .listen(
                 this.config.socketInfo.port,
                 this.config.socketInfo.ipAddress,

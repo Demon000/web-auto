@@ -3,8 +3,8 @@
 
 import {
     COMMUNICATION_CHANNEL_GET_WEB_CONTENTS_ID,
-    MethodsMap,
     composeName,
+    type MethodsMap,
 } from '@web-auto/electron-ipc';
 import { contextBridge, ipcRenderer } from 'electron';
 

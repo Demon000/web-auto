@@ -1,3 +1,3 @@
-export * from './BluetoothMessageType';
-export * from './BluetoothMessage';
-export * from './BluetoothMessageCodec';
+export * from './BluetoothMessageType.js';
+export * from './BluetoothMessage.js';
+export * from './BluetoothMessageCodec.js';

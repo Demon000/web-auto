@@ -1,1 +1,1 @@
-export * from './Cryptor';
+export * from './Cryptor.js';

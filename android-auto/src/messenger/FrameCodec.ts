@@ -1,10 +1,10 @@
 import { getLogger } from '@web-auto/logging';
-import { DataBuffer } from '../utils/DataBuffer';
-import { EncryptionType } from './EncryptionType';
-import { FrameData } from './FrameData';
-import { FrameHeader } from './FrameHeader';
-import { FrameType } from './FrameType';
-import { MessageType } from './MessageType';
+import { DataBuffer } from '../utils/DataBuffer.js';
+import { EncryptionType } from './EncryptionType.js';
+import { type FrameData } from './FrameData.js';
+import { FrameHeader } from './FrameHeader.js';
+import { FrameType } from './FrameType.js';
+import { MessageType } from './MessageType.js';
 
 export class FrameCodec {
     protected logger = getLogger(this.constructor.name);

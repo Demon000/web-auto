@@ -1,27 +1,27 @@
-import { ServiceFactory } from './services/ServiceFactory';
+import { ServiceFactory } from './services/ServiceFactory.js';
 import {
-    IServiceDiscoveryResponse,
+    type IServiceDiscoveryResponse,
     ServiceDiscoveryRequest,
     ServiceDiscoveryResponse,
 } from '@web-auto/android-auto-proto';
-import { DeviceHandler } from './transport/DeviceHandler';
+import { DeviceHandler } from './transport/DeviceHandler.js';
 import { getLogger } from '@web-auto/logging';
-import { Device } from './transport/Device';
+import { Device } from './transport/Device.js';
 import EventEmitter from 'eventemitter3';
 import {
     ANDROID_AUTO_CERTIFICATE,
     ANDROID_AUTO_PRIVATE_KEY,
-} from './crypto/keys';
-import { FrameCodec } from './messenger/FrameCodec';
-import { MessageAggregator } from './messenger/MessageAggregator';
-import { Cryptor } from './crypto/Cryptor';
-import { Service } from './services/Service';
-import { ControlService } from './services/ControlService';
+} from './crypto/keys.js';
+import { FrameCodec } from './messenger/FrameCodec.js';
+import { MessageAggregator } from './messenger/MessageAggregator.js';
+import { Cryptor } from './crypto/Cryptor.js';
+import { Service } from './services/Service.js';
+import { ControlService } from './services/ControlService.js';
 import assert from 'node:assert';
-import { FrameData } from './messenger/FrameData';
-import { EncryptionType } from './messenger/EncryptionType';
-import { Message } from './messenger/Message';
-import { DataBuffer } from './utils/DataBuffer';
+import { type FrameData } from './messenger/FrameData.js';
+import { EncryptionType } from './messenger/EncryptionType.js';
+import { Message } from './messenger/Message.js';
+import { DataBuffer } from './utils/DataBuffer.js';
 
 export interface AndroidAutoServerConfig {
     serviceDiscovery: IServiceDiscoveryResponse;

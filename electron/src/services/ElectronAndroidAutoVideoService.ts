@@ -6,13 +6,13 @@ import {
     AVStreamType,
     ChannelDescriptor,
     ChannelOpenRequest,
-    IVideoConfig,
+    type IVideoConfig,
     VideoConfig,
     VideoFocusRequest,
 } from '@web-auto/android-auto-proto';
 import {
     DataBuffer,
-    ServiceEvents,
+    type ServiceEvents,
     VideoService,
 } from '@web-auto/android-auto';
 import EventEmitter from 'eventemitter3';

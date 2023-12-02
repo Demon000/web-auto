@@ -1,4 +1,7 @@
-import { BluetoothProfile, BluetoothProfileEvents } from './BluetoothProfile';
+import {
+    BluetoothProfile,
+    type BluetoothProfileEvents,
+} from './BluetoothProfile.js';
 
 export const ANDROID_AUTO_UUID = '4de17a00-52cb-11e6-bdf4-0800200c9a66';
 

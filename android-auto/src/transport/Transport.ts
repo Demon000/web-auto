@@ -1,4 +1,4 @@
-import { DataBuffer } from '@/utils/DataBuffer';
+import { DataBuffer } from '../utils/DataBuffer.js';
 
 export enum TransportState {
     AVAILABLE,

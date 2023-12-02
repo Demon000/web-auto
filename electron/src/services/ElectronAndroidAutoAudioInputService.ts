@@ -1,17 +1,20 @@
 import {
     AudioInputService,
     DataBuffer,
-    ServiceEvents,
+    type ServiceEvents,
 } from '@web-auto/android-auto';
 import {
     AVChannelSetupRequest,
     AVInputOpenRequest,
     ChannelOpenRequest,
 } from '@web-auto/android-auto-proto';
-import { RtAudio, RtAudioFormat } from 'audify';
+import RtAudioPackage from 'audify';
+
+const RTAUDIO_SINT16 = 2;
+const { RtAudio } = RtAudioPackage;
 
 export class ElectronAndroidAutoAudioInputService extends AudioInputService {
-    private rtaudio: RtAudio;
+    private rtaudio;
 
     public constructor(events: ServiceEvents) {
         super(events);
@@ -30,7 +33,7 @@ export class ElectronAndroidAutoAudioInputService extends AudioInputService {
             {
                 nChannels: this.channelCount(),
             },
-            RtAudioFormat.RTAUDIO_SINT16,
+            RTAUDIO_SINT16,
             this.sampleRate(),
             this.chunkSize(),
             this.constructor.name,

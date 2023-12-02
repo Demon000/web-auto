@@ -1,5 +1,5 @@
-import { FrameHeader } from './FrameHeader';
-import { DataBuffer } from '@/utils/DataBuffer';
+import { FrameHeader } from './FrameHeader.js';
+import { DataBuffer } from '../utils/DataBuffer.js';
 
 export interface FrameData {
     frameHeader: FrameHeader;

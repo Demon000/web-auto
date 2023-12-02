@@ -2,8 +2,8 @@ import { BrowserWindow } from 'electron';
 import { MainCommuncationChannel } from '@web-auto/electron-ipc-main';
 import {
     ANDROID_AUTO_CHANNEL_NAME,
-    AndroidAutoMainMethods,
-    AndroidAutoRendererMethods,
+    type AndroidAutoMainMethods,
+    type AndroidAutoRendererMethods,
 } from '@web-auto/electron-ipc-android-auto';
 
 export class AndroidAutoCommuncationChannel extends MainCommuncationChannel<

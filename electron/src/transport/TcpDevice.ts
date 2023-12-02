@@ -1,10 +1,10 @@
 import {
     Device,
-    DeviceEvents,
+    type DeviceEvents,
     Transport,
-    TransportEvents,
+    type TransportEvents,
 } from '@web-auto/android-auto';
-import { ElectronDuplexTransport } from './ElectronDuplexTransport';
+import { ElectronDuplexTransport } from './ElectronDuplexTransport.js';
 import { Socket } from 'node:net';
 
 export class TcpDevice extends Device {

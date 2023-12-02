@@ -1,6 +1,6 @@
 import {
     Transport,
-    TransportEvents,
+    type TransportEvents,
     TransportState,
 } from '@web-auto/android-auto';
 import { DataBuffer } from '@web-auto/android-auto';

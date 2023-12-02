@@ -1,10 +1,10 @@
 import {
     ControlService,
-    ControlServiceEvents,
+    type ControlServiceEvents,
     DeviceHandler,
-    DeviceHandlerEvents,
+    type DeviceHandlerEvents,
     InputService,
-    ServiceEvents,
+    type ServiceEvents,
     ServiceFactory,
     VideoService,
 } from '@web-auto/android-auto';
@@ -13,25 +13,25 @@ import { Cryptor } from '@web-auto/android-auto';
 import {
     ElectronAndroidAutoVideoService,
     ElectronAndroidAutoVideoServiceEvent,
-    ElectronAndroidAutoVideoServiceEvents,
-} from './ElectronAndroidAutoVideoService';
+    type ElectronAndroidAutoVideoServiceEvents,
+} from './ElectronAndroidAutoVideoService.js';
 import EventEmitter from 'eventemitter3';
-import { AudioType, ITouchEvent } from '@web-auto/android-auto-proto';
+import { AudioType, type ITouchEvent } from '@web-auto/android-auto-proto';
 import {
     ElectronAndroidAutoInputService,
     ElectronAndroidAutoInputServiceEvent,
-    ElectronAndroidAutoInputServiceEvents,
-} from './ElectronAndroidAutoInputService';
-import { ElectronAndroidAutoAudioOutputService } from './ElectronAndroidAutoAudioOutputService';
-import { ElectronAndroidAutoAudioInputService } from './ElectronAndroidAutoAudioInputService';
-import { NodeCryptor } from '@/crypto/NodeCryptor';
-import { DummySensorService } from './DummySensorService';
-import { DummyNavigationStatusService } from './DummyNavigationService';
-import { DummyMediaStatusService } from './DummyMediaStatusService';
-import { AndroidAutoConfig } from '@/config';
-import { ElectronUsbDeviceHandler } from '@/transport/ElectronUsbDeviceHandler';
-import { ElectronTcpDeviceHandler } from '@/transport/ElectronTcpDeviceHandler';
-import { ElectronBluetoothDeviceHandler } from '@/transport/bluetooth/ElectronBluetoothDeviceHandler';
+    type ElectronAndroidAutoInputServiceEvents,
+} from './ElectronAndroidAutoInputService.js';
+import { ElectronAndroidAutoAudioOutputService } from './ElectronAndroidAutoAudioOutputService.js';
+import { ElectronAndroidAutoAudioInputService } from './ElectronAndroidAutoAudioInputService.js';
+import { NodeCryptor } from '../crypto/NodeCryptor.js';
+import { DummySensorService } from './DummySensorService.js';
+import { DummyNavigationStatusService } from './DummyNavigationService.js';
+import { DummyMediaStatusService } from './DummyMediaStatusService.js';
+import { type AndroidAutoConfig } from '../config.js';
+import { ElectronUsbDeviceHandler } from '../transport/ElectronUsbDeviceHandler.js';
+import { ElectronTcpDeviceHandler } from '../transport/ElectronTcpDeviceHandler.js';
+import { ElectronBluetoothDeviceHandler } from '../transport/bluetooth/ElectronBluetoothDeviceHandler.js';
 
 export class ElectronAndroidAutoServiceFactory extends ServiceFactory {
     public emitter = new EventEmitter<

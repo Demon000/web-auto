@@ -1,11 +1,11 @@
-import { DataBuffer } from '@/utils/DataBuffer';
-import { FrameHeader } from './FrameHeader';
+import { DataBuffer } from '../utils/DataBuffer.js';
+import { FrameHeader } from './FrameHeader.js';
 import { getLogger } from '@web-auto/logging';
-import { Message } from './Message';
-import { FrameType } from './FrameType';
+import { Message } from './Message.js';
+import { FrameType } from './FrameType.js';
 import assert from 'node:assert';
-import { EncryptionType } from './EncryptionType';
-import { FrameData } from './FrameData';
+import { EncryptionType } from './EncryptionType.js';
+import { type FrameData } from './FrameData.js';
 
 interface AggregatorData {
     frameHeader: FrameHeader;

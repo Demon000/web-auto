@@ -1,3 +1,3 @@
-export * from './Device';
-export * from './DeviceHandler';
-export * from './Transport';
+export * from './Device.js';
+export * from './DeviceHandler.js';
+export * from './Transport.js';

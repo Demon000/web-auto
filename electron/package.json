@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "author": "Demon000",
   "license": "GPL-3.0",
+  "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && mv ./dist/esm/web-preload.js ./dist/esm/web-preload.mjs",
     "clean": "tsc --build --clean",
     "lint": "eslint --fix .",
-    "start": "electron ./dist/main.js",
+    "start": "electron ./dist/esm/main.js",
+    "start-debug": "electron --inspect-brk=5858 ./dist/esm/main.js",
     "prepare": "electron-rebuild -o bluetooth-socket && electron-rebuild -o usocket"
   },
   "dependencies": {
@@ -16,6 +18,7 @@
     "audify": "^1.8.2",
     "bluetooth-socket": "github:Demon000/node-bluetooth-socket#master",
     "bluez": "github:Demon000/node-bluez#master",
+    "import-meta-resolve": "^4.0.0",
     "json5": "^2.2.3",
     "lilconfig": "^3.0.0",
     "native-duplexpair": "^1.0.0",

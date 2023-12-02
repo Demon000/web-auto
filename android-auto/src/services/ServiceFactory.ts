@@ -1,8 +1,8 @@
-import { Cryptor } from '@/crypto/Cryptor';
+import { Cryptor } from '../crypto/Cryptor.js';
 
-import { ControlService, ControlServiceEvents } from './ControlService';
-import { Service, ServiceEvents } from './Service';
-import { DeviceHandler, DeviceHandlerEvents } from '..';
+import { ControlService, type ControlServiceEvents } from './ControlService.js';
+import { Service, type ServiceEvents } from './Service.js';
+import { DeviceHandler, type DeviceHandlerEvents } from '../index.js';
 
 export abstract class ServiceFactory {
     public abstract buildDeviceHandlers(

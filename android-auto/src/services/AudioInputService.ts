@@ -1,4 +1,4 @@
-import { Message } from '@/messenger/Message';
+import { Message } from '../messenger/Message.js';
 import {
     AVChannelMessage,
     AVInputChannel,
@@ -8,10 +8,10 @@ import {
     AVStreamType,
 } from '@web-auto/android-auto-proto';
 import { ChannelDescriptor } from '@web-auto/android-auto-proto';
-import { DataBuffer } from '@/utils/DataBuffer';
-import { AVService } from './AVService';
-import { microsecondsTime } from '@/utils/time';
-import { ServiceEvents } from './Service';
+import { DataBuffer } from '../utils/DataBuffer.js';
+import { AVService } from './AVService.js';
+import { microsecondsTime } from '../utils/time.js';
+import { type ServiceEvents } from './Service.js';
 
 export abstract class AudioInputService extends AVService {
     public constructor(protected events: ServiceEvents) {

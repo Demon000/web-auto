@@ -1,12 +1,12 @@
 import {
     Device,
     DeviceDisconnectReason,
-    DeviceEvents,
+    type DeviceEvents,
     Transport,
-    TransportEvents,
+    type TransportEvents,
 } from '@web-auto/android-auto';
-import { ElectronUsbDuplex } from './ElectronUsbDuplex';
-import { ElectronDuplexTransport } from './ElectronDuplexTransport';
+import { ElectronUsbDuplex } from './ElectronUsbDuplex.js';
+import { ElectronDuplexTransport } from './ElectronDuplexTransport.js';
 
 export const usbDeviceName = (device: USBDevice) => {
     let name;

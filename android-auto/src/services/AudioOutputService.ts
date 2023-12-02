@@ -4,8 +4,8 @@ import {
     AudioType,
 } from '@web-auto/android-auto-proto';
 import { ChannelDescriptor } from '@web-auto/android-auto-proto';
-import { AVOutputService } from './AVOutputService';
-import { ServiceEvents } from './Service';
+import { AVOutputService } from './AVOutputService.js';
+import { type ServiceEvents } from './Service.js';
 
 export abstract class AudioOutputService extends AVOutputService {
     public constructor(

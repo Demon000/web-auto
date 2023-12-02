@@ -1,1 +1,1 @@
-export * from './Sensor';
+export * from './Sensor.js';

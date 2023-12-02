@@ -1,14 +1,14 @@
-import { Message } from '@/messenger/Message';
+import { Message } from '../messenger/Message.js';
 import {
     AVChannelMessage,
     AVChannelStartIndication,
     AVChannelStopIndication,
     AVMediaAckIndication,
 } from '@web-auto/android-auto-proto';
-import { DataBuffer } from '@/utils/DataBuffer';
-import { AVService } from './AVService';
+import { DataBuffer } from '../utils/DataBuffer.js';
+import { AVService } from './AVService.js';
 import Long from 'long';
-import { ServiceEvents } from './Service';
+import { type ServiceEvents } from './Service.js';
 
 export abstract class AVOutputService extends AVService {
     public constructor(protected events: ServiceEvents) {

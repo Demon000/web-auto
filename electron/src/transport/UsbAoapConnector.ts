@@ -1,5 +1,5 @@
 import { getLogger } from '@web-auto/logging';
-import { usbDeviceName as name } from './UsbDevice';
+import { usbDeviceName as name } from './UsbDevice.js';
 
 enum StringType {
     MANUFACTURER,

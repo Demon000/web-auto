@@ -10,7 +10,7 @@ export const microsecondsTime = () => {
 };
 
 export const microToMilli = (micro: Long | number) => {
-    assert(micro instanceof Long);
+    assert(Long.isLong(micro));
     return micro.divide(1000).toNumber();
 };
 

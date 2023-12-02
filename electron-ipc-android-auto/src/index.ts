@@ -1,4 +1,4 @@
-import { ITouchEvent } from '@web-auto/android-auto-proto';
+import { type ITouchEvent } from '@web-auto/android-auto-proto';
 
 export const ANDROID_AUTO_CHANNEL_NAME = 'android-auto';
 

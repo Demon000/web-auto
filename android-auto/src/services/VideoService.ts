@@ -5,17 +5,12 @@ import {
     VideoFocusRequest,
 } from '@web-auto/android-auto-proto';
 
-import { Message } from '@/messenger/Message';
-import { DataBuffer } from '@/utils/DataBuffer';
+import { Message } from '../messenger/Message.js';
+import { DataBuffer } from '../utils/DataBuffer.js';
 
-import { AVOutputService } from './AVOutputService';
-import { ServiceEvents } from './Service';
+import { AVOutputService } from './AVOutputService.js';
 
 export abstract class VideoService extends AVOutputService {
-    public constructor(protected events: ServiceEvents) {
-        super(events);
-    }
-
     public async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;

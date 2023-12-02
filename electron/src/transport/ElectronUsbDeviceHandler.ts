@@ -1,12 +1,11 @@
 import {
     Device,
-    DeviceDisconnectReason,
     DeviceHandler,
-    DeviceHandlerEvents,
+    type DeviceHandlerEvents,
 } from '@web-auto/android-auto';
 import { WebUSB } from 'usb';
-import { UsbDevice, usbDeviceName as name } from './UsbDevice';
-import { UsbAoapConnector } from './UsbAoapConnector';
+import { UsbDevice, usbDeviceName as name } from './UsbDevice.js';
+import { UsbAoapConnector } from './UsbAoapConnector.js';
 
 const GOOGLE_VENDOR_ID = 0x18d1;
 const GOOGLE_AOAP_WITHOUT_ADB_ID = 0x2d00;

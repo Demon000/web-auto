@@ -1,5 +1,5 @@
 import BluetoothSocket from 'bluetooth-socket';
-import { Device, Profile, ProfileOptions } from 'bluez';
+import { Device, type Profile, type ProfileOptions } from 'bluez';
 
 export interface BluetoothProfileEvents {
     onConnected: (address: string, socket: BluetoothSocket) => Promise<void>;

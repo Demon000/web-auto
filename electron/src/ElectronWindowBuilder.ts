@@ -1,5 +1,5 @@
 import { BrowserWindow, screen, session } from 'electron';
-import { ElectronAndroidAutoServiceFactory } from './services/ElectronAndroidAutoServiceFactory';
+import { ElectronAndroidAutoServiceFactory } from './services/ElectronAndroidAutoServiceFactory.js';
 import {
     AndroidAutoServer,
     AndroidAutoserverEvent,
@@ -7,19 +7,24 @@ import {
 } from '@web-auto/android-auto';
 import path from 'node:path';
 import assert from 'node:assert';
-import { AndroidAutoCommuncationChannel } from './android-auto-ipc';
+import { AndroidAutoCommuncationChannel } from './android-auto-ipc.js';
 import {
     AndroidAutoMainMethod,
     AndroidAutoRendererMethod,
-    IDevice,
+    type IDevice,
 } from '@web-auto/electron-ipc-android-auto';
-import { ElectronAndroidAutoVideoServiceEvent } from './services/ElectronAndroidAutoVideoService';
-import { WebConfig } from '@web-auto/web-config';
-import * as url from 'node:url';
-import { WebConfigCommuncationChannel } from './config-ipc';
+import { ElectronAndroidAutoVideoServiceEvent } from './services/ElectronAndroidAutoVideoService.js';
+import { type WebConfig } from '@web-auto/web-config';
+import { WebConfigCommuncationChannel } from './config-ipc.js';
 import { WebConfigMainMethod } from '@web-auto/electron-ipc-web-config';
-import { ElectronAndroidAutoInputServiceEvent } from './services/ElectronAndroidAutoInputService';
+import { ElectronAndroidAutoInputServiceEvent } from './services/ElectronAndroidAutoInputService.js';
 import { getLogger } from '@web-auto/logging';
+
+import { resolve } from 'import-meta-resolve';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export interface ElectronWindowBuilderAndroidAuto {
     server: AndroidAutoServer;
@@ -163,7 +168,7 @@ export class ElectronWindowBuilder {
     public async buildWindow(config: ElectronWindowConfig): Promise<void> {
         const preloadPath = path.join(
             __dirname,
-            `${config.app.name}-preload.js`,
+            `${config.app.name}-preload.mjs`,
         );
 
         const displays = screen.getAllDisplays();
@@ -239,13 +244,14 @@ export class ElectronWindowBuilder {
                 return;
         }
 
-        const indexPath = require.resolve(`@web-auto/${config.app.name}`);
-        const appPath = path.dirname(indexPath);
-        const indexUrl = url.format({
-            pathname: indexPath,
-            protocol: 'file',
-            slashes: true,
-        });
+        const fileUrlStart = 'file://';
+        const indexPath = resolve(
+            `@web-auto/${config.app.name}`,
+            import.meta.url,
+        );
+
+        assert(indexPath.startsWith(fileUrlStart));
+        const appPath = path.dirname(indexPath).slice(fileUrlStart.length);
 
         ses.protocol.interceptFileProtocol('file', (request, callback) => {
             let url = request.url;
@@ -258,7 +264,7 @@ export class ElectronWindowBuilder {
         });
 
         try {
-            await window.loadURL(indexUrl);
+            await window.loadURL(indexPath);
         } catch (e) {
             this.logger.error('Cannot load window URL', {
                 metadata: e,

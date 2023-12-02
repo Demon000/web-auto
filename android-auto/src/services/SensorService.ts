@@ -1,6 +1,6 @@
 import {
     ChannelDescriptor,
-    ISensor,
+    type ISensor,
     SensorChannel,
     SensorChannelMessage,
     SensorEventIndication,
@@ -10,10 +10,10 @@ import {
     Status,
 } from '@web-auto/android-auto-proto';
 
-import { Message } from '@/messenger/Message';
-import { Sensor, SensorEvents } from '@/sensors/Sensor';
-import { DataBuffer } from '@/utils/DataBuffer';
-import { Service, ServiceEvents } from './Service';
+import { Message } from '../messenger/Message.js';
+import { Sensor, type SensorEvents } from '../sensors/Sensor.js';
+import { DataBuffer } from '../utils/DataBuffer.js';
+import { Service, type ServiceEvents } from './Service.js';
 
 export abstract class SensorService extends Service {
     protected sensors: Sensor[];

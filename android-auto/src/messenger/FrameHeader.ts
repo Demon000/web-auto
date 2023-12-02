@@ -1,7 +1,7 @@
-import { DataBuffer } from '@/utils/DataBuffer';
-import { EncryptionType } from './EncryptionType';
-import { FrameType } from './FrameType';
-import { MessageType } from './MessageType';
+import { DataBuffer } from '../utils/DataBuffer.js';
+import { EncryptionType } from './EncryptionType.js';
+import { FrameType } from './FrameType.js';
+import { MessageType } from './MessageType.js';
 
 export type FrameHeaderOptions = {
     serviceId: number;

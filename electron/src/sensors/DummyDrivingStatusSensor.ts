@@ -1,4 +1,4 @@
-import { Sensor, SensorEvents } from '@web-auto/android-auto';
+import { Sensor, type SensorEvents } from '@web-auto/android-auto';
 import {
     DrivingStatusNumber,
     SensorEventIndication,

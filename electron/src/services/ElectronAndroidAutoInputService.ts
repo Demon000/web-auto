@@ -1,12 +1,12 @@
-import { InputService, ServiceEvents } from '@web-auto/android-auto';
+import { InputService, type ServiceEvents } from '@web-auto/android-auto';
 import {
     ChannelOpenRequest,
     BindingRequest,
     ChannelDescriptor,
     InputChannel,
-    ITouchConfig,
+    type ITouchConfig,
     TouchConfig,
-    ITouchEvent,
+    type ITouchEvent,
 } from '@web-auto/android-auto-proto';
 import EventEmitter from 'eventemitter3';
 

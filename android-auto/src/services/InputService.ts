@@ -1,17 +1,17 @@
 import {
     BindingRequest,
     BindingResponse,
-    ITouchEvent,
+    type ITouchEvent,
     InputChannelMessage,
     InputEventIndication,
     Status,
 } from '@web-auto/android-auto-proto';
 
-import { Message } from '@/messenger/Message';
-import { DataBuffer } from '@/utils/DataBuffer';
+import { Message } from '../messenger/Message.js';
+import { DataBuffer } from '../utils/DataBuffer.js';
 
-import { Service, ServiceEvents } from './Service';
-import { microsecondsTime } from '@/utils/time';
+import { Service, type ServiceEvents } from './Service.js';
+import { microsecondsTime } from '../utils/time.js';
 
 export abstract class InputService extends Service {
     public constructor(protected events: ServiceEvents) {

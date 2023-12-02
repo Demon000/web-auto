@@ -1,14 +1,14 @@
-import { ElectronWindowBuilderAndroidAuto } from './ElectronWindowBuilder';
-import { ElectronAndroidAutoServiceFactory } from './services/ElectronAndroidAutoServiceFactory';
+import { type ElectronWindowBuilderAndroidAuto } from './ElectronWindowBuilder.js';
+import { ElectronAndroidAutoServiceFactory } from './services/ElectronAndroidAutoServiceFactory.js';
 import { AndroidAutoServer } from '@web-auto/android-auto';
 import { getLogger, setConfig } from '@web-auto/logging';
 import { lilconfigSync } from 'lilconfig';
 import JSON5 from 'json5';
 
 import { app, BrowserWindow } from 'electron';
-import { ElectronWindowBuilder } from './ElectronWindowBuilder';
+import { ElectronWindowBuilder } from './ElectronWindowBuilder.js';
 import { assert } from 'typia';
-import { ElectronConfig } from './config';
+import { type ElectronConfig } from './config.js';
 
 const electronConfig = lilconfigSync('web-auto', {
     loaders: {
@@ -48,7 +48,7 @@ if (electronConfig.androidAuto !== undefined) {
 }
 
 /*
-import { ElectronAndroidAutoVideoServiceEvent } from './services/ElectronAndroidAutoVideoService';
+import { ElectronAndroidAutoVideoServiceEvent } from './services/ElectronAndroidAutoVideoService.js';
 import { DataBuffer } from '@web-auto/android-auto';
 
 if (androidAuto !== undefined) {

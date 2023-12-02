@@ -1,5 +1,8 @@
-import { DeviceHandler, DeviceHandlerEvents } from '@web-auto/android-auto';
-import { TcpDevice } from './TcpDevice';
+import {
+    DeviceHandler,
+    type DeviceHandlerEvents,
+} from '@web-auto/android-auto';
+import { TcpDevice } from './TcpDevice.js';
 
 export interface ElectronTcpDeviceHandlerConfig {
     ips: string[];

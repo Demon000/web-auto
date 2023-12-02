@@ -17,11 +17,11 @@ import {
     VersionResponseStatus,
 } from '@web-auto/android-auto-proto';
 
-import { Message } from '@/messenger/Message';
-import { DataBuffer } from '@/utils/DataBuffer';
+import { Message } from '../messenger/Message.js';
+import { DataBuffer } from '../utils/DataBuffer.js';
 
-import { Service, ServiceEvents } from './Service';
-import { Pinger } from './Pinger';
+import { Service, type ServiceEvents } from './Service.js';
+import { Pinger } from './Pinger.js';
 import Long from 'long';
 import assert from 'node:assert';
 
@@ -55,7 +55,7 @@ export class ControlService extends Service {
     }
 
     public async onPingRequest(data: PingRequest): Promise<void> {
-        assert(data.timestamp instanceof Long);
+        assert(Long.isLong(data.timestamp));
         await this.sendPingResponse(data.timestamp);
     }
 

@@ -1,13 +1,13 @@
-export * from './ServiceFactory';
-export * from './Service';
+export * from './ServiceFactory.js';
+export * from './Service.js';
 
-export * from './ControlService';
+export * from './ControlService.js';
 
-export * from './AudioInputService';
-export * from './AudioOutputService';
-export * from './AVOutputService';
-export * from './InputService';
-export * from './MediaStatusService';
-export * from './NavigationStatusService';
-export * from './SensorService';
-export * from './VideoService';
+export * from './AudioInputService.js';
+export * from './AudioOutputService.js';
+export * from './AVOutputService.js';
+export * from './InputService.js';
+export * from './MediaStatusService.js';
+export * from './NavigationStatusService.js';
+export * from './SensorService.js';
+export * from './VideoService.js';

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { androidAutoChannel } from '@/ipc/channels';
+import { androidAutoChannel } from '../ipc/channels';
 import { AndroidAutoMainMethod } from '@web-auto/electron-ipc-android-auto';
 import {
     AndroidAutoRendererMethod,
