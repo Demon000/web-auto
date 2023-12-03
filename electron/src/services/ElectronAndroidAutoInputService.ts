@@ -24,12 +24,11 @@ export class ElectronAndroidAutoInputService extends InputService {
     public extraEmitter =
         new EventEmitter<ElectronAndroidAutoInputServiceEvents>();
 
-    private touchScreenConfig: ITouchConfig;
-
-    public constructor(touchScreenConfig: ITouchConfig, events: ServiceEvents) {
+    public constructor(
+        private touchScreenConfig: ITouchConfig,
+        events: ServiceEvents,
+    ) {
         super(events);
-
-        this.touchScreenConfig = TouchConfig.fromObject(touchScreenConfig);
 
         this.extraEmitter.on(
             ElectronAndroidAutoInputServiceEvent.TOUCH,

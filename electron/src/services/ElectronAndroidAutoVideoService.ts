@@ -36,17 +36,11 @@ export class ElectronAndroidAutoVideoService extends VideoService {
     public extraEmitter =
         new EventEmitter<ElectronAndroidAutoVideoServiceEvents>();
 
-    private videoConfigs: IVideoConfig[] = [];
-
     public constructor(
-        videoConfigs: IVideoConfig[],
+        private videoConfigs: IVideoConfig[],
         protected events: ServiceEvents,
     ) {
         super(events);
-
-        for (const videoConfig of videoConfigs) {
-            this.videoConfigs.push(VideoConfig.fromObject(videoConfig));
-        }
     }
 
     public async start(): Promise<void> {
