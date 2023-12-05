@@ -82,6 +82,8 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
             'disconnectDeviceName',
             this.disconnectDeviceName.bind(this),
         );
+
+        this.ipcHandler.on('getDevices', this.getDevices.bind(this));
     }
 
     protected buildDeviceHandlers(
@@ -162,7 +164,7 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
         ];
     }
 
-    protected onDevicesUpdated(devices: Device[]): void {
+    protected devicesFromImpl(devices: Device[]): IDevice[] {
         const ipcDevices: IDevice[] = [];
         for (const device of devices) {
             ipcDevices.push({
@@ -173,6 +175,17 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
             });
         }
 
+        return ipcDevices;
+    }
+
+    protected onDevicesUpdated(devices: Device[]): void {
+        const ipcDevices = this.devicesFromImpl(devices);
         this.ipcHandler.devices(ipcDevices);
+    }
+
+    public async getDevices(): Promise<IDevice[]> {
+        const devices = super.getDevicesImpl();
+        const ipcDevices = this.devicesFromImpl(devices);
+        return ipcDevices;
     }
 }

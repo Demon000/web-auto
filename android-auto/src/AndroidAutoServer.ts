@@ -351,8 +351,12 @@ export abstract class AndroidAutoServer {
 
     protected abstract onDevicesUpdated(devices: Device[]): void;
 
+    protected getDevicesImpl(): Device[] {
+        return Array.from(this.nameDeviceMap.values());
+    }
+
     private callOnDevicesUpdated(): void {
-        const devices = Array.from(this.nameDeviceMap.values());
+        const devices = this.getDevicesImpl();
         this.onDevicesUpdated(devices);
     }
 

@@ -29,6 +29,7 @@ export interface IDevice {
 export type AndroidAutoServerService = {
     connectDeviceName(name: string): Promise<void>;
     disconnectDeviceName(name: string): Promise<void>;
+    getDevices(): Promise<IDevice[]>;
 };
 
 export type AndroidAutoServerClient = {

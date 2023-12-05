@@ -5,11 +5,20 @@ import { onMounted, ref, type Ref } from 'vue';
 
 let devices: Ref<IDevice[]> = ref([]);
 
+androidAutoServerService
+    .getDevices()
+    .then((updatedDevices) => {
+        devices.value = updatedDevices;
+    })
+    .catch((err) => {
+        console.error(err);
+    });
+
 const onConnectClick = async (name: string) => {
     try {
         await androidAutoServerService.connectDeviceName(name);
     } catch (err) {
-        console.log(err);
+        console.error(err);
     }
 };
 
@@ -17,7 +26,7 @@ const onDisconnectClick = async (name: string) => {
     try {
         await androidAutoServerService.disconnectDeviceName(name);
     } catch (err) {
-        console.log(err);
+        console.error(err);
     }
 };
 
