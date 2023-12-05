@@ -4,5 +4,13 @@
     "compilerOptions": {
         "composite": true,
         "baseUrl": "."
-    }
+    },
+    "references": [
+        {
+            "path": "../android-auto-ipc"
+        },
+        {
+            "path": "../electron-ipc"
+        }
+    ]
 }

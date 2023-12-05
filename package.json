@@ -15,7 +15,8 @@
     ]
   },
   "scripts": {
-    "prepare": "ts-patch install && npx typia patch && npm run prepare -w=electron"
+    "prepare": "ts-patch install && npx typia patch && npm run prepare -w=electron",
+    "dev": "tsc -b --watch"
   },
   "dependencies": {
     "typia": "^5.3.3"

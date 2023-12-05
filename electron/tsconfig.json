@@ -5,5 +5,19 @@
         "rootDir": "./src",
         "outDir": "./dist/esm",
         "baseUrl": "."
-    }
+    },
+    "references": [
+        {
+            "path": "../logging"
+        },
+        {
+            "path": "../android-auto"
+        },
+        {
+            "path": "../android-auto-ipc"
+        },
+        {
+            "path": "../electron-ipc"
+        }
+    ]
 }
