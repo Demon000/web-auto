@@ -26,6 +26,7 @@ export interface ElectronWindowConfig {
     y?: number;
     app: {
         name: 'web';
+        url?: string;
     };
 }
 
@@ -52,6 +53,41 @@ export class ElectronWindowBuilder {
     public createWebWindow(window: BrowserWindow): void {
         assert(this.androidAutoIpcServiceRegistry !== undefined);
         this.androidAutoIpcServiceRegistry.attachWindow(window);
+    }
+
+    private async loadFile(
+        window: BrowserWindow,
+        config: ElectronWindowConfig,
+        session: Electron.Session,
+    ): Promise<void> {
+        const fileUrlStart = 'file://';
+        const indexPath = resolve(
+            `@web-auto/${config.app.name}`,
+            import.meta.url,
+        );
+
+        assert(indexPath.startsWith(fileUrlStart));
+        const appPath = path.dirname(indexPath).slice(fileUrlStart.length);
+
+        session.protocol.interceptFileProtocol('file', (request, callback) => {
+            let url = request.url;
+            url = url.substring(7);
+            if (!url.startsWith(appPath)) {
+                url = path.join(appPath, url);
+            }
+
+            callback({ path: url });
+        });
+
+        await window.loadURL(indexPath);
+    }
+
+    private async loadUrl(
+        window: BrowserWindow,
+        config: ElectronWindowConfig,
+    ): Promise<void> {
+        assert(config.app.url !== undefined);
+        await window.loadURL(config.app.url);
     }
 
     public async buildWindow(config: ElectronWindowConfig): Promise<void> {
@@ -131,27 +167,12 @@ export class ElectronWindowBuilder {
                 return;
         }
 
-        const fileUrlStart = 'file://';
-        const indexPath = resolve(
-            `@web-auto/${config.app.name}`,
-            import.meta.url,
-        );
-
-        assert(indexPath.startsWith(fileUrlStart));
-        const appPath = path.dirname(indexPath).slice(fileUrlStart.length);
-
-        ses.protocol.interceptFileProtocol('file', (request, callback) => {
-            let url = request.url;
-            url = url.substring(7);
-            if (!url.startsWith(appPath)) {
-                url = path.join(appPath, url);
-            }
-
-            callback({ path: url });
-        });
-
         try {
-            await window.loadURL(indexPath);
+            if (config.app.url === undefined) {
+                await this.loadFile(window, config, ses);
+            } else {
+                await this.loadUrl(window, config);
+            }
         } catch (err) {
             this.logger.error('Cannot load window URL', err);
             return;
