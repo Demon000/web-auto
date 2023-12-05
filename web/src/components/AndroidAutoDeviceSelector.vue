@@ -1,21 +1,13 @@
 <script setup lang="ts">
-import { androidAutoChannel } from '../ipc/channels';
-import { AndroidAutoMainMethod } from '@web-auto/electron-ipc-android-auto';
-import {
-    AndroidAutoRendererMethod,
-    type IDevice,
-} from '@web-auto/electron-ipc-android-auto';
+import type { IDevice } from '@web-auto/android-auto-ipc';
+import { androidAutoServerService } from '../ipc.js';
 import { onMounted, ref, type Ref } from 'vue';
 
 let devices: Ref<IDevice[]> = ref([]);
 
 const onConnectClick = async (name: string) => {
     try {
-        console.log('connect', name);
-        await androidAutoChannel.invoke(
-            AndroidAutoMainMethod.CONNECT_DEVICE,
-            name,
-        );
+        await androidAutoServerService.connectDeviceName(name);
     } catch (err) {
         console.log(err);
     }
@@ -23,23 +15,16 @@ const onConnectClick = async (name: string) => {
 
 const onDisconnectClick = async (name: string) => {
     try {
-        await androidAutoChannel.invoke(
-            AndroidAutoMainMethod.DISCONNECT_DEVICE,
-            name,
-        );
+        await androidAutoServerService.disconnectDeviceName(name);
     } catch (err) {
         console.log(err);
     }
 };
 
 onMounted(() => {
-    androidAutoChannel.on(
-        AndroidAutoRendererMethod.DEVICES_UPDATED,
-        (updatedDevices) => {
-            console.log(updatedDevices);
-            devices.value = updatedDevices;
-        },
-    );
+    androidAutoServerService.on('devices', (updatedDevices) => {
+        devices.value = updatedDevices;
+    });
 });
 </script>
 

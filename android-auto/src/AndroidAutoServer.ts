@@ -1,13 +1,14 @@
-import { ServiceFactory } from './services/ServiceFactory.js';
 import {
     type IServiceDiscoveryResponse,
     ServiceDiscoveryRequest,
     ServiceDiscoveryResponse,
 } from '@web-auto/android-auto-proto';
-import { DeviceHandler } from './transport/DeviceHandler.js';
+import {
+    DeviceHandler,
+    type DeviceHandlerEvents,
+} from './transport/DeviceHandler.js';
 import { getLogger } from '@web-auto/logging';
 import { Device } from './transport/Device.js';
-import EventEmitter from 'eventemitter3';
 import {
     ANDROID_AUTO_CERTIFICATE,
     ANDROID_AUTO_PRIVATE_KEY,
@@ -15,8 +16,12 @@ import {
 import { FrameCodec } from './messenger/FrameCodec.js';
 import { MessageAggregator } from './messenger/MessageAggregator.js';
 import { Cryptor } from './crypto/Cryptor.js';
-import { Service } from './services/Service.js';
-import { ControlService } from './services/ControlService.js';
+import { Service, type ServiceEvents } from './services/Service.js';
+import {
+    ControlService,
+    type ControlServiceConfig,
+    type ControlServiceEvents,
+} from './services/ControlService.js';
 import assert from 'node:assert';
 import { type FrameData } from './messenger/FrameData.js';
 import { Message } from './messenger/Message.js';
@@ -24,38 +29,44 @@ import { DataBuffer } from './utils/DataBuffer.js';
 import { FrameHeaderFlags } from './messenger/FrameHeader.js';
 
 export interface AndroidAutoServerConfig {
+    controlConfig: ControlServiceConfig;
     serviceDiscovery: IServiceDiscoveryResponse;
     deviceNameWhitelist?: string[];
 }
 
-export enum AndroidAutoserverEvent {
-    DEVICES_UPDATED = 'devices-updated',
-}
-
-export interface AndroidAutoServerEvents {
-    [AndroidAutoserverEvent.DEVICES_UPDATED]: (device: Device[]) => void;
-}
-
-export class AndroidAutoServer {
-    public emitter = new EventEmitter<AndroidAutoServerEvents>();
+export abstract class AndroidAutoServer {
     private logger = getLogger(this.constructor.name);
     private nameDeviceMap = new Map<string, Device>();
     private connectedDevice?: Device;
     private started = false;
 
-    private cryptor: Cryptor;
-    private frameCodec: FrameCodec;
-    private messageAggregator: MessageAggregator;
-    private services: Service[];
-    private controlService: ControlService;
+    private cryptor?: Cryptor;
+    private frameCodec?: FrameCodec;
+    private messageAggregator?: MessageAggregator;
+    private services?: Service[];
+    private controlService?: ControlService;
     private serviceIdServiceMap = new Map<number, Service>();
-    private deviceHandlers: DeviceHandler[];
+    private deviceHandlers?: DeviceHandler[];
 
-    public constructor(
-        private options: AndroidAutoServerConfig,
-        private serviceFactory: ServiceFactory,
-    ) {
-        this.deviceHandlers = this.serviceFactory.buildDeviceHandlers({
+    public constructor(protected config: AndroidAutoServerConfig) {}
+
+    protected abstract buildDeviceHandlers(
+        events: DeviceHandlerEvents,
+    ): DeviceHandler[];
+
+    protected abstract buildCryptor(
+        certificateBuffer: Buffer,
+        privateKeyBuffer: Buffer,
+    ): Cryptor;
+
+    protected abstract buildControlService(
+        events: ControlServiceEvents,
+    ): ControlService;
+
+    protected abstract buildServices(events: ServiceEvents): Service[];
+
+    public build(): void {
+        this.deviceHandlers = this.buildDeviceHandlers({
             onDeviceAvailable: this.onDeviceAvailable.bind(this),
             onDeviceStateUpdated: this.onDeviceStateUpdated.bind(this),
             onDeviceSelfConnect: this.onDeviceSelfConnect.bind(this),
@@ -67,7 +78,7 @@ export class AndroidAutoServer {
             onDeviceTransportError: this.onDeviceTransportError.bind(this),
         });
 
-        this.cryptor = this.serviceFactory.buildCryptor(
+        this.cryptor = this.buildCryptor(
             ANDROID_AUTO_CERTIFICATE,
             ANDROID_AUTO_PRIVATE_KEY,
         );
@@ -75,7 +86,7 @@ export class AndroidAutoServer {
         this.frameCodec = new FrameCodec();
         this.messageAggregator = new MessageAggregator();
 
-        this.controlService = this.serviceFactory.buildControlService({
+        this.controlService = this.buildControlService({
             onServiceDiscoveryRequest:
                 this.onServiceDiscoveryRequest.bind(this),
             onHandshake: this.onHandshake.bind(this),
@@ -83,7 +94,7 @@ export class AndroidAutoServer {
             onPingTimeout: this.onPingTimeout.bind(this),
         });
 
-        this.services = this.serviceFactory.buildServices({
+        this.services = this.buildServices({
             onMessageSent: this.onSendMessage.bind(this),
         });
 
@@ -91,17 +102,18 @@ export class AndroidAutoServer {
             this.controlService.serviceId,
             this.controlService,
         );
+
         for (const service of this.services) {
             this.serviceIdServiceMap.set(service.serviceId, service);
         }
     }
 
     private isDeviceWhitelisted(device: Device): boolean {
-        if (this.options.deviceNameWhitelist === undefined) {
+        if (this.config.deviceNameWhitelist === undefined) {
             return true;
         }
 
-        return this.options.deviceNameWhitelist.includes(device.name);
+        return this.config.deviceNameWhitelist.includes(device.name);
     }
 
     private isDeviceConnected(device: Device): boolean {
@@ -113,6 +125,9 @@ export class AndroidAutoServer {
     }
 
     private async onSendFrameData(frameData: FrameData): Promise<void> {
+        assert(this.cryptor !== undefined);
+        assert(this.frameCodec !== undefined);
+
         const frameHeader = frameData.frameHeader;
         let buffer;
 
@@ -157,6 +172,8 @@ export class AndroidAutoServer {
         isEncrypted: boolean,
         isControl: boolean,
     ): Promise<void> {
+        assert(this.messageAggregator !== undefined);
+
         const frameDatas = this.messageAggregator.split(
             serviceId,
             message,
@@ -170,8 +187,11 @@ export class AndroidAutoServer {
     }
 
     private async sendServiceDiscoveryResponse(): Promise<void> {
+        assert(this.controlService !== undefined);
+        assert(this.services !== undefined);
+
         const data = ServiceDiscoveryResponse.create(
-            this.options.serviceDiscovery,
+            this.config.serviceDiscovery,
         );
 
         for (const service of this.services) {
@@ -192,6 +212,9 @@ export class AndroidAutoServer {
     }
 
     private async onHandshake(payload?: DataBuffer): Promise<void> {
+        assert(this.cryptor !== undefined);
+        assert(this.controlService !== undefined);
+
         if (payload !== undefined) {
             await this.cryptor.writeHandshakeBuffer(payload);
         }
@@ -263,6 +286,9 @@ export class AndroidAutoServer {
     private async onReceiveFrameData(
         frameData: FrameData,
     ): Promise<Message | undefined> {
+        assert(this.cryptor !== undefined);
+        assert(this.messageAggregator !== undefined);
+
         const frameHeader = frameData.frameHeader;
 
         if (frameHeader.flags & FrameHeaderFlags.ENCRYPTED) {
@@ -288,6 +314,8 @@ export class AndroidAutoServer {
         device: Device,
         buffer: DataBuffer,
     ): Promise<void> {
+        assert(this.frameCodec !== undefined);
+
         if (!this.isDeviceConnected(device)) {
             this.logger.error(
                 `Cannot accept data from ${device.name}, ` +
@@ -333,9 +361,11 @@ export class AndroidAutoServer {
         });
     }
 
-    private emitDevicesUpdated(): void {
+    protected abstract onDevicesUpdated(devices: Device[]): void;
+
+    private callOnDevicesUpdated(): void {
         const devices = Array.from(this.nameDeviceMap.values());
-        this.emitter.emit(AndroidAutoserverEvent.DEVICES_UPDATED, devices);
+        this.onDevicesUpdated(devices);
     }
 
     private async onDeviceSelfConnect(device: Device): Promise<boolean> {
@@ -364,16 +394,21 @@ export class AndroidAutoServer {
 
         this.logger.info(`New available device ${device.name}`);
 
-        this.emitDevicesUpdated();
+        this.callOnDevicesUpdated();
     }
 
     private async onDeviceStateUpdated(device: Device): Promise<void> {
         assert(this.nameDeviceMap.has(device.name));
 
-        this.emitDevicesUpdated();
+        this.callOnDevicesUpdated();
     }
 
     private async onDeviceConnected(device: Device): Promise<void> {
+        assert(this.frameCodec !== undefined);
+        assert(this.cryptor !== undefined);
+        assert(this.services !== undefined);
+        assert(this.controlService !== undefined);
+
         if (this.connectedDevice !== undefined) {
             this.logger.error(
                 `Cannot connect ${device.name}, ` +
@@ -404,6 +439,11 @@ export class AndroidAutoServer {
     }
 
     private async onDeviceDisconnect(device: Device): Promise<void> {
+        assert(this.frameCodec !== undefined);
+        assert(this.cryptor !== undefined);
+        assert(this.services !== undefined);
+        assert(this.controlService !== undefined);
+
         if (!this.isDeviceConnected(device)) {
             this.logger.info(
                 `Cannot disconnect ${device.name}, ` +
@@ -446,7 +486,7 @@ export class AndroidAutoServer {
 
         this.nameDeviceMap.delete(device.name);
 
-        this.emitDevicesUpdated();
+        this.callOnDevicesUpdated();
     }
 
     private async connectDevice(device: Device): Promise<void> {
@@ -514,6 +554,8 @@ export class AndroidAutoServer {
     }
 
     public async start(): Promise<void> {
+        assert(this.deviceHandlers !== undefined);
+
         if (this.started) {
             return;
         }
@@ -536,6 +578,8 @@ export class AndroidAutoServer {
     }
 
     public async stop(): Promise<void> {
+        assert(this.deviceHandlers !== undefined);
+
         if (!this.started) {
             return;
         }

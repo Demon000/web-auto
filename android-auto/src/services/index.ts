@@ -1,8 +1,5 @@
-export * from './ServiceFactory.js';
 export * from './Service.js';
-
 export * from './ControlService.js';
-
 export * from './AudioInputService.js';
 export * from './AudioOutputService.js';
 export * from './AVOutputService.js';

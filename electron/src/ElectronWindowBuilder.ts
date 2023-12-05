@@ -1,35 +1,15 @@
 import { BrowserWindow, screen, session } from 'electron';
-import { ElectronAndroidAutoServiceFactory } from './services/ElectronAndroidAutoServiceFactory.js';
-import {
-    AndroidAutoServer,
-    AndroidAutoserverEvent,
-    DataBuffer,
-} from '@web-auto/android-auto';
 import path from 'node:path';
 import assert from 'node:assert';
-import { AndroidAutoCommuncationChannel } from './android-auto-ipc.js';
-import {
-    AndroidAutoMainMethod,
-    AndroidAutoRendererMethod,
-    type IDevice,
-} from '@web-auto/electron-ipc-android-auto';
-import { ElectronAndroidAutoVideoServiceEvent } from './services/ElectronAndroidAutoVideoService.js';
-import { type WebConfig } from '@web-auto/web-config';
-import { WebConfigCommuncationChannel } from './config-ipc.js';
-import { WebConfigMainMethod } from '@web-auto/electron-ipc-web-config';
-import { ElectronAndroidAutoInputServiceEvent } from './services/ElectronAndroidAutoInputService.js';
 import { getLogger } from '@web-auto/logging';
 
 import { resolve } from 'import-meta-resolve';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import { ElectronIpcServiceRegistry } from '@web-auto/electron-ipc/main.js';
 
-export interface ElectronWindowBuilderAndroidAuto {
-    server: AndroidAutoServer;
-    serviceFactory: ElectronAndroidAutoServiceFactory;
-}
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export interface ElectronWindowConfig {
     name: string;
@@ -46,7 +26,6 @@ export interface ElectronWindowConfig {
     y?: number;
     app: {
         name: 'web';
-        config: WebConfig;
     };
 }
 
@@ -60,7 +39,9 @@ export class ElectronWindowBuilder {
 
     public constructor(
         private config: ElectronWindowBuilderConfig,
-        private androidAuto: ElectronWindowBuilderAndroidAuto | undefined,
+        private androidAutoIpcServiceRegistry:
+            | ElectronIpcServiceRegistry
+            | undefined,
     ) {}
 
     public logDisplays(): void {
@@ -70,99 +51,9 @@ export class ElectronWindowBuilder {
         });
     }
 
-    public createWebWindow(
-        window: BrowserWindow,
-        config: ElectronWindowConfig,
-    ): void {
-        const androidAutoChannel = new AndroidAutoCommuncationChannel(window);
-        const webConfigChannel = new WebConfigCommuncationChannel(window);
-        const androidAuto = this.androidAuto;
-
-        assert(androidAuto !== undefined);
-
-        androidAutoChannel.on(
-            AndroidAutoMainMethod.SEND_INPUT_SERVICE_TOUCH,
-            (data) => {
-                assert(androidAuto.serviceFactory);
-                androidAuto.serviceFactory.emitter.emit(
-                    ElectronAndroidAutoInputServiceEvent.TOUCH,
-                    data.event,
-                );
-            },
-        );
-
-        androidAutoChannel.on(AndroidAutoMainMethod.START, async () => {
-            await androidAuto.server.start();
-        });
-
-        webConfigChannel.handle(WebConfigMainMethod.CONFIG, () => {
-            return Promise.resolve(config.app.config);
-        });
-
-        androidAuto.serviceFactory.emitter.on(
-            ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
-            () => {
-                androidAutoChannel.send(AndroidAutoRendererMethod.VIDEO_START);
-            },
-        );
-
-        androidAuto.serviceFactory.emitter.on(
-            ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP,
-            () => {
-                androidAutoChannel.send(AndroidAutoRendererMethod.VIDEO_STOP);
-            },
-        );
-
-        androidAuto.serviceFactory.emitter.on(
-            ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
-            (buffer: DataBuffer) => {
-                androidAutoChannel.send(
-                    AndroidAutoRendererMethod.VIDEO_DATA,
-                    buffer.data,
-                );
-            },
-        );
-
-        androidAuto.server.emitter.on(
-            AndroidAutoserverEvent.DEVICES_UPDATED,
-            (devices) => {
-                const ipcDevices: IDevice[] = [];
-
-                for (const device of devices) {
-                    ipcDevices.push({
-                        name: device.name,
-                        prefix: device.prefix,
-                        realName: device.realName,
-                        state: device.state,
-                    });
-                }
-
-                try {
-                    androidAutoChannel.send(
-                        AndroidAutoRendererMethod.DEVICES_UPDATED,
-                        ipcDevices,
-                    );
-                } catch (err) {
-                    this.logger.error('Cannot send updated devices', {
-                        metadata: err,
-                    });
-                }
-            },
-        );
-
-        androidAutoChannel.handle(
-            AndroidAutoMainMethod.CONNECT_DEVICE,
-            async (name: string) => {
-                await androidAuto.server.connectDeviceName(name);
-            },
-        );
-
-        androidAutoChannel.handle(
-            AndroidAutoMainMethod.DISCONNECT_DEVICE,
-            async (name: string) => {
-                await androidAuto.server.disconnectDeviceName(name);
-            },
-        );
+    public createWebWindow(window: BrowserWindow): void {
+        assert(this.androidAutoIpcServiceRegistry !== undefined);
+        this.androidAutoIpcServiceRegistry.attachWindow(window);
     }
 
     public async buildWindow(config: ElectronWindowConfig): Promise<void> {
@@ -236,7 +127,7 @@ export class ElectronWindowBuilder {
 
         switch (config.app.name) {
             case 'web':
-                this.createWebWindow(window, config);
+                this.createWebWindow(window);
                 break;
             default:
                 this.logger.error(`Unknown app name ${config.app.name}`);

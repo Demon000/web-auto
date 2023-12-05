@@ -7,6 +7,7 @@
   "types": "./dist/esm/index.d.ts",
   "exports": {
     "./main.js": "./dist/esm/main.js",
+    "./common.js": "./dist/esm/common.js",
     "./preload.js": "./dist/esm/preload.js",
     "./renderer.js": "./dist/esm/renderer.js"
   },

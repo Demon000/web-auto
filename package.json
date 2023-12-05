@@ -6,12 +6,10 @@
       "eslint-config-node",
       "prettier-config",
       "logging",
-      "electron-ipc",
       "android-auto-proto",
+      "android-auto-ipc",
+      "electron-ipc",
       "android-auto",
-      "web-config",
-      "electron-ipc-android-auto",
-      "electron-ipc-web-config",
       "web",
       "electron"
     ]

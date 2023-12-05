@@ -1,9 +1,0 @@
-{
-    "extends": "../tsconfig/tsconfig.node.json",
-    "include": ["src/**/*"],
-    "compilerOptions": {
-        "rootDir": "./src",
-        "outDir": "./dist/esm",
-        "baseUrl": "."
-    }
-}

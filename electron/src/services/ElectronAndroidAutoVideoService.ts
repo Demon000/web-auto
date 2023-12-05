@@ -7,7 +7,6 @@ import {
     ChannelDescriptor,
     ChannelOpenRequest,
     type IVideoConfig,
-    VideoConfig,
     VideoFocusRequest,
 } from '@web-auto/android-auto-proto';
 import {
@@ -15,45 +14,39 @@ import {
     type ServiceEvents,
     VideoService,
 } from '@web-auto/android-auto';
-import EventEmitter from 'eventemitter3';
 import Long from 'long';
-
-export enum ElectronAndroidAutoVideoServiceEvent {
-    VIDEO_START = 'video-start',
-    VIDEO_DATA = 'video-data',
-    VIDEO_STOP = 'video-stop',
-}
-
-export interface ElectronAndroidAutoVideoServiceEvents {
-    [ElectronAndroidAutoVideoServiceEvent.VIDEO_START]: () => void;
-    [ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP]: () => void;
-    [ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA]: (
-        buffer: DataBuffer,
-    ) => void;
-}
+import type {
+    AndroidAutoVideoClient,
+    AndroidAutoVideoService,
+} from '@web-auto/android-auto-ipc';
+import type { IpcServiceHandler } from '@web-auto/electron-ipc/common.js';
 
 export class ElectronAndroidAutoVideoService extends VideoService {
-    public extraEmitter =
-        new EventEmitter<ElectronAndroidAutoVideoServiceEvents>();
-
     public constructor(
+        private ipcHandler: IpcServiceHandler<
+            AndroidAutoVideoService,
+            AndroidAutoVideoClient
+        >,
         private videoConfigs: IVideoConfig[],
         protected events: ServiceEvents,
     ) {
         super(events);
+
+        ipcHandler.on('getVideoConfig', this.getVideoConfig.bind(this));
+    }
+
+    public async getVideoConfig(): Promise<IVideoConfig> {
+        return this.videoConfigs[0];
     }
 
     public async start(): Promise<void> {
         await super.start();
-
-        this.extraEmitter.emit(
-            ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
-        );
+        this.ipcHandler.start();
     }
 
     public async stop(): Promise<void> {
         await super.stop();
-        this.extraEmitter.emit(ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP);
+        this.ipcHandler.stop();
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {
@@ -82,10 +75,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         buffer: DataBuffer,
         _timestamp?: Long,
     ): Promise<void> {
-        this.extraEmitter.emit(
-            ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
-            buffer,
-        );
+        this.ipcHandler.data(buffer.data);
     }
 
     protected fillChannelDescriptor(

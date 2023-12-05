@@ -1,6 +1,3 @@
-import { type ElectronWindowBuilderAndroidAuto } from './ElectronWindowBuilder.js';
-import { ElectronAndroidAutoServiceFactory } from './services/ElectronAndroidAutoServiceFactory.js';
-import { AndroidAutoServer } from '@web-auto/android-auto';
 import { getLogger, setConfig } from '@web-auto/logging';
 import { lilconfigSync } from 'lilconfig';
 import JSON5 from 'json5';
@@ -9,6 +6,9 @@ import { app, BrowserWindow } from 'electron';
 import { ElectronWindowBuilder } from './ElectronWindowBuilder.js';
 import { assert } from 'typia';
 import { type ElectronConfig } from './config.js';
+import { ElectronAndroidAutoServer } from './ElectronAndroidAutoServer.js';
+import { ElectronIpcServiceRegistry } from '@web-auto/electron-ipc/main.js';
+import { ANDROID_AUTO_IPC_REGISTRY_NAME } from '@web-auto/android-auto-ipc';
 
 const electronConfig = lilconfigSync('web-auto', {
     loaders: {
@@ -17,7 +17,7 @@ const electronConfig = lilconfigSync('web-auto', {
         },
     },
     searchPlaces: ['config.json5'],
-}).search()?.config;
+}).search()?.config as ElectronConfig;
 
 assert<ElectronConfig>(electronConfig);
 
@@ -29,56 +29,33 @@ logger.info('Electron config', {
     metadata: electronConfig,
 });
 
-let androidAuto: ElectronWindowBuilderAndroidAuto | undefined;
+let androidAutoServer: ElectronAndroidAutoServer | undefined;
+let androidAutoIpcServiceRegistry: ElectronIpcServiceRegistry | undefined;
 
 if (electronConfig.androidAuto !== undefined) {
-    const serviceFactory = new ElectronAndroidAutoServiceFactory(
+    androidAutoIpcServiceRegistry = new ElectronIpcServiceRegistry(
+        ANDROID_AUTO_IPC_REGISTRY_NAME,
+    );
+
+    androidAutoIpcServiceRegistry.register();
+
+    androidAutoServer = new ElectronAndroidAutoServer(
+        androidAutoIpcServiceRegistry,
         electronConfig.androidAuto,
     );
 
-    const server = new AndroidAutoServer(
-        electronConfig.androidAuto.serverConfig,
-        serviceFactory,
-    );
+    androidAutoServer.build();
 
-    androidAuto = {
-        server,
-        serviceFactory,
-    };
+    androidAutoServer.start().catch((err) => {
+        logger.error('Failed to start android auto server', {
+            metadata: err,
+        });
+    });
 }
-
-/*
-import { ElectronAndroidAutoVideoServiceEvent } from './services/ElectronAndroidAutoVideoService.js';
-import { DataBuffer } from '@web-auto/android-auto';
-
-if (androidAuto !== undefined) {
-    androidAuto.serviceFactory.emitter.on(
-        ElectronAndroidAutoVideoServiceEvent.VIDEO_START,
-        () => {
-            console.log('video-start');
-        },
-    );
-
-    androidAuto.serviceFactory.emitter.on(
-        ElectronAndroidAutoVideoServiceEvent.VIDEO_STOP,
-        () => {
-            console.log('video-stop');
-        },
-    );
-
-    androidAuto.serviceFactory.emitter.on(
-        ElectronAndroidAutoVideoServiceEvent.VIDEO_DATA,
-        (buffer: DataBuffer): void => {
-            console.log('video-data', buffer);
-        },
-    );
-    androidAuto.server.start();
-}
-*/
 
 const electronWindowBuilder = new ElectronWindowBuilder(
     electronConfig.electronWindowBuilder,
-    androidAuto,
+    androidAutoIpcServiceRegistry,
 );
 
 app.whenReady()
@@ -105,8 +82,12 @@ app.on('before-quit', async (event) => {
 
     event.preventDefault();
 
-    if (androidAuto !== undefined) {
-        await androidAuto.server.stop();
+    if (androidAutoServer !== undefined) {
+        await androidAutoServer.stop();
+    }
+
+    if (androidAutoIpcServiceRegistry !== undefined) {
+        androidAutoIpcServiceRegistry.unregister();
     }
 
     cleanupRan = true;

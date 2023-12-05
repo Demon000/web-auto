@@ -5,40 +5,25 @@ import {
     ChannelDescriptor,
     InputChannel,
     type ITouchConfig,
-    TouchConfig,
-    type ITouchEvent,
 } from '@web-auto/android-auto-proto';
-import EventEmitter from 'eventemitter3';
-
-export enum ElectronAndroidAutoInputServiceEvent {
-    STOP = 'stop',
-    TOUCH = 'touch',
-}
-
-export interface ElectronAndroidAutoInputServiceEvents {
-    [ElectronAndroidAutoInputServiceEvent.STOP]: () => void;
-    [ElectronAndroidAutoInputServiceEvent.TOUCH]: (data: ITouchEvent) => void;
-}
+import type {
+    AndroidAutoInputService,
+    AndroidAutoInputClient,
+} from '@web-auto/android-auto-ipc';
+import type { IpcServiceHandler } from '@web-auto/electron-ipc/common.js';
 
 export class ElectronAndroidAutoInputService extends InputService {
-    public extraEmitter =
-        new EventEmitter<ElectronAndroidAutoInputServiceEvents>();
-
     public constructor(
+        private ipcHandler: IpcServiceHandler<
+            AndroidAutoInputService,
+            AndroidAutoInputClient
+        >,
         private touchScreenConfig: ITouchConfig,
         events: ServiceEvents,
     ) {
         super(events);
 
-        this.extraEmitter.on(
-            ElectronAndroidAutoInputServiceEvent.TOUCH,
-            () => {},
-        );
-    }
-
-    public async stop(): Promise<void> {
-        await super.stop();
-        this.extraEmitter.emit(ElectronAndroidAutoInputServiceEvent.STOP);
+        this.ipcHandler.on('sendTouchEvent', this.sendTouchEvent.bind(this));
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {}

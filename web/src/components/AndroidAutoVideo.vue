@@ -4,32 +4,31 @@ import {
     H264WebCodecsDecoderEvent,
     type VideoDimensions,
 } from '../codec/H264WebCodecsDecoder';
-import { androidAutoChannel } from '../ipc/channels.js';
-import { webConfigChannel } from '../ipc/channels.js';
-import { AndroidAutoMainMethod } from '@web-auto/electron-ipc-android-auto';
-import { AndroidAutoRendererMethod } from '@web-auto/electron-ipc-android-auto';
+import { androidAutoInputService, androidAutoVideoService } from '../ipc.js';
 import { onMounted, ref, type Ref } from 'vue';
 import { transformFittedPoint } from 'object-fit-math';
 import type { FitMode } from 'object-fit-math/dist/types.d.ts';
 import { TouchAction } from '@web-auto/android-auto-proto';
-import { WebConfigMainMethod } from '@web-auto/electron-ipc-web-config';
 
 let marginHeight = 0;
 let marginWidth = 0;
 let marginVertical = 0;
 let marginHorizontal = 0;
 
-webConfigChannel
-    .invoke(WebConfigMainMethod.CONFIG)
+androidAutoVideoService
+    .getVideoConfig()
     .then((config) => {
-        marginHeight = config.androidAuto?.video?.marginHeight ?? 0;
-        marginWidth = config.androidAuto?.video?.marginWidth ?? 0;
+        marginHeight = config.marginHeight;
+        marginWidth = config.marginWidth;
         marginVertical = Math.floor(marginHeight / 2);
         marginHorizontal = Math.floor(marginWidth / 2);
     })
     .catch((err) => {
         console.error(err);
     });
+
+marginVertical = Math.floor(marginHeight / 2);
+marginHorizontal = Math.floor(marginWidth / 2);
 
 const canvasRef: Ref<HTMLCanvasElement | undefined> = ref(undefined);
 let canvasSize: { width: number; height: number } = { width: 0, height: 0 };
@@ -102,7 +101,7 @@ onMounted(() => {
         setCanvasRealSize();
     };
 
-    androidAutoChannel.on(AndroidAutoRendererMethod.VIDEO_START, () => {
+    androidAutoVideoService.on('start', () => {
         decoder = new H264WebCodecsDecoder();
 
         decoder.emitter.on(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
@@ -113,13 +112,13 @@ onMounted(() => {
         );
     });
 
-    androidAutoChannel.on(AndroidAutoRendererMethod.VIDEO_DATA, (buffer) => {
+    androidAutoVideoService.on('data', (buffer) => {
         assert(decoder !== undefined);
 
         decoder.decode(buffer);
     });
 
-    androidAutoChannel.on(AndroidAutoRendererMethod.VIDEO_STOP, () => {
+    androidAutoVideoService.on('stop', () => {
         context.clearRect(0, 0, canvas.width, canvas.height);
 
         assert(decoder !== undefined);
@@ -135,8 +134,6 @@ onMounted(() => {
 
         decoder = undefined;
     });
-
-    androidAutoChannel.send(AndroidAutoMainMethod.START);
 });
 
 const translateCanvasPosition = (x: number, y: number): [number, number] => {
@@ -181,18 +178,16 @@ const sendPointerEvent = (event: PointerEvent) => {
     }
 
     const [x, y] = translateCanvasPosition(event.x, event.y);
-    androidAutoChannel.send(AndroidAutoMainMethod.SEND_INPUT_SERVICE_TOUCH, {
-        event: {
-            touchAction,
-            actionIndex: null,
-            touchLocation: [
-                {
-                    x,
-                    y,
-                    pointerId: event.pointerId,
-                },
-            ],
-        },
+    androidAutoInputService.sendTouchEvent({
+        touchAction,
+        actionIndex: null,
+        touchLocation: [
+            {
+                x,
+                y,
+                pointerId: event.pointerId,
+            },
+        ],
     });
 };
 

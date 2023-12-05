@@ -3,20 +3,18 @@
         debug: false,
     },
     androidAuto: {
-        serverConfig: {
-            serviceDiscovery: {
-                headUnitName: 'WebAuto',
-                carModel: 'Universal',
-                carYear: '2018',
-                carSerial: '20180301',
-                leftHandDriveVehicle: false,
-                headunitManufacturer: 'WebAuto',
-                headunitModel: 'WebAuto Headunit',
-                swBuild: '1',
-                swVersion: '1.0',
-                canPlayNativeMediaDuringVr: false,
-                hideClock: false,
-            },
+        serviceDiscovery: {
+            headUnitName: 'WebAuto',
+            carModel: 'Universal',
+            carYear: '2018',
+            carSerial: '20180301',
+            leftHandDriveVehicle: false,
+            headunitManufacturer: 'WebAuto',
+            headunitModel: 'WebAuto Headunit',
+            swBuild: '1',
+            swVersion: '1.0',
+            canPlayNativeMediaDuringVr: false,
+            hideClock: false,
         },
         controlConfig: {
             pingTimeoutMs: 5000,
@@ -86,14 +84,6 @@
                 },
                 app: {
                     name: 'web',
-                    config: {
-                        androidAuto: {
-                            video: {
-                                marginHeight: 280,
-                                marginWidth: 0,
-                            },
-                        },
-                    },
                 },
             },
         ],
