@@ -5,7 +5,7 @@
   "license": "GPL-3.0",
   "type": "module",
   "scripts": {
-    "build": "tsc && mv ./dist/esm/web-preload.js ./dist/esm/web-preload.mjs",
+    "build": "tsc && [ ! -f ./dist/esm/web-preload.js ] || mv ./dist/esm/web-preload.js ./dist/esm/web-preload.mjs",
     "clean": "tsc --build --clean",
     "lint": "eslint --fix .",
     "start": "electron ./dist/esm/main.js",
