@@ -21,9 +21,7 @@ export class ElectronTcpDeviceHandler extends DeviceHandler {
         try {
             await this.events.onDeviceAvailable(device);
         } catch (err) {
-            this.logger.error('Failed to emit device available event', {
-                metadata: err,
-            });
+            this.logger.error('Failed to emit device available event', err);
         }
     }
 

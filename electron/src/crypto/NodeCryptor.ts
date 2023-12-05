@@ -129,15 +129,11 @@ export class NodeCryptor extends Cryptor {
         assert(this.encrypted !== undefined);
 
         const release = await this.encryptMutex.acquire();
-        this.logger.debug('Encrypting buffer', {
-            metadata: buffer,
-        });
+        this.logger.debug('Encrypting buffer', buffer);
         try {
             await this.write(this.cleartext, buffer);
             const encrypyedBuffer = await this.read(this.encrypted);
-            this.logger.debug('Encrypted buffer', {
-                metadata: encrypyedBuffer,
-            });
+            this.logger.debug('Encrypted buffer', encrypyedBuffer);
             return encrypyedBuffer;
         } finally {
             release();
@@ -149,15 +145,11 @@ export class NodeCryptor extends Cryptor {
         assert(this.encrypted !== undefined);
 
         const release = await this.decryptMutex.acquire();
-        this.logger.debug('Decrypting buffer', {
-            metadata: buffer,
-        });
+        this.logger.debug('Decrypting buffer', buffer);
         try {
             await this.write(this.encrypted, buffer);
             const decryptedBuffer = await this.read(this.cleartext);
-            this.logger.debug('Decrypted buffer', {
-                metadata: decryptedBuffer,
-            });
+            this.logger.debug('Decrypted buffer', decryptedBuffer);
             return decryptedBuffer;
         } finally {
             release();

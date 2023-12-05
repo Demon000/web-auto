@@ -1,6 +1,5 @@
 import { Transport, type TransportEvents } from './Transport.js';
-import { getLogger } from '@web-auto/logging';
-import { Logger } from 'winston';
+import { LoggerWrapper, getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
 import { DataBuffer } from '../utils/DataBuffer.js';
 
@@ -32,7 +31,7 @@ export abstract class Device {
     public transport?: Transport;
     public state = DeviceState.AVAILABLE;
     public name: string;
-    protected logger: Logger;
+    protected logger: LoggerWrapper;
 
     public constructor(
         public prefix: string,
@@ -52,9 +51,7 @@ export abstract class Device {
         try {
             await this.events.onStateUpdated(this);
         } catch (err) {
-            this.logger.error('Failed to emit state updated event', {
-                metadata: err,
-            });
+            this.logger.error('Failed to emit state updated event', err);
         }
     }
 
@@ -78,9 +75,7 @@ export abstract class Device {
                 onDisconnected: this.onTransportDisconnected.bind(this),
             });
         } catch (err) {
-            this.logger.error('Failed to connect', {
-                metadata: err,
-            });
+            this.logger.error('Failed to connect', err);
             await this.setState(DeviceState.AVAILABLE);
             throw err;
         }
@@ -92,9 +87,7 @@ export abstract class Device {
         try {
             await this.events.onConnected(this);
         } catch (err) {
-            this.logger.error('Failed to emit connected event', {
-                metadata: err,
-            });
+            this.logger.error('Failed to emit connected event', err);
         }
     }
 
@@ -127,9 +120,7 @@ export abstract class Device {
         try {
             await this.events.onDisconnect(this);
         } catch (err) {
-            this.logger.error('Failed to emit disconnect event', {
-                metadata: err,
-            });
+            this.logger.error('Failed to emit disconnect event', err);
         }
 
         await this.setState(DeviceState.DISCONNECTING);
@@ -143,9 +134,7 @@ export abstract class Device {
 
                 this.logger.info('Disconnected transport');
             } catch (err) {
-                this.logger.error('Failed to disconnect transport', {
-                    metadata: err,
-                });
+                this.logger.error('Failed to disconnect transport', err);
             }
         }
 
@@ -153,17 +142,13 @@ export abstract class Device {
         try {
             await this.handleDisconnect(reason);
         } catch (err) {
-            this.logger.error('Failed to handle disconnect', {
-                metadata: err,
-            });
+            this.logger.error('Failed to handle disconnect', err);
         }
 
         try {
             await this.events.onDisconnected(this);
         } catch (err) {
-            this.logger.error('Failed to emit disconnected event', {
-                metadata: err,
-            });
+            this.logger.error('Failed to emit disconnected event', err);
         }
 
         await this.setState(DeviceState.AVAILABLE);

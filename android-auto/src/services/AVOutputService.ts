@@ -20,20 +20,16 @@ export abstract class AVOutputService extends AVService {
             await this.handleData(buffer);
         } catch (err) {
             this.logger.error('Failed to handle data', {
-                metadata: {
-                    buffer,
-                    err,
-                },
+                buffer,
+                err,
             });
             return;
         }
 
         try {
             await this.sendAvMediaAckIndication();
-        } catch (e) {
-            this.logger.error('Failed to send ack', {
-                metadata: e,
-            });
+        } catch (err) {
+            this.logger.error('Failed to send ack', err);
         }
     }
 
@@ -47,21 +43,17 @@ export abstract class AVOutputService extends AVService {
             await this.handleData(buffer, timestamp);
         } catch (err) {
             this.logger.error('Failed to handle data', {
-                metadata: {
-                    buffer,
-                    timestamp,
-                    err,
-                },
+                buffer,
+                timestamp,
+                err,
             });
             return;
         }
 
         try {
             await this.sendAvMediaAckIndication();
-        } catch (e) {
-            this.logger.error('Failed to send ack', {
-                metadata: e,
-            });
+        } catch (err) {
+            this.logger.error('Failed to send ack', err);
         }
     }
 
@@ -72,10 +64,8 @@ export abstract class AVOutputService extends AVService {
             await this.channelStop(data);
         } catch (err) {
             this.logger.error('Failed to stop channel', {
-                metadata: {
-                    data,
-                    err,
-                },
+                data,
+                err,
             });
         }
     }
@@ -89,10 +79,8 @@ export abstract class AVOutputService extends AVService {
             await this.channelStart(data);
         } catch (err) {
             this.logger.error('Failed to start channel', {
-                metadata: {
-                    data,
-                    err,
-                },
+                data,
+                err,
             });
         }
     }

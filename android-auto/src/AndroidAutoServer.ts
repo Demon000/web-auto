@@ -141,10 +141,8 @@ export abstract class AndroidAutoServer {
             buffer = this.frameCodec.encodeFrameData(frameData);
         } catch (err) {
             this.logger.error('Failed to encode', {
-                metadata: {
-                    err,
-                    frameData,
-                },
+                err,
+                frameData,
             });
             return;
         }
@@ -160,9 +158,7 @@ export abstract class AndroidAutoServer {
         try {
             await this.connectedDevice.transport.send(buffer);
         } catch (err) {
-            this.logger.error('Failed to send', {
-                metadata: err,
-            });
+            this.logger.error('Failed to send', err);
         }
     }
 
@@ -256,9 +252,7 @@ export abstract class AndroidAutoServer {
             this.logger.error(
                 `Unhandled message with id ${message.messageId} ` +
                     `on service with id ${serviceId}`,
-                {
-                    metadata: message,
-                },
+                message,
             );
             return;
         }
@@ -276,9 +270,7 @@ export abstract class AndroidAutoServer {
             this.logger.error(
                 `Unhandled ${tag} message with id ${message.messageId} ` +
                     `on service with id ${serviceId}`,
-                {
-                    metadata: message.getPayload(),
-                },
+                message.getPayload(),
             );
         }
     }
@@ -298,10 +290,8 @@ export abstract class AndroidAutoServer {
                 );
             } catch (err) {
                 this.logger.error('Failed to decrypt', {
-                    metadata: {
-                        frameData,
-                        err,
-                    },
+                    frameData,
+                    err,
                 });
                 return undefined;
             }
@@ -356,9 +346,7 @@ export abstract class AndroidAutoServer {
             return;
         }
 
-        this.logger.error(`Received transport error from ${device.name}`, {
-            metadata: err,
-        });
+        this.logger.error(`Received transport error from ${device.name}`, err);
     }
 
     protected abstract onDevicesUpdated(devices: Device[]): void;
@@ -508,10 +496,8 @@ export abstract class AndroidAutoServer {
         this.logger.info(`Connecting device ${device.name}`);
         try {
             await device.connect();
-        } catch (e) {
-            this.logger.error(`Failed to connect to ${device.name}`, {
-                metadata: e,
-            });
+        } catch (err) {
+            this.logger.error(`Failed to connect to ${device.name}`, err);
             return;
         }
     }
@@ -529,9 +515,10 @@ export abstract class AndroidAutoServer {
         try {
             await device.disconnect();
         } catch (err) {
-            this.logger.error(`Failed to disconnect device ${device.name}`, {
-                metadata: err,
-            });
+            this.logger.error(
+                `Failed to disconnect device ${device.name}`,
+                err,
+            );
         }
     }
 
@@ -566,9 +553,7 @@ export abstract class AndroidAutoServer {
             try {
                 await deviceHandler.waitForDevices();
             } catch (err) {
-                this.logger.error('Failed to start waiting for devices', {
-                    metadata: err,
-                });
+                this.logger.error('Failed to start waiting for devices', err);
             }
         }
 
@@ -596,9 +581,7 @@ export abstract class AndroidAutoServer {
             try {
                 await deviceHandler.stopWaitingForDevices();
             } catch (err) {
-                this.logger.error('Failed to stop waiting for devices', {
-                    metadata: err,
-                });
+                this.logger.error('Failed to stop waiting for devices', err);
             }
         }
 

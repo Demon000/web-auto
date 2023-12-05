@@ -21,9 +21,7 @@ export class MessageAggregator {
     private serviceIdAggregatorMap = new Map<number, AggregatorData>();
 
     public aggregate(frameData: FrameData): Message | undefined {
-        this.logger.debug('Aggregate frame data', {
-            metadata: frameData,
-        });
+        this.logger.debug('Aggregate frame data', frameData);
         const frameHeader = frameData.frameHeader;
         const payload = frameData.payload;
         const totalSize = frameData.totalSize;
@@ -35,9 +33,7 @@ export class MessageAggregator {
             const message = new Message({
                 rawPayload: payload,
             });
-            this.logger.debug('Atomic message', {
-                metadata: message,
-            });
+            this.logger.debug('Atomic message', message);
             return message;
         } else if (frameHeader.flags & FrameHeaderFlags.FIRST) {
             assert(!this.serviceIdAggregatorMap.has(frameHeader.serviceId));
@@ -47,9 +43,7 @@ export class MessageAggregator {
                 payload,
             };
 
-            this.logger.debug('Creating new aggregated data', {
-                metadata: data,
-            });
+            this.logger.debug('Creating new aggregated data', data);
 
             this.serviceIdAggregatorMap.set(frameHeader.serviceId, data);
         } else {
@@ -58,10 +52,8 @@ export class MessageAggregator {
 
             data.payload.appendBuffer(payload);
             this.logger.debug('Adding frame data to aggregated data', {
-                metadata: {
-                    frameData,
-                    aggregatedData: data,
-                },
+                frameData,
+                aggregatedData: data,
             });
 
             if (frameHeader.flags & FrameHeaderFlags.LAST) {
@@ -78,9 +70,7 @@ export class MessageAggregator {
                 const message = new Message({
                     rawPayload: data.payload,
                 });
-                this.logger.debug('Aggregated message', {
-                    metadata: message,
-                });
+                this.logger.debug('Aggregated message', message);
                 return message;
             }
         }
@@ -145,11 +135,7 @@ export class MessageAggregator {
         isEncrypted: boolean,
         isControl: boolean,
     ): FrameData[] {
-        this.logger.debug('Split message', {
-            metadata: {
-                message,
-            },
-        });
+        this.logger.debug('Split message', message);
         const context = {
             remainingSize: message.payload.size,
         };
@@ -163,9 +149,7 @@ export class MessageAggregator {
                 isControl,
                 context,
             );
-            this.logger.debug('Split frame', {
-                metadata: frameData,
-            });
+            this.logger.debug('Split frame', frameData);
             frameDatas.push(frameData);
         }
 

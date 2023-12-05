@@ -81,7 +81,29 @@ export const setConfig = (newConfig: LoggingConfig) => {
     config = newConfig;
 };
 
-export const getLogger = (label: string): Logger => {
+export class LoggerWrapper {
+    public constructor(private logger: Logger) {}
+
+    public error(message: string, metadata?: any): void {
+        this.logger.error(message, {
+            metadata,
+        });
+    }
+
+    public info(message: string, metadata?: any): void {
+        this.logger.info(message, {
+            metadata,
+        });
+    }
+
+    public debug(message: string, metadata?: any): void {
+        this.logger.debug(message, {
+            metadata,
+        });
+    }
+}
+
+export const getLogger = (label: string): LoggerWrapper => {
     if (!loggers.has(label)) {
         let debug;
 
@@ -98,5 +120,5 @@ export const getLogger = (label: string): Logger => {
         });
     }
 
-    return loggers.get(label);
+    return new LoggerWrapper(loggers.get(label));
 };

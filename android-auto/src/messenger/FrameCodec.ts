@@ -27,9 +27,7 @@ export class FrameCodec {
         const totalSize = frameData.totalSize;
         const payload = frameData.payload;
 
-        this.logger.debug('Encode frame data', {
-            metadata: frameData,
-        });
+        this.logger.debug('Encode frame data', frameData);
 
         const buffer = DataBuffer.empty();
         this.encodeFrameHeader(frameHeader, buffer);
@@ -40,9 +38,7 @@ export class FrameCodec {
 
         buffer.appendBuffer(payload);
 
-        this.logger.debug('Encoded buffer', {
-            metadata: buffer,
-        });
+        this.logger.debug('Encoded buffer', buffer);
 
         return buffer;
     }
@@ -103,16 +99,12 @@ export class FrameCodec {
     }
 
     public decodeBuffer(buffer: DataBuffer): FrameData[] {
-        this.logger.debug('Decode buffer', {
-            metadata: buffer,
-        });
+        this.logger.debug('Decode buffer', buffer);
 
         if (this.buffer !== undefined) {
             this.logger.debug('Remaining buffer exists, add to it');
             buffer = this.buffer.appendBuffer(buffer);
-            this.logger.debug('Decoding entire buffer', {
-                metadata: buffer,
-            });
+            this.logger.debug('Decoding entire buffer', buffer);
         }
 
         const frameDatas: FrameData[] = [];
@@ -121,9 +113,7 @@ export class FrameCodec {
             if (frameData === undefined) {
                 break;
             }
-            this.logger.debug('Decoded frame data', {
-                metadata: frameData,
-            });
+            this.logger.debug('Decoded frame data', frameData);
             frameDatas.push(frameData);
         }
 

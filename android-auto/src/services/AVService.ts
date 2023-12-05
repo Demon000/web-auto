@@ -23,10 +23,8 @@ export abstract class AVService extends Service {
             status = true;
         } catch (err) {
             this.logger.error('Failed to setup', {
-                metadata: {
-                    data,
-                    err,
-                },
+                data,
+                err,
             });
             return;
         }

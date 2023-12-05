@@ -1,4 +1,4 @@
-import { getLogger } from '@web-auto/logging';
+import { LoggerWrapper, getLogger } from '@web-auto/logging';
 import { EventEmitter } from 'eventemitter3';
 import {
     BluetoothMessage,
@@ -15,7 +15,6 @@ import {
 } from '@web-auto/android-auto-proto';
 import assert from 'node:assert';
 import { Duplex } from 'node:stream';
-import { Logger } from 'winston';
 import { type ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig.js';
 
 enum InternalEvent {
@@ -34,7 +33,7 @@ export class BluetoothDeviceWifiConnector {
     private codec = new BluetoothMessageCodec();
     private internalEmitter = new EventEmitter<InternalEvents>();
     private bluetoothSocket?: Duplex;
-    protected logger: Logger;
+    protected logger: LoggerWrapper;
 
     public constructor(
         private config: ElectronBluetoothDeviceHandlerConfig,
@@ -64,15 +63,11 @@ export class BluetoothDeviceWifiConnector {
         return new Promise((resolve, reject) => {
             assert(this.bluetoothSocket !== undefined);
 
-            this.logger.debug('Send encoded message', {
-                metadata: message,
-            });
+            this.logger.debug('Send encoded message', message);
 
             const buffer = this.codec.encodeMessage(message);
 
-            this.logger.debug('Send data', {
-                metadata: buffer,
-            });
+            this.logger.debug('Send data', buffer);
 
             this.bluetoothSocket.write(buffer.data, undefined, (err) => {
                 if (err === undefined) {
@@ -88,12 +83,10 @@ export class BluetoothDeviceWifiConnector {
         const data = SocketInfoRequest.create(this.config.socketInfo);
 
         this.logger.debug('Send message', {
-            metadata: {
-                type: BluetoothMessageType[
-                    BluetoothMessageType.SOCKET_INFO_REQUEST
-                ],
-                data,
-            },
+            type: BluetoothMessageType[
+                BluetoothMessageType.SOCKET_INFO_REQUEST
+            ],
+            data,
         });
 
         const message = new BluetoothMessage(
@@ -108,12 +101,10 @@ export class BluetoothDeviceWifiConnector {
         const data = this.config.networkInfo;
 
         this.logger.debug('Send message', {
-            metadata: {
-                type: BluetoothMessageType[
-                    BluetoothMessageType.NETWORK_INFO_RESPONSE
-                ],
-                data,
-            },
+            type: BluetoothMessageType[
+                BluetoothMessageType.NETWORK_INFO_RESPONSE
+            ],
+            data,
         });
 
         const message = new BluetoothMessage(
@@ -138,9 +129,7 @@ export class BluetoothDeviceWifiConnector {
     public async onMessage(message: BluetoothMessage): Promise<void> {
         let data;
 
-        this.logger.debug('Receive message', {
-            metadata: message,
-        });
+        this.logger.debug('Receive message', message);
 
         switch (message.type) {
             case BluetoothMessageType.NETWORK_INFO_REQUEST:
@@ -148,15 +137,11 @@ export class BluetoothDeviceWifiConnector {
                 break;
             case BluetoothMessageType.SOCKET_INFO_RESPONSE:
                 data = SocketInfoResponse.decode(message.payload.data);
-                this.logger.debug('Receive decoded message', {
-                    metadata: data,
-                });
+                this.logger.debug('Receive decoded message', data);
                 break;
             case BluetoothMessageType.CONNECT_STATUS:
                 data = ConnectStatusMessage.decode(message.payload.data);
-                this.logger.debug('Receive decoded message', {
-                    metadata: data,
-                });
+                this.logger.debug('Receive decoded message', data);
                 this.onStatus(data);
                 break;
             default:
@@ -166,9 +151,7 @@ export class BluetoothDeviceWifiConnector {
     }
 
     private async onData(buffer: Buffer): Promise<void> {
-        this.logger.debug('Receive data', {
-            metadata: buffer,
-        });
+        this.logger.debug('Receive data', buffer);
 
         const messages = this.codec.decodeBuffer(buffer);
         for (const message of messages) {

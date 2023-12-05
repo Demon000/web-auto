@@ -39,10 +39,8 @@ export abstract class AudioInputService extends AVService {
             await this.inputOpen(data);
         } catch (err) {
             this.logger.error('Failed to open input', {
-                metadata: {
-                    data,
-                    err,
-                },
+                data,
+                err,
             });
             return;
         }

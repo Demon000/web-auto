@@ -51,10 +51,8 @@ export abstract class Service {
             status = true;
         } catch (err) {
             this.logger.error('Failed to open channel', {
-                metadata: {
-                    data,
-                    err,
-                },
+                data,
+                err,
             });
             return;
         }
@@ -68,9 +66,7 @@ export abstract class Service {
             extra = message;
             message = undefined;
         }
-        this.logger.debug(`Receive ${extra}`, {
-            metadata: message,
-        });
+        this.logger.debug(`Receive ${extra}`, message);
     }
 
     protected printSend(message: any): void {
@@ -79,9 +75,7 @@ export abstract class Service {
             extra = message;
             message = undefined;
         }
-        this.logger.debug(`Send ${extra}`, {
-            metadata: message,
-        });
+        this.logger.debug(`Send ${extra}`, message);
     }
 
     public async onControlMessage(message: Message): Promise<boolean> {
@@ -142,9 +136,7 @@ export abstract class Service {
                 isControl,
             );
         } catch (err) {
-            this.logger.error('Failed to emit message sent event', {
-                metadata: err,
-            });
+            this.logger.error('Failed to emit message sent event', err);
         }
     }
 

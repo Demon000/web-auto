@@ -73,9 +73,7 @@ export class ControlService extends Service {
         try {
             await this.events.onHandshake();
         } catch (err) {
-            this.logger.error('Failed to emit handshake event', {
-                metadata: err,
-            });
+            this.logger.error('Failed to emit handshake event', err);
         }
     }
 
@@ -108,9 +106,7 @@ export class ControlService extends Service {
                 try {
                     await this.events.onHandshake(payload);
                 } catch (err) {
-                    this.logger.error('Failed to emit handshake event', {
-                        metadata: err,
-                    });
+                    this.logger.error('Failed to emit handshake event', err);
                 }
                 break;
             case ControlMessage.Enum.SERVICE_DISCOVERY_REQUEST:
@@ -121,9 +117,7 @@ export class ControlService extends Service {
                 } catch (err) {
                     this.logger.error(
                         'Failed to emit service discovery request event',
-                        {
-                            metadata: err,
-                        },
+                        err,
                     );
                 }
                 break;

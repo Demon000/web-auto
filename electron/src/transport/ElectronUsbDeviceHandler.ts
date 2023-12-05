@@ -57,9 +57,7 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         try {
             await this.events.onDeviceAvailable(device);
         } catch (err) {
-            this.logger.error('Failed to emit device available event', {
-                metadata: err,
-            });
+            this.logger.error('Failed to emit device available event', err);
         }
     }
 
@@ -103,9 +101,7 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         } catch (err) {
             this.logger.error(
                 `Failed to reset already connected device ${name(device)}`,
-                {
-                    metadata: err,
-                },
+                err,
             );
             return;
         }
@@ -123,9 +119,7 @@ export class ElectronUsbDeviceHandler extends DeviceHandler {
         try {
             await this.events.onDeviceUnavailable(device);
         } catch (err) {
-            this.logger.error('Failed to emit device unavailable event', {
-                metadata: err,
-            });
+            this.logger.error('Failed to emit device unavailable event', err);
         }
 
         this.usbDeviceMap.delete(usbDevice);

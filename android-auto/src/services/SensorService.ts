@@ -58,10 +58,8 @@ export abstract class SensorService extends Service {
             await sensor.start();
         } catch (err) {
             this.logger.error('Failed to start sensor', {
-                metadata: {
-                    data,
-                    err,
-                },
+                data,
+                err,
             });
             return;
         }

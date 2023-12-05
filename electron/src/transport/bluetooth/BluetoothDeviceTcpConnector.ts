@@ -1,7 +1,6 @@
 import { EventEmitter } from 'eventemitter3';
 import { Duplex } from 'node:stream';
-import { getLogger } from '@web-auto/logging';
-import { Logger } from 'winston';
+import { LoggerWrapper, getLogger } from '@web-auto/logging';
 import { Server, Socket } from 'node:net';
 
 enum InternalEvent {
@@ -18,7 +17,7 @@ const TIMEOUT = 10000;
 
 export class BluetoothDeviceTcpConnector {
     private internalEmitter = new EventEmitter<InternalEvents>();
-    protected logger: Logger;
+    protected logger: LoggerWrapper;
 
     public constructor(
         private tcpServer: Server,

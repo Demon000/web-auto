@@ -25,9 +25,7 @@ setConfig(electronConfig.logging);
 
 const logger = getLogger('electron');
 
-logger.info('Electron config', {
-    metadata: electronConfig,
-});
+logger.info('Electron config', electronConfig);
 
 let androidAutoServer: ElectronAndroidAutoServer | undefined;
 let androidAutoIpcServiceRegistry: ElectronIpcServiceRegistry | undefined;
@@ -47,9 +45,7 @@ if (electronConfig.androidAuto !== undefined) {
     androidAutoServer.build();
 
     androidAutoServer.start().catch((err) => {
-        logger.error('Failed to start android auto server', {
-            metadata: err,
-        });
+        logger.error('Failed to start android auto server', err);
     });
 }
 

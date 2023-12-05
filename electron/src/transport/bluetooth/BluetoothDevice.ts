@@ -59,9 +59,7 @@ export class BluetoothDevice extends Device {
             try {
                 canConnect = await this.events.onSelfConnect(this);
             } catch (err) {
-                this.logger.error('Failed to emit self connect event', {
-                    metadata: err,
-                });
+                this.logger.error('Failed to emit self connect event', err);
             }
 
             if (!canConnect) {
@@ -150,9 +148,7 @@ export class BluetoothDevice extends Device {
             bluetoothSocket = await this.profileConnector.connect();
             this.logger.info('Connected to Bluetooth profile');
         } catch (err) {
-            this.logger.error('Failed to connect to Bluetooth profile', {
-                metadata: err,
-            });
+            this.logger.error('Failed to connect to Bluetooth profile', err);
             await this.disconnectBluetooth();
             throw err;
         }
@@ -162,9 +158,7 @@ export class BluetoothDevice extends Device {
             await this.wifiConnector.connect(bluetoothSocket);
             this.logger.info('Connected to WiFi');
         } catch (err) {
-            this.logger.error('Failed to connect to WiFi', {
-                metadata: err,
-            });
+            this.logger.error('Failed to connect to WiFi', err);
             await this.disconnectBluetoothProfile();
             await this.disconnectBluetooth();
             throw err;
@@ -175,9 +169,7 @@ export class BluetoothDevice extends Device {
             this.tcpSocket = await this.tcpConnector.connect();
             this.logger.info('TCP connection received');
         } catch (err) {
-            this.logger.error('Failed to receive TCP connection', {
-                metadata: err,
-            });
+            this.logger.error('Failed to receive TCP connection', err);
             await this.disconnectBluetoothProfile();
             await this.disconnectBluetooth();
             throw err;

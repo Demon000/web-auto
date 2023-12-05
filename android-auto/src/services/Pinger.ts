@@ -48,9 +48,7 @@ export class Pinger {
             try {
                 await this.events.onPingTimeout();
             } catch (err) {
-                this.logger.error('Failed to emit ping timeout event', {
-                    metadata: err,
-                });
+                this.logger.error('Failed to emit ping timeout event', err);
             }
             return;
         }
@@ -66,9 +64,7 @@ export class Pinger {
         try {
             await this.events.onPingRequest(data);
         } catch (err) {
-            this.logger.error('Failed to emit ping request event', {
-                metadata: err,
-            });
+            this.logger.error('Failed to emit ping request event', err);
         }
         this.schedulePingTimeout();
     }

@@ -46,9 +46,7 @@ export class ElectronWindowBuilder {
 
     public logDisplays(): void {
         const displays = screen.getAllDisplays();
-        this.logger.info('Displays', {
-            metadata: displays,
-        });
+        this.logger.info('Displays', displays);
     }
 
     public createWebWindow(window: BrowserWindow): void {
@@ -81,9 +79,7 @@ export class ElectronWindowBuilder {
             }
 
             if (display === undefined) {
-                this.logger.error('Failed to find display', {
-                    metadata: config.display,
-                });
+                this.logger.error('Failed to find display', config.display);
             }
         }
         if (display === undefined) {
@@ -156,10 +152,8 @@ export class ElectronWindowBuilder {
 
         try {
             await window.loadURL(indexPath);
-        } catch (e) {
-            this.logger.error('Cannot load window URL', {
-                metadata: e,
-            });
+        } catch (err) {
+            this.logger.error('Cannot load window URL', err);
             return;
         }
 
@@ -172,10 +166,8 @@ export class ElectronWindowBuilder {
         for (const windowConfig of this.config.windows) {
             this.buildWindow(windowConfig).catch((e) =>
                 this.logger.error('Failed to build window with config', {
-                    metadata: {
-                        config: windowConfig,
-                        err: e,
-                    },
+                    config: windowConfig,
+                    err: e,
                 }),
             );
         }

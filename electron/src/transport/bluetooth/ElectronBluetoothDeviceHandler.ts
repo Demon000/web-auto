@@ -64,9 +64,7 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         try {
             await this.events.onDeviceAvailable(device);
         } catch (err) {
-            this.logger.error('Failed to emit device available event', {
-                metadata: err,
-            });
+            this.logger.error('Failed to emit device available event', err);
         }
     }
 
@@ -80,9 +78,7 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         try {
             await this.events.onDeviceUnavailable(device);
         } catch (err) {
-            this.logger.error('Failed to emit device unavailable event', {
-                metadata: err,
-            });
+            this.logger.error('Failed to emit device unavailable event', err);
         }
 
         this.addressDeviceMap.delete(address);
@@ -163,9 +159,7 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         try {
             this.adapter = await this.bluetooth.getAdapter();
         } catch (err) {
-            this.logger.error('Failed to get adapter', {
-                metadata: err,
-            });
+            this.logger.error('Failed to get adapter', err);
             return;
         }
 

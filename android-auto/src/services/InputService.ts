@@ -28,10 +28,8 @@ export abstract class InputService extends Service {
             status = true;
         } catch (err) {
             this.logger.error('Failed to bind', {
-                metadata: {
-                    data,
-                    err,
-                },
+                data,
+                err,
             });
             return;
         }
