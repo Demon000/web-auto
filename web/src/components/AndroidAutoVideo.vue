@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import {
-    H264WebCodecsDecoder,
     H264WebCodecsDecoderEvent,
     type VideoDimensions,
 } from '../codec/H264WebCodecsDecoder';
 import { androidAutoInputService, androidAutoVideoService } from '../ipc.js';
-import { onMounted, ref, type Ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 import { transformFittedPoint } from 'object-fit-math';
 import type { FitMode } from 'object-fit-math/dist/types.d.ts';
 import { TouchAction } from '@web-auto/android-auto-proto';
+import { decoder } from '../codec/index.js';
 
 let marginHeight = 0;
 let marginWidth = 0;
@@ -27,10 +27,10 @@ androidAutoVideoService
         console.error(err);
     });
 
-marginVertical = Math.floor(marginHeight / 2);
-marginHorizontal = Math.floor(marginWidth / 2);
-
 const canvasRef: Ref<HTMLCanvasElement | undefined> = ref(undefined);
+
+let context: CanvasRenderingContext2D | undefined | null;
+let canvasObserver: ResizeObserver | undefined;
 let canvasSize: { width: number; height: number } = { width: 0, height: 0 };
 let canvasRealSize: { width: number; height: number } = { width: 0, height: 0 };
 let canvasObjectFit: FitMode = 'contain';
@@ -41,8 +41,9 @@ function assert(conditional: boolean, message?: string): asserts conditional {
 }
 
 const setCanvasObjectPosition = () => {
-    const canvas = canvasRef.value;
-    assert(canvas !== undefined);
+    assert(context !== undefined && context !== null);
+
+    const canvas = context.canvas;
 
     const { objectPosition } = getComputedStyle(canvas);
     const objectPositionSplit = objectPosition.split(' ');
@@ -51,8 +52,8 @@ const setCanvasObjectPosition = () => {
 };
 
 const setCanvasSize = () => {
-    const canvas = canvasRef.value;
-    assert(canvas !== undefined);
+    assert(context !== undefined && context !== null);
+    const canvas = context.canvas;
 
     const canvasBoundingBox = canvas.getBoundingClientRect();
     canvasSize.width = canvasBoundingBox.width;
@@ -62,25 +63,19 @@ const setCanvasSize = () => {
 };
 
 const setCanvasRealSize = () => {
-    const canvas = canvasRef.value;
-    assert(canvas !== undefined);
+    assert(context !== undefined && context !== null);
+    const canvas = context.canvas;
 
     canvasRealSize.width = canvas.width;
     canvasRealSize.height = canvas.height;
 };
 
-onMounted(() => {
-    const canvas = canvasRef.value;
-    assert(canvas !== undefined);
+const onDecoderFrame = (data: VideoFrame) => {
+    try {
+        assert(context !== undefined && context !== null);
 
-    const context = canvas.getContext('2d');
-    assert(context !== null);
+        const canvas = context.canvas;
 
-    new ResizeObserver(setCanvasSize).observe(canvas);
-
-    let decoder: H264WebCodecsDecoder | undefined;
-
-    const onDecoderFrame = (data: VideoFrame) => {
         context.drawImage(
             data,
             marginHorizontal,
@@ -92,48 +87,55 @@ onMounted(() => {
             canvas.width,
             canvas.height,
         );
-    };
+    } catch (err) {
+        console.error(err);
+    }
+};
 
-    const onDecoderDimensions = (data: VideoDimensions) => {
-        canvas.width = data.width - marginWidth;
-        canvas.height = data.height - marginHeight;
+const onDecoderDimensions = (data: VideoDimensions) => {
+    assert(context !== undefined && context !== null);
+    const canvas = context.canvas;
 
-        setCanvasRealSize();
-    };
+    canvas.width = data.width - marginWidth;
+    canvas.height = data.height - marginHeight;
 
-    androidAutoVideoService.on('start', () => {
-        decoder = new H264WebCodecsDecoder();
+    setCanvasRealSize();
+};
 
-        decoder.emitter.on(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
+onMounted(() => {
+    const canvas = canvasRef.value;
+    assert(canvas !== undefined);
 
-        decoder.emitter.on(
-            H264WebCodecsDecoderEvent.DIMENSIONS,
-            onDecoderDimensions,
-        );
-    });
+    context = canvas.getContext('2d');
+    assert(context !== null);
 
-    androidAutoVideoService.on('data', (buffer) => {
-        assert(decoder !== undefined);
+    canvasObserver = new ResizeObserver(setCanvasSize);
+    canvasObserver.observe(canvas);
 
-        decoder.decode(buffer);
-    });
+    decoder.emitter.on(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
+    decoder.emitter.on(
+        H264WebCodecsDecoderEvent.DIMENSIONS,
+        onDecoderDimensions,
+    );
 
-    androidAutoVideoService.on('stop', () => {
-        context.clearRect(0, 0, canvas.width, canvas.height);
+    if (decoder.dimensions !== undefined) {
+        onDecoderDimensions(decoder.dimensions);
+    }
 
-        assert(decoder !== undefined);
+    if (decoder.lastFrame !== undefined) {
+        onDecoderFrame(decoder.lastFrame);
+    }
+});
 
-        decoder.emitter.off(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
+onBeforeUnmount(() => {
+    decoder.emitter.off(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
+    decoder.emitter.off(
+        H264WebCodecsDecoderEvent.DIMENSIONS,
+        onDecoderDimensions,
+    );
 
-        decoder.emitter.off(
-            H264WebCodecsDecoderEvent.DIMENSIONS,
-            onDecoderDimensions,
-        );
-
-        decoder.dispose();
-
-        decoder = undefined;
-    });
+    assert(canvasObserver !== undefined);
+    canvasObserver.disconnect();
 });
 
 const translateCanvasPosition = (x: number, y: number): [number, number] => {
@@ -233,13 +235,15 @@ const onPointerUp = (event: PointerEvent) => {
 </template>
 
 <style scoped>
+.android-auto-video {
+    width: 100%;
+    height: 100%;
+    background: #000;
+}
 canvas {
     width: 100%;
     height: 100%;
     display: block;
     object-fit: v-bind('canvasObjectFit');
-    touch-action: none;
-    user-select: none;
-    background: #000;
 }
 </style>

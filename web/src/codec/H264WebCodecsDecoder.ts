@@ -25,6 +25,11 @@ export class H264WebCodecsDecoder {
 
     private decoder: VideoDecoder;
     private configData?: Uint8Array;
+    public lastFrame?: VideoFrame;
+    public dimensions?: {
+        width: number;
+        height: number;
+    };
 
     private animationFrameId = 0;
 
@@ -37,9 +42,11 @@ export class H264WebCodecsDecoder {
                 // But this ensures users can always see the most up-to-date screen.
                 // This is also the behavior of official Scrcpy client.
                 // https://github.com/Genymobile/scrcpy/issues/3679
+                if (this.lastFrame !== undefined) {
+                    this.lastFrame.close();
+                }
+                this.lastFrame = frame;
                 this.emitter.emit(H264WebCodecsDecoderEvent.FRAME, frame);
-
-                frame.close();
             },
             error(e) {
                 console.error(e);
@@ -62,10 +69,15 @@ export class H264WebCodecsDecoder {
             croppedHeight,
         } = h264ParseConfiguration(data);
 
-        this.emitter.emit(H264WebCodecsDecoderEvent.DIMENSIONS, {
+        this.dimensions = {
             width: croppedWidth,
             height: croppedHeight,
-        });
+        };
+
+        this.emitter.emit(
+            H264WebCodecsDecoderEvent.DIMENSIONS,
+            this.dimensions,
+        );
 
         // https://www.rfc-editor.org/rfc/rfc6381#section-3.3
         // ISO Base Media File Format Name Space
@@ -121,11 +133,11 @@ export class H264WebCodecsDecoder {
         }
     }
 
-    dispose() {
+    reset() {
         cancelAnimationFrame(this.animationFrameId);
 
-        if (this.decoder.state !== 'closed') {
-            this.decoder.close();
-        }
+        this.decoder.reset();
+        this.dimensions = undefined;
+        this.configData = undefined;
     }
 }

@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@fontsource/roboto": "^5.0.8",
+    "material-symbols": "^0.14.1",
     "object-fit-math": "^1.0.0",
     "pinia": "^2.1.4",
     "vue": "^3.3.10",

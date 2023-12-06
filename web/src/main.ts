@@ -1,4 +1,5 @@
 import '@fontsource/roboto';
+import 'material-symbols';
 
 import './assets/main.css';
 
@@ -15,7 +16,7 @@ app.use(router);
 
 router
     .replace({
-        name: 'home',
+        name: 'device-selector',
     })
     .catch((err) => {
         console.error(err);

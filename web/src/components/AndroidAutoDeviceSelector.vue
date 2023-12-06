@@ -62,9 +62,6 @@ onMounted(() => {
 
 <style scoped>
 .android-auto-device-selector {
-    position: absolute;
-    top: 0;
-    left: 0;
     padding: 16px;
 }
 
@@ -76,7 +73,6 @@ onMounted(() => {
     font-size: 20px;
     background: #202124;
     border-radius: 32px;
-    color: #fff;
     margin: 16px;
 
     display: flex;

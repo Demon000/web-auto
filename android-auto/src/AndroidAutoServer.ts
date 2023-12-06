@@ -490,11 +490,7 @@ export abstract class AndroidAutoServer {
         }
 
         if (this.connectedDevice !== undefined) {
-            this.logger.error(
-                `Cannot connect to ${device.name}, ` +
-                    `${this.connectedDevice.name} already connected`,
-            );
-            return;
+            await this.disconnectDevice(this.connectedDevice);
         }
 
         this.logger.info(`Connecting device ${device.name}`);

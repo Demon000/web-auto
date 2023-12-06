@@ -5,6 +5,14 @@ body {
     margin: 0;
 
     font-family: 'Roboto';
+    background: #0e1013;
+    color: #fff;
+    touch-action: none;
+    user-select: none;
+}
+
+* {
+    box-sizing: border-box;
 }
 
 #app {
