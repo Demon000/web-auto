@@ -1,7 +1,7 @@
 import {
-    MediaInfoChannelMessage,
-    MediaInfoChannelMetadataData,
-    MediaInfoChannelPlaybackData,
+    MediaPlaybackMetadata,
+    MediaPlaybackStatus,
+    MediaPlaybackStatusMessageId,
 } from '@web-auto/android-auto-proto';
 
 import { Message } from '../messenger/Message.js';
@@ -14,22 +14,16 @@ export abstract class MediaStatusService extends Service {
     }
 
     protected abstract handleMetadata(
-        data: MediaInfoChannelMetadataData,
+        data: MediaPlaybackMetadata,
     ): Promise<void>;
 
-    protected abstract handlePlayback(
-        data: MediaInfoChannelPlaybackData,
-    ): Promise<void>;
+    protected abstract handlePlayback(data: MediaPlaybackStatus): Promise<void>;
 
-    protected async onMetadata(
-        data: MediaInfoChannelMetadataData,
-    ): Promise<void> {
+    protected async onMetadata(data: MediaPlaybackMetadata): Promise<void> {
         await this.handleMetadata(data);
     }
 
-    protected async onPlayback(
-        data: MediaInfoChannelPlaybackData,
-    ): Promise<void> {
+    protected async onPlayback(data: MediaPlaybackStatus): Promise<void> {
         await this.handlePlayback(data);
     }
 
@@ -38,13 +32,13 @@ export abstract class MediaStatusService extends Service {
         let data;
 
         switch (message.messageId) {
-            case MediaInfoChannelMessage.Enum.METADATA:
-                data = MediaInfoChannelMetadataData.decode(bufferPayload);
+            case MediaPlaybackStatusMessageId.MEDIA_PLAYBACK_METADATA:
+                data = MediaPlaybackMetadata.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onMetadata(data);
                 break;
-            case MediaInfoChannelMessage.Enum.PLAYBACK:
-                data = MediaInfoChannelPlaybackData.decode(bufferPayload);
+            case MediaPlaybackStatusMessageId.MEDIA_PLAYBACK_STATUS:
+                data = MediaPlaybackStatus.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onPlayback(data);
                 break;

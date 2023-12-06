@@ -4,16 +4,16 @@
   "author": "Demon000",
   "license": "GPL-3.0",
   "type": "module",
+  "types": "./dist/esm/protos_pb.d.ts",
   "exports": {
-    "import": "./dist/esm/index.js",
-    "types": "./dist/esm/index.d.ts"
+    ".": "./dist/esm/protos_pb.js",
+    "./bluetooth.js": "./dist/esm/bluetooth_pb.js"
   },
   "scripts": {
-    "build": "./build-protos.sh",
-    "clean": "rm -rf ./dist"
+    "build": "./build-protos.sh && tsc",
+    "clean": "tsc --build --clean && rm ./src/protos_pb.ts && rm ./src/bluetooth_pb.ts"
   },
   "devDependencies": {
-    "protobufjs": "^7.2.4",
-    "protobufjs-cli": "^1.1.1"
+    "@bufbuild/protoc-gen-es": "^1.5.1"
   }
 }

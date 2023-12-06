@@ -1,10 +1,10 @@
-import { Message } from '../messenger/Message.js';
 import {
-    AVChannelMessage,
-    AVChannelSetupRequest,
-    AVChannelSetupResponse,
-    AVChannelSetupStatus,
+    Config,
+    Config_Status,
+    MediaMessageId,
+    Setup,
 } from '@web-auto/android-auto-proto';
+import { Message } from '../messenger/Message.js';
 import { DataBuffer } from '../utils/DataBuffer.js';
 import { Service, type ServiceEvents } from './Service.js';
 
@@ -15,7 +15,7 @@ export abstract class AVService extends Service {
         super(events);
     }
 
-    protected async onSetupRequest(data: AVChannelSetupRequest): Promise<void> {
+    protected async onSetupRequest(data: Setup): Promise<void> {
         let status = false;
 
         try {
@@ -37,8 +37,8 @@ export abstract class AVService extends Service {
         let data;
 
         switch (message.messageId) {
-            case AVChannelMessage.Enum.SETUP_REQUEST:
-                data = AVChannelSetupRequest.decode(bufferPayload);
+            case MediaMessageId.MEDIA_MESSAGE_SETUP:
+                data = Setup.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onSetupRequest(data);
                 break;
@@ -49,24 +49,20 @@ export abstract class AVService extends Service {
         return true;
     }
 
-    protected abstract setup(data: AVChannelSetupRequest): Promise<void>;
+    protected abstract setup(data: Setup): Promise<void>;
 
     protected async sendSetupResponse(status: boolean): Promise<void> {
-        const data = AVChannelSetupResponse.create({
+        const data = new Config({
             maxUnacked: 1,
-            mediaStatus: status
-                ? AVChannelSetupStatus.Enum.OK
-                : AVChannelSetupStatus.Enum.FAIL,
-            configs: [0],
+            status: status ? Config_Status.READY : Config_Status.WAIT,
+            configurationIndices: [0],
         });
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            AVChannelSetupResponse.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
-            AVChannelMessage.Enum.SETUP_RESPONSE,
+            MediaMessageId.MEDIA_MESSAGE_CONFIG,
             payload,
         );
     }

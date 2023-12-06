@@ -1,14 +1,8 @@
 import { Message } from '../messenger/Message.js';
-import {
-    AVChannelMessage,
-    AVChannelStartIndication,
-    AVChannelStopIndication,
-    AVMediaAckIndication,
-} from '@web-auto/android-auto-proto';
 import { DataBuffer } from '../utils/DataBuffer.js';
 import { AVService } from './AVService.js';
-import Long from 'long';
 import { type ServiceEvents } from './Service.js';
+import { Ack, MediaMessageId, Start, Stop } from '@web-auto/android-auto-proto';
 
 export abstract class AVOutputService extends AVService {
     public constructor(protected events: ServiceEvents) {
@@ -57,9 +51,7 @@ export abstract class AVOutputService extends AVService {
         }
     }
 
-    protected async onStopIndication(
-        data: AVChannelStopIndication,
-    ): Promise<void> {
+    protected async onStopIndication(data: Stop): Promise<void> {
         try {
             await this.channelStop(data);
         } catch (err) {
@@ -70,10 +62,8 @@ export abstract class AVOutputService extends AVService {
         }
     }
 
-    protected async onStartIndication(
-        data: AVChannelStartIndication,
-    ): Promise<void> {
-        this.session = data.session;
+    protected async onStartIndication(data: Start): Promise<void> {
+        this.session = data.sessionId;
 
         try {
             await this.channelStart(data);
@@ -91,21 +81,21 @@ export abstract class AVOutputService extends AVService {
         let data;
 
         switch (message.messageId) {
-            case AVChannelMessage.Enum.AV_MEDIA_WITH_TIMESTAMP_INDICATION:
+            case MediaMessageId.MEDIA_MESSAGE_DATA:
                 this.printReceive('data');
                 await this.onAvMediaWithTimestampIndication(payload);
                 break;
-            case AVChannelMessage.Enum.AV_MEDIA_INDICATION:
+            case MediaMessageId.MEDIA_MESSAGE_CODEC_CONFIG:
                 this.printReceive('data');
                 await this.onAvMediaIndication(payload);
                 break;
-            case AVChannelMessage.Enum.START_INDICATION:
-                data = AVChannelStartIndication.decode(bufferPayload);
+            case MediaMessageId.MEDIA_MESSAGE_START:
+                data = Start.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onStartIndication(data);
                 break;
-            case AVChannelMessage.Enum.STOP_INDICATION:
-                data = AVChannelStopIndication.decode(bufferPayload);
+            case MediaMessageId.MEDIA_MESSAGE_STOP:
+                data = Stop.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onStopIndication(data);
                 break;
@@ -116,15 +106,11 @@ export abstract class AVOutputService extends AVService {
         return true;
     }
 
-    protected abstract channelStart(
-        data: AVChannelStartIndication,
-    ): Promise<void>;
-    protected abstract channelStop(
-        data: AVChannelStopIndication,
-    ): Promise<void>;
+    protected abstract channelStart(data: Start): Promise<void>;
+    protected abstract channelStop(data: Stop): Promise<void>;
     protected abstract handleData(
         buffer: DataBuffer,
-        timestamp?: Long,
+        timestamp?: bigint,
     ): Promise<void>;
 
     protected async sendAvMediaAckIndication(): Promise<void> {
@@ -132,18 +118,16 @@ export abstract class AVOutputService extends AVService {
             throw new Error('Received media indication without valid session');
         }
 
-        const data = AVMediaAckIndication.create({
-            session: this.session,
-            value: 1,
+        const data = new Ack({
+            sessionId: this.session,
+            ack: 1,
         });
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            AVMediaAckIndication.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
-            AVChannelMessage.Enum.AV_MEDIA_ACK_INDICATION,
+            MediaMessageId.MEDIA_MESSAGE_ACK,
             payload,
         );
     }

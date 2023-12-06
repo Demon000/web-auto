@@ -1,20 +1,21 @@
 import {
-    AudioFocusRequest,
-    AudioFocusResponse,
-    AudioFocusState,
-    AudioFocusType,
-    AuthCompleteIndication,
-    ChannelDescriptor,
+    AudioFocusNotification,
+    AudioFocusRequestNotification,
+    AudioFocusRequestType,
+    AudioFocusStateType,
+    AuthResponse,
     ChannelOpenRequest,
-    ControlMessage,
-    NavigationFocusRequest,
-    NavigationFocusResponse,
+    ControlMessageType,
+    MessageStatus,
+    NavFocusNotification,
+    NavFocusRequestNotification,
+    NavFocusType,
     PingRequest,
     PingResponse,
     ServiceDiscoveryRequest,
     ServiceDiscoveryResponse,
-    Status,
-    VersionResponseStatus,
+    type Service as ProtoService,
+    GalConstants,
 } from '@web-auto/android-auto-proto';
 
 import { Message } from '../messenger/Message.js';
@@ -22,7 +23,6 @@ import { DataBuffer } from '../utils/DataBuffer.js';
 
 import { Service, type ServiceEvents } from './Service.js';
 import { Pinger } from './Pinger.js';
-import Long from 'long';
 import assert from 'node:assert';
 
 export interface ControlServiceEvents extends ServiceEvents {
@@ -53,15 +53,15 @@ export class ControlService extends Service {
     }
 
     public async onPingRequest(data: PingRequest): Promise<void> {
-        assert(Long.isLong(data.timestamp));
+        assert(data.timestamp !== undefined);
         await this.sendPingResponse(data.timestamp);
     }
 
     private async onVersionReponse(payload: DataBuffer): Promise<void> {
         const majorCode = payload.readUint16BE();
         const mainorCode = payload.readUint16BE();
-        const status = payload.readUint16BE() as VersionResponseStatus.Enum;
-        if (status === VersionResponseStatus.Enum.MISMATCH) {
+        const status = payload.readUint16BE() as MessageStatus;
+        if (status === MessageStatus.STATUS_NO_COMPATIBLE_VERSION) {
             this.logger.error('Mismatched verion');
             return;
         }
@@ -77,40 +77,44 @@ export class ControlService extends Service {
         }
     }
 
-    private async onAudioFocusRequest(data: AudioFocusRequest): Promise<void> {
+    private async onAudioFocusRequest(
+        data: AudioFocusRequestNotification,
+    ): Promise<void> {
         const audioFocusState =
-            data.audioFocusType === AudioFocusType.Enum.RELEASE
-                ? AudioFocusState.Enum.LOSS
-                : AudioFocusState.Enum.GAIN;
+            data.request === AudioFocusRequestType.AUDIO_FOCUS_RELEASE
+                ? AudioFocusStateType.AUDIO_FOCUS_STATE_LOSS
+                : AudioFocusStateType.AUDIO_FOCUS_STATE_GAIN;
 
         return this.sendAudioFocusResponse(audioFocusState);
     }
 
     private async onNavigationFocusRequest(
-        _data: NavigationFocusRequest,
+        _data: NavFocusRequestNotification,
     ): Promise<void> {
-        return this.sendNavigationFocusResponse(2);
+        return this.sendNavigationFocusResponse(
+            NavFocusType.NAV_FOCUS_PROJECTED,
+        );
     }
 
     public async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         const payload = message.getPayload();
-        const messageId = message.messageId as ControlMessage.Enum;
+        const messageId = message.messageId as ControlMessageType;
         let data;
 
         switch (messageId) {
-            case ControlMessage.Enum.VERSION_RESPONSE:
+            case ControlMessageType.MESSAGE_VERSION_RESPONSE:
                 await this.onVersionReponse(payload);
                 break;
-            case ControlMessage.Enum.SSL_HANDSHAKE:
+            case ControlMessageType.MESSAGE_ENCAPSULATED_SSL:
                 try {
                     await this.events.onHandshake(payload);
                 } catch (err) {
                     this.logger.error('Failed to emit handshake event', err);
                 }
                 break;
-            case ControlMessage.Enum.SERVICE_DISCOVERY_REQUEST:
-                data = ServiceDiscoveryRequest.decode(bufferPayload);
+            case ControlMessageType.MESSAGE_SERVICE_DISCOVERY_REQUEST:
+                data = ServiceDiscoveryRequest.fromBinary(bufferPayload);
                 this.printReceive(data);
                 try {
                     await this.events.onServiceDiscoveryRequest(data);
@@ -121,23 +125,23 @@ export class ControlService extends Service {
                     );
                 }
                 break;
-            case ControlMessage.Enum.PING_REQUEST:
-                data = PingRequest.decode(bufferPayload);
+            case ControlMessageType.MESSAGE_PING_REQUEST:
+                data = PingRequest.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onPingRequest(data);
                 break;
-            case ControlMessage.Enum.PING_RESPONSE:
-                data = PingResponse.decode(bufferPayload);
+            case ControlMessageType.MESSAGE_PING_RESPONSE:
+                data = PingResponse.fromBinary(bufferPayload);
                 this.printReceive(data);
                 this.pinger.onPingResponse(data);
                 break;
-            case ControlMessage.Enum.AUDIO_FOCUS_REQUEST:
-                data = AudioFocusRequest.decode(bufferPayload);
+            case ControlMessageType.MESSAGE_AUDIO_FOCUS_REQUEST:
+                data = AudioFocusRequestNotification.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onAudioFocusRequest(data);
                 break;
-            case ControlMessage.Enum.NAVIGATION_FOCUS_REQUEST:
-                data = NavigationFocusRequest.decode(bufferPayload);
+            case ControlMessageType.MESSAGE_NAV_FOCUS_REQUEST:
+                data = NavFocusRequestNotification.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onNavigationFocusRequest(data);
                 break;
@@ -148,30 +152,29 @@ export class ControlService extends Service {
         return true;
     }
 
-    private async sendPingResponse(timestamp: Long): Promise<void> {
-        const data = PingResponse.create({
+    private async sendPingResponse(timestamp: bigint): Promise<void> {
+        const data = new PingResponse({
             timestamp,
+            data: new Uint8Array(),
         });
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            PingResponse.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         return this.sendPlainSpecificMessage(
-            ControlMessage.Enum.PING_RESPONSE,
+            ControlMessageType.MESSAGE_PING_RESPONSE,
             payload,
         );
     }
     private async sendVersionRequest(): Promise<void> {
         const payload = DataBuffer.fromSize(4)
-            .appendUint16BE(1)
-            .appendUint16BE(6);
+            .appendUint16BE(GalConstants.PROTOCOL_MAJOR_VERSION)
+            .appendUint16BE(GalConstants.PROTOCOL_MINOR_VERSION);
 
         this.printSend('version request');
 
         await this.sendPlainSpecificMessage(
-            ControlMessage.Enum.VERSION_REQUEST,
+            ControlMessageType.MESSAGE_VERSION_REQUEST,
             payload,
         );
     }
@@ -180,23 +183,21 @@ export class ControlService extends Service {
         this.printSend('handshake');
 
         await this.sendPlainSpecificMessage(
-            ControlMessage.Enum.SSL_HANDSHAKE,
+            ControlMessageType.MESSAGE_ENCAPSULATED_SSL,
             payload,
         );
     }
 
     public async sendAuthComplete(): Promise<void> {
-        const data = AuthCompleteIndication.create({
-            status: Status.Enum.OK,
+        const data = new AuthResponse({
+            status: 0,
         });
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            AuthCompleteIndication.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendPlainSpecificMessage(
-            ControlMessage.Enum.AUTH_COMPLETE,
+            ControlMessageType.MESSAGE_AUTH_COMPLETE,
             payload,
         );
     }
@@ -204,46 +205,43 @@ export class ControlService extends Service {
     private async sendPingRequest(data: PingRequest): Promise<void> {
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            PingRequest.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendPlainSpecificMessage(
-            ControlMessage.Enum.PING_REQUEST,
+            ControlMessageType.MESSAGE_PING_REQUEST,
             payload,
         );
     }
 
     private async sendAudioFocusResponse(
-        audioFocusState: AudioFocusState.Enum,
+        focusState: AudioFocusStateType,
     ): Promise<void> {
-        const data = AudioFocusResponse.create({
-            audioFocusState,
+        const data = new AudioFocusNotification({
+            focusState,
+            unsolicited: false,
         });
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            AudioFocusResponse.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
-            ControlMessage.Enum.AUDIO_FOCUS_RESPONSE,
+            ControlMessageType.MESSAGE_AUDIO_FOCUS_NOTIFICATION,
             payload,
         );
     }
 
-    private async sendNavigationFocusResponse(type: number): Promise<void> {
-        const data = NavigationFocusResponse.create({
-            type,
+    private async sendNavigationFocusResponse(
+        focusType: NavFocusType,
+    ): Promise<void> {
+        const data = new NavFocusNotification({
+            focusType,
         });
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            NavigationFocusResponse.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
-            ControlMessage.Enum.NAVIGATION_FOCUS_RESPONSE,
+            ControlMessageType.MESSAGE_NAV_FOCUS_NOTIFICATION,
             payload,
         );
     }
@@ -253,12 +251,10 @@ export class ControlService extends Service {
     ): Promise<void> {
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            ServiceDiscoveryResponse.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
-            ControlMessage.Enum.SERVICE_DISCOVERY_RESPONSE,
+            ControlMessageType.MESSAGE_SERVICE_DISCOVERY_RESPONSE,
             payload,
         );
     }
@@ -281,9 +277,7 @@ export class ControlService extends Service {
         this.pinger.stop();
     }
 
-    protected fillChannelDescriptor(
-        _channelDescriptor: ChannelDescriptor,
-    ): void {
+    protected fillChannelDescriptor(_channelDescriptor: ProtoService): void {
         throw new Error('Control service does not support discovery');
     }
 

@@ -4,14 +4,13 @@ import {
     type ServiceEvents,
 } from '@web-auto/android-auto';
 import {
-    AVChannelSetupRequest,
-    AVChannelStartIndication,
-    AVChannelStopIndication,
-    AudioType,
+    AudioStreamType,
     ChannelOpenRequest,
+    Setup,
+    Start,
+    Stop,
 } from '@web-auto/android-auto-proto';
 import RtAudioPackage from 'audify';
-import Long from 'long';
 
 const RTAUDIO_SINT16 = 2;
 const { RtAudio } = RtAudioPackage;
@@ -19,7 +18,7 @@ const { RtAudio } = RtAudioPackage;
 export class ElectronAndroidAutoAudioOutputService extends AudioOutputService {
     private rtaudio;
 
-    public constructor(audioType: AudioType.Enum, events: ServiceEvents) {
+    public constructor(audioType: AudioStreamType, events: ServiceEvents) {
         super(audioType, events);
 
         this.rtaudio = new RtAudio();
@@ -40,17 +39,15 @@ export class ElectronAndroidAutoAudioOutputService extends AudioOutputService {
         );
     }
 
-    protected async channelStart(
-        _data: AVChannelStartIndication,
-    ): Promise<void> {
+    protected async channelStart(_data: Start): Promise<void> {
         this.rtaudio.start();
     }
 
-    protected async setup(_data: AVChannelSetupRequest): Promise<void> {
+    protected async setup(_data: Setup): Promise<void> {
         // TODO
     }
 
-    protected async channelStop(_data: AVChannelStopIndication): Promise<void> {
+    protected async channelStop(_data: Stop): Promise<void> {
         this.rtaudio.stop();
     }
 
@@ -61,7 +58,7 @@ export class ElectronAndroidAutoAudioOutputService extends AudioOutputService {
 
     protected async handleData(
         buffer: DataBuffer,
-        _timestamp?: Long,
+        _timestamp?: bigint,
     ): Promise<void> {
         this.rtaudio.write(buffer.data);
     }

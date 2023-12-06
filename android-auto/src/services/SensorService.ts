@@ -1,19 +1,20 @@
 import {
-    ChannelDescriptor,
-    type ISensor,
-    SensorChannel,
-    SensorChannelMessage,
-    SensorEventIndication,
-    SensorStartRequest,
-    SensorStartResponse,
+    SensorMessageId,
+    type Service as ProtoService,
+    SensorSourceService_Sensor,
+    SensorRequest,
     SensorType,
-    Status,
+    SensorResponse,
+    MessageStatus,
+    SensorBatch,
+    SensorSourceService,
 } from '@web-auto/android-auto-proto';
 
 import { Message } from '../messenger/Message.js';
 import { Sensor, type SensorEvents } from '../sensors/Sensor.js';
 import { DataBuffer } from '../utils/DataBuffer.js';
 import { Service, type ServiceEvents } from './Service.js';
+import assert from 'node:assert';
 
 export abstract class SensorService extends Service {
     protected sensors: Sensor[];
@@ -29,7 +30,7 @@ export abstract class SensorService extends Service {
         return [];
     }
 
-    protected findSensor(sensorType: SensorType.Enum): Sensor | undefined {
+    protected findSensor(sensorType: SensorType): Sensor | undefined {
         for (const sensor of this.sensors) {
             if (sensor.type === sensorType) {
                 return sensor;
@@ -39,7 +40,7 @@ export abstract class SensorService extends Service {
         return undefined;
     }
 
-    protected getSensor(sensorType: SensorType.Enum): Sensor {
+    protected getSensor(sensorType: SensorType): Sensor {
         const sensor = this.findSensor(sensorType);
         if (sensor === undefined) {
             throw new Error(
@@ -50,11 +51,10 @@ export abstract class SensorService extends Service {
         return sensor;
     }
 
-    protected async onSensorStartRequest(
-        data: SensorStartRequest,
-    ): Promise<void> {
+    protected async onSensorStartRequest(data: SensorRequest): Promise<void> {
         try {
-            const sensor = this.getSensor(data.sensorType);
+            assert(data.type !== undefined);
+            const sensor = this.getSensor(data.type);
             await sensor.start();
         } catch (err) {
             this.logger.error('Failed to start sensor', {
@@ -64,7 +64,7 @@ export abstract class SensorService extends Service {
             return;
         }
 
-        return this.sendSensorStartResponse(data.sensorType, true);
+        return this.sendSensorStartResponse(data.type, true);
     }
 
     public async onSpecificMessage(message: Message): Promise<boolean> {
@@ -72,8 +72,8 @@ export abstract class SensorService extends Service {
         let data;
 
         switch (message.messageId) {
-            case SensorChannelMessage.Enum.SENSOR_START_REQUEST:
-                data = SensorStartRequest.decode(bufferPayload);
+            case SensorMessageId.SENSOR_MESSAGE_REQUEST:
+                data = SensorRequest.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onSensorStartRequest(data);
                 break;
@@ -85,20 +85,20 @@ export abstract class SensorService extends Service {
     }
 
     protected async sendSensorStartResponse(
-        sensorType: SensorType.Enum,
+        sensorType: SensorType,
         status: boolean,
     ): Promise<void> {
-        const data = SensorStartResponse.create({
-            status: status ? Status.Enum.OK : Status.Enum.FAIL,
+        const data = new SensorResponse({
+            status: status
+                ? MessageStatus.STATUS_SUCCESS
+                : MessageStatus.STATUS_INVALID_SENSOR,
         });
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            SensorStartResponse.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
-            SensorChannelMessage.Enum.SENSOR_START_RESPONSE,
+            SensorMessageId.SENSOR_MESSAGE_RESPONSE,
             payload,
         );
 
@@ -106,33 +106,27 @@ export abstract class SensorService extends Service {
         await sensor.emit();
     }
 
-    protected async sendEventIndication(
-        data: SensorEventIndication,
-    ): Promise<void> {
-        const payload = DataBuffer.fromBuffer(
-            SensorEventIndication.encode(data).finish(),
-        );
+    protected async sendEventIndication(data: SensorBatch): Promise<void> {
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         return this.sendEncryptedSpecificMessage(
-            SensorChannelMessage.Enum.SENSOR_EVENT_INDICATION,
+            SensorMessageId.SENSOR_MESSAGE_BATCH,
             payload,
         );
     }
 
-    protected fillChannelDescriptor(
-        channelDescriptor: ChannelDescriptor,
-    ): void {
-        const sensors: ISensor[] = [];
+    protected fillChannelDescriptor(channelDescriptor: ProtoService): void {
+        channelDescriptor.sensorSourceService = new SensorSourceService({
+            sensors: [],
+        });
 
         for (const sensor of this.sensors) {
-            sensors.push({
-                type: sensor.type,
-            });
+            channelDescriptor.sensorSourceService.sensors.push(
+                new SensorSourceService_Sensor({
+                    sensorType: sensor.type,
+                }),
+            );
         }
-
-        channelDescriptor.sensorChannel = SensorChannel.create({
-            sensors,
-        });
     }
 
     public async stop(): Promise<void> {

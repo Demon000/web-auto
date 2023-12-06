@@ -1,9 +1,10 @@
 import { MediaStatusService } from '@web-auto/android-auto';
 import {
-    ChannelDescriptor,
     ChannelOpenRequest,
-    MediaInfoChannelMetadataData,
-    MediaInfoChannelPlaybackData,
+    MediaPlaybackMetadata,
+    MediaPlaybackStatus,
+    MediaPlaybackStatusService,
+    Service,
 } from '@web-auto/android-auto-proto';
 
 export class DummyMediaStatusService extends MediaStatusService {
@@ -12,20 +13,18 @@ export class DummyMediaStatusService extends MediaStatusService {
     }
 
     protected async handleMetadata(
-        _data: MediaInfoChannelMetadataData,
+        _data: MediaPlaybackMetadata,
     ): Promise<void> {
         // TODO
     }
 
-    protected async handlePlayback(
-        _data: MediaInfoChannelPlaybackData,
-    ): Promise<void> {
+    protected async handlePlayback(_data: MediaPlaybackStatus): Promise<void> {
         // TODO
     }
 
-    protected fillChannelDescriptor(
-        channelDescriptor: ChannelDescriptor,
-    ): void {
-        channelDescriptor.mediaInfoChannel = {};
+    protected fillChannelDescriptor(channelDescriptor: Service): void {
+        channelDescriptor.mediaPlaybackService = new MediaPlaybackStatusService(
+            {},
+        );
     }
 }

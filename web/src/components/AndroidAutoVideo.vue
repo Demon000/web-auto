@@ -7,8 +7,8 @@ import { androidAutoInputService, androidAutoVideoService } from '../ipc.js';
 import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 import { transformFittedPoint } from 'object-fit-math';
 import type { FitMode } from 'object-fit-math/dist/types.d.ts';
-import { TouchAction } from '@web-auto/android-auto-proto';
 import { decoder } from '../codec/index.js';
+import { PointerAction } from '@web-auto/android-auto-proto';
 
 let marginHeight = 0;
 let marginWidth = 0;
@@ -18,8 +18,14 @@ let marginHorizontal = 0;
 androidAutoVideoService
     .getVideoConfig()
     .then((config) => {
-        marginHeight = config.marginHeight;
-        marginWidth = config.marginWidth;
+        if (
+            config.heightMargin === undefined ||
+            config.widthMargin === undefined
+        ) {
+            return;
+        }
+        marginHeight = config.heightMargin;
+        marginWidth = config.widthMargin;
         marginVertical = Math.floor(marginHeight / 2);
         marginHorizontal = Math.floor(marginWidth / 2);
     })
@@ -162,33 +168,33 @@ const translateCanvasPosition = (x: number, y: number): [number, number] => {
 const pointerMap = new Map<number, true>();
 
 const sendPointerEvent = (event: PointerEvent) => {
-    let touchAction;
+    let action;
 
     switch (event.type) {
         case 'pointerdown':
-            touchAction = TouchAction.Enum.POINTER_DOWN;
+            action = PointerAction.ACTION_POINTER_DOWN;
             break;
         case 'pointermove':
-            touchAction = TouchAction.Enum.DRAG;
+            action = PointerAction.ACTION_MOVED;
             break;
         case 'pointerup':
         case 'pointercancel':
         case 'pointerout':
         case 'pointerleave':
-            touchAction = TouchAction.Enum.POINTER_UP;
+            action = PointerAction.ACTION_POINTER_UP;
             break;
     }
 
-    if (touchAction === undefined) {
+    if (action === undefined) {
         console.error('Unhandled event', event);
         return;
     }
 
     const [x, y] = translateCanvasPosition(event.x, event.y);
     androidAutoInputService.sendTouchEvent({
-        touchAction,
-        actionIndex: null,
-        touchLocation: [
+        action,
+        actionIndex: 0,
+        pointerData: [
             {
                 x,
                 y,

@@ -1,15 +1,16 @@
-import { Message } from '../messenger/Message.js';
 import {
-    ChannelDescriptor,
+    ControlMessageType,
     ChannelOpenRequest,
     ChannelOpenResponse,
-    ControlMessage,
+    MessageStatus,
+    Service as ProtoService,
     ServiceDiscoveryResponse,
-    Status,
 } from '@web-auto/android-auto-proto';
+import { Message } from '../messenger/Message.js';
 import { DataBuffer } from '../utils/DataBuffer.js';
 import { getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
+import { Message as ProtoMessage } from '@bufbuild/protobuf';
 
 export interface ServiceEvents {
     onMessageSent: (
@@ -69,7 +70,11 @@ export abstract class Service {
         if (typeof message === 'string') {
             extra = message;
             message = undefined;
+        } else if (message instanceof ProtoMessage) {
+            extra = message.getType().typeName;
+            message = message.toJson();
         }
+
         this.logger.debug(`Receive ${extra}`, message);
     }
 
@@ -83,6 +88,12 @@ export abstract class Service {
             extra = message;
             message = undefined;
         }
+
+        if (message instanceof ProtoMessage) {
+            extra = message.getType().typeName;
+            message = message.toJson();
+        }
+
         this.logger.debug(`Send ${extra}`, message);
     }
 
@@ -91,8 +102,8 @@ export abstract class Service {
         let data;
 
         switch (message.messageId) {
-            case ControlMessage.Enum.CHANNEL_OPEN_REQUEST:
-                data = ChannelOpenRequest.decode(bufferPayload);
+            case ControlMessageType.MESSAGE_CHANNEL_OPEN_REQUEST:
+                data = ChannelOpenRequest.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onChannelOpenRequest(data);
                 break;
@@ -110,17 +121,17 @@ export abstract class Service {
     protected abstract open(data: ChannelOpenRequest): Promise<void>;
 
     protected async sendChannelOpenResponse(status: boolean): Promise<void> {
-        const data = ChannelOpenResponse.create({
-            status: status ? Status.Enum.OK : Status.Enum.FAIL,
+        const data = new ChannelOpenResponse({
+            status: status
+                ? MessageStatus.STATUS_SUCCESS
+                : MessageStatus.STATUS_INVALID_CHANNEL,
         });
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            ChannelOpenResponse.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedControlMessage(
-            ControlMessage.Enum.CHANNEL_OPEN_RESPONSE,
+            ControlMessageType.MESSAGE_CHANNEL_OPEN_RESPONSE,
             payload,
         );
     }
@@ -170,15 +181,16 @@ export abstract class Service {
     }
 
     protected abstract fillChannelDescriptor(
-        channelDescriptor: ChannelDescriptor,
+        channelDescriptor: ProtoService,
     ): void;
 
     public fillFeatures(response: ServiceDiscoveryResponse): void {
-        const channelDescriptor = ChannelDescriptor.create();
-        channelDescriptor.channelId = this.serviceId;
+        const channelDescriptor = new ProtoService({
+            id: this.serviceId,
+        });
 
         this.fillChannelDescriptor(channelDescriptor);
 
-        response.channels.push(channelDescriptor);
+        response.services.push(channelDescriptor);
     }
 }

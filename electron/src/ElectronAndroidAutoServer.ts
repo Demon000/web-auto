@@ -20,11 +20,6 @@ import {
     type AndroidAutoVideoService,
     type AndroidAutoVideoClient,
 } from '@web-auto/android-auto-ipc';
-import {
-    AudioType,
-    type ITouchConfig,
-    type IVideoConfig,
-} from '@web-auto/android-auto-proto';
 import { DummyMediaStatusService } from './services/DummyMediaStatusService.js';
 import { DummyNavigationStatusService } from './services/DummyNavigationService.js';
 import { DummySensorService } from './services/DummySensorService.js';
@@ -47,11 +42,17 @@ import {
     type IpcServiceHandler,
     type IpcServiceRegistry,
 } from '@web-auto/electron-ipc/common.js';
+import {
+    AudioStreamType,
+    type InputSourceService_TouchScreen,
+    type VideoConfiguration,
+} from '@web-auto/android-auto-proto';
+import type { PartialMessage } from '@bufbuild/protobuf';
 
 export interface ElectronAndroidAutoServerConfig
     extends AndroidAutoServerConfig {
-    videoConfigs: IVideoConfig[];
-    touchScreenConfig: ITouchConfig;
+    videoConfigs: PartialMessage<VideoConfiguration>[];
+    touchScreenConfig: PartialMessage<InputSourceService_TouchScreen>;
     tcpDeviceHandlerConfig: ElectronTcpDeviceHandlerConfig;
     usbDeviceHandlerConfig: ElectronUsbDeviceHandlerConfig;
     bluetoothDeviceHandlerConfig?: ElectronBluetoothDeviceHandlerConfig;
@@ -137,15 +138,15 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
         return [
             new ElectronAndroidAutoAudioInputService(events),
             new ElectronAndroidAutoAudioOutputService(
-                AudioType.Enum.MEDIA,
+                AudioStreamType.AUDIO_STREAM_MEDIA,
                 events,
             ),
             new ElectronAndroidAutoAudioOutputService(
-                AudioType.Enum.SPEECH,
+                AudioStreamType.AUDIO_STREAM_GUIDANCE,
                 events,
             ),
             new ElectronAndroidAutoAudioOutputService(
-                AudioType.Enum.SYSTEM,
+                AudioStreamType.AUDIO_STREAM_SYSTEM_AUDIO,
                 events,
             ),
             new DummySensorService(events),

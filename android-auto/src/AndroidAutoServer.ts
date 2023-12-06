@@ -1,6 +1,7 @@
 import {
-    type IServiceDiscoveryResponse,
     ServiceDiscoveryRequest,
+    HeadUnitInfo,
+    DriverPosition,
     ServiceDiscoveryResponse,
 } from '@web-auto/android-auto-proto';
 import {
@@ -30,7 +31,7 @@ import { FrameHeaderFlags } from './messenger/FrameHeader.js';
 
 export interface AndroidAutoServerConfig {
     controlConfig: ControlServiceConfig;
-    serviceDiscovery: IServiceDiscoveryResponse;
+    headunitInfo: HeadUnitInfo;
     deviceNameWhitelist?: string[];
 }
 
@@ -186,9 +187,27 @@ export abstract class AndroidAutoServer {
         assert(this.controlService !== undefined);
         assert(this.services !== undefined);
 
-        const data = ServiceDiscoveryResponse.create(
-            this.config.serviceDiscovery,
-        );
+        const data = new ServiceDiscoveryResponse({
+            ...this.config.headunitInfo,
+            headunitInfo: this.config.headunitInfo,
+            driverPosition: DriverPosition.LEFT,
+
+            canPlayNativeMediaDuringVr: false,
+            sessionConfiguration: 0,
+            displayName: '',
+            probeForSupport: false,
+            connectionConfiguration: {
+                pingConfiguration: {
+                    timeoutMs: 3000,
+                    intervalMs: 1000,
+                    highLatencyThresholdMs: 200,
+                    trackedPingCount: 5,
+                },
+                wirelessTcpConfiguration: undefined,
+            },
+
+            services: [],
+        });
 
         for (const service of this.services) {
             service.fillFeatures(data);
@@ -200,9 +219,7 @@ export abstract class AndroidAutoServer {
     private async onServiceDiscoveryRequest(
         data: ServiceDiscoveryRequest,
     ): Promise<void> {
-        this.logger.info(
-            `Discovery request, brand: ${data.deviceBrand}, device name ${data.deviceName}`,
-        );
+        this.logger.info(`Discovery request, device name ${data.deviceName}`);
 
         await this.sendServiceDiscoveryResponse();
     }

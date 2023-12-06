@@ -1,26 +1,25 @@
-import {
-    BindingRequest,
-    BindingResponse,
-    type ITouchEvent,
-    InputChannelMessage,
-    InputEventIndication,
-    Status,
-} from '@web-auto/android-auto-proto';
-
 import { Message } from '../messenger/Message.js';
 import { DataBuffer } from '../utils/DataBuffer.js';
+import type { PartialMessage } from '@bufbuild/protobuf';
 
 import { Service, type ServiceEvents } from './Service.js';
 import { microsecondsTime } from '../utils/time.js';
+import {
+    InputMessageId,
+    InputReport,
+    KeyBindingRequest,
+    KeyBindingResponse,
+    TouchEvent,
+} from '@web-auto/android-auto-proto';
 
 export abstract class InputService extends Service {
     public constructor(protected events: ServiceEvents) {
         super(events);
     }
 
-    protected abstract bind(data: BindingRequest): Promise<void>;
+    protected abstract bind(data: KeyBindingRequest): Promise<void>;
 
-    protected async onBindingRequest(data: BindingRequest): Promise<void> {
+    protected async onBindingRequest(data: KeyBindingRequest): Promise<void> {
         let status = false;
 
         try {
@@ -39,11 +38,11 @@ export abstract class InputService extends Service {
 
     public async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
-        let data: BindingRequest;
+        let data;
 
         switch (message.messageId) {
-            case InputChannelMessage.Enum.BINDING_REQUEST:
-                data = BindingRequest.decode(bufferPayload);
+            case InputMessageId.INPUT_MESSAGE_KEY_BINDING_REQUEST:
+                data = KeyBindingRequest.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onBindingRequest(data);
                 break;
@@ -55,38 +54,36 @@ export abstract class InputService extends Service {
     }
 
     protected async sendBindingResponse(status: boolean): Promise<void> {
-        const data = BindingResponse.create({
-            status: status ? Status.Enum.OK : Status.Enum.FAIL,
+        const data = new KeyBindingResponse({
+            status: status ? 0 : -1,
         });
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            BindingResponse.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
-            InputChannelMessage.Enum.BINDING_RESPONSE,
+            InputMessageId.INPUT_MESSAGE_KEY_BINDING_RESPONSE,
             payload,
         );
     }
 
-    public async sendTouchEvent(touchEvent: ITouchEvent): Promise<void> {
+    public async sendTouchEvent(
+        touchEvent: PartialMessage<TouchEvent>,
+    ): Promise<void> {
         if (!this.started) {
             return;
         }
 
-        const data = InputEventIndication.create({
+        const data = new InputReport({
             timestamp: microsecondsTime(),
             touchEvent,
         });
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            InputEventIndication.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
-            InputChannelMessage.Enum.INPUT_EVENT_INDICATION,
+            InputMessageId.INPUT_MESSAGE_INPUT_REPORT,
             payload,
         );
     }

@@ -1,15 +1,12 @@
-import {
-    SensorEventIndication,
-    SensorType,
-} from '@web-auto/android-auto-proto';
+import { SensorBatch, SensorType } from '@web-auto/android-auto-proto';
 
 export interface SensorEvents {
-    onData: (data: SensorEventIndication) => Promise<void>;
+    onData: (data: SensorBatch) => Promise<void>;
 }
 
 export abstract class Sensor {
     public constructor(
-        public readonly type: SensorType.Enum,
+        public readonly type: SensorType,
         protected events: SensorEvents,
     ) {}
 

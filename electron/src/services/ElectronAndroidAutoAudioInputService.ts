@@ -4,9 +4,9 @@ import {
     type ServiceEvents,
 } from '@web-auto/android-auto';
 import {
-    AVChannelSetupRequest,
-    AVInputOpenRequest,
     ChannelOpenRequest,
+    MicrophoneRequest,
+    Setup,
 } from '@web-auto/android-auto-proto';
 import RtAudioPackage from 'audify';
 
@@ -23,7 +23,7 @@ export class ElectronAndroidAutoAudioInputService extends AudioInputService {
         this.session = 0;
     }
 
-    protected async setup(_data: AVChannelSetupRequest): Promise<void> {
+    protected async setup(_data: Setup): Promise<void> {
         // TODO
     }
 
@@ -51,7 +51,7 @@ export class ElectronAndroidAutoAudioInputService extends AudioInputService {
         this.rtaudio.closeStream();
     }
 
-    protected async inputOpen(data: AVInputOpenRequest): Promise<void> {
+    protected async inputOpen(data: MicrophoneRequest): Promise<void> {
         if (data.open) {
             this.rtaudio.start();
         } else {

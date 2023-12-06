@@ -6,16 +6,17 @@ import {
     BluetoothMessageType,
     DataBuffer,
 } from '@web-auto/android-auto';
-import {
-    ConnectStatusMessage,
-    NetworkInfo,
-    SocketInfoRequest,
-    SocketInfoResponse,
-    SocketInfoResponseStatus,
-} from '@web-auto/android-auto-proto';
 import assert from 'node:assert';
 import { Duplex } from 'node:stream';
 import { type ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig.js';
+
+import {
+    SocketInfoResponse,
+    SocketInfoRequest,
+    NetworkInfo,
+    ConnectStatus,
+    SocketInfoResponseStatus,
+} from '@web-auto/android-auto-proto/bluetooth.js';
 
 enum InternalEvent {
     CONNECTION_SUCCESS,
@@ -44,15 +45,16 @@ export class BluetoothDeviceWifiConnector {
         this.onData = this.onData.bind(this);
     }
 
-    private onStatus(data: ConnectStatusMessage): void {
-        if (data.status === SocketInfoResponseStatus.Enum.STATUS_SUCCESS) {
+    private onStatus(data: ConnectStatus): void {
+        if (data.status === SocketInfoResponseStatus.STATUS_SUCCESS) {
             this.internalEmitter.emit(InternalEvent.CONNECTION_SUCCESS);
         } else {
+            assert(data.status !== undefined);
             this.internalEmitter.emit(
                 InternalEvent.CONNECTION_FAIL,
                 new Error(
                     `Wi-Fi connection failed with ${
-                        SocketInfoResponseStatus.Enum[data.status]
+                        SocketInfoResponseStatus[data.status]
                     }`,
                 ),
             );
@@ -80,7 +82,7 @@ export class BluetoothDeviceWifiConnector {
     }
 
     public async sendSocketInfoRequest(): Promise<void> {
-        const data = SocketInfoRequest.create(this.config.socketInfo);
+        const data = new SocketInfoRequest(this.config.socketInfo);
 
         this.logger.debug('Send message', {
             type: BluetoothMessageType[
@@ -91,14 +93,14 @@ export class BluetoothDeviceWifiConnector {
 
         const message = new BluetoothMessage(
             BluetoothMessageType.SOCKET_INFO_REQUEST,
-            DataBuffer.fromBuffer(SocketInfoRequest.encode(data).finish()),
+            DataBuffer.fromBuffer(data.toBinary()),
         );
 
         await this.sendMessage(message);
     }
 
     public async sendNetworkInfoResponse(): Promise<void> {
-        const data = this.config.networkInfo;
+        const data = new NetworkInfo(this.config.networkInfo);
 
         this.logger.debug('Send message', {
             type: BluetoothMessageType[
@@ -109,7 +111,7 @@ export class BluetoothDeviceWifiConnector {
 
         const message = new BluetoothMessage(
             BluetoothMessageType.NETWORK_INFO_RESPONSE,
-            DataBuffer.fromBuffer(NetworkInfo.encode(data).finish()),
+            DataBuffer.fromBuffer(data.toBinary()),
         );
 
         await this.sendMessage(message);
@@ -136,16 +138,16 @@ export class BluetoothDeviceWifiConnector {
                 await this.onNetworkInfoRequest();
                 break;
             case BluetoothMessageType.SOCKET_INFO_RESPONSE:
-                data = SocketInfoResponse.decode(message.payload.data);
+                data = SocketInfoResponse.fromBinary(message.payload.data);
                 this.logger.debug('Receive decoded message', data);
                 break;
             case BluetoothMessageType.CONNECT_STATUS:
-                data = ConnectStatusMessage.decode(message.payload.data);
+                data = ConnectStatus.fromBinary(message.payload.data);
                 this.logger.debug('Receive decoded message', data);
                 this.onStatus(data);
                 break;
             default:
-                this.logger.error('Receive unhandled message');
+                this.logger.error('Receive unhandled message', message);
                 break;
         }
     }

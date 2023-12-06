@@ -1,16 +1,17 @@
 import { InputService, type ServiceEvents } from '@web-auto/android-auto';
 import {
     ChannelOpenRequest,
-    BindingRequest,
-    ChannelDescriptor,
-    InputChannel,
-    type ITouchConfig,
+    InputSourceService,
+    InputSourceService_TouchScreen,
+    KeyBindingRequest,
+    Service,
 } from '@web-auto/android-auto-proto';
 import type {
     AndroidAutoInputService,
     AndroidAutoInputClient,
 } from '@web-auto/android-auto-ipc';
 import type { IpcServiceHandler } from '@web-auto/electron-ipc/common.js';
+import type { PartialMessage } from '@bufbuild/protobuf';
 
 export class ElectronAndroidAutoInputService extends InputService {
     public constructor(
@@ -18,7 +19,7 @@ export class ElectronAndroidAutoInputService extends InputService {
             AndroidAutoInputService,
             AndroidAutoInputClient
         >,
-        private touchScreenConfig: ITouchConfig,
+        private touchScreenConfig: PartialMessage<InputSourceService_TouchScreen>,
         events: ServiceEvents,
     ) {
         super(events);
@@ -27,14 +28,15 @@ export class ElectronAndroidAutoInputService extends InputService {
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {}
-    protected async bind(_data: BindingRequest): Promise<void> {}
+    protected async bind(_data: KeyBindingRequest): Promise<void> {}
 
-    protected fillChannelDescriptor(
-        channelDescriptor: ChannelDescriptor,
-    ): void {
-        channelDescriptor.inputChannel = InputChannel.create({
-            supportedKeycodes: [],
-            touchScreenConfig: this.touchScreenConfig,
+    protected fillChannelDescriptor(channelDescriptor: Service): void {
+        channelDescriptor.inputSourceService = new InputSourceService({
+            keycodesSupported: [],
+            touchscreen: [this.touchScreenConfig],
+            touchpad: [],
+            feedbackEventsSupported: [],
+            displayId: 0,
         });
     }
 }

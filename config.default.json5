@@ -3,18 +3,16 @@
         debug: false,
     },
     androidAuto: {
-        serviceDiscovery: {
+        headunitInfo: {
+            make: 'WebAuto',
+            model: 'Universal',
+            year: '2023',
+            vehicleId: '20231206',
             headUnitName: 'WebAuto',
-            carModel: 'Universal',
-            carYear: '2018',
-            carSerial: '20180301',
-            leftHandDriveVehicle: false,
-            headunitManufacturer: 'WebAuto',
-            headunitModel: 'WebAuto Headunit',
-            swBuild: '1',
-            swVersion: '1.0',
-            canPlayNativeMediaDuringVr: false,
-            hideClock: false,
+            headUnitMake: 'WebAuto',
+            headUnitModel: 'WebAuto Headunit',
+            headUnitSoftwareBuild: '1',
+            headUnitSoftwareVersion: '1.0',
         },
         controlConfig: {
             pingTimeoutMs: 5000,
@@ -30,18 +28,24 @@
                 // _1080p_p = 7
                 // _1440p_p = 8
                 // _2160p_p = 9
-                videoResolution: 3,
+                codecResolution: 3,
                 // _30 = 1
                 // _60 = 2
-                videoFps: 2,
-                marginHeight: 0,
-                marginWidth: 0,
-                dpi: 240,
+                frameRate: 2,
+                heightMargin: 0,
+                widthMargin: 0,
+                density: 240,
             },
         ],
         touchScreenConfig: {
             width: 1920,
             height: 1080,
+
+            // CAPACITIVE = 1
+            // RESISTIVE = 2
+            // INFRARED = 3
+            type: 1,
+            isSecondary: false,
         },
         tcpDeviceHandlerConfig: {
             ips: ['192.168.0.103'],

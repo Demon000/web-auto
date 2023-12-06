@@ -1,17 +1,17 @@
 import { Message } from '../messenger/Message.js';
-import {
-    AVChannelMessage,
-    AVInputChannel,
-    AVInputOpenRequest,
-    AVInputOpenResponse,
-    AVMediaAckIndication,
-    AVStreamType,
-} from '@web-auto/android-auto-proto';
-import { ChannelDescriptor } from '@web-auto/android-auto-proto';
 import { DataBuffer } from '../utils/DataBuffer.js';
 import { AVService } from './AVService.js';
 import { microsecondsTime } from '../utils/time.js';
 import { type ServiceEvents } from './Service.js';
+import {
+    Ack,
+    MediaCodecType,
+    MediaMessageId,
+    MediaSourceService,
+    MicrophoneRequest,
+    MicrophoneResponse,
+    Service,
+} from '@web-auto/android-auto-proto';
 
 export abstract class AudioInputService extends AVService {
     public constructor(protected events: ServiceEvents) {
@@ -30,11 +30,9 @@ export abstract class AudioInputService extends AVService {
         return 2048;
     }
 
-    protected abstract inputOpen(data: AVInputOpenRequest): Promise<void>;
+    protected abstract inputOpen(data: MicrophoneRequest): Promise<void>;
 
-    protected async onInputOpenRequest(
-        data: AVInputOpenRequest,
-    ): Promise<void> {
+    protected async onInputOpenRequest(data: MicrophoneRequest): Promise<void> {
         try {
             await this.inputOpen(data);
         } catch (err) {
@@ -48,22 +46,20 @@ export abstract class AudioInputService extends AVService {
         await this.sendInputOpenResponse();
     }
 
-    protected async onAckIndication(
-        _data: AVMediaAckIndication,
-    ): Promise<void> {}
+    protected async onAckIndication(_data: Ack): Promise<void> {}
 
     public async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
         switch (message.messageId) {
-            case AVChannelMessage.Enum.AV_INPUT_OPEN_REQUEST:
-                data = AVInputOpenRequest.decode(bufferPayload);
+            case MediaMessageId.MEDIA_MESSAGE_MICROPHONE_REQUEST:
+                data = MicrophoneRequest.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onInputOpenRequest(data);
                 break;
-            case AVChannelMessage.Enum.AV_MEDIA_ACK_INDICATION:
-                data = AVMediaAckIndication.decode(bufferPayload);
+            case MediaMessageId.MEDIA_MESSAGE_ACK:
+                data = Ack.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onAckIndication(data);
                 break;
@@ -82,18 +78,16 @@ export abstract class AudioInputService extends AVService {
             return;
         }
 
-        const data = AVInputOpenResponse.create({
-            value: 0,
-            session: this.session,
+        const data = new MicrophoneResponse({
+            status: 0,
+            sessionId: this.session,
         });
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            AVInputOpenResponse.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
-            AVChannelMessage.Enum.AV_INPUT_OPEN_RESPONSE,
+            MediaMessageId.MEDIA_MESSAGE_MICROPHONE_RESPONSE,
             payload,
         );
     }
@@ -104,24 +98,22 @@ export abstract class AudioInputService extends AVService {
         const payload = DataBuffer.empty();
         const timestamp = microsecondsTime();
 
-        payload.appendUint64BELong(timestamp);
+        payload.appendUint64BE(timestamp);
         payload.appendBuffer(buffer);
 
         await this.sendEncryptedSpecificMessage(
-            AVChannelMessage.Enum.AV_MEDIA_WITH_TIMESTAMP_INDICATION,
+            MediaMessageId.MEDIA_MESSAGE_DATA,
             payload,
         );
     }
 
-    protected fillChannelDescriptor(
-        channelDescriptor: ChannelDescriptor,
-    ): void {
-        channelDescriptor.avInputChannel = AVInputChannel.create({
-            streamType: AVStreamType.Enum.AUDIO,
+    protected fillChannelDescriptor(channelDescriptor: Service): void {
+        channelDescriptor.mediaSourceService = new MediaSourceService({
+            availableType: MediaCodecType.MEDIA_CODEC_AUDIO_PCM,
             audioConfig: {
-                sampleRate: this.sampleRate(),
-                channelCount: this.channelCount(),
-                bitDepth: 16,
+                samplingRate: this.sampleRate(),
+                numberOfChannels: this.channelCount(),
+                numberOfBits: 16,
             },
         });
     }

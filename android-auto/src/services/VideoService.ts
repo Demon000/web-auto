@@ -1,8 +1,8 @@
 import {
-    AVChannelMessage,
-    VideoFocusIndication,
+    MediaMessageId,
     VideoFocusMode,
-    VideoFocusRequest,
+    VideoFocusNotification,
+    VideoFocusRequestNotification,
 } from '@web-auto/android-auto-proto';
 
 import { Message } from '../messenger/Message.js';
@@ -16,8 +16,8 @@ export abstract class VideoService extends AVOutputService {
         let data;
 
         switch (message.messageId) {
-            case AVChannelMessage.Enum.VIDEO_FOCUS_REQUEST:
-                data = VideoFocusRequest.decode(bufferPayload);
+            case MediaMessageId.MEDIA_MESSAGE_VIDEO_FOCUS_REQUEST:
+                data = VideoFocusRequestNotification.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onVideoFocusRequest(data);
                 break;
@@ -28,7 +28,9 @@ export abstract class VideoService extends AVOutputService {
         return true;
     }
 
-    protected abstract focus(data: VideoFocusRequest): Promise<void>;
+    protected abstract focus(
+        data: VideoFocusRequestNotification,
+    ): Promise<void>;
 
     protected async sendSetupResponse(status: boolean): Promise<void> {
         await super.sendSetupResponse(status);
@@ -40,7 +42,7 @@ export abstract class VideoService extends AVOutputService {
     }
 
     protected async onVideoFocusRequest(
-        data: VideoFocusRequest,
+        data: VideoFocusRequestNotification,
     ): Promise<void> {
         try {
             await this.focus(data);
@@ -56,18 +58,17 @@ export abstract class VideoService extends AVOutputService {
     }
 
     protected async sendVideoFocusIndication(): Promise<void> {
-        const data = VideoFocusIndication.create({
-            focusMode: VideoFocusMode.Enum.FOCUSED,
-            unrequested: false,
+        const data = new VideoFocusNotification({
+            focus: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
+            unsolicited: false,
         });
+
         this.printSend(data);
 
-        const payload = DataBuffer.fromBuffer(
-            VideoFocusIndication.encode(data).finish(),
-        );
+        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
-            AVChannelMessage.Enum.VIDEO_FOCUS_INDICATION,
+            MediaMessageId.MEDIA_MESSAGE_VIDEO_FOCUS_NOTIFICATION,
             payload,
         );
     }

@@ -1,8 +1,7 @@
 import { PingRequest, PingResponse } from '@web-auto/android-auto-proto';
 import assert from 'node:assert';
-import { microToMilli, milliTime, milliToMicro } from '../utils/time.js';
 import { getLogger } from '@web-auto/logging';
-import Long from 'long';
+import { microsecondsTime, milliToMicro } from './../utils/time.js';
 
 export interface PingerEvents {
     onPingRequest: (request: PingRequest) => Promise<void>;
@@ -12,14 +11,16 @@ export interface PingerEvents {
 export class Pinger {
     protected logger = getLogger(this.constructor.name);
     private pingTimeout?: ReturnType<typeof setTimeout>;
-    private pingReceivedTime?: number;
-    private pingSentTime?: number;
+    private pingReceivedTime?: bigint;
+    private pingSentTime?: bigint;
     private started = false;
+    private pingTimeoutUs: bigint;
 
     public constructor(
-        private pingTimeoutMs: number,
+        pingTimeoutMs: number,
         private events: PingerEvents,
     ) {
+        this.pingTimeoutUs = milliToMicro(pingTimeoutMs);
         this.onPingTimeout = this.onPingTimeout.bind(this);
     }
 
@@ -38,7 +39,7 @@ export class Pinger {
         const isTimeoutPing =
             this.pingReceivedTime !== undefined &&
             this.pingSentTime !== undefined &&
-            this.pingReceivedTime - this.pingSentTime > this.pingTimeoutMs;
+            this.pingReceivedTime - this.pingSentTime > this.pingTimeoutUs;
 
         if (isTimeoutPing) {
             try {
@@ -50,11 +51,11 @@ export class Pinger {
         }
 
         this.pingTimeout = undefined;
-        this.pingSentTime = milliTime();
+        this.pingSentTime = microsecondsTime();
         this.pingReceivedTime = undefined;
 
-        const data = PingRequest.create({
-            timestamp: milliToMicro(this.pingSentTime),
+        const data = new PingRequest({
+            timestamp: this.pingSentTime,
         });
 
         try {
@@ -67,8 +68,7 @@ export class Pinger {
     }
 
     public onPingResponse(data: PingResponse): void {
-        assert(Long.isLong(data.timestamp));
-        this.pingReceivedTime = microToMilli(data.timestamp);
+        this.pingReceivedTime = data.timestamp;
     }
 
     public start(): void {

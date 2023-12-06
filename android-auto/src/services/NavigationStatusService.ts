@@ -1,10 +1,9 @@
 import {
-    NavigationChannelMessage,
-    NavigationDistanceEvent,
+    NavigationNextTurnDistanceEvent,
+    NavigationNextTurnEvent,
     NavigationStatus,
-    NavigationTurnEvent,
+    NavigationStatusMessageId,
 } from '@web-auto/android-auto-proto';
-
 import { Message } from '../messenger/Message.js';
 
 import { Service, type ServiceEvents } from './Service.js';
@@ -17,20 +16,22 @@ export abstract class NavigationStatusService extends Service {
     protected abstract handleStatus(data: NavigationStatus): Promise<void>;
 
     protected abstract handleDistance(
-        data: NavigationDistanceEvent,
+        data: NavigationNextTurnDistanceEvent,
     ): Promise<void>;
 
-    protected abstract handleTurn(data: NavigationTurnEvent): Promise<void>;
+    protected abstract handleTurn(data: NavigationNextTurnEvent): Promise<void>;
 
     protected async onStatus(data: NavigationStatus): Promise<void> {
         await this.handleStatus(data);
     }
 
-    protected async onDistance(data: NavigationDistanceEvent): Promise<void> {
+    protected async onDistance(
+        data: NavigationNextTurnDistanceEvent,
+    ): Promise<void> {
         await this.handleDistance(data);
     }
 
-    protected async onTurn(data: NavigationTurnEvent): Promise<void> {
+    protected async onTurn(data: NavigationNextTurnEvent): Promise<void> {
         await this.handleTurn(data);
     }
 
@@ -38,19 +39,20 @@ export abstract class NavigationStatusService extends Service {
         const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId) {
-            case NavigationChannelMessage.Enum.STATUS:
-                data = NavigationStatus.decode(bufferPayload);
+        switch (message.messageId as NavigationStatusMessageId) {
+            case NavigationStatusMessageId.INSTRUMENT_CLUSTER_NAVIGATION_STATUS:
+                data = NavigationStatus.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onStatus(data);
                 break;
-            case NavigationChannelMessage.Enum.DISTANCE_EVENT:
-                data = NavigationDistanceEvent.decode(bufferPayload);
+            case NavigationStatusMessageId.INSTRUMENT_CLUSTER_NAVIGATION_DISTANCE_EVENT:
+                data =
+                    NavigationNextTurnDistanceEvent.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onDistance(data);
                 break;
-            case NavigationChannelMessage.Enum.TURN_EVENT:
-                data = NavigationTurnEvent.decode(bufferPayload);
+            case NavigationStatusMessageId.INSTRUMENT_CLUSTER_NAVIGATION_TURN_EVENT:
+                data = NavigationNextTurnEvent.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onTurn(data);
                 break;

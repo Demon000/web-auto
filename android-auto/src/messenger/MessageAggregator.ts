@@ -135,7 +135,10 @@ export class MessageAggregator {
         isEncrypted: boolean,
         isControl: boolean,
     ): FrameData[] {
-        this.logger.debug('Split message', message);
+        this.logger.debug('Split message', {
+            message,
+            buffer: message.getBufferPayload().toString('hex'),
+        });
         const context = {
             remainingSize: message.payload.size,
         };

@@ -1,15 +1,16 @@
 import {
-    AVChannel,
-    AVStreamType,
-    AudioType,
+    AudioConfiguration,
+    AudioStreamType,
+    MediaCodecType,
+    MediaSinkService,
+    type Service,
 } from '@web-auto/android-auto-proto';
-import { ChannelDescriptor } from '@web-auto/android-auto-proto';
 import { AVOutputService } from './AVOutputService.js';
 import { type ServiceEvents } from './Service.js';
 
 export abstract class AudioOutputService extends AVOutputService {
     public constructor(
-        private audioType: AudioType.Enum,
+        private audioType: AudioStreamType,
         protected events: ServiceEvents,
     ) {
         super(events);
@@ -17,11 +18,11 @@ export abstract class AudioOutputService extends AVOutputService {
 
     protected channelConfig(): [number, number, number] {
         switch (this.audioType) {
-            case AudioType.Enum.MEDIA:
+            case AudioStreamType.AUDIO_STREAM_MEDIA:
                 return [2, 48000, 2048];
-            case AudioType.Enum.SYSTEM:
+            case AudioStreamType.AUDIO_STREAM_SYSTEM_AUDIO:
                 return [1, 16000, 1024];
-            case AudioType.Enum.SPEECH:
+            case AudioStreamType.AUDIO_STREAM_GUIDANCE:
                 return [1, 16000, 1024];
             default:
                 throw new Error(`Unhandled audio type ${this.audioType}`);
@@ -40,18 +41,15 @@ export abstract class AudioOutputService extends AVOutputService {
         return this.channelConfig()[2];
     }
 
-    protected fillChannelDescriptor(
-        channelDescriptor: ChannelDescriptor,
-    ): void {
-        channelDescriptor.avChannel = AVChannel.create({
-            streamType: AVStreamType.Enum.AUDIO,
+    protected fillChannelDescriptor(channelDescriptor: Service): void {
+        channelDescriptor.mediaSinkService = new MediaSinkService({
+            availableType: MediaCodecType.MEDIA_CODEC_AUDIO_PCM,
             audioType: this.audioType,
-            availableWhileInCall: true,
             audioConfigs: [
                 {
-                    bitDepth: 16,
-                    channelCount: this.channelCount(),
-                    sampleRate: this.sampleRate(),
+                    samplingRate: this.sampleRate(),
+                    numberOfChannels: this.channelCount(),
+                    numberOfBits: 16,
                 },
             ],
         });

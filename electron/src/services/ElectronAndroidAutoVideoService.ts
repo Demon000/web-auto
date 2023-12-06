@@ -1,25 +1,26 @@
 import {
-    AVChannel,
-    AVChannelSetupRequest,
-    AVChannelStartIndication,
-    AVChannelStopIndication,
-    AVStreamType,
-    ChannelDescriptor,
-    ChannelOpenRequest,
-    type IVideoConfig,
-    VideoFocusRequest,
-} from '@web-auto/android-auto-proto';
-import {
     DataBuffer,
     type ServiceEvents,
     VideoService,
 } from '@web-auto/android-auto';
-import Long from 'long';
 import type {
     AndroidAutoVideoClient,
     AndroidAutoVideoService,
 } from '@web-auto/android-auto-ipc';
 import type { IpcServiceHandler } from '@web-auto/electron-ipc/common.js';
+import {
+    MediaCodecType,
+    type ChannelOpenRequest,
+    type Service,
+    type Setup,
+    type Start,
+    type Stop,
+    type VideoConfiguration,
+    type VideoFocusRequestNotification,
+    DisplayType,
+    MediaSinkService,
+} from '@web-auto/android-auto-proto';
+import type { PartialMessage } from '@bufbuild/protobuf';
 
 export class ElectronAndroidAutoVideoService extends VideoService {
     public constructor(
@@ -27,7 +28,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
             AndroidAutoVideoService,
             AndroidAutoVideoClient
         >,
-        private videoConfigs: IVideoConfig[],
+        private videoConfigs: PartialMessage<VideoConfiguration>[],
         protected events: ServiceEvents,
     ) {
         super(events);
@@ -35,7 +36,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         ipcHandler.on('getVideoConfig', this.getVideoConfig.bind(this));
     }
 
-    public async getVideoConfig(): Promise<IVideoConfig> {
+    public async getVideoConfig(): Promise<PartialMessage<VideoConfiguration>> {
         return this.videoConfigs[0];
     }
 
@@ -53,38 +54,35 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         // TODO
     }
 
-    protected async channelStart(
-        _data: AVChannelStartIndication,
-    ): Promise<void> {
+    protected async channelStart(_data: Start): Promise<void> {
         // TODO
     }
 
-    protected async setup(_data: AVChannelSetupRequest): Promise<void> {
+    protected async setup(_data: Setup): Promise<void> {
         // TODO
     }
 
-    protected async focus(_data: VideoFocusRequest): Promise<void> {
+    protected async focus(_data: VideoFocusRequestNotification): Promise<void> {
         // TODO
     }
 
-    protected async channelStop(_data: AVChannelStopIndication): Promise<void> {
+    protected async channelStop(_data: Stop): Promise<void> {
         // TODO
     }
 
     protected async handleData(
         buffer: DataBuffer,
-        _timestamp?: Long,
+        _timestamp?: bigint,
     ): Promise<void> {
         this.ipcHandler.data(buffer.data);
     }
 
-    protected fillChannelDescriptor(
-        channelDescriptor: ChannelDescriptor,
-    ): void {
-        channelDescriptor.avChannel = AVChannel.create({
-            streamType: AVStreamType.Enum.VIDEO,
-            availableWhileInCall: true,
+    protected fillChannelDescriptor(channelDescriptor: Service): void {
+        channelDescriptor.mediaSinkService = new MediaSinkService({
+            availableType: MediaCodecType.MEDIA_CODEC_VIDEO_H264_BP,
             videoConfigs: this.videoConfigs,
+            displayId: 0,
+            displayType: DisplayType.MAIN,
         });
     }
 }

@@ -1,11 +1,12 @@
 import { NavigationStatusService } from '@web-auto/android-auto';
 import {
-    ChannelDescriptor,
     ChannelOpenRequest,
-    NavigationDistanceEvent,
+    NavigationNextTurnDistanceEvent,
+    NavigationNextTurnEvent,
     NavigationStatus,
-    NavigationTurnEvent,
-    NavigationTurnType,
+    NavigationStatusService as NavigationStatusServiceProto,
+    NavigationStatusService_InstrumentClusterType,
+    Service,
 } from '@web-auto/android-auto-proto';
 
 export class DummyNavigationStatusService extends NavigationStatusService {
@@ -18,27 +19,25 @@ export class DummyNavigationStatusService extends NavigationStatusService {
     }
 
     protected async handleDistance(
-        _data: NavigationDistanceEvent,
+        _data: NavigationNextTurnDistanceEvent,
     ): Promise<void> {
         // TODO
     }
 
-    protected async handleTurn(_data: NavigationTurnEvent): Promise<void> {
+    protected async handleTurn(_data: NavigationNextTurnEvent): Promise<void> {
         // TODO
     }
 
-    protected fillChannelDescriptor(
-        channelDescriptor: ChannelDescriptor,
-    ): void {
-        channelDescriptor.navigationChannel = {
-            minimumIntervalMs: 1000,
-            type: NavigationTurnType.Enum.IMAGE,
-            imageOptions: {
-                width: 256,
-                height: 256,
-                colourDepthBits: 16,
-                dunno: 256,
-            },
-        };
+    protected fillChannelDescriptor(channelDescriptor: Service): void {
+        channelDescriptor.navigationStatusService =
+            new NavigationStatusServiceProto({
+                minimumIntervalMs: 1000,
+                type: NavigationStatusService_InstrumentClusterType.IMAGE,
+                imageOptions: {
+                    width: 256,
+                    height: 256,
+                    colourDepthBits: 16,
+                },
+            });
     }
 }
