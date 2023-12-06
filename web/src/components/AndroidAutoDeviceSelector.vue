@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { IDevice } from '@web-auto/android-auto-ipc';
+import Device from './Device.vue';
 import { androidAutoServerService } from '../ipc.js';
-import { onMounted, ref, type Ref } from 'vue';
+import { computed, onMounted, ref, type Ref } from 'vue';
 
 let devices: Ref<IDevice[]> = ref([]);
 
@@ -14,21 +15,28 @@ androidAutoServerService
         console.error(err);
     });
 
-const onConnectClick = async (name: string) => {
-    try {
-        await androidAutoServerService.connectDeviceName(name);
-    } catch (err) {
-        console.error(err);
-    }
-};
+const deviceHandlers = computed(() => {
+    const deviceHandlers: Record<string, IDevice[]> = {};
+    for (const device of devices.value) {
+        if (!(device.prefix in deviceHandlers)) {
+            deviceHandlers[device.prefix] = [];
+        }
 
-const onDisconnectClick = async (name: string) => {
-    try {
-        await androidAutoServerService.disconnectDeviceName(name);
-    } catch (err) {
-        console.error(err);
+        deviceHandlers[device.prefix].push(device);
     }
-};
+
+    return deviceHandlers;
+});
+
+const connectedDevice = computed(() => {
+    for (const device of devices.value) {
+        if (device.state === 'available' || device.state === 'disconnected') {
+            continue;
+        }
+
+        return device;
+    }
+});
 
 onMounted(() => {
     androidAutoServerService.on('devices', (updatedDevices) => {
@@ -39,22 +47,31 @@ onMounted(() => {
 
 <template>
     <div class="android-auto-device-selector">
-        <div class="device" v-for="device in devices">
-            <div class="name">{{ device.name }}</div>
-            <div class="state">{{ device.state }}</div>
-            <div
-                v-if="device.state === 'available'"
-                class="button connect-button"
-                @click="onConnectClick(device.name)"
-            >
-                CONNECT
+        <div class="device-handler" v-if="connectedDevice !== undefined">
+            <div class="title">Connected</div>
+
+            <div class="devices">
+                <device :device="connectedDevice"></device>
             </div>
-            <div
-                v-if="device.state === 'connected'"
-                class="button disconnect-button"
-                @click="onDisconnectClick(device.name)"
-            >
-                DISCONNECT
+        </div>
+
+        <div
+            class="device-handler"
+            v-for="(devices, deviceHandler) in deviceHandlers"
+            :key="deviceHandler"
+        >
+            <div class="title">
+                <template v-if="deviceHandler === 'TCP'"> Network </template>
+                <template v-else-if="deviceHandler === 'BT'">
+                    Bluetooth
+                </template>
+                <template v-else>
+                    {{ deviceHandler }}
+                </template>
+            </div>
+
+            <div class="devices" v-for="device in devices">
+                <device :device="device"></device>
             </div>
         </div>
     </div>
@@ -63,45 +80,12 @@ onMounted(() => {
 <style scoped>
 .android-auto-device-selector {
     padding: 16px;
-}
-
-.device {
     width: 100%;
-    height: 64px;
-    line-height: 64px;
+}
+
+.device-handler {
+    font-size: 32px;
+    margin: 32px 16px;
     padding: 0 32px;
-    font-size: 20px;
-    background: #202124;
-    border-radius: 32px;
-    margin: 16px;
-
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-}
-
-.name {
-    margin-right: 16px;
-}
-
-.state {
-    color: #5f6368;
-}
-
-.button {
-    margin: 16px 0;
-    height: 32px;
-    line-height: 32px;
-    border-radius: 16px;
-    padding: 0 16px;
-    font-size: 16px;
-    cursor: pointer;
-    background: #5f6368;
-    user-select: none;
-}
-
-.connect-button,
-.disconnect-button {
-    margin-left: auto;
 }
 </style>
