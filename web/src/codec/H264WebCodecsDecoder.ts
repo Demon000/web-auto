@@ -17,7 +17,7 @@ export enum H264WebCodecsDecoderEvent {
 
 export interface H264WebCodecsDecoderEvents {
     [H264WebCodecsDecoderEvent.DIMENSIONS]: (data: VideoDimensions) => void;
-    [H264WebCodecsDecoderEvent.FRAME]: (data: VideoFrame) => void;
+    [H264WebCodecsDecoderEvent.FRAME]: (data?: VideoFrame) => void;
 }
 
 export class H264WebCodecsDecoder {
@@ -35,19 +35,7 @@ export class H264WebCodecsDecoder {
 
     constructor() {
         this.decoder = new VideoDecoder({
-            output: (frame) => {
-                // PERF: H.264 renderer may draw multiple frames in one vertical sync interval to minimize latency.
-                // When multiple frames are drawn in one vertical sync interval,
-                // only the last one is visible to users.
-                // But this ensures users can always see the most up-to-date screen.
-                // This is also the behavior of official Scrcpy client.
-                // https://github.com/Genymobile/scrcpy/issues/3679
-                if (this.lastFrame !== undefined) {
-                    this.lastFrame.close();
-                }
-                this.lastFrame = frame;
-                this.emitter.emit(H264WebCodecsDecoderEvent.FRAME, frame);
-            },
+            output: this.onFrame.bind(this),
             error(e) {
                 console.error(e);
             },
@@ -58,6 +46,20 @@ export class H264WebCodecsDecoder {
 
     private onFramePresented = () => {
         this.animationFrameId = requestAnimationFrame(this.onFramePresented);
+    };
+
+    private onFrame = (frame?: VideoFrame) => {
+        // PERF: H.264 renderer may draw multiple frames in one vertical sync interval to minimize latency.
+        // When multiple frames are drawn in one vertical sync interval,
+        // only the last one is visible to users.
+        // But this ensures users can always see the most up-to-date screen.
+        // This is also the behavior of official Scrcpy client.
+        // https://github.com/Genymobile/scrcpy/issues/3679
+        if (this.lastFrame !== undefined) {
+            this.lastFrame.close();
+        }
+        this.lastFrame = frame;
+        this.emitter.emit(H264WebCodecsDecoderEvent.FRAME, frame);
     };
 
     configure(data: Uint8Array) {
@@ -136,6 +138,7 @@ export class H264WebCodecsDecoder {
     reset() {
         cancelAnimationFrame(this.animationFrameId);
 
+        this.onFrame(undefined);
         this.decoder.reset();
         this.dimensions = undefined;
         this.configData = undefined;

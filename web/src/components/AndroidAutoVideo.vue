@@ -70,11 +70,16 @@ const setCanvasRealSize = () => {
     canvasRealSize.height = canvas.height;
 };
 
-const onDecoderFrame = (data: VideoFrame) => {
+const onDecoderFrame = (data?: VideoFrame) => {
     try {
         assert(context !== undefined && context !== null);
 
         const canvas = context.canvas;
+
+        if (data === undefined) {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            return;
+        }
 
         context.drawImage(
             data,
