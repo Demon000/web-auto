@@ -35,16 +35,12 @@ export class Pinger {
     }
 
     public async onPingTimeout(): Promise<void> {
-        const isFirstPing =
-            this.pingReceivedTime === undefined &&
-            this.pingSentTime !== undefined;
-
         const isTimeoutPing =
             this.pingReceivedTime !== undefined &&
             this.pingSentTime !== undefined &&
             this.pingReceivedTime - this.pingSentTime > this.pingTimeoutMs;
 
-        if (isFirstPing || isTimeoutPing) {
+        if (isTimeoutPing) {
             try {
                 await this.events.onPingTimeout();
             } catch (err) {
@@ -66,6 +62,7 @@ export class Pinger {
         } catch (err) {
             this.logger.error('Failed to emit ping request event', err);
         }
+
         this.schedulePingTimeout();
     }
 
@@ -85,6 +82,8 @@ export class Pinger {
         assert(this.started);
 
         this.cancelPing();
+        this.pingReceivedTime = undefined;
+        this.pingSentTime = undefined;
         this.started = false;
     }
 }
