@@ -12,6 +12,7 @@ export type AndroidAutoInputClient = Record<string, never>;
 
 export type AndroidAutoVideoService = {
     getVideoConfig(): Promise<PartialMessage<VideoConfiguration>>;
+    getFirstBuffer(): Promise<Buffer | undefined>;
 };
 
 export type AndroidAutoVideoClient = {
