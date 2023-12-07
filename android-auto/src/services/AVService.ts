@@ -5,7 +5,6 @@ import {
     Setup,
 } from '@web-auto/android-auto-proto';
 import { Message } from '../messenger/Message.js';
-import { DataBuffer } from '../utils/DataBuffer.js';
 import { Service, type ServiceEvents } from './Service.js';
 
 export abstract class AVService extends Service {
@@ -57,13 +56,10 @@ export abstract class AVService extends Service {
             status: status ? Config_Status.READY : Config_Status.WAIT,
             configurationIndices: [0],
         });
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
             MediaMessageId.MEDIA_MESSAGE_CONFIG,
-            payload,
+            data,
         );
     }
 }

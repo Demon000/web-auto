@@ -126,22 +126,22 @@ export abstract class Service {
                 ? MessageStatus.STATUS_SUCCESS
                 : MessageStatus.STATUS_INVALID_CHANNEL,
         });
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedControlMessage(
             ControlMessageType.MESSAGE_CHANNEL_OPEN_RESPONSE,
-            payload,
+            data,
         );
     }
 
-    public async sendMessageWithId(
+    public async sendPayloadWithId(
         messageId: number,
         dataPayload: DataBuffer,
+        printMessage: any,
         isEncrypted: boolean,
         isControl: boolean,
     ): Promise<void> {
+        this.printSend(printMessage);
+
         const message = new Message({
             messageId,
             dataPayload,
@@ -159,25 +159,42 @@ export abstract class Service {
         }
     }
 
+    public async sendMessageWithId(
+        messageId: number,
+        protoMessage: ProtoMessage,
+        isEncrypted: boolean,
+        isControl: boolean,
+    ): Promise<void> {
+        const dataPayload = DataBuffer.fromBuffer(protoMessage.toBinary());
+
+        return this.sendPayloadWithId(
+            messageId,
+            dataPayload,
+            protoMessage,
+            isEncrypted,
+            isControl,
+        );
+    }
+
     public async sendPlainSpecificMessage(
         messageId: number,
-        payload: DataBuffer,
+        message: ProtoMessage,
     ): Promise<void> {
-        return this.sendMessageWithId(messageId, payload, false, false);
+        return this.sendMessageWithId(messageId, message, false, false);
     }
 
     public async sendEncryptedSpecificMessage(
         messageId: number,
-        payload: DataBuffer,
+        message: ProtoMessage,
     ): Promise<void> {
-        return this.sendMessageWithId(messageId, payload, true, false);
+        return this.sendMessageWithId(messageId, message, true, false);
     }
 
     public async sendEncryptedControlMessage(
         messageId: number,
-        payload: DataBuffer,
+        message: ProtoMessage,
     ): Promise<void> {
-        return this.sendMessageWithId(messageId, payload, true, true);
+        return this.sendMessageWithId(messageId, message, true, true);
     }
 
     protected abstract fillChannelDescriptor(

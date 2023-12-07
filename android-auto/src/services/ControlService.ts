@@ -157,13 +157,10 @@ export class ControlService extends Service {
             timestamp,
             data: new Uint8Array(),
         });
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         return this.sendPlainSpecificMessage(
             ControlMessageType.MESSAGE_PING_RESPONSE,
-            payload,
+            data,
         );
     }
     private async sendVersionRequest(): Promise<void> {
@@ -171,20 +168,22 @@ export class ControlService extends Service {
             .appendUint16BE(GalConstants.PROTOCOL_MAJOR_VERSION)
             .appendUint16BE(GalConstants.PROTOCOL_MINOR_VERSION);
 
-        this.printSend('version request');
-
-        await this.sendPlainSpecificMessage(
+        await this.sendPayloadWithId(
             ControlMessageType.MESSAGE_VERSION_REQUEST,
             payload,
+            'version request',
+            false,
+            false,
         );
     }
 
     public async sendHandshake(payload: DataBuffer): Promise<void> {
-        this.printSend('handshake');
-
-        await this.sendPlainSpecificMessage(
+        await this.sendPayloadWithId(
             ControlMessageType.MESSAGE_ENCAPSULATED_SSL,
             payload,
+            'handshake',
+            false,
+            false,
         );
     }
 
@@ -192,24 +191,17 @@ export class ControlService extends Service {
         const data = new AuthResponse({
             status: 0,
         });
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendPlainSpecificMessage(
             ControlMessageType.MESSAGE_AUTH_COMPLETE,
-            payload,
+            data,
         );
     }
 
     private async sendPingRequest(data: PingRequest): Promise<void> {
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(data.toBinary());
-
         await this.sendPlainSpecificMessage(
             ControlMessageType.MESSAGE_PING_REQUEST,
-            payload,
+            data,
         );
     }
 
@@ -220,13 +212,10 @@ export class ControlService extends Service {
             focusState,
             unsolicited: false,
         });
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
             ControlMessageType.MESSAGE_AUDIO_FOCUS_NOTIFICATION,
-            payload,
+            data,
         );
     }
 
@@ -236,26 +225,19 @@ export class ControlService extends Service {
         const data = new NavFocusNotification({
             focusType,
         });
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
             ControlMessageType.MESSAGE_NAV_FOCUS_NOTIFICATION,
-            payload,
+            data,
         );
     }
 
     public async sendDiscoveryResponse(
         data: ServiceDiscoveryResponse,
     ): Promise<void> {
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(data.toBinary());
-
         await this.sendEncryptedSpecificMessage(
             ControlMessageType.MESSAGE_SERVICE_DISCOVERY_RESPONSE,
-            payload,
+            data,
         );
     }
 

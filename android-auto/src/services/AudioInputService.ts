@@ -82,13 +82,10 @@ export abstract class AudioInputService extends AVService {
             status: 0,
             sessionId: this.session,
         });
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
             MediaMessageId.MEDIA_MESSAGE_MICROPHONE_RESPONSE,
-            payload,
+            data,
         );
     }
 
@@ -101,9 +98,12 @@ export abstract class AudioInputService extends AVService {
         payload.appendUint64BE(timestamp);
         payload.appendBuffer(buffer);
 
-        await this.sendEncryptedSpecificMessage(
+        await this.sendPayloadWithId(
             MediaMessageId.MEDIA_MESSAGE_DATA,
             payload,
+            'data',
+            true,
+            false,
         );
     }
 

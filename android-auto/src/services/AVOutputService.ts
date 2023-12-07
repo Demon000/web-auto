@@ -122,13 +122,10 @@ export abstract class AVOutputService extends AVService {
             sessionId: this.session,
             ack: 1,
         });
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
             MediaMessageId.MEDIA_MESSAGE_ACK,
-            payload,
+            data,
         );
     }
 }

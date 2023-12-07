@@ -1,5 +1,4 @@
 import { Message } from '../messenger/Message.js';
-import { DataBuffer } from '../utils/DataBuffer.js';
 import type { PartialMessage } from '@bufbuild/protobuf';
 
 import { Service, type ServiceEvents } from './Service.js';
@@ -57,13 +56,10 @@ export abstract class InputService extends Service {
         const data = new KeyBindingResponse({
             status: status ? 0 : -1,
         });
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
             InputMessageId.INPUT_MESSAGE_KEY_BINDING_RESPONSE,
-            payload,
+            data,
         );
     }
 
@@ -78,13 +74,10 @@ export abstract class InputService extends Service {
             timestamp: microsecondsTime(),
             touchEvent,
         });
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
             InputMessageId.INPUT_MESSAGE_INPUT_REPORT,
-            payload,
+            data,
         );
     }
 }

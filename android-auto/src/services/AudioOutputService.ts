@@ -1,5 +1,4 @@
 import {
-    AudioConfiguration,
     AudioStreamType,
     MediaCodecType,
     MediaSinkService,

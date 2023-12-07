@@ -12,7 +12,6 @@ import {
 
 import { Message } from '../messenger/Message.js';
 import { Sensor, type SensorEvents } from '../sensors/Sensor.js';
-import { DataBuffer } from '../utils/DataBuffer.js';
 import { Service, type ServiceEvents } from './Service.js';
 import assert from 'node:assert';
 
@@ -93,13 +92,10 @@ export abstract class SensorService extends Service {
                 ? MessageStatus.STATUS_SUCCESS
                 : MessageStatus.STATUS_INVALID_SENSOR,
         });
-        this.printSend(data);
-
-        const payload = DataBuffer.fromBuffer(data.toBinary());
 
         await this.sendEncryptedSpecificMessage(
             SensorMessageId.SENSOR_MESSAGE_RESPONSE,
-            payload,
+            data,
         );
 
         const sensor = this.getSensor(sensorType);
@@ -107,11 +103,9 @@ export abstract class SensorService extends Service {
     }
 
     protected async sendEventIndication(data: SensorBatch): Promise<void> {
-        const payload = DataBuffer.fromBuffer(data.toBinary());
-
         return this.sendEncryptedSpecificMessage(
             SensorMessageId.SENSOR_MESSAGE_BATCH,
-            payload,
+            data,
         );
     }
 
