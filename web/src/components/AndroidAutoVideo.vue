@@ -241,7 +241,7 @@ const onPointerUp = (event: PointerEvent) => {
 </script>
 
 <template>
-    <div class="android-auto-video">
+    <div class="video">
         <canvas
             ref="canvasRef"
             @pointerdown="onPointerDown"
@@ -255,11 +255,12 @@ const onPointerUp = (event: PointerEvent) => {
 </template>
 
 <style scoped>
-.android-auto-video {
+.video {
     width: 100%;
     height: 100%;
     background: #000;
 }
+
 canvas {
     width: 100%;
     height: 100%;
