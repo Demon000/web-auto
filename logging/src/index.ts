@@ -82,7 +82,10 @@ export const setConfig = (newConfig: LoggingConfig) => {
 };
 
 export class LoggerWrapper {
-    public constructor(private logger: Logger) {}
+    public constructor(
+        private logger: Logger,
+        public debuggable: boolean,
+    ) {}
 
     public error(message: string, metadata?: any): void {
         this.logger.error(message, {
@@ -97,6 +100,10 @@ export class LoggerWrapper {
     }
 
     public debug(message: string, metadata?: any): void {
+        if (!this.debuggable) {
+            return;
+        }
+
         this.logger.debug(message, {
             metadata,
         });
@@ -104,21 +111,21 @@ export class LoggerWrapper {
 }
 
 export const getLogger = (label: string): LoggerWrapper => {
+    let debug;
+
+    if (typeof config.debug === 'boolean') {
+        debug = config.debug;
+    } else {
+        debug = config.debug.includes(label);
+    }
+
     if (!loggers.has(label)) {
-        let debug;
-
-        if (typeof config.debug === 'boolean') {
-            debug = config.debug;
-        } else {
-            debug = config.debug.includes(label);
-        }
-
         loggers.add(label, {
             transports: [consoleTransport, fileTransport],
-            level: debug ? 'debug' : 'info',
+            level: 'debug',
             format: format.label({ label }),
         });
     }
 
-    return new LoggerWrapper(loggers.get(label));
+    return new LoggerWrapper(loggers.get(label), debug);
 };

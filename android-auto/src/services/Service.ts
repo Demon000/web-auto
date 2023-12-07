@@ -61,6 +61,10 @@ export abstract class Service {
     }
 
     protected printReceive(message: any): void {
+        if (!this.logger.debuggable) {
+            return;
+        }
+
         let extra = '';
         if (typeof message === 'string') {
             extra = message;
@@ -70,6 +74,10 @@ export abstract class Service {
     }
 
     protected printSend(message: any): void {
+        if (!this.logger.debuggable) {
+            return;
+        }
+
         let extra = '';
         if (typeof message === 'string') {
             extra = message;
