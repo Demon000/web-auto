@@ -36,6 +36,7 @@ androidAutoVideoService
 const canvasRef: Ref<HTMLCanvasElement | undefined> = ref(undefined);
 
 let context: CanvasRenderingContext2D | undefined | null;
+let canvasPosition: { x: number; y: number } = { x: 0, y: 0 };
 let canvasObserver: ResizeObserver | undefined;
 let canvasSize: { width: number; height: number } = { width: 0, height: 0 };
 let canvasRealSize: { width: number; height: number } = { width: 0, height: 0 };
@@ -64,6 +65,8 @@ const setCanvasSize = () => {
     const canvasBoundingBox = canvas.getBoundingClientRect();
     canvasSize.width = canvasBoundingBox.width;
     canvasSize.height = canvasBoundingBox.height;
+    canvasPosition.x = canvasBoundingBox.left;
+    canvasPosition.y = canvasBoundingBox.top;
 
     setCanvasObjectPosition();
 };
@@ -152,6 +155,9 @@ onBeforeUnmount(() => {
 const translateCanvasPosition = (x: number, y: number): [number, number] => {
     const canvas = canvasRef.value;
     assert(canvas !== undefined);
+
+    x = x - canvasPosition.x;
+    y = y - canvasPosition.y;
 
     const translatedPoint = transformFittedPoint(
         { x, y },
