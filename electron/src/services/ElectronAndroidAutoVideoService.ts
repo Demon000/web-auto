@@ -23,8 +23,6 @@ import {
 import type { PartialMessage } from '@bufbuild/protobuf';
 
 export class ElectronAndroidAutoVideoService extends VideoService {
-    private firstBufffer?: DataBuffer;
-
     public constructor(
         private ipcHandler: IpcServiceHandler<
             AndroidAutoVideoService,
@@ -36,15 +34,10 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         super(events);
 
         ipcHandler.on('getVideoConfig', this.getVideoConfig.bind(this));
-        ipcHandler.on('getFirstBuffer', this.getFirstBuffer.bind(this));
     }
 
     public async getVideoConfig(): Promise<PartialMessage<VideoConfiguration>> {
         return this.videoConfigs[0];
-    }
-
-    public async getFirstBuffer(): Promise<Buffer | undefined> {
-        return this.firstBufffer?.data;
     }
 
     public async start(): Promise<void> {
@@ -54,7 +47,6 @@ export class ElectronAndroidAutoVideoService extends VideoService {
 
     public async stop(): Promise<void> {
         await super.stop();
-        this.firstBufffer = undefined;
         this.ipcHandler.stop();
     }
 
@@ -82,10 +74,6 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         buffer: DataBuffer,
         _timestamp?: bigint,
     ): Promise<void> {
-        if (this.firstBufffer === undefined) {
-            this.firstBufffer = buffer;
-        }
-
         this.ipcHandler.data(buffer.data);
     }
 
