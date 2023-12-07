@@ -17,6 +17,7 @@ androidAutoServerService
 
 const deviceHandlers = computed(() => {
     const deviceHandlers: Record<string, IDevice[]> = {};
+
     for (const device of devices.value) {
         if (!(device.prefix in deviceHandlers)) {
             deviceHandlers[device.prefix] = [];
@@ -36,6 +37,8 @@ const connectedDevice = computed(() => {
 
         return device;
     }
+
+    return undefined;
 });
 
 onMounted(() => {
