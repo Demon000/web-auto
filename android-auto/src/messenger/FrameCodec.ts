@@ -102,7 +102,10 @@ export class FrameCodec {
         this.logger.debug('Decode buffer', buffer);
 
         if (this.buffer !== undefined) {
-            this.logger.debug('Remaining buffer exists, add to it');
+            this.logger.debug(
+                'Remaining buffer exists, add to it',
+                this.buffer,
+            );
             buffer = this.buffer.appendBuffer(buffer);
             this.logger.debug('Decoding entire buffer', buffer);
         }
@@ -113,14 +116,24 @@ export class FrameCodec {
             if (frameData === undefined) {
                 break;
             }
-            this.logger.debug('Decoded frame data', frameData);
+            this.logger.debug('Decoded frame data', {
+                frameData,
+                buffer,
+            });
             frameDatas.push(frameData);
         }
 
-        if (buffer.readBufferSize() !== 0) {
-            this.logger.debug('Remaining buffer not empty');
+        if (buffer.readBufferSize() === 0) {
+            this.logger.debug('Remaining buffer empty', buffer);
+            this.buffer = undefined;
+        } else {
+            this.logger.debug('Remaining buffer not empty', buffer);
             this.buffer = buffer.readBuffer();
         }
+
+        this.logger.debug('Finish decode', {
+            buffer: this.buffer,
+        });
 
         return frameDatas;
     }
