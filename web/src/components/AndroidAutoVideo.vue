@@ -191,6 +191,9 @@ const sendPointerEvent = (event: PointerEvent) => {
     }
 
     const [x, y] = translateCanvasPosition(event.x, event.y);
+    if (x < 0 || y < 0) {
+        return;
+    }
     androidAutoInputService.sendTouchEvent({
         action,
         actionIndex: 0,
