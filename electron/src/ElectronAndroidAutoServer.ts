@@ -84,7 +84,11 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
             this.disconnectDeviceName.bind(this),
         );
 
-        this.ipcHandler.on('getDevices', this.getDevices.bind(this));
+        this.ipcHandler.on('getDevices', this.getDevicesObjects.bind(this));
+        this.ipcHandler.on(
+            'getConnectedDevice',
+            this.getConnectedDeviceObject.bind(this),
+        );
     }
 
     protected buildDeviceHandlers(
@@ -165,28 +169,65 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
         ];
     }
 
+    protected deviceFromImpl(device: Device): IDevice {
+        return {
+            name: device.name,
+            prefix: device.prefix,
+            realName: device.realName,
+            state: device.state,
+        };
+    }
+
     protected devicesFromImpl(devices: Device[]): IDevice[] {
         const ipcDevices: IDevice[] = [];
         for (const device of devices) {
-            ipcDevices.push({
-                name: device.name,
-                prefix: device.prefix,
-                realName: device.realName,
-                state: device.state,
-            });
+            ipcDevices.push(this.deviceFromImpl(device));
         }
 
         return ipcDevices;
     }
 
-    protected onDevicesUpdated(devices: Device[]): void {
+    public async getDevicesObjects(): Promise<IDevice[]> {
+        const devices = this.getDevices();
+        return this.devicesFromImpl(devices);
+    }
+
+    public async getConnectedDeviceObject(): Promise<IDevice | undefined> {
+        const device = this.getConnectedDevice();
+        if (device === undefined) {
+            return undefined;
+        }
+
+        return this.deviceFromImpl(device);
+    }
+
+    public async connectDeviceName(name: string): Promise<void> {
+        const device = this.getDeviceByName(name);
+        if (device === undefined) {
+            throw new Error(`Unknown device ${name}`);
+        }
+
+        await this.connectDevice(device);
+    }
+
+    public async disconnectDeviceName(name: string): Promise<void> {
+        const device = this.getDeviceByName(name);
+        if (device === undefined) {
+            throw new Error(`Unknown device ${name}`);
+        }
+
+        await this.disconnectDevice(device);
+    }
+
+    protected onDevicesUpdatedCallback(devices: Device[]): void {
         const ipcDevices = this.devicesFromImpl(devices);
         this.ipcHandler.devices(ipcDevices);
     }
 
-    public async getDevices(): Promise<IDevice[]> {
-        const devices = super.getDevicesImpl();
-        const ipcDevices = this.devicesFromImpl(devices);
-        return ipcDevices;
+    protected onDeviceDisconnectedCallback(): void {
+        this.ipcHandler.deviceDisconnected();
+    }
+    protected onDeviceConnectedCallback(device: Device): void {
+        this.ipcHandler.deviceConnected(this.deviceFromImpl(device));
     }
 }

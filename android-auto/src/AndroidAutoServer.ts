@@ -366,15 +366,17 @@ export abstract class AndroidAutoServer {
         this.logger.error(`Received transport error from ${device.name}`, err);
     }
 
-    protected abstract onDevicesUpdated(devices: Device[]): void;
+    protected abstract onDevicesUpdatedCallback(devices: Device[]): void;
+    protected abstract onDeviceDisconnectedCallback(): void;
+    protected abstract onDeviceConnectedCallback(device: Device): void;
 
-    protected getDevicesImpl(): Device[] {
+    protected getDevices(): Device[] {
         return Array.from(this.nameDeviceMap.values());
     }
 
     private callOnDevicesUpdated(): void {
-        const devices = this.getDevicesImpl();
-        this.onDevicesUpdated(devices);
+        const devices = this.getDevices();
+        this.onDevicesUpdatedCallback(devices);
     }
 
     private async onDeviceSelfConnect(device: Device): Promise<boolean> {
@@ -427,6 +429,7 @@ export abstract class AndroidAutoServer {
         }
 
         this.connectedDevice = device;
+        this.onDeviceConnectedCallback(device);
 
         this.logger.info(`Connected device ${device.name}`);
 
@@ -477,7 +480,7 @@ export abstract class AndroidAutoServer {
         this.frameCodec.stop();
     }
 
-    private async onDeviceDisconnected(device: Device): Promise<void> {
+    protected async onDeviceDisconnected(device: Device): Promise<void> {
         if (!this.isDeviceConnected(device)) {
             this.logger.info(
                 `Cannot disconnect ${device.name}, ` +
@@ -488,6 +491,7 @@ export abstract class AndroidAutoServer {
 
         this.logger.info(`Disconnected ${device.name}`);
         this.connectedDevice = undefined;
+        this.onDeviceDisconnectedCallback();
     }
 
     private async onDeviceUnavailable(device: Device): Promise<void> {
@@ -498,7 +502,7 @@ export abstract class AndroidAutoServer {
         this.callOnDevicesUpdated();
     }
 
-    private async connectDevice(device: Device): Promise<void> {
+    public async connectDevice(device: Device): Promise<void> {
         if (!this.isDeviceWhitelisted(device)) {
             throw new Error(
                 `Cannot connect to ${device.name}, ` +
@@ -519,7 +523,7 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    private async disconnectDevice(device: Device): Promise<void> {
+    public async disconnectDevice(device: Device): Promise<void> {
         if (!this.isDeviceConnected(device)) {
             this.logger.info(
                 `Cannot disconnect ${device.name}, ` +
@@ -539,22 +543,12 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    public async connectDeviceName(name: string): Promise<void> {
-        const device = this.nameDeviceMap.get(name);
-        if (device === undefined) {
-            throw new Error(`Unknown device ${name}`);
-        }
-
-        await this.connectDevice(device);
+    public getDeviceByName(name: string): Device | undefined {
+        return this.nameDeviceMap.get(name);
     }
 
-    public async disconnectDeviceName(name: string): Promise<void> {
-        const device = this.nameDeviceMap.get(name);
-        if (device === undefined) {
-            throw new Error(`Unknown device ${name}`);
-        }
-
-        await this.disconnectDevice(device);
+    public getConnectedDevice(): Device | undefined {
+        return this.connectedDevice;
     }
 
     public async start(): Promise<void> {
