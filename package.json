@@ -27,7 +27,7 @@
     "@tsconfig/node20": "^20.1.1",
     "@types/native-duplexpair": "^1.0.0",
     "@types/node": "^20.4.7",
-    "electron": "^28.0.0-beta.11",
+    "electron": "^28.0.0",
     "eslint": "^8.46.0",
     "ts-patch": "^3.0.2"
   }
