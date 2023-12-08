@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import AndroidAutoDeviceSelector from '../components/DeviceSelector.vue';
-import AndroidAutoMiniVideo from '../components/MiniVideo.vue';
+import AndroidAutoDeviceSelector from './DeviceSelector.vue';
+import AndroidAutoMiniVideo from './MiniVideo.vue';
+import AppBar from './AppBar.vue';
 </script>
 
 <template>
     <div class="home">
-        <AndroidAutoDeviceSelector></AndroidAutoDeviceSelector>
-        <AndroidAutoMiniVideo></AndroidAutoMiniVideo>
+        <AppBar></AppBar>
+        <div class="main">
+            <AndroidAutoDeviceSelector></AndroidAutoDeviceSelector>
+            <AndroidAutoMiniVideo></AndroidAutoMiniVideo>
+        </div>
     </div>
 </template>
 
@@ -14,8 +18,16 @@ import AndroidAutoMiniVideo from '../components/MiniVideo.vue';
 .home {
     width: 100%;
     height: 100%;
-    flex-direction: row;
+
+    flex-direction: column;
     display: flex;
+}
+
+.main {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+
     padding: 32px;
 }
 

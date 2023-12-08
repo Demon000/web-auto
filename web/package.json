@@ -13,6 +13,7 @@
     "lint": "eslint --fix ."
   },
   "dependencies": {
+    "@fontsource/nunito-sans": "^5.0.8",
     "@fontsource/roboto": "^5.0.8",
     "@material/material-color-utilities": "^0.2.7",
     "@material/web": "^1.0.1",
