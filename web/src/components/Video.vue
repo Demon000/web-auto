@@ -15,12 +15,11 @@ let marginVertical = 0;
 let marginHorizontal = 0;
 
 const canvasRef: Ref<HTMLCanvasElement | undefined> = ref(undefined);
-
-let context: CanvasRenderingContext2D | undefined | null;
-let canvasPosition: { x: number; y: number } = { x: 0, y: 0 };
+let context: CanvasRenderingContext2D | undefined;
 let canvasObserver: ResizeObserver | undefined;
+
+let canvasPosition: { x: number; y: number } = { x: 0, y: 0 };
 let canvasSize: { width: number; height: number } = { width: 0, height: 0 };
-let canvasRealSize: { width: number; height: number } = { width: 0, height: 0 };
 let canvasObjectFit: FitMode = 'contain';
 let canvasObjectPosition: [string, string] = ['0', '0'];
 
@@ -28,52 +27,44 @@ function assert(conditional: boolean, message?: string): asserts conditional {
     if (!conditional) throw new Error(message);
 }
 
-const setCanvasObjectPosition = () => {
+const getContext = () => {
     assert(context !== undefined && context !== null);
-
-    const canvas = context.canvas;
-
-    const { objectPosition } = getComputedStyle(canvas);
-    const objectPositionSplit = objectPosition.split(' ');
-    assert(objectPositionSplit.length === 2);
-    canvasObjectPosition = objectPositionSplit as [string, string];
+    return context;
 };
 
-const setCanvasSize = () => {
-    assert(context !== undefined && context !== null);
-    const canvas = context.canvas;
+const getCanvas = () => {
+    return getContext().canvas;
+};
+
+const onCanvasResized = () => {
+    const canvas = getCanvas();
 
     const canvasBoundingBox = canvas.getBoundingClientRect();
+
     canvasSize.width = canvasBoundingBox.width;
     canvasSize.height = canvasBoundingBox.height;
+
     canvasPosition.x = canvasBoundingBox.left;
     canvasPosition.y = canvasBoundingBox.top;
 
-    setCanvasObjectPosition();
+    const { objectPosition } = getComputedStyle(canvas);
+    const objectPositionSplit = objectPosition.split(' ');
+    if (objectPositionSplit.length !== 2) {
+        return;
+    }
+    canvasObjectPosition = objectPositionSplit as [string, string];
 };
 
-const setCanvasRealSize = () => {
-    assert(context !== undefined && context !== null);
-    const canvas = context.canvas;
-
-    canvasRealSize.width = canvas.width;
-    canvasRealSize.height = canvas.height;
-};
-
-const onDecoderDimensions = (data: VideoCodecConfig) => {
-    assert(context !== undefined && context !== null);
-    const canvas = context.canvas;
+const onCodecConfig = (data: VideoCodecConfig) => {
+    const canvas = getCanvas();
 
     canvas.width = data.width - marginWidth;
     canvas.height = data.height - marginHeight;
-
-    setCanvasRealSize();
 };
 
 const onDecoderFrame = (data?: VideoFrame) => {
-    assert(context !== undefined && context !== null);
-
-    const canvas = context.canvas;
+    const context = getContext();
+    const canvas = getCanvas();
 
     if (data === undefined) {
         context.clearRect(0, 0, canvas.width, canvas.height);
@@ -97,6 +88,7 @@ const onVideoConfig = (config: IVideoConfiguration) => {
     if (config.heightMargin === undefined || config.widthMargin === undefined) {
         return;
     }
+
     marginHeight = config.heightMargin;
     marginWidth = config.widthMargin;
     marginVertical = Math.floor(marginHeight / 2);
@@ -133,10 +125,12 @@ onMounted(async () => {
     const canvas = canvasRef.value;
     assert(canvas !== undefined);
 
-    context = canvas.getContext('2d');
-    assert(context !== null);
+    const localContext = canvas.getContext('2d');
+    assert(localContext !== null);
 
-    canvasObserver = new ResizeObserver(setCanvasSize);
+    context = localContext;
+
+    canvasObserver = new ResizeObserver(onCanvasResized);
     canvasObserver.observe(canvas);
 
     androidAutoVideoService
@@ -154,34 +148,36 @@ onMounted(async () => {
         });
 
     androidAutoVideoService.on('afterSetup', onAfterSetup);
-    androidAutoVideoService.on('codecConfig', onDecoderDimensions);
+    androidAutoVideoService.on('codecConfig', onCodecConfig);
     decoder.emitter.on(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
 });
 
-onBeforeUnmount(() => {
+onBeforeUnmount(async () => {
     onDecoderFrame(undefined);
 
-    androidAutoVideoService.sendVideoFocusNotification({
-        focus: VideoFocusMode.VIDEO_FOCUS_NATIVE,
-        unsolicited: true,
-    });
-
     decoder.emitter.off(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
-    androidAutoVideoService.off('codecConfig', onDecoderDimensions);
+    androidAutoVideoService.off('codecConfig', onCodecConfig);
     androidAutoVideoService.off('afterSetup', onAfterSetup);
 
     assert(canvasObserver !== undefined);
     canvasObserver.disconnect();
+
+    await showNative();
 });
 
 const translateCanvasPosition = (x: number, y: number): [number, number] => {
+    const canvas = getCanvas();
+
     x = x - canvasPosition.x;
     y = y - canvasPosition.y;
 
     const translatedPoint = transformFittedPoint(
         { x, y },
         canvasSize,
-        canvasRealSize,
+        {
+            width: canvas.width,
+            height: canvas.height,
+        },
         canvasObjectFit,
         canvasObjectPosition[0],
         canvasObjectPosition[1],
