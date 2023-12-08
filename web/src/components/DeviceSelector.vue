@@ -15,20 +15,6 @@ androidAutoServerService
         console.error(err);
     });
 
-const deviceHandlers = computed(() => {
-    const deviceHandlers: Record<string, IDevice[]> = {};
-
-    for (const device of devices.value) {
-        if (!(device.prefix in deviceHandlers)) {
-            deviceHandlers[device.prefix] = [];
-        }
-
-        deviceHandlers[device.prefix].push(device);
-    }
-
-    return deviceHandlers;
-});
-
 const connectedDevice = computed(() => {
     for (const device of devices.value) {
         if (device.state === 'available' || device.state === 'disconnected') {
@@ -50,35 +36,16 @@ onMounted(() => {
 
 <template>
     <div class="device-selector">
-        <div class="title">Connect a device</div>
-        <div class="device-handler" v-if="connectedDevice !== undefined">
-            <div class="title">Connected</div>
+        <div class="title">Connections</div>
 
-            <div class="devices">
-                <div class="devices">
-                    <device :device="connectedDevice"></device>
-                </div>
-            </div>
-        </div>
+        <template v-if="connectedDevice !== undefined">
+            <div class="section-title">Active</div>
+            <device class="connected-device" :device="connectedDevice"></device>
+        </template>
 
-        <div
-            class="device-handler"
-            v-for="(devices, deviceHandler) in deviceHandlers"
-            :key="deviceHandler"
-        >
-            <div class="title">
-                <template v-if="deviceHandler === 'TCP'"> Network </template>
-                <template v-else-if="deviceHandler === 'BT'">
-                    Bluetooth
-                </template>
-                <template v-else>
-                    {{ deviceHandler }}
-                </template>
-            </div>
-
-            <div class="devices" v-for="device in devices">
-                <device :device="device"></device>
-            </div>
+        <div class="section-title">Available</div>
+        <div class="devices" v-for="device in devices">
+            <device v-if="device !== connectedDevice" :device="device"></device>
         </div>
     </div>
 </template>
@@ -94,13 +61,19 @@ onMounted(() => {
 
 .title {
     font-size: 32px;
+    margin-bottom: 32px;
 }
 
-.device-handler {
-    margin: 32px 0;
+.section-title {
+    opacity: 70%;
+    font-size: 18px;
 }
 
 .device {
     margin: 16px 0;
+}
+
+.connected-device {
+    margin-bottom: 32px;
 }
 </style>

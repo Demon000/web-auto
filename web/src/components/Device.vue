@@ -29,7 +29,10 @@ const onDisconnectClick = async (name: string) => {
 <template>
     <div class="device">
         <div class="name-state-container">
-            <div class="name">{{ device.realName }}</div>
+            <div>
+                <span class="name">{{ device.realName }}</span>
+                <span class="prefix">{{ device.prefix }}</span>
+            </div>
             <div class="state">{{ device.state }}</div>
         </div>
 
@@ -70,7 +73,16 @@ const onDisconnectClick = async (name: string) => {
 }
 
 .state {
-    color: #5f6368;
+    color: var(--md-sys-color-on-surface);
+    opacity: 50%;
+}
+
+.name {
+    margin-right: 8px;
+}
+
+.prefix {
+    opacity: 50%;
 }
 
 .button-container {
