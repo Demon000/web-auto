@@ -30,9 +30,11 @@ export class H264WebCodecsDecoder {
         this.animationFrameId = requestAnimationFrame(this.onFramePresented);
     };
 
-    private onFrame = (frame: VideoFrame) => {
+    private onFrame = (frame?: VideoFrame) => {
         this.emitter.emit(H264WebCodecsDecoderEvent.FRAME, frame);
-        frame.close();
+        if (frame !== undefined) {
+            frame.close();
+        }
     };
 
     configure(codec: string) {
@@ -63,6 +65,7 @@ export class H264WebCodecsDecoder {
     }
 
     reset() {
+        this.onFrame(undefined);
         cancelAnimationFrame(this.animationFrameId);
         this.decoder.reset();
     }
