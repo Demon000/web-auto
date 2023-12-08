@@ -103,19 +103,30 @@ const onVideoConfig = (config: IVideoConfiguration) => {
     marginHorizontal = Math.floor(marginWidth / 2);
 };
 
-const onSetup = (status: boolean) => {
-    if (!status) {
-        return;
-    }
-
-    androidAutoVideoService.sendVideoFocusNotification({
+const showProjection = async () => {
+    await androidAutoVideoService.sendVideoFocusNotification({
         focus: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
         unsolicited: true,
     });
 };
 
-const onAfterSetup = () => {
-    onSetup(true);
+const showNative = async () => {
+    await androidAutoVideoService.sendVideoFocusNotification({
+        focus: VideoFocusMode.VIDEO_FOCUS_NATIVE,
+        unsolicited: true,
+    });
+};
+
+const onIsSetup = async (status: boolean) => {
+    if (status) {
+        await showNative();
+    }
+
+    await showProjection();
+};
+
+const onAfterSetup = async () => {
+    await showProjection();
 };
 
 onMounted(async () => {
@@ -137,7 +148,7 @@ onMounted(async () => {
 
     androidAutoVideoService
         .isSetup()
-        .then(onSetup)
+        .then(onIsSetup)
         .catch((err) => {
             console.error(err);
         });
