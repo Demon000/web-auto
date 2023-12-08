@@ -1,6 +1,5 @@
 import {
     MediaMessageId,
-    VideoFocusMode,
     VideoFocusNotification,
     VideoFocusRequestNotification,
 } from '@web-auto/android-auto-proto';
@@ -31,15 +30,6 @@ export abstract class VideoService extends AVOutputService {
         data: VideoFocusRequestNotification,
     ): Promise<void>;
 
-    protected async sendSetupResponse(status: boolean): Promise<void> {
-        await super.sendSetupResponse(status);
-        if (!status) {
-            return;
-        }
-
-        await this.sendVideoFocusIndication();
-    }
-
     protected async onVideoFocusRequest(
         data: VideoFocusRequestNotification,
     ): Promise<void> {
@@ -52,16 +42,11 @@ export abstract class VideoService extends AVOutputService {
             });
             return;
         }
-
-        await this.sendVideoFocusIndication();
     }
 
-    protected async sendVideoFocusIndication(): Promise<void> {
-        const data = new VideoFocusNotification({
-            focus: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
-            unsolicited: false,
-        });
-
+    protected async sendVideoFocusIndication(
+        data: VideoFocusNotification,
+    ): Promise<void> {
         await this.sendEncryptedSpecificMessage(
             MediaMessageId.MEDIA_MESSAGE_VIDEO_FOCUS_NOTIFICATION,
             data,

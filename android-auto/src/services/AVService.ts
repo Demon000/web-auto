@@ -49,6 +49,7 @@ export abstract class AVService extends Service {
     }
 
     protected abstract setup(data: Setup): Promise<void>;
+    protected async afterSetup(): Promise<void> {}
 
     protected async sendSetupResponse(status: boolean): Promise<void> {
         const data = new Config({
@@ -61,5 +62,11 @@ export abstract class AVService extends Service {
             MediaMessageId.MEDIA_MESSAGE_CONFIG,
             data,
         );
+
+        if (!status) {
+            return;
+        }
+
+        await this.afterSetup();
     }
 }

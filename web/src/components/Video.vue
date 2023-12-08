@@ -1,37 +1,18 @@
 <script setup lang="ts">
-import {
-    H264WebCodecsDecoderEvent,
-    type VideoDimensions,
-} from '../codec/H264WebCodecsDecoder';
+import { H264WebCodecsDecoderEvent } from '../codec/H264WebCodecsDecoder';
 import { androidAutoInputService, androidAutoVideoService } from '../ipc.js';
 import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 import { transformFittedPoint } from 'object-fit-math';
 import type { FitMode } from 'object-fit-math/dist/types.d.ts';
 import { decoder } from '../codec/index.js';
-import { PointerAction } from '@web-auto/android-auto-proto';
+import { PointerAction, VideoFocusMode } from '@web-auto/android-auto-proto';
+import { IVideoConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
+import { VideoCodecConfig } from '@web-auto/android-auto-ipc';
 
 let marginHeight = 0;
 let marginWidth = 0;
 let marginVertical = 0;
 let marginHorizontal = 0;
-
-androidAutoVideoService
-    .getVideoConfig()
-    .then((config) => {
-        if (
-            config.heightMargin === undefined ||
-            config.widthMargin === undefined
-        ) {
-            return;
-        }
-        marginHeight = config.heightMargin;
-        marginWidth = config.widthMargin;
-        marginVertical = Math.floor(marginHeight / 2);
-        marginHorizontal = Math.floor(marginWidth / 2);
-    })
-    .catch((err) => {
-        console.error(err);
-    });
 
 const canvasRef: Ref<HTMLCanvasElement | undefined> = ref(undefined);
 
@@ -79,34 +60,7 @@ const setCanvasRealSize = () => {
     canvasRealSize.height = canvas.height;
 };
 
-const onDecoderFrame = (data?: VideoFrame) => {
-    try {
-        assert(context !== undefined && context !== null);
-
-        const canvas = context.canvas;
-
-        if (data === undefined) {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            return;
-        }
-
-        context.drawImage(
-            data,
-            marginHorizontal,
-            marginVertical,
-            canvas.width,
-            canvas.height,
-            0,
-            0,
-            canvas.width,
-            canvas.height,
-        );
-    } catch (err) {
-        console.error(err);
-    }
-};
-
-const onDecoderDimensions = (data: VideoDimensions) => {
+const onDecoderDimensions = (data: VideoCodecConfig) => {
     assert(context !== undefined && context !== null);
     const canvas = context.canvas;
 
@@ -116,7 +70,55 @@ const onDecoderDimensions = (data: VideoDimensions) => {
     setCanvasRealSize();
 };
 
-onMounted(() => {
+const onDecoderFrame = (data?: VideoFrame) => {
+    assert(context !== undefined && context !== null);
+
+    const canvas = context.canvas;
+
+    if (data === undefined) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+    }
+
+    context.drawImage(
+        data,
+        marginHorizontal,
+        marginVertical,
+        canvas.width,
+        canvas.height,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+    );
+};
+
+const onVideoConfig = (config: IVideoConfiguration) => {
+    if (config.heightMargin === undefined || config.widthMargin === undefined) {
+        return;
+    }
+    marginHeight = config.heightMargin;
+    marginWidth = config.widthMargin;
+    marginVertical = Math.floor(marginHeight / 2);
+    marginHorizontal = Math.floor(marginWidth / 2);
+};
+
+const onSetup = (status: boolean) => {
+    if (!status) {
+        return;
+    }
+
+    androidAutoVideoService.sendVideoFocusNotification({
+        focus: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
+        unsolicited: true,
+    });
+};
+
+const onAfterSetup = () => {
+    onSetup(true);
+};
+
+onMounted(async () => {
     const canvas = canvasRef.value;
     assert(canvas !== undefined);
 
@@ -126,36 +128,42 @@ onMounted(() => {
     canvasObserver = new ResizeObserver(setCanvasSize);
     canvasObserver.observe(canvas);
 
+    androidAutoVideoService
+        .getVideoConfig()
+        .then(onVideoConfig)
+        .catch((err) => {
+            console.error(err);
+        });
+
+    androidAutoVideoService
+        .isSetup()
+        .then(onSetup)
+        .catch((err) => {
+            console.error(err);
+        });
+
+    androidAutoVideoService.on('afterSetup', onAfterSetup);
+    androidAutoVideoService.on('codecConfig', onDecoderDimensions);
     decoder.emitter.on(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
-    decoder.emitter.on(
-        H264WebCodecsDecoderEvent.DIMENSIONS,
-        onDecoderDimensions,
-    );
-
-    if (decoder.dimensions !== undefined) {
-        onDecoderDimensions(decoder.dimensions);
-    }
-
-    if (decoder.lastFrame !== undefined) {
-        onDecoderFrame(decoder.lastFrame);
-    }
 });
 
 onBeforeUnmount(() => {
+    onDecoderFrame(undefined);
+
+    androidAutoVideoService.sendVideoFocusNotification({
+        focus: VideoFocusMode.VIDEO_FOCUS_NATIVE,
+        unsolicited: true,
+    });
+
     decoder.emitter.off(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
-    decoder.emitter.off(
-        H264WebCodecsDecoderEvent.DIMENSIONS,
-        onDecoderDimensions,
-    );
+    androidAutoVideoService.off('codecConfig', onDecoderDimensions);
+    androidAutoVideoService.off('afterSetup', onAfterSetup);
 
     assert(canvasObserver !== undefined);
     canvasObserver.disconnect();
 });
 
 const translateCanvasPosition = (x: number, y: number): [number, number] => {
-    const canvas = canvasRef.value;
-    assert(canvas !== undefined);
-
     x = x - canvasPosition.x;
     y = y - canvasPosition.y;
 
@@ -197,7 +205,7 @@ const sendPointerEvent = (event: PointerEvent) => {
     }
 
     const [x, y] = translateCanvasPosition(event.x, event.y);
-    if (x < 0 || y < 0) {
+    if (isNaN(x) || isNaN(y) || x < 0 || y < 0) {
         return;
     }
     androidAutoInputService.sendTouchEvent({
@@ -241,26 +249,18 @@ const onPointerUp = (event: PointerEvent) => {
 </script>
 
 <template>
-    <div class="video">
-        <canvas
-            ref="canvasRef"
-            @pointerdown="onPointerDown"
-            @pointermove="onPointerMove"
-            @pointerup="onPointerUp"
-            @pointercancel="onPointerUp"
-            @pointerout="onPointerUp"
-            @pointerleave="onPointerUp"
-        ></canvas>
-    </div>
+    <canvas
+        ref="canvasRef"
+        @pointerdown="onPointerDown"
+        @pointermove="onPointerMove"
+        @pointerup="onPointerUp"
+        @pointercancel="onPointerUp"
+        @pointerout="onPointerUp"
+        @pointerleave="onPointerUp"
+    ></canvas>
 </template>
 
 <style scoped>
-.video {
-    width: 100%;
-    height: 100%;
-    background: #000;
-}
-
 canvas {
     width: 100%;
     height: 100%;

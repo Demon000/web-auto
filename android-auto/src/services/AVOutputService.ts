@@ -53,7 +53,7 @@ export abstract class AVOutputService extends AVService {
 
     protected async onStopIndication(data: Stop): Promise<void> {
         try {
-            await this.channelStop(data);
+            await this.channelStop();
         } catch (err) {
             this.logger.error('Failed to stop channel', {
                 data,
@@ -107,7 +107,7 @@ export abstract class AVOutputService extends AVService {
     }
 
     protected abstract channelStart(data: Start): Promise<void>;
-    protected abstract channelStop(data: Stop): Promise<void>;
+    protected abstract channelStop(): Promise<void>;
     protected abstract handleData(
         buffer: DataBuffer,
         timestamp?: bigint,

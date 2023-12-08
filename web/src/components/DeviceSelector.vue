@@ -49,12 +49,15 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="android-auto-device-selector">
+    <div class="device-selector">
+        <div class="title">Connect a device</div>
         <div class="device-handler" v-if="connectedDevice !== undefined">
             <div class="title">Connected</div>
 
             <div class="devices">
-                <device :device="connectedDevice"></device>
+                <div class="devices">
+                    <device :device="connectedDevice"></device>
+                </div>
             </div>
         </div>
 
@@ -81,14 +84,23 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.android-auto-device-selector {
-    padding: 16px;
+.device-selector {
     width: 100%;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: 28px;
+
+    padding: 32px;
+}
+
+.title {
+    font-size: 32px;
 }
 
 .device-handler {
-    font-size: 32px;
-    margin: 32px 16px;
-    padding: 0 32px;
+    margin: 32px 0;
+}
+
+.device {
+    margin: 16px 0;
 }
 </style>

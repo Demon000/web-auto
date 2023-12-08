@@ -2,6 +2,9 @@
 import type { IDevice } from '@web-auto/android-auto-ipc';
 import { androidAutoServerService } from '../ipc.ts';
 
+import '@material/web/iconbutton/filled-icon-button.js';
+import '@material/web/icon/icon.js';
+
 defineProps<{
     device: IDevice;
 }>();
@@ -25,62 +28,55 @@ const onDisconnectClick = async (name: string) => {
 
 <template>
     <div class="device">
-        <div class="name">{{ device.name }}</div>
-        <div class="state">{{ device.state }}</div>
-        <div
-            v-if="device.state === 'available'"
-            class="button connect-button"
-            @click="onConnectClick(device.name)"
-        >
-            CONNECT
+        <div class="name-state-container">
+            <div class="name">{{ device.realName }}</div>
+            <div class="state">{{ device.state }}</div>
         </div>
-        <div
-            v-if="device.state === 'connected'"
-            class="button disconnect-button"
-            @click="onDisconnectClick(device.name)"
-        >
-            DISCONNECT
+
+        <div class="button-container">
+            <md-filled-icon-button
+                class="connect-button"
+                @click="onConnectClick(device.name)"
+                v-if="device.state === 'available'"
+            >
+                <md-icon>link</md-icon>
+            </md-filled-icon-button>
+
+            <md-filled-icon-button
+                class="disconnect-button"
+                @click="onDisconnectClick(device.name)"
+                v-else-if="device.state === 'connected'"
+            >
+                <md-icon>close</md-icon>
+            </md-filled-icon-button>
         </div>
     </div>
 </template>
 <style scoped>
 .device {
     width: 100%;
-    height: 64px;
-    line-height: 64px;
-    padding: 0 32px;
+    border-radius: 28px;
+    padding: 24px;
+
     font-size: 20px;
-    background: #202124;
-    border-radius: 32px;
-    margin: 16px 0;
+    line-height: 32px;
 
     display: flex;
     flex-direction: row;
-    align-items: flex-start;
-}
+    align-items: stretch;
 
-.name {
-    margin-right: 16px;
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
 }
 
 .state {
     color: #5f6368;
 }
 
-.button {
-    margin: 16px 0;
-    height: 32px;
-    line-height: 32px;
-    border-radius: 16px;
-    padding: 0 16px;
-    font-size: 16px;
-    cursor: pointer;
-    background: #5f6368;
-    user-select: none;
-}
-
-.connect-button,
-.disconnect-button {
+.button-container {
     margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 </style>

@@ -246,6 +246,18 @@ export function h264SearchConfiguration(buffer: Uint8Array) {
     throw new Error('Invalid data');
 }
 
+export function h264HasKeyFrame(buffer: Uint8Array) {
+    for (const nalu of annexBSplitNalu(buffer)) {
+        const naluType = nalu[0]! & 0x1f;
+
+        if (naluType === 5) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 export interface H264Configuration {
     pictureParameterSet: Uint8Array;
     sequenceParameterSet: Uint8Array;
@@ -308,4 +320,8 @@ export function h264ParseConfiguration(data: Uint8Array): H264Configuration {
         croppedWidth,
         croppedHeight,
     };
+}
+
+export function toHex(value: number) {
+    return value.toString(16).padStart(2, '0').toUpperCase();
 }

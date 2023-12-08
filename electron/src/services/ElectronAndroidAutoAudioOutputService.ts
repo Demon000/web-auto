@@ -8,7 +8,6 @@ import {
     ChannelOpenRequest,
     Setup,
     Start,
-    Stop,
 } from '@web-auto/android-auto-proto';
 import RtAudioPackage from 'audify';
 
@@ -47,7 +46,7 @@ export class ElectronAndroidAutoAudioOutputService extends AudioOutputService {
         // TODO
     }
 
-    protected async channelStop(_data: Stop): Promise<void> {
+    protected async channelStop(): Promise<void> {
         this.rtaudio.stop();
     }
 

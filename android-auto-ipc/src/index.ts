@@ -1,6 +1,8 @@
 import type {
     ITouchEvent,
     IVideoConfiguration,
+    IVideoFocusNotification,
+    IVideoFocusRequestNotification,
 } from '@web-auto/android-auto-proto/interfaces.js';
 
 export type AndroidAutoInputService = {
@@ -9,14 +11,29 @@ export type AndroidAutoInputService = {
 
 export type AndroidAutoInputClient = Record<string, never>;
 
+export type VideoCodecConfig = {
+    width: number;
+    height: number;
+    cropLeft: number;
+    cropRight: number;
+    cropTop: number;
+    cropBottom: number;
+    codec: string;
+};
+
 export type AndroidAutoVideoService = {
     getVideoConfig(): Promise<IVideoConfiguration>;
+    sendVideoFocusNotification(data: IVideoFocusNotification): Promise<void>;
+    isSetup(): Promise<boolean>;
 };
 
 export type AndroidAutoVideoClient = {
-    start: () => void;
-    stop: () => void;
-    data: (buffer: Buffer) => void;
+    focusRequest(data: IVideoFocusRequestNotification): void;
+    afterSetup(): void;
+    codecConfig(config: VideoCodecConfig): void;
+    firstFrame(buffer: Buffer): void;
+    stop(): void;
+    data(buffer: Buffer): void;
 };
 
 export interface IDevice {

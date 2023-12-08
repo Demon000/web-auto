@@ -32,6 +32,11 @@
                 // _30 = 1
                 // _60 = 2
                 frameRate: 2,
+                // H264_BP = 3
+                // VP9 = 5
+                // AV1 = 6
+                // H265 = 7
+                videoCodecType: 3,
                 heightMargin: 0,
                 widthMargin: 0,
                 density: 240,

@@ -101,30 +101,14 @@ export class NaluSodbBitReader {
     #bitPosition = -1;
     #byte = 0;
 
-    get byteLength() {
-        return this.#byteLength;
-    }
-
-    get stopBitIndex() {
-        return this.#stopBitIndex;
-    }
-
-    get bytePosition() {
-        return this.#bytePosition;
-    }
-
-    get bitPosition() {
-        return this.#bitPosition;
-    }
-
-    get ended() {
+    public get ended() {
         return (
             this.#bytePosition === this.#byteLength &&
             this.#bitPosition === this.#stopBitIndex
         );
     }
 
-    constructor(nalu: Uint8Array) {
+    public constructor(nalu: Uint8Array) {
         this.#nalu = nalu;
 
         for (let i = nalu.length - 1; i >= 0; i -= 1) {
@@ -162,7 +146,7 @@ export class NaluSodbBitReader {
         }
     }
 
-    next() {
+    public next() {
         if (this.#bitPosition === -1) {
             this.#bitPosition = 7;
             this.#bytePosition += 1;
@@ -178,7 +162,7 @@ export class NaluSodbBitReader {
         return value;
     }
 
-    read(length: number): number {
+    public read(length: number): number {
         if (length > 32) {
             throw new Error('Read length too large');
         }
@@ -190,13 +174,7 @@ export class NaluSodbBitReader {
         return result;
     }
 
-    skip(length: number) {
-        for (let i = 0; i < length; i += 1) {
-            this.next();
-        }
-    }
-
-    decodeExponentialGolombNumber(): number {
+    public decodeExponentialGolombNumber(): number {
         let length = 0;
         while (this.next() === 0) {
             length += 1;
@@ -228,24 +206,9 @@ export class NaluSodbBitReader {
         this.#byte = state.byte;
     }
 
-    peek(length: number) {
+    public peek(length: number) {
         const state = this.#save();
         const result = this.read(length);
-        this.#restore(state);
-        return result;
-    }
-
-    readBytes(length: number): Uint8Array {
-        const result = new Uint8Array(length);
-        for (let i = 0; i < length; i += 1) {
-            result[i] = this.read(8);
-        }
-        return result;
-    }
-
-    peekBytes(length: number): Uint8Array {
-        const state = this.#save();
-        const result = this.readBytes(length);
         this.#restore(state);
         return result;
     }
