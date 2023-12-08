@@ -133,7 +133,17 @@ export abstract class AndroidAutoServer {
         let buffer;
 
         if (frameHeader.flags & FrameHeaderFlags.ENCRYPTED) {
-            frameData.payload = await this.cryptor.encrypt(frameData.payload);
+            try {
+                frameData.payload = await this.cryptor.encrypt(
+                    frameData.payload,
+                );
+            } catch (err) {
+                this.logger.error('Failed to encrypt', {
+                    frameData,
+                    err,
+                });
+                return;
+            }
         }
 
         frameHeader.payloadSize = frameData.payload.size;

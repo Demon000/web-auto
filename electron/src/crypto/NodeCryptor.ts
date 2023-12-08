@@ -53,6 +53,9 @@ export class NodeCryptor extends Cryptor {
         });
     }
     public async stop(): Promise<void> {
+        const releaseEncrypt = await this.encryptMutex.acquire();
+        const releaseDecrypt = await this.decryptMutex.acquire();
+
         assert(this.cleartext !== undefined);
         assert(this.encrypted !== undefined);
 
@@ -65,6 +68,9 @@ export class NodeCryptor extends Cryptor {
         this.cleartext = undefined;
         this.encrypted = undefined;
         this.connected = false;
+
+        releaseDecrypt();
+        releaseEncrypt();
     }
     public isHandshakeComplete(): boolean {
         return this.connected;
