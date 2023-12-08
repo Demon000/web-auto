@@ -7,7 +7,9 @@
   "types": "./dist/esm/protos_pb.d.ts",
   "exports": {
     ".": "./dist/esm/protos_pb.js",
-    "./bluetooth.js": "./dist/esm/bluetooth_pb.js"
+    "./interfaces.js": "./dist/esm/protos_interfaces.js",
+    "./bluetooth.js": "./dist/esm/bluetooth_pb.js",
+    "./bluetooth_interfaces.js": "./dist/esm/bluetooth_interfaces.js"
   },
   "scripts": {
     "build": "./build-protos.sh && tsc",
@@ -15,5 +17,8 @@
   },
   "devDependencies": {
     "@bufbuild/protoc-gen-es": "^1.5.1"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "^1.5.1"
   }
 }

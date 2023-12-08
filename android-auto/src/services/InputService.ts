@@ -1,5 +1,4 @@
 import { Message } from '../messenger/Message.js';
-import type { PartialMessage } from '@bufbuild/protobuf';
 
 import { Service, type ServiceEvents } from './Service.js';
 import { microsecondsTime } from '../utils/time.js';
@@ -63,9 +62,7 @@ export abstract class InputService extends Service {
         );
     }
 
-    public async sendTouchEvent(
-        touchEvent: PartialMessage<TouchEvent>,
-    ): Promise<void> {
+    protected async sendTouchEvent(touchEvent: TouchEvent): Promise<void> {
         if (!this.started) {
             return;
         }

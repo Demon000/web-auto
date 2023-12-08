@@ -42,17 +42,16 @@ import {
     type IpcServiceHandler,
     type IpcServiceRegistry,
 } from '@web-auto/electron-ipc/common.js';
-import {
-    AudioStreamType,
-    type InputSourceService_TouchScreen,
-    type VideoConfiguration,
-} from '@web-auto/android-auto-proto';
-import type { PartialMessage } from '@bufbuild/protobuf';
+import { AudioStreamType } from '@web-auto/android-auto-proto';
+import type {
+    IInputSourceService_TouchScreen,
+    IVideoConfiguration,
+} from '@web-auto/android-auto-proto/interfaces.js';
 
 export interface ElectronAndroidAutoServerConfig
     extends AndroidAutoServerConfig {
-    videoConfigs: PartialMessage<VideoConfiguration>[];
-    touchScreenConfig: PartialMessage<InputSourceService_TouchScreen>;
+    videoConfigs: IVideoConfiguration[];
+    touchScreenConfig: IInputSourceService_TouchScreen;
     tcpDeviceHandlerConfig: ElectronTcpDeviceHandlerConfig;
     usbDeviceHandlerConfig: ElectronUsbDeviceHandlerConfig;
     bluetoothDeviceHandlerConfig?: ElectronBluetoothDeviceHandlerConfig;

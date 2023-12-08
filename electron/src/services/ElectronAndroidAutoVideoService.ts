@@ -15,12 +15,11 @@ import {
     type Setup,
     type Start,
     type Stop,
-    type VideoConfiguration,
     type VideoFocusRequestNotification,
     DisplayType,
     MediaSinkService,
 } from '@web-auto/android-auto-proto';
-import type { PartialMessage } from '@bufbuild/protobuf';
+import type { IVideoConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
 
 export class ElectronAndroidAutoVideoService extends VideoService {
     public constructor(
@@ -28,7 +27,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
             AndroidAutoVideoService,
             AndroidAutoVideoClient
         >,
-        private videoConfigs: PartialMessage<VideoConfiguration>[],
+        private videoConfigs: IVideoConfiguration[],
         protected events: ServiceEvents,
     ) {
         super(events);
@@ -36,7 +35,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         ipcHandler.on('getVideoConfig', this.getVideoConfig.bind(this));
     }
 
-    public async getVideoConfig(): Promise<PartialMessage<VideoConfiguration>> {
+    public async getVideoConfig(): Promise<IVideoConfiguration> {
         return this.videoConfigs[0];
     }
 

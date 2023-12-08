@@ -1,17 +1,16 @@
-import {
-    type TouchEvent,
-    type VideoConfiguration,
-} from '@web-auto/android-auto-proto';
-import type { PartialMessage } from '@bufbuild/protobuf';
+import type {
+    ITouchEvent,
+    IVideoConfiguration,
+} from '@web-auto/android-auto-proto/interfaces.js';
 
 export type AndroidAutoInputService = {
-    sendTouchEvent: (touchEvent: PartialMessage<TouchEvent>) => Promise<void>;
+    sendTouchEvent: (touchEvent: ITouchEvent) => Promise<void>;
 };
 
 export type AndroidAutoInputClient = Record<string, never>;
 
 export type AndroidAutoVideoService = {
-    getVideoConfig(): Promise<PartialMessage<VideoConfiguration>>;
+    getVideoConfig(): Promise<IVideoConfiguration>;
 };
 
 export type AndroidAutoVideoClient = {
