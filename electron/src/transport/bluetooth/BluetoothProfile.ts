@@ -4,6 +4,7 @@ import { Device, type Profile, type ProfileOptions } from 'bluez';
 export interface BluetoothProfileEvents {
     onConnected: (address: string, socket: BluetoothSocket) => Promise<void>;
     onDisconnected: (address: string) => Promise<void>;
+    onError: (address: string, err: Error) => void;
 }
 
 export class BluetoothProfile implements Profile {
@@ -36,7 +37,14 @@ export class BluetoothProfile implements Profile {
          * disconnection, not if the remote end does it.
          * Listen to the close event.
          */
+        const onError = (err: Error) => {
+            this.events.onError(address, err);
+        };
+
+        socket.once('error', onError);
         socket.once('close', async () => {
+            socket.off('error', onError);
+
             await this.events.onDisconnected(address);
         });
 

@@ -31,10 +31,12 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         this.onDeviceRemoved = this.onDeviceRemoved.bind(this);
         this.onProfileConnected = this.onProfileConnected.bind(this);
         this.onProfileDisconnected = this.onProfileDisconnected.bind(this);
+        this.onProfileError = this.onProfileError.bind(this);
 
         this.androidAutoProfile = new AndroidAutoProfile({
             onConnected: this.onProfileConnected,
             onDisconnected: this.onProfileDisconnected,
+            onError: this.onProfileError,
         });
     }
 
@@ -82,6 +84,10 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         }
 
         this.addressDeviceMap.delete(address);
+    }
+
+    private onProfileError(address: string, err: Error): void {
+        this.logger.error('Received bluetooth profile error', err);
     }
 
     private async onProfileConnected(
