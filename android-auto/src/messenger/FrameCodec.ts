@@ -124,16 +124,12 @@ export class FrameCodec {
         }
 
         if (buffer.readBufferSize() === 0) {
-            this.logger.debug('Remaining buffer empty', buffer);
+            this.logger.debug('Remaining buffer empty');
             this.buffer = undefined;
         } else {
             this.logger.debug('Remaining buffer not empty', buffer);
             this.buffer = buffer.readBuffer();
         }
-
-        this.logger.debug('Finish decode', {
-            buffer: this.buffer,
-        });
 
         return frameDatas;
     }
