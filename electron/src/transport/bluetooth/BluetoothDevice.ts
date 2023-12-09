@@ -110,13 +110,26 @@ export class BluetoothDevice extends Device {
 
     private async disconnectBluetooth(): Promise<void> {
         this.logger.info('Disconnecting from Bluetooth');
-        await this.device.Disconnect();
+        try {
+            await this.device.Disconnect();
+        } catch (err) {
+            this.logger.info('Failed to disconnect from Bluetooth', err);
+            return;
+        }
         this.logger.info('Disconnected from Bluetooth');
     }
 
     private async disconnectBluetoothProfile(): Promise<void> {
         this.logger.info('Disconnecting from Bluetooth profile');
-        await this.profileConnector.disconnect();
+        try {
+            await this.profileConnector.disconnect();
+        } catch (err) {
+            this.logger.info(
+                'Failed to disconnect from Bluetooth profile',
+                err,
+            );
+            return;
+        }
         this.logger.info('Disconnected from Bluetooth profile');
     }
 
