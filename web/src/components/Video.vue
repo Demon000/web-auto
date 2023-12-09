@@ -59,6 +59,8 @@ const onCodecConfig = (data: VideoCodecConfig) => {
 
     canvas.width = data.width - marginWidth;
     canvas.height = data.height - marginHeight;
+
+    decoder.emitter.on(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
 };
 
 const onDecoderFrame = (data?: VideoFrame) => {
@@ -128,7 +130,6 @@ onMounted(async () => {
 
     androidAutoVideoService.on('afterSetup', onAfterSetup);
     androidAutoVideoService.on('codecConfig', onCodecConfig);
-    decoder.emitter.on(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
 });
 
 onBeforeUnmount(async () => {
