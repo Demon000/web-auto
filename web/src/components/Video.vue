@@ -6,7 +6,6 @@ import { transformFittedPoint } from 'object-fit-math';
 import type { FitMode } from 'object-fit-math/dist/types.d.ts';
 import { decoder } from '../codec/index.js';
 import { PointerAction, VideoFocusMode } from '@web-auto/android-auto-proto';
-import { IVideoConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
 import { VideoCodecConfig } from '@web-auto/android-auto-ipc';
 
 let marginHeight = 0;
@@ -84,17 +83,6 @@ const onDecoderFrame = (data?: VideoFrame) => {
     );
 };
 
-const onVideoConfig = (config: IVideoConfiguration) => {
-    if (config.heightMargin === undefined || config.widthMargin === undefined) {
-        return;
-    }
-
-    marginHeight = config.heightMargin;
-    marginWidth = config.widthMargin;
-    marginVertical = Math.floor(marginHeight / 2);
-    marginHorizontal = Math.floor(marginWidth / 2);
-};
-
 const showProjection = async () => {
     await androidAutoVideoService.sendVideoFocusNotification({
         focus: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
@@ -107,14 +95,6 @@ const showNative = async () => {
         focus: VideoFocusMode.VIDEO_FOCUS_NATIVE,
         unsolicited: true,
     });
-};
-
-const onIsSetup = async (status: boolean) => {
-    if (status) {
-        await showNative();
-    }
-
-    await showProjection();
 };
 
 const onAfterSetup = async () => {
@@ -133,19 +113,18 @@ onMounted(async () => {
     canvasObserver = new ResizeObserver(onCanvasResized);
     canvasObserver.observe(canvas);
 
-    androidAutoVideoService
-        .getVideoConfig()
-        .then(onVideoConfig)
-        .catch((err) => {
-            console.error(err);
-        });
+    const videoConfig = await androidAutoVideoService.getVideoConfig();
+    marginHeight = videoConfig.heightMargin ?? 0;
+    marginWidth = videoConfig.widthMargin ?? 0;
+    marginVertical = Math.floor(marginHeight / 2);
+    marginHorizontal = Math.floor(marginWidth / 2);
 
-    androidAutoVideoService
-        .isSetup()
-        .then(onIsSetup)
-        .catch((err) => {
-            console.error(err);
-        });
+    const isSetup = await androidAutoVideoService.isSetup();
+    if (isSetup) {
+        await showNative();
+    }
+
+    await showProjection();
 
     androidAutoVideoService.on('afterSetup', onAfterSetup);
     androidAutoVideoService.on('codecConfig', onCodecConfig);
