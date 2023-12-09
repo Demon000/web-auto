@@ -6,6 +6,10 @@ import { Mutex } from 'async-mutex';
 import { getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
 
+export interface NodeCryptorConfig {
+    ciphers: string;
+}
+
 export class NodeCryptor extends Cryptor {
     private logger = getLogger(this.constructor.name);
 
@@ -17,6 +21,7 @@ export class NodeCryptor extends Cryptor {
     private decryptMutex = new Mutex();
 
     public constructor(
+        private config: NodeCryptorConfig,
         protected certificateBuffer: Buffer,
         protected privateKeyBuffer: Buffer,
     ) {
@@ -34,6 +39,7 @@ export class NodeCryptor extends Cryptor {
             cert: this.certificateBuffer,
             rejectUnauthorized: false,
             enableTrace: true,
+            ciphers: this.config.ciphers,
         });
 
         this.encrypted = pair.socket2;

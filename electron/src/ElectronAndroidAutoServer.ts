@@ -36,7 +36,7 @@ import {
     type ElectronTcpDeviceHandlerConfig,
 } from './transport/ElectronTcpDeviceHandler.js';
 import { ElectronBluetoothDeviceHandler } from './transport/bluetooth/ElectronBluetoothDeviceHandler.js';
-import { NodeCryptor } from './crypto/NodeCryptor.js';
+import { NodeCryptor, type NodeCryptorConfig } from './crypto/NodeCryptor.js';
 import type { ElectronBluetoothDeviceHandlerConfig } from './transport/bluetooth/ElectronBluetoothDeviceHandlerConfig.js';
 import {
     type IpcServiceHandler,
@@ -50,6 +50,7 @@ import type {
 
 export interface ElectronAndroidAutoServerConfig
     extends AndroidAutoServerConfig {
+    cryptorConfig: NodeCryptorConfig;
     videoConfigs: IVideoConfiguration[];
     touchScreenConfig: IInputSourceService_TouchScreen;
     tcpDeviceHandlerConfig: ElectronTcpDeviceHandlerConfig;
@@ -119,7 +120,11 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
         certificateBuffer: Buffer,
         privateKeyBuffer: Buffer,
     ): Cryptor {
-        return new NodeCryptor(certificateBuffer, privateKeyBuffer);
+        return new NodeCryptor(
+            this.config.cryptorConfig,
+            certificateBuffer,
+            privateKeyBuffer,
+        );
     }
     protected buildControlService(
         events: ControlServiceEvents,

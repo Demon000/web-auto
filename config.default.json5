@@ -3,6 +3,9 @@
         debug: false,
     },
     androidAuto: {
+        cryptorConfig: {
+            ciphers: 'ECDHE-RSA-AES128-GCM-SHA256',
+        },
         headunitInfo: {
             make: 'WebAuto',
             model: 'Universal',
