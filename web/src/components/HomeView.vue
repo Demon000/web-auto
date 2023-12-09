@@ -2,6 +2,35 @@
 import AndroidAutoDeviceSelector from './DeviceSelector.vue';
 import AndroidAutoMiniVideo from './MiniVideo.vue';
 import AppBar from './AppBar.vue';
+import { Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { IDevice } from '@web-auto/android-auto-ipc';
+import { androidAutoServerService } from '../ipc.ts';
+
+const connectedDevice = computed(() => {
+    for (const device of devices.value) {
+        if (device.state === 'connected') {
+            return device;
+        }
+    }
+
+    return undefined;
+});
+
+const devices: Ref<IDevice[]> = ref([]);
+
+const onDevices = (updatedDevices: IDevice[]) => {
+    devices.value = updatedDevices;
+};
+
+onMounted(async () => {
+    devices.value = await androidAutoServerService.getDevices();
+
+    androidAutoServerService.on('devices', onDevices);
+});
+
+onBeforeUnmount(() => {
+    androidAutoServerService.off('devices', onDevices);
+});
 </script>
 
 <template>
@@ -9,7 +38,9 @@ import AppBar from './AppBar.vue';
         <AppBar></AppBar>
         <div class="main">
             <AndroidAutoDeviceSelector></AndroidAutoDeviceSelector>
-            <AndroidAutoMiniVideo></AndroidAutoMiniVideo>
+            <AndroidAutoMiniVideo
+                v-if="connectedDevice !== undefined"
+            ></AndroidAutoMiniVideo>
         </div>
     </div>
 </template>
