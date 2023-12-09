@@ -38,7 +38,6 @@ export class NodeCryptor extends Cryptor {
             key: this.privateKeyBuffer,
             cert: this.certificateBuffer,
             rejectUnauthorized: false,
-            enableTrace: true,
             ciphers: this.config.ciphers,
         });
 
