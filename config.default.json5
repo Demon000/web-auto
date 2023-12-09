@@ -60,6 +60,7 @@
             handleAlreadyConnectedDevices: true,
         },
         bluetoothDeviceHandlerConfig: {
+            profileConnectionTimeoutMs: 20000,
             socketInfo: {
                 ipAddress: '192.168.0.106',
                 port: 5000,

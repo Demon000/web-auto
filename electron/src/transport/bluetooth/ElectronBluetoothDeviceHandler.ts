@@ -9,7 +9,6 @@ import { BluetoothDevice } from './BluetoothDevice.js';
 import { AndroidAutoProfile } from './AndroidAutoProfile.js';
 import { type ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig.js';
 import net from 'node:net';
-import { Duplex } from 'node:stream';
 
 const AA_OBJECT_PATH = '/com/aa/aa';
 
@@ -29,15 +28,8 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
 
         this.onDeviceAdded = this.onDeviceAdded.bind(this);
         this.onDeviceRemoved = this.onDeviceRemoved.bind(this);
-        this.onProfileConnected = this.onProfileConnected.bind(this);
-        this.onProfileDisconnected = this.onProfileDisconnected.bind(this);
-        this.onProfileError = this.onProfileError.bind(this);
 
-        this.androidAutoProfile = new AndroidAutoProfile({
-            onConnected: this.onProfileConnected,
-            onDisconnected: this.onProfileDisconnected,
-            onError: this.onProfileError,
-        });
+        this.androidAutoProfile = new AndroidAutoProfile();
     }
 
     private async onDeviceAdded(address: string): Promise<void> {
@@ -57,10 +49,12 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         const device = new BluetoothDevice(
             this.config,
             bluezDevice,
+            address,
             this.tcpServer,
             name,
             this.getDeviceEvents(),
         );
+        this.androidAutoProfile.addHandler(address, device.profileHandler);
         this.addressDeviceMap.set(address, device);
 
         try {
@@ -83,44 +77,8 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
             this.logger.error('Failed to emit device unavailable event', err);
         }
 
+        this.androidAutoProfile.removeHandler(address, device.profileHandler);
         this.addressDeviceMap.delete(address);
-    }
-
-    private onProfileError(address: string, err: Error): void {
-        this.logger.error('Received bluetooth profile error', err);
-    }
-
-    private async onProfileConnected(
-        address: string,
-        socket: Duplex,
-    ): Promise<void> {
-        this.logger.info(
-            `Received bluetooth profile connection from device ${address}`,
-        );
-        const device = this.addressDeviceMap.get(address);
-        if (device === undefined) {
-            this.logger.error(
-                `Received connection from unknown device ${address}`,
-            );
-            return;
-        }
-
-        await device.onBluetoothProfileConnected(socket);
-    }
-
-    private async onProfileDisconnected(address: string): Promise<void> {
-        this.logger.info(
-            `Received bluetooth profile disconnection from device ${address}`,
-        );
-        const device = this.addressDeviceMap.get(address);
-        if (device === undefined) {
-            this.logger.error(
-                `Received disconnection from unknown device ${address}`,
-            );
-            return;
-        }
-
-        await device.onBluetoothProfileDisconnected();
     }
 
     public async waitForDevices(): Promise<void> {

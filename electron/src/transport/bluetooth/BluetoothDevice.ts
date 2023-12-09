@@ -8,33 +8,41 @@ import {
 } from '@web-auto/android-auto';
 import { Device as BluezDevice } from 'bluez';
 import { type ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig.js';
-import { BluetoothDeviceProfileConnector } from './BluetoothDeviceProfileConnector.js';
 import { BluetoothDeviceWifiConnector } from './BluetoothDeviceWifiConnector.js';
 import { Server } from 'node:net';
 import { BluetoothDeviceTcpConnector } from './BluetoothDeviceTcpConnector.js';
 import { ElectronDuplexTransport } from '../ElectronDuplexTransport.js';
 import { Duplex } from 'node:stream';
+import { BluetoothProfileHandler } from './BluetoothProfileHandler.js';
 
 enum BluetoothDeviceDisconnectReason {
     BLUETOOTH_PROFILE = 'bluetooth-profile-disconnected',
 }
 
+class BluetoothProfileDisconnectedError extends Error {}
+
 export class BluetoothDevice extends Device {
-    private profileConnector: BluetoothDeviceProfileConnector;
+    public profileHandler: BluetoothProfileHandler;
     private wifiConnector: BluetoothDeviceWifiConnector;
     private tcpConnector: BluetoothDeviceTcpConnector;
-    private tcpSocket?: Duplex;
 
     public constructor(
         private config: ElectronBluetoothDeviceHandlerConfig,
         private device: BluezDevice,
+        address: string,
         tcpServer: Server,
         name: string,
         events: DeviceEvents,
     ) {
         super('BT', name, events);
 
-        this.profileConnector = new BluetoothDeviceProfileConnector();
+        this.profileHandler = new BluetoothProfileHandler({
+            onUnhandledConnection:
+                this.onBluetoothProfileSelfConnected.bind(this),
+            onUnhandledDisconnected:
+                this.onBluetoothProfileSelfDisconnected.bind(this),
+            onError: this.onBluetoothProfileError.bind(this),
+        });
 
         this.wifiConnector = new BluetoothDeviceWifiConnector(
             this.config,
@@ -44,68 +52,49 @@ export class BluetoothDevice extends Device {
         this.tcpConnector = new BluetoothDeviceTcpConnector(tcpServer, name);
     }
 
-    public async onBluetoothProfileConnected(socket: Duplex): Promise<void> {
-        if (this.state === DeviceState.CONNECTING) {
-            /*
-             * Already trying to connect, pass the socket to the
-             * connector to complete the connection.
-             */
-            this.profileConnector.onConnect(socket);
-        } else if (this.state === DeviceState.AVAILABLE) {
-            await this.setState(DeviceState.SELF_CONNECTING);
+    private onBluetoothProfileError(err: Error): void {
+        this.logger.error('Received bluetooth profile error', err);
+    }
 
-            let canConnect = false;
+    public async onBluetoothProfileSelfConnected(): Promise<void> {
+        if (this.state !== DeviceState.AVAILABLE) {
+            this.logger.error(
+                `Unexpected bluetooth profile self-connection in state: ${this.state}`,
+            );
+        }
 
-            try {
-                canConnect = await this.events.onSelfConnect(this);
-            } catch (err) {
-                this.logger.error('Failed to emit self connect event', err);
-            }
+        this.logger.info('Received bluetooth profile self-connection');
 
-            if (!canConnect) {
-                return;
-            }
+        await this.setState(DeviceState.SELF_CONNECTING);
 
-            /*
-             * Device connected itself. Set the bluetooth socket inside the
-             * profile connector. Then start the connection process.
-             * The connector will return the already existing bluetooth socket.
-             */
-            this.profileConnector.onConnect(socket);
+        let canConnect = false;
 
+        try {
+            canConnect = await this.events.onSelfConnect(this);
+        } catch (err) {
+            this.logger.error('Failed to emit self connect event', err);
+        }
+
+        if (canConnect) {
+            this.logger.info('Bluetooth profile self-connection accepted');
             await this.connect();
+        } else {
+            this.logger.info('Bluetooth profile self-connection denied');
+            await this.disconnectBluetoothProfile();
+            await this.disconnectBluetooth();
         }
     }
 
-    public async onBluetoothProfileDisconnected(): Promise<void> {
-        if (this.state === DeviceState.CONNECTED) {
-            /*
-             * Bluetooth profile disconnection, disconnect transport.
-             */
-            await this.disconnect(
-                BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE,
+    public async onBluetoothProfileSelfDisconnected(): Promise<void> {
+        if (this.state !== DeviceState.AVAILABLE) {
+            this.logger.error(
+                `Unexpected bluetooth profile disconnection in state: ${this.state}`,
             );
-        } else if (
-            /*
-             * The profile connector is waiting for disconnection event.
-             */
-            this.state === DeviceState.DISCONNECTING ||
-            /*
-             * The disconnection event will cancel the connection event.
-             */
-            this.state === DeviceState.CONNECTING
-        ) {
-            await this.profileConnector.onDisconnect();
-        } else if (
-            /*
-             * The connection event previously fired on its own triggering a self
-             * connection, but the self connection has not been accepted.
-             */
-            this.state === DeviceState.SELF_CONNECTING
-        ) {
-            await this.profileConnector.onDisconnect();
-            await this.setState(DeviceState.AVAILABLE);
         }
+
+        await this.disconnect(
+            BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE,
+        );
     }
 
     private async disconnectBluetooth(): Promise<void> {
@@ -122,7 +111,7 @@ export class BluetoothDevice extends Device {
     private async disconnectBluetoothProfile(): Promise<void> {
         this.logger.info('Disconnecting from Bluetooth profile');
         try {
-            await this.profileConnector.disconnect();
+            await this.profileHandler.disconnect();
         } catch (err) {
             this.logger.info(
                 'Failed to disconnect from Bluetooth profile',
@@ -145,6 +134,68 @@ export class BluetoothDevice extends Device {
         }
     }
 
+    public async connectWifi(bluetoothSocket: Duplex): Promise<void> {
+        this.logger.info('Connecting to WiFi');
+        try {
+            await this.wifiConnector.connect(bluetoothSocket);
+        } catch (err) {
+            this.logger.error('Failed to connect to WiFi', err);
+            throw err;
+        }
+        this.logger.info('Connected to WiFi');
+    }
+
+    public async connectTcp(): Promise<Duplex> {
+        let socket;
+
+        this.logger.info('Waiting for TCP connection');
+        try {
+            socket = await this.tcpConnector.connect();
+        } catch (err) {
+            this.logger.error('Failed to receive TCP connection', err);
+            throw err;
+        }
+        this.logger.info('TCP connection received');
+
+        return socket;
+    }
+
+    public async connectWifiAndTcp(bluetoothSocket: Duplex): Promise<Duplex> {
+        await this.connectWifi(bluetoothSocket);
+        return this.connectTcp();
+    }
+
+    public waitForTcpConnection(bluetoothSocket: Duplex): Promise<Duplex> {
+        return new Promise((resolve, reject) => {
+            const controller = new AbortController();
+            const signal = controller.signal;
+
+            const disconnectionPromise =
+                this.profileHandler.waitForDisconnection(signal);
+
+            disconnectionPromise
+                .then(() => {
+                    reject(
+                        new BluetoothProfileDisconnectedError(
+                            'Bluetooth profile disconnected while waiting',
+                        ),
+                    );
+                })
+                .catch(() => {});
+
+            this.connectWifiAndTcp(bluetoothSocket)
+                .then((socket) => {
+                    resolve(socket);
+                })
+                .catch((err) => {
+                    reject(err);
+                })
+                .finally(() => {
+                    controller.abort();
+                });
+        });
+    }
+
     public async connectImpl(events: TransportEvents): Promise<Transport> {
         const paired = await this.device.Paired();
         if (!paired) {
@@ -158,7 +209,10 @@ export class BluetoothDevice extends Device {
         let bluetoothSocket;
         try {
             this.logger.info('Connecting to Bluetooth profile');
-            bluetoothSocket = await this.profileConnector.connect();
+            bluetoothSocket =
+                await this.profileHandler.waitForConnectionWithTimeout(
+                    this.config.profileConnectionTimeoutMs,
+                );
             this.logger.info('Connected to Bluetooth profile');
         } catch (err) {
             this.logger.error('Failed to connect to Bluetooth profile', err);
@@ -166,28 +220,18 @@ export class BluetoothDevice extends Device {
             throw err;
         }
 
+        let tcpSocket;
         try {
-            this.logger.info('Connecting to WiFi');
-            await this.wifiConnector.connect(bluetoothSocket);
-            this.logger.info('Connected to WiFi');
+            tcpSocket = await this.waitForTcpConnection(bluetoothSocket);
         } catch (err) {
-            this.logger.error('Failed to connect to WiFi', err);
-            await this.disconnectBluetoothProfile();
+            this.logger.error('Failed to wait for TCP connection', err);
+            if (!(err instanceof BluetoothProfileDisconnectedError)) {
+                await this.disconnectBluetoothProfile();
+            }
             await this.disconnectBluetooth();
             throw err;
         }
 
-        try {
-            this.logger.info('Waiting for TCP connection');
-            this.tcpSocket = await this.tcpConnector.connect();
-            this.logger.info('TCP connection received');
-        } catch (err) {
-            this.logger.error('Failed to receive TCP connection', err);
-            await this.disconnectBluetoothProfile();
-            await this.disconnectBluetooth();
-            throw err;
-        }
-
-        return new ElectronDuplexTransport(this.tcpSocket, events);
+        return new ElectronDuplexTransport(tcpSocket, events);
     }
 }

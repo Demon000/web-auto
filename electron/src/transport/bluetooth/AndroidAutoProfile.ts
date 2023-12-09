@@ -1,7 +1,4 @@
-import {
-    BluetoothProfile,
-    type BluetoothProfileEvents,
-} from './BluetoothProfile.js';
+import { BluetoothProfile } from './BluetoothProfile.js';
 
 export const ANDROID_AUTO_UUID = '4de17a00-52cb-11e6-bdf4-0800200c9a66';
 
@@ -79,16 +76,12 @@ const ANDROID_AUTO_SERVICE_RECORD = `<?xml version="1.0"?>
 </record>`;
 
 export class AndroidAutoProfile extends BluetoothProfile {
-    public constructor(events: BluetoothProfileEvents) {
-        super(
-            ANDROID_AUTO_UUID,
-            {
-                Name: 'AA Wireless',
-                Role: 'server',
-                Channel: ANDROID_AUTO_RFCOMM_CHANNEL,
-                ServiceRecord: ANDROID_AUTO_SERVICE_RECORD,
-            },
-            events,
-        );
+    public constructor() {
+        super(ANDROID_AUTO_UUID, {
+            Name: 'AA Wireless',
+            Role: 'server',
+            Channel: ANDROID_AUTO_RFCOMM_CHANNEL,
+            ServiceRecord: ANDROID_AUTO_SERVICE_RECORD,
+        });
     }
 }

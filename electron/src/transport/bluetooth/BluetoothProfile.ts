@@ -1,23 +1,35 @@
-import BluetoothSocket from 'bluetooth-socket';
 import { Device, type Profile, type ProfileOptions } from 'bluez';
-
-export interface BluetoothProfileEvents {
-    onConnected: (address: string, socket: BluetoothSocket) => Promise<void>;
-    onDisconnected: (address: string) => Promise<void>;
-    onError: (address: string, err: Error) => void;
-}
+import type { BluetoothProfileHandler } from './BluetoothProfileHandler.js';
+import assert from 'assert';
+import { getLogger } from '@web-auto/logging';
 
 export class BluetoothProfile implements Profile {
+    private logger = getLogger(this.constructor.name);
+
     public UUID: string;
     public ProfileOptions: Partial<ProfileOptions>;
+    private addressHandlerMap = new Map<string, BluetoothProfileHandler>();
 
-    public constructor(
-        uuid: string,
-        options: Partial<ProfileOptions>,
-        private events: BluetoothProfileEvents,
-    ) {
+    public constructor(uuid: string, options: Partial<ProfileOptions>) {
         this.UUID = uuid;
         this.ProfileOptions = options;
+    }
+
+    public addHandler(address: string, handler: BluetoothProfileHandler): void {
+        assert(!this.addressHandlerMap.has(address));
+        this.addressHandlerMap.set(address, handler);
+    }
+
+    public removeHandler(
+        address: string,
+        handler: BluetoothProfileHandler,
+    ): void {
+        assert(this.addressHandlerMap.get(address) === handler);
+        this.addressHandlerMap.delete(address);
+    }
+
+    private getHandler(address: string): BluetoothProfileHandler | undefined {
+        return this.addressHandlerMap.get(address);
     }
 
     public async NewConnection(
@@ -25,29 +37,27 @@ export class BluetoothProfile implements Profile {
         fd: number,
         _options: Record<string, any>,
     ): Promise<void> {
-        const address = await device.Address();
+        let address: string | undefined;
 
-        /*
-         * Open the socket automatically just to handle close events.
-         */
-        const socket = new BluetoothSocket(fd);
+        try {
+            address = await device.Address();
+        } catch (err) {
+            this.logger.error('Failed to get device address', err);
+            return;
+        }
 
-        /*
-         * RequestDisconnection is only called if the stack initiates the
-         * disconnection, not if the remote end does it.
-         * Listen to the close event.
-         */
-        const onError = (err: Error) => {
-            this.events.onError(address, err);
-        };
+        const handler = this.getHandler(address);
+        if (handler === undefined) {
+            this.logger.error(
+                `Received new connection from unhandled address ${address}`,
+            );
+            return;
+        }
 
-        socket.once('error', onError);
-        socket.once('close', async () => {
-            socket.off('error', onError);
-
-            await this.events.onDisconnected(address);
-        });
-
-        await this.events.onConnected(address, socket);
+        try {
+            await handler.connect(fd);
+        } catch (err) {
+            this.logger.error(`Failed to connect address ${address}`, err);
+        }
     }
 }
