@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { H264WebCodecsDecoderEvent } from '../codec/H264WebCodecsDecoder';
+import { H264WebCodecsDecoder } from '../codec/H264WebCodecsDecoder';
 import { androidAutoInputService, androidAutoVideoService } from '../ipc.js';
 import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 import { transformFittedPoint } from 'object-fit-math';
 import type { FitMode } from 'object-fit-math/dist/types.d.ts';
-import { decoder } from '../codec/index.js';
 import { PointerAction, VideoFocusMode } from '@web-auto/android-auto-proto';
 import { VideoCodecConfig } from '@web-auto/android-auto-ipc';
 
@@ -21,6 +20,32 @@ let canvasPosition: { x: number; y: number } = { x: 0, y: 0 };
 let canvasSize: { width: number; height: number } = { width: 0, height: 0 };
 let canvasObjectFit: FitMode = 'contain';
 let canvasObjectPosition: [string, string] = ['0', '0'];
+
+const onDecoderFrame = (data?: VideoFrame) => {
+    const context = getContext();
+    const canvas = getCanvas();
+
+    if (data === undefined) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+    }
+
+    context.drawImage(
+        data,
+        marginHorizontal,
+        marginVertical,
+        canvas.width,
+        canvas.height,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+    );
+};
+
+const decoder = new H264WebCodecsDecoder({
+    onFrame: onDecoderFrame,
+});
 
 function assert(conditional: boolean, message?: string): asserts conditional {
     if (!conditional) throw new Error(message);
@@ -60,29 +85,12 @@ const onCodecConfig = (data: VideoCodecConfig) => {
     canvas.width = data.width - marginWidth;
     canvas.height = data.height - marginHeight;
 
-    decoder.emitter.on(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
-};
-
-const onDecoderFrame = (data?: VideoFrame) => {
-    const context = getContext();
-    const canvas = getCanvas();
-
-    if (data === undefined) {
-        context.clearRect(0, 0, canvas.width, canvas.height);
+    try {
+        decoder.configure(data.codec);
+    } catch (err) {
+        console.error(err);
         return;
     }
-
-    context.drawImage(
-        data,
-        marginHorizontal,
-        marginVertical,
-        canvas.width,
-        canvas.height,
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-    );
 };
 
 const showProjection = async () => {
@@ -103,6 +111,26 @@ const onAfterSetup = async () => {
     await showProjection();
 };
 
+const onFirstFrameData = (buffer: Uint8Array) => {
+    try {
+        decoder.decodeKeyFrame(buffer);
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+const onFrameData = (buffer: Uint8Array) => {
+    try {
+        decoder.decode(buffer);
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+const onStop = () => {
+    decoder.reset();
+};
+
 onMounted(async () => {
     const canvas = canvasRef.value;
     assert(canvas !== undefined);
@@ -121,28 +149,28 @@ onMounted(async () => {
     marginVertical = Math.floor(marginHeight / 2);
     marginHorizontal = Math.floor(marginWidth / 2);
 
-    const isSetup = await androidAutoVideoService.isSetup();
-    if (isSetup) {
-        await showNative();
-    }
-
-    await showProjection();
-
     androidAutoVideoService.on('afterSetup', onAfterSetup);
     androidAutoVideoService.on('codecConfig', onCodecConfig);
+    androidAutoVideoService.on('firstFrame', onFirstFrameData);
+    androidAutoVideoService.on('data', onFrameData);
+    androidAutoVideoService.on('stop', onStop);
+
+    await showProjection();
 });
 
 onBeforeUnmount(async () => {
     onDecoderFrame(undefined);
 
-    decoder.emitter.off(H264WebCodecsDecoderEvent.FRAME, onDecoderFrame);
+    await showNative();
+
+    androidAutoVideoService.off('stop', onStop);
+    androidAutoVideoService.off('data', onFrameData);
+    androidAutoVideoService.off('firstFrame', onFirstFrameData);
     androidAutoVideoService.off('codecConfig', onCodecConfig);
     androidAutoVideoService.off('afterSetup', onAfterSetup);
 
     assert(canvasObserver !== undefined);
     canvasObserver.disconnect();
-
-    await showNative();
 });
 
 const translateCanvasPosition = (x: number, y: number): [number, number] => {

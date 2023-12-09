@@ -1,11 +1,7 @@
 import { EventEmitter } from 'eventemitter3';
 
-export enum H264WebCodecsDecoderEvent {
-    FRAME,
-}
-
 export interface H264WebCodecsDecoderEvents {
-    [H264WebCodecsDecoderEvent.FRAME]: (data?: VideoFrame) => void;
+    onFrame: (data?: VideoFrame) => void;
 }
 
 export class H264WebCodecsDecoder {
@@ -15,7 +11,7 @@ export class H264WebCodecsDecoder {
 
     private animationFrameId = 0;
 
-    constructor() {
+    constructor(private events: H264WebCodecsDecoderEvents) {
         this.decoder = new VideoDecoder({
             output: this.onFrame.bind(this),
             error(e) {
@@ -30,11 +26,9 @@ export class H264WebCodecsDecoder {
         this.animationFrameId = requestAnimationFrame(this.onFramePresented);
     };
 
-    private onFrame = (frame?: VideoFrame) => {
-        this.emitter.emit(H264WebCodecsDecoderEvent.FRAME, frame);
-        if (frame !== undefined) {
-            frame.close();
-        }
+    private onFrame = (frame: VideoFrame) => {
+        this.events.onFrame(frame);
+        frame.close();
     };
 
     configure(codec: string) {
@@ -65,7 +59,7 @@ export class H264WebCodecsDecoder {
     }
 
     reset() {
-        this.onFrame(undefined);
+        this.events.onFrame(undefined);
         cancelAnimationFrame(this.animationFrameId);
         this.decoder.reset();
     }
