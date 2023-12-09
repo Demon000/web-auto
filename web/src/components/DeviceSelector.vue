@@ -2,18 +2,7 @@
 import type { IDevice } from '@web-auto/android-auto-ipc';
 import Device from './Device.vue';
 import { androidAutoServerService } from '../ipc.js';
-import { computed, onMounted, ref, type Ref } from 'vue';
-
-let devices: Ref<IDevice[]> = ref([]);
-
-androidAutoServerService
-    .getDevices()
-    .then((updatedDevices) => {
-        devices.value = updatedDevices;
-    })
-    .catch((err) => {
-        console.error(err);
-    });
+import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 
 const connectedDevice = computed(() => {
     for (const device of devices.value) {
@@ -27,10 +16,20 @@ const connectedDevice = computed(() => {
     return undefined;
 });
 
-onMounted(() => {
-    androidAutoServerService.on('devices', (updatedDevices) => {
-        devices.value = updatedDevices;
-    });
+const devices: Ref<IDevice[]> = ref([]);
+
+const onDevices = (updatedDevices: IDevice[]) => {
+    devices.value = updatedDevices;
+};
+
+onMounted(async () => {
+    devices.value = await androidAutoServerService.getDevices();
+
+    androidAutoServerService.on('devices', onDevices);
+});
+
+onBeforeUnmount(() => {
+    androidAutoServerService.off('devices', onDevices);
 });
 </script>
 
