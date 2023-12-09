@@ -49,6 +49,11 @@ export class H264WebCodecsDecoder {
     }
 
     decode(data: Uint8Array) {
+        /* TODO: fix me */
+        if (this.decoder.state !== 'configured') {
+            return;
+        }
+
         this.decoder.decode(
             new EncodedVideoChunk({
                 type: 'delta',
