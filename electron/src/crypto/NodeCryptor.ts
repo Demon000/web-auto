@@ -82,12 +82,18 @@ export class NodeCryptor extends Cryptor {
     }
 
     public async readHandshakeBuffer(): Promise<DataBuffer> {
-        assert(this.encrypted !== undefined);
+        if (this.encrypted === undefined) {
+            throw new Error('Cannot read handshake buffer after stop');
+        }
+
         return await this.read(this.encrypted);
     }
 
     public async writeHandshakeBuffer(buffer: DataBuffer): Promise<void> {
-        assert(this.encrypted !== undefined);
+        if (this.encrypted === undefined) {
+            throw new Error('Cannot write handshake buffer after stop');
+        }
+
         await this.write(this.encrypted, buffer);
     }
 
@@ -136,8 +142,9 @@ export class NodeCryptor extends Cryptor {
     }
 
     public async encrypt(buffer: DataBuffer): Promise<DataBuffer> {
-        assert(this.cleartext !== undefined);
-        assert(this.encrypted !== undefined);
+        if (this.cleartext === undefined || this.encrypted === undefined) {
+            throw new Error('Cannot encrypt after stop');
+        }
 
         const release = await this.encryptMutex.acquire();
         this.logger.debug('Encrypting buffer', buffer);
@@ -152,8 +159,9 @@ export class NodeCryptor extends Cryptor {
     }
 
     public async decrypt(buffer: DataBuffer): Promise<DataBuffer> {
-        assert(this.cleartext !== undefined);
-        assert(this.encrypted !== undefined);
+        if (this.cleartext === undefined || this.encrypted === undefined) {
+            throw new Error('Cannot decrypt after stop');
+        }
 
         const release = await this.decryptMutex.acquire();
         this.logger.debug('Decrypting buffer', buffer);
