@@ -36,13 +36,16 @@ export class BluetoothDevice extends Device {
     ) {
         super('BT', name, events);
 
-        this.profileHandler = new BluetoothProfileHandler({
-            onUnhandledConnection:
-                this.onBluetoothProfileSelfConnected.bind(this),
-            onUnhandledDisconnected:
-                this.onBluetoothProfileSelfDisconnected.bind(this),
-            onError: this.onBluetoothProfileError.bind(this),
-        });
+        this.profileHandler = new BluetoothProfileHandler(
+            {
+                onUnhandledConnection:
+                    this.onBluetoothProfileSelfConnected.bind(this),
+                onUnhandledDisconnected:
+                    this.onBluetoothProfileSelfDisconnected.bind(this),
+                onError: this.onBluetoothProfileError.bind(this),
+            },
+            name,
+        );
 
         this.wifiConnector = new BluetoothDeviceWifiConnector(
             this.config,

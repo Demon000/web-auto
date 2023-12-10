@@ -1,6 +1,7 @@
 import assert from 'assert';
 import { Duplex } from 'node:stream';
 import BluetoothSocket from 'bluetooth-socket';
+import { getLogger, type LoggerWrapper } from '@web-auto/logging';
 
 export interface BluetoothProfileEvents {
     onUnhandledConnection: (socket: BluetoothSocket) => Promise<void>;
@@ -12,8 +13,14 @@ export class BluetoothProfileHandler {
     public socket?: BluetoothSocket;
     private connectionCallback?: (socket: Duplex) => void;
     private disconnectionCallback?: () => void;
+    protected logger: LoggerWrapper;
 
-    public constructor(private events: BluetoothProfileEvents) {
+    public constructor(
+        private events: BluetoothProfileEvents,
+        private name: string,
+    ) {
+        this.logger = getLogger(`${this.constructor.name}@${this.name}`);
+
         this.onDisconnect = this.onDisconnect.bind(this);
         this.onError = this.onError.bind(this);
     }
@@ -45,8 +52,10 @@ export class BluetoothProfileHandler {
         this.socket.once('close', this.onDisconnect);
 
         if (this.connectionCallback === undefined) {
+            this.logger.info('Connection expected');
             await this.events.onUnhandledConnection(this.socket);
         } else {
+            this.logger.info('Connection unexpected');
             this.connectionCallback(this.socket);
         }
     }
@@ -56,11 +65,13 @@ export class BluetoothProfileHandler {
             assert(this.disconnectionCallback === undefined);
 
             const onAbort = () => {
+                this.logger.info('Aborted wait for disconnection');
                 this.disconnectionCallback = undefined;
                 reject(new Error('Aborted'));
             };
 
             const onDisconnect = () => {
+                this.logger.info('Received disconnection event');
                 this.disconnectionCallback = undefined;
                 signal?.removeEventListener('abort', onAbort);
                 resolve();
@@ -81,11 +92,13 @@ export class BluetoothProfileHandler {
             assert(this.connectionCallback === undefined);
 
             const onAbort = () => {
+                this.logger.info('Aborted wait for connection');
                 this.connectionCallback = undefined;
                 reject(new Error('Aborted'));
             };
 
             const onConnect = (socket: Duplex) => {
+                this.logger.info('Received connection event');
                 this.connectionCallback = undefined;
                 signal?.removeEventListener('abort', onAbort);
                 resolve(socket);
