@@ -179,6 +179,16 @@ export abstract class AndroidAutoServer {
         isEncrypted: boolean,
         isControl: boolean,
     ): Promise<void> {
+        if (this.connectedDevice === undefined) {
+            this.logger.error('Device not connected, skip sending message', {
+                serviceId,
+                message,
+                isEncrypted,
+                isControl,
+            });
+            return;
+        }
+
         assert(this.messageAggregator !== undefined);
 
         const frameDatas = this.messageAggregator.split(
