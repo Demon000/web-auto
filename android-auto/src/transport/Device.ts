@@ -141,12 +141,8 @@ export abstract class Device {
             this.logger.error('Failed to handle disconnect', err);
         }
 
-        try {
-            await this.events.onDisconnected(this);
-        } catch (err) {
-            this.logger.error('Failed to emit disconnected event', err);
-        }
-
         await this.setState(DeviceState.AVAILABLE);
+
+        void this.events.onDisconnected(this);
     }
 }
