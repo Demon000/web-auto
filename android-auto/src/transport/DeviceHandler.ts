@@ -9,7 +9,7 @@ export interface DeviceHandlerEvents {
     onDeviceStateUpdated: (device: Device) => Promise<void>;
     onDeviceSelfConnect: (device: Device) => Promise<boolean>;
     onDeviceConnected: (device: Device) => Promise<void>;
-    onDeviceDisconnect: (device: Device) => Promise<void>;
+    onDeviceDisconnect: (device: Device, reason: string) => Promise<void>;
     onDeviceDisconnected: (device: Device) => Promise<void>;
 
     onDeviceTransportData: (

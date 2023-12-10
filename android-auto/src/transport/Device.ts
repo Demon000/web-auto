@@ -16,7 +16,7 @@ export interface DeviceEvents {
     onStateUpdated: (device: Device) => Promise<void>;
     onSelfConnect: (device: Device) => Promise<boolean>;
     onConnected: (device: Device) => Promise<void>;
-    onDisconnect: (device: Device) => Promise<void>;
+    onDisconnect: (device: Device, reason: string) => Promise<void>;
     onDisconnected: (device: Device) => Promise<void>;
     onTransportData: (device: Device, buffer: DataBuffer) => Promise<void>;
     onTransportError: (device: Device, err: Error) => Promise<void>;
@@ -25,6 +25,7 @@ export interface DeviceEvents {
 export enum DeviceDisconnectReason {
     TRANSPORT = 'transport-disconnected',
     USER = 'user-requested',
+    START_FAILED = 'start-failed',
 }
 
 export abstract class Device {
@@ -114,7 +115,7 @@ export abstract class Device {
         }
 
         try {
-            await this.events.onDisconnect(this);
+            await this.events.onDisconnect(this, reason);
         } catch (err) {
             this.logger.error('Failed to emit disconnect event', err);
         }

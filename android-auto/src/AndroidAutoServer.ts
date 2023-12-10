@@ -9,7 +9,7 @@ import {
     type DeviceHandlerEvents,
 } from './transport/DeviceHandler.js';
 import { getLogger } from '@web-auto/logging';
-import { Device } from './transport/Device.js';
+import { Device, DeviceDisconnectReason } from './transport/Device.js';
 import {
     ANDROID_AUTO_CERTIFICATE,
     ANDROID_AUTO_PRIVATE_KEY,
@@ -438,12 +438,95 @@ export abstract class AndroidAutoServer {
         this.callOnDevicesUpdated();
     }
 
-    private async onDeviceConnected(device: Device): Promise<void> {
+    private async stopServices(i?: number): Promise<void> {
+        assert(this.services !== undefined);
+
+        if (i === undefined) {
+            i = this.services.length - 1;
+        }
+
+        this.logger.info('Stopping services');
+        for (; i >= 0; i--) {
+            const service = this.services[i];
+            try {
+                await service.stop();
+            } catch (err) {
+                this.logger.error(
+                    `Failed to stop service ${service.constructor.name}`,
+                    err,
+                );
+                throw err;
+            }
+        }
+        this.logger.info('Stopped services');
+    }
+
+    private async startServices(): Promise<void> {
+        assert(this.services !== undefined);
+
+        this.logger.info('Starting services');
+        let i = 0;
+        try {
+            for (; i < this.services.length; i++) {
+                const service = this.services[i];
+                await service.start();
+            }
+        } catch (err) {
+            this.logger.error('Failed to start services', err);
+            try {
+                await this.stopServices(i - 1);
+            } catch (err) {
+                this.logger.error(
+                    'Failure after failed to start services',
+                    err,
+                );
+            }
+            throw err;
+        }
+        this.logger.info('Started services');
+    }
+
+    private async startDependencies(): Promise<void> {
         assert(this.frameCodec !== undefined);
         assert(this.cryptor !== undefined);
         assert(this.services !== undefined);
         assert(this.controlService !== undefined);
 
+        this.frameCodec.start();
+
+        this.logger.info('Starting cryptor');
+        try {
+            await this.cryptor.start();
+        } catch (err) {
+            this.logger.info('Failed to start cryptor');
+            this.frameCodec.stop();
+            throw err;
+        }
+        this.logger.info('Started cryptor');
+
+        await this.startServices();
+
+        this.logger.info('Starting control service');
+        try {
+            await this.controlService.start();
+        } catch (err) {
+            this.logger.error('Failed to start control service', err);
+            try {
+                await this.stopServices();
+                await this.cryptor.stop();
+                this.frameCodec.stop();
+            } catch (err) {
+                this.logger.error(
+                    'Failure after failed to start control service',
+                    err,
+                );
+            }
+            throw err;
+        }
+        this.logger.info('Started control service');
+    }
+
+    private async onDeviceConnected(device: Device): Promise<void> {
         if (this.connectedDevice !== undefined) {
             this.logger.error(
                 `Cannot connect ${device.name}, ` +
@@ -457,29 +540,53 @@ export abstract class AndroidAutoServer {
 
         this.logger.info(`Connected device ${device.name}`);
 
-        this.frameCodec.start();
-
-        this.logger.info('Starting cryptor');
-        await this.cryptor.start();
-        this.logger.info('Started cryptor');
-
-        this.logger.info('Starting services');
-        for (const service of this.services) {
-            await service.start();
+        try {
+            this.logger.info('Starting dependencies');
+            await this.startDependencies();
+            this.logger.info('Started dependencies');
+        } catch (err) {
+            this.logger.error('Failed to start dependencies', err);
+            await this.disconnectDevice(
+                device,
+                DeviceDisconnectReason.START_FAILED,
+            );
         }
-        this.logger.info('Started services');
-
-        this.logger.info('Starting control service');
-        await this.controlService.start();
-        this.logger.info('Started control service');
     }
 
-    private async onDeviceDisconnect(device: Device): Promise<void> {
-        assert(this.frameCodec !== undefined);
-        assert(this.cryptor !== undefined);
-        assert(this.services !== undefined);
+    private async stopDependencies(): Promise<void> {
         assert(this.controlService !== undefined);
+        assert(this.cryptor !== undefined);
+        assert(this.frameCodec !== undefined);
 
+        this.logger.info('Stopping control service');
+        try {
+            await this.controlService.stop();
+            this.logger.info('Stopped control service');
+        } catch (err) {
+            this.logger.error('Failed to stop control service', err);
+        }
+
+        try {
+            await this.stopServices();
+        } catch (err) {
+            this.logger.error('Failed to stop services', err);
+        }
+
+        this.logger.info('Stopping cryptor');
+        try {
+            await this.cryptor.stop();
+            this.logger.info('Stopped cryptor');
+        } catch (err) {
+            this.logger.error('Failed to stop cryptor', err);
+        }
+
+        this.frameCodec.stop();
+    }
+
+    private async onDeviceDisconnect(
+        device: Device,
+        reason: string,
+    ): Promise<void> {
         if (!this.isDeviceConnected(device)) {
             this.logger.info(
                 `Cannot disconnect ${device.name}, ` +
@@ -488,20 +595,18 @@ export abstract class AndroidAutoServer {
             return;
         }
 
-        this.logger.info('Stopping control service');
-        await this.controlService.stop();
-        this.logger.info('Stopped control service');
-        this.logger.info('Stopping services');
-        for (const service of this.services) {
-            await service.stop();
+        if (reason === DeviceDisconnectReason.START_FAILED) {
+            return;
         }
-        this.logger.info('Stopped services');
 
-        this.logger.info('Stopping cryptor');
-        await this.cryptor.stop();
-        this.logger.info('Stopped cryptor');
-
-        this.frameCodec.stop();
+        this.logger.info('Stopping dependencies');
+        try {
+            await this.stopDependencies();
+        } catch (err) {
+            this.logger.error('Failed to stop dependencies', err);
+            return;
+        }
+        this.logger.info('Stopped dependencies');
     }
 
     protected async onDeviceDisconnected(device: Device): Promise<void> {
@@ -547,7 +652,10 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    public async disconnectDevice(device: Device): Promise<void> {
+    public async disconnectDevice(
+        device: Device,
+        reason?: string,
+    ): Promise<void> {
         if (!this.isDeviceConnected(device)) {
             this.logger.info(
                 `Cannot disconnect ${device.name}, ` +
@@ -558,7 +666,7 @@ export abstract class AndroidAutoServer {
 
         this.logger.info(`Disconnecting device ${device.name}`);
         try {
-            await device.disconnect();
+            await device.disconnect(reason);
         } catch (err) {
             this.logger.error(
                 `Failed to disconnect device ${device.name}`,

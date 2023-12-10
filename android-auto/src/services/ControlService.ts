@@ -249,6 +249,7 @@ export class ControlService extends Service {
         try {
             await this.sendVersionRequest();
         } catch (err) {
+            this.logger.error('Failed to send version request', err);
             this.pinger.stop();
             throw err;
         }
