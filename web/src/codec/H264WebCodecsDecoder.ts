@@ -1,12 +1,8 @@
-import { EventEmitter } from 'eventemitter3';
-
 export interface H264WebCodecsDecoderEvents {
     onFrame: (data?: VideoFrame) => void;
 }
 
 export class H264WebCodecsDecoder {
-    public emitter = new EventEmitter<H264WebCodecsDecoderEvents>();
-
     private decoder: VideoDecoder;
 
     private animationFrameId = 0;
