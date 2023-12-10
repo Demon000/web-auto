@@ -152,8 +152,8 @@ export class NodeCryptor extends Cryptor {
             throw new Error('Cannot encrypt after stop');
         }
 
-        const release = await this.encryptMutex.acquire();
         this.logger.debug('Encrypting buffer', buffer);
+        const release = await this.encryptMutex.acquire();
         try {
             await this.write(this.cleartext, buffer);
             const encrypyedBuffer = await this.read(this.encrypted);
@@ -169,8 +169,8 @@ export class NodeCryptor extends Cryptor {
             throw new Error('Cannot decrypt after stop');
         }
 
-        const release = await this.decryptMutex.acquire();
         this.logger.debug('Decrypting buffer', buffer);
+        const release = await this.decryptMutex.acquire();
         try {
             await this.write(this.encrypted, buffer);
             const decryptedBuffer = await this.read(this.cleartext);
