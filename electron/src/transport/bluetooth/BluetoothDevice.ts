@@ -170,10 +170,8 @@ export class BluetoothDevice extends Device {
             const controller = new AbortController();
             const signal = controller.signal;
 
-            const disconnectionPromise =
-                this.profileHandler.waitForDisconnection(signal);
-
-            disconnectionPromise
+            this.profileHandler
+                .waitForDisconnection(signal)
                 .then(() => {
                     reject(
                         new BluetoothProfileDisconnectedError(
@@ -185,13 +183,12 @@ export class BluetoothDevice extends Device {
 
             this.connectWifiAndTcp(bluetoothSocket)
                 .then((socket) => {
+                    controller.abort();
                     resolve(socket);
                 })
                 .catch((err) => {
-                    reject(err);
-                })
-                .finally(() => {
                     controller.abort();
+                    reject(err);
                 });
         });
     }
