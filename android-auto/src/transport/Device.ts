@@ -84,11 +84,7 @@ export abstract class Device {
 
         await this.setState(DeviceState.CONNECTED);
 
-        try {
-            await this.events.onConnected(this);
-        } catch (err) {
-            this.logger.error('Failed to emit connected event', err);
-        }
+        void this.events.onConnected(this);
     }
 
     protected async onTransportData(data: DataBuffer): Promise<void> {
