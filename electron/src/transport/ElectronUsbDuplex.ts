@@ -95,15 +95,14 @@ export class ElectronUsbDuplex extends Duplex {
 
         this.writeAsync(chunk)
             .then(() => {
+                clearTimeout(timeout);
                 if (callbackCalled) return;
                 callback(null);
             })
             .catch((err) => {
+                clearTimeout(timeout);
                 if (callbackCalled) return;
                 callback(err);
-            })
-            .finally(() => {
-                clearTimeout(timeout);
             });
     }
 
