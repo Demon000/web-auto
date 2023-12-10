@@ -70,6 +70,12 @@ export class NodeCryptor extends Cryptor {
             this.cleartext.destroy();
         });
 
+        await new Promise((resolve) => {
+            assert(this.encrypted !== undefined);
+            this.encrypted.once('close', resolve);
+            this.encrypted.destroy();
+        });
+
         this.cleartext = undefined;
         this.encrypted = undefined;
         this.connected = false;
