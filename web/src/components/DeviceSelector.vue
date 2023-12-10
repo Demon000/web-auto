@@ -51,8 +51,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .device-selector {
-    width: 100%;
-    border: 1px solid var(--md-sys-color-outline);
+    border: 2px solid var(--md-sys-color-outline);
     border-radius: 28px;
 
     padding: 32px;

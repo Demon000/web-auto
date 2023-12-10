@@ -7,6 +7,8 @@ import {
     type AndroidAutoServerService,
     type AndroidAutoServerClient,
     ANDROID_AUTO_IPC_REGISTRY_NAME,
+    AndroidAutoMediaStatusClient,
+    AndroidAutoMediaStatusService,
 } from '@web-auto/android-auto-ipc';
 import { ElectronIpcClientRegistry } from '@web-auto/electron-ipc/renderer.js';
 
@@ -33,3 +35,9 @@ export const androidAutoVideoService =
         AndroidAutoVideoClient,
         AndroidAutoVideoService
     >(AndroidAutoIpcNames.VIDEO);
+
+export const androidAutoMediaStatusService =
+    androidAutoIpcClientRegistry.registerIpcClient<
+        AndroidAutoMediaStatusClient,
+        AndroidAutoMediaStatusService
+    >(AndroidAutoIpcNames.MEDIA_STATUS);

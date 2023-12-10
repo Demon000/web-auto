@@ -14,7 +14,7 @@ const onOpenClick = async () => {
 
 <template>
     <div class="mini-video">
-        <android-auto-video></android-auto-video>
+        <AndroidAutoVideo></AndroidAutoVideo>
         <md-fab
             class="open"
             size="large"
@@ -28,9 +28,15 @@ const onOpenClick = async () => {
 
 <style scoped>
 .mini-video {
-    border: 1px solid var(--md-sys-color-outline);
+    border: 2px solid var(--md-sys-color-outline);
     border-radius: 28px;
     overflow: hidden;
+    position: relative;
+}
+
+.video {
+    width: 100%;
+    height: 100%;
 }
 
 .open {

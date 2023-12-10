@@ -14,6 +14,7 @@ import {
     themeFromSourceColor,
     applyTheme,
 } from '@material/material-color-utilities';
+import { useMediaStatusStore } from './stores/media-status-store.js';
 
 const theme = themeFromSourceColor(argbFromHex('#60a8f0'));
 
@@ -24,12 +25,16 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 
-router
-    .replace({
-        name: 'home',
-    })
-    .catch((err) => {
-        console.error(err);
-    });
+const mediaStatusStore = useMediaStatusStore();
 
-app.mount('#app');
+const initialize = async () => {
+    await mediaStatusStore.initialize();
+
+    app.mount('#app');
+
+    await router.replace({
+        name: 'home',
+    });
+};
+
+initialize();

@@ -1,4 +1,6 @@
 import type {
+    IMediaPlaybackMetadata,
+    IMediaPlaybackStatus,
     ITouchEvent,
     IVideoConfiguration,
     IVideoFocusNotification,
@@ -56,10 +58,21 @@ export type AndroidAutoServerClient = {
     deviceDisconnected: () => void;
 };
 
+export type AndroidAutoMediaStatusService = {
+    getStatus(): Promise<IMediaPlaybackStatus | undefined>;
+    getMetadata(): Promise<IMediaPlaybackMetadata | undefined>;
+};
+
+export type AndroidAutoMediaStatusClient = {
+    status(status: IMediaPlaybackStatus | undefined): void;
+    metadata(metadata: IMediaPlaybackMetadata | undefined): void;
+};
+
 export enum AndroidAutoIpcNames {
     SERVER = 'server',
     VIDEO = 'video',
     INPUT = 'input',
+    MEDIA_STATUS = 'media-status',
 }
 
 export const ANDROID_AUTO_IPC_REGISTRY_NAME = 'android-auto';

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import AndroidAutoDeviceSelector from './DeviceSelector.vue';
-import AndroidAutoMiniVideo from './MiniVideo.vue';
+import DeviceSelector from './DeviceSelector.vue';
+import MiniVideo from './MiniVideo.vue';
+import MediaStatus from './MediaStatus.vue';
 import AppBar from './AppBar.vue';
 import { Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { IDevice } from '@web-auto/android-auto-ipc';
@@ -36,11 +37,17 @@ onBeforeUnmount(() => {
 <template>
     <div class="home">
         <AppBar></AppBar>
-        <div class="main">
-            <AndroidAutoDeviceSelector></AndroidAutoDeviceSelector>
-            <AndroidAutoMiniVideo
-                v-if="connectedDevice !== undefined"
-            ></AndroidAutoMiniVideo>
+        <div
+            class="main"
+            :class="{
+                unconnected: connectedDevice === undefined,
+            }"
+        >
+            <DeviceSelector></DeviceSelector>
+            <template v-if="connectedDevice !== undefined">
+                <MiniVideo></MiniVideo>
+                <MediaStatus></MediaStatus>
+            </template>
         </div>
     </div>
 </template>
@@ -50,20 +57,61 @@ onBeforeUnmount(() => {
     width: 100%;
     height: 100%;
 
-    flex-direction: column;
     display: flex;
+    flex-direction: column;
 }
 
 .main {
-    display: flex;
-    flex-direction: row;
+    padding: 32px;
+
+    display: grid;
     flex-grow: 1;
 
-    padding: 32px;
+    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 32px;
+    width: 100%;
+    height: 100%;
+
+    min-width: 0;
+    min-height: 0;
 }
 
-.device-selector {
-    flex-grow: 1;
-    margin-right: 32px;
+.main .device-selector {
+    grid-row-start: 1;
+    grid-row-end: 3;
+
+    grid-column-start: 1;
+    grid-column-end: 2;
+}
+
+.main .mini-video {
+    grid-row-start: 1;
+    grid-row-end: 2;
+
+    grid-column-start: 2;
+    grid-column-end: 3;
+}
+
+.main .media-status {
+    grid-row-start: 2;
+    grid-column-start: 2;
+
+    grid-row-end: 3;
+    grid-column-end: 3;
+}
+
+.main.unconnected {
+    grid-template-rows: 1fr;
+    grid-template-columns: 1fr;
+}
+
+.main.unconnected .device-selector {
+    grid-row-start: 1;
+    grid-row-end: 1;
+
+    grid-column-start: 1;
+    grid-column-end: 1;
 }
 </style>

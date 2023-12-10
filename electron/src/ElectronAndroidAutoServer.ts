@@ -19,8 +19,10 @@ import {
     type AndroidAutoInputClient,
     type AndroidAutoVideoService,
     type AndroidAutoVideoClient,
+    type AndroidAutoMediaStatusService,
+    type AndroidAutoMediaStatusClient,
 } from '@web-auto/android-auto-ipc';
-import { DummyMediaStatusService } from './services/DummyMediaStatusService.js';
+import { ElectronMediaStatusService } from './services/ElectronMediaStatusService.js';
 import { DummyNavigationStatusService } from './services/DummyNavigationService.js';
 import { DummySensorService } from './services/DummySensorService.js';
 import { ElectronAndroidAutoAudioInputService } from './services/ElectronAndroidAutoAudioInputService.js';
@@ -143,6 +145,11 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
             AndroidAutoVideoClient
         >(AndroidAutoIpcNames.VIDEO);
 
+        const mediaStatusIpcHandler = this.ipcRegistry.registerIpcService<
+            AndroidAutoMediaStatusService,
+            AndroidAutoMediaStatusClient
+        >(AndroidAutoIpcNames.MEDIA_STATUS);
+
         return [
             new ElectronAndroidAutoAudioInputService(events),
             new ElectronAndroidAutoAudioOutputService(
@@ -159,7 +166,7 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
             ),
             new DummySensorService(events),
             new DummyNavigationStatusService(events),
-            new DummyMediaStatusService(events),
+            new ElectronMediaStatusService(mediaStatusIpcHandler, events),
             new ElectronAndroidAutoInputService(
                 inputIpcHandler,
                 this.config.touchScreenConfig,
