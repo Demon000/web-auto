@@ -125,29 +125,37 @@ export abstract class AndroidAutoServer {
         return this.connectedDevice === device;
     }
 
+    private async encryptFrameData(frameData: FrameData): Promise<void> {
+        assert(this.cryptor !== undefined);
+
+        const frameHeader = frameData.frameHeader;
+
+        if (!(frameHeader.flags & FrameHeaderFlags.ENCRYPTED)) {
+            return;
+        }
+
+        try {
+            frameData.payload = await this.cryptor.encrypt(frameData.payload);
+        } catch (err) {
+            this.logger.error('Failed to encrypt', {
+                frameData,
+                err,
+            });
+            throw err;
+        }
+    }
+
     private async onSendFrameData(frameData: FrameData): Promise<void> {
         assert(this.cryptor !== undefined);
         assert(this.frameCodec !== undefined);
 
         const frameHeader = frameData.frameHeader;
-        let buffer;
 
-        if (frameHeader.flags & FrameHeaderFlags.ENCRYPTED) {
-            try {
-                frameData.payload = await this.cryptor.encrypt(
-                    frameData.payload,
-                );
-            } catch (err) {
-                this.logger.error('Failed to encrypt', {
-                    frameData,
-                    err,
-                });
-                return;
-            }
-        }
+        await this.encryptFrameData(frameData);
 
         frameHeader.payloadSize = frameData.payload.size;
 
+        let buffer;
         try {
             buffer = this.frameCodec.encodeFrameData(frameData);
         } catch (err) {
@@ -312,29 +320,24 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    private async onReceiveFrameData(
-        frameData: FrameData,
-    ): Promise<Message | undefined> {
+    private async decryptFrameData(frameData: FrameData): Promise<void> {
         assert(this.cryptor !== undefined);
-        assert(this.messageAggregator !== undefined);
 
         const frameHeader = frameData.frameHeader;
 
-        if (frameHeader.flags & FrameHeaderFlags.ENCRYPTED) {
-            try {
-                frameData.payload = await this.cryptor.decrypt(
-                    frameData.payload,
-                );
-            } catch (err) {
-                this.logger.error('Failed to decrypt', {
-                    frameData,
-                    err,
-                });
-                return undefined;
-            }
+        if (!(frameHeader.flags & FrameHeaderFlags.ENCRYPTED)) {
+            return;
         }
 
-        return this.messageAggregator.aggregate(frameData);
+        try {
+            frameData.payload = await this.cryptor.decrypt(frameData.payload);
+        } catch (err) {
+            this.logger.error('Failed to decrypt', {
+                frameData,
+                err,
+            });
+            throw err;
+        }
     }
 
     private async onDeviceTransportData(
@@ -342,6 +345,7 @@ export abstract class AndroidAutoServer {
         buffer: DataBuffer,
     ): Promise<void> {
         assert(this.frameCodec !== undefined);
+        assert(this.messageAggregator !== undefined);
 
         if (!this.isDeviceConnected(device)) {
             this.logger.error(
@@ -353,22 +357,22 @@ export abstract class AndroidAutoServer {
 
         const frameDatas = this.frameCodec.decodeBuffer(buffer);
 
-        const messages: [number, Message, boolean][] = [];
         for (const frameData of frameDatas) {
-            const message = await this.onReceiveFrameData(frameData);
+            await this.decryptFrameData(frameData);
+        }
+
+        for (const frameData of frameDatas) {
+            const message = this.messageAggregator.aggregate(frameData);
             if (message === undefined) {
                 continue;
             }
 
-            messages.push([
-                frameData.frameHeader.serviceId,
-                message,
-                !!(frameData.frameHeader.flags & FrameHeaderFlags.CONTROL),
-            ]);
-        }
+            const serviceId = frameData.frameHeader.serviceId;
+            const isControl = !!(
+                frameData.frameHeader.flags & FrameHeaderFlags.CONTROL
+            );
 
-        for (const message of messages) {
-            await this.onReceiveMessage(message[0], message[1], message[2]);
+            await this.onReceiveMessage(serviceId, message, isControl);
         }
     }
     private async onDeviceTransportError(
