@@ -10,3 +10,16 @@
 6. `npm run build --workspaces`
 7. `cd electron`
 8. `npm run start`
+
+## Features
+
+-   Connection via TCP (Head unit server enabled on phone)
+-   Connection via USB
+-   Connection via Bluetooth
+-   Video (H264)
+-   Audio input
+-   Audio output
+-   Media status (WIP)
+-   Navigation status (WIP)
+-   Picture-in-picture video
+-   Mouse support for interacting with the video
