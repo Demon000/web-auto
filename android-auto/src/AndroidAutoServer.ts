@@ -1,5 +1,4 @@
 import {
-    ServiceDiscoveryRequest,
     HeadUnitInfo,
     DriverPosition,
     ServiceDiscoveryResponse,
@@ -61,6 +60,7 @@ export abstract class AndroidAutoServer {
     ): Cryptor;
 
     protected abstract buildControlService(
+        cryptor: Cryptor,
         events: ControlServiceEvents,
     ): ControlService;
 
@@ -87,10 +87,9 @@ export abstract class AndroidAutoServer {
         this.frameCodec = new FrameCodec();
         this.messageAggregator = new MessageAggregator();
 
-        this.controlService = this.buildControlService({
-            onServiceDiscoveryRequest:
-                this.onServiceDiscoveryRequest.bind(this),
-            onHandshake: this.onHandshake.bind(this),
+        this.controlService = this.buildControlService(this.cryptor, {
+            getServiceDiscoveryResponse:
+                this.getServiceDiscoveryResponse.bind(this),
             onMessageSent: this.onSendMessage.bind(this),
             onPingTimeout: this.onPingTimeout.bind(this),
         });
@@ -211,7 +210,7 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    private async sendServiceDiscoveryResponse(): Promise<void> {
+    private async getServiceDiscoveryResponse(): Promise<ServiceDiscoveryResponse> {
         assert(this.controlService !== undefined);
         assert(this.services !== undefined);
 
@@ -241,35 +240,7 @@ export abstract class AndroidAutoServer {
             service.fillFeatures(data);
         }
 
-        await this.controlService.sendDiscoveryResponse(data);
-    }
-
-    private async onServiceDiscoveryRequest(
-        data: ServiceDiscoveryRequest,
-    ): Promise<void> {
-        this.logger.info(`Discovery request, device name ${data.deviceName}`);
-
-        await this.sendServiceDiscoveryResponse();
-    }
-
-    private async onHandshake(payload?: DataBuffer): Promise<void> {
-        assert(this.cryptor !== undefined);
-        assert(this.controlService !== undefined);
-
-        if (payload !== undefined) {
-            await this.cryptor.writeHandshakeBuffer(payload);
-        }
-
-        if (this.cryptor.isHandshakeComplete()) {
-            this.logger.debug('Auth completed');
-
-            await this.controlService.sendAuthComplete();
-        } else {
-            this.logger.debug('Continue handshake');
-
-            const payload = await this.cryptor.readHandshakeBuffer();
-            await this.controlService.sendHandshake(payload);
-        }
+        return data;
     }
 
     private async onPingTimeout(): Promise<void> {

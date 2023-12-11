@@ -24,10 +24,10 @@ import { DataBuffer } from '../utils/DataBuffer.js';
 import { Service, type ServiceEvents } from './Service.js';
 import { Pinger } from './Pinger.js';
 import assert from 'node:assert';
+import type { Cryptor } from 'src/crypto/Cryptor.js';
 
 export interface ControlServiceEvents extends ServiceEvents {
-    onHandshake: (payload?: DataBuffer) => Promise<void>;
-    onServiceDiscoveryRequest: (data: ServiceDiscoveryRequest) => Promise<void>;
+    getServiceDiscoveryResponse: () => Promise<ServiceDiscoveryResponse>;
     onPingTimeout: () => Promise<void>;
 }
 
@@ -39,6 +39,7 @@ export class ControlService extends Service {
     private pinger;
 
     public constructor(
+        private cryptor: Cryptor,
         private config: ControlServiceConfig,
         protected events: ControlServiceEvents,
     ) {
@@ -52,29 +53,9 @@ export class ControlService extends Service {
         });
     }
 
-    public async onPingRequest(data: PingRequest): Promise<void> {
+    private async onPingRequest(data: PingRequest): Promise<void> {
         assert(data.timestamp !== undefined);
         await this.sendPingResponse(data.timestamp);
-    }
-
-    private async onVersionReponse(payload: DataBuffer): Promise<void> {
-        const majorCode = payload.readUint16BE();
-        const mainorCode = payload.readUint16BE();
-        const status = payload.readUint16BE() as MessageStatus;
-        if (status === MessageStatus.STATUS_NO_COMPATIBLE_VERSION) {
-            this.logger.error('Mismatched verion');
-            return;
-        }
-
-        this.logger.info(
-            `Major: ${majorCode}, minor: ${mainorCode}, status: ${status}`,
-        );
-
-        try {
-            await this.events.onHandshake();
-        } catch (err) {
-            this.logger.error('Failed to emit handshake event', err);
-        }
     }
 
     private async onAudioFocusRequest(
@@ -96,35 +77,12 @@ export class ControlService extends Service {
         );
     }
 
-    public async onSpecificMessage(message: Message): Promise<boolean> {
+    protected async onSpecificMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
-        const payload = message.getPayload();
         const messageId = message.messageId as ControlMessageType;
         let data;
 
         switch (messageId) {
-            case ControlMessageType.MESSAGE_VERSION_RESPONSE:
-                await this.onVersionReponse(payload);
-                break;
-            case ControlMessageType.MESSAGE_ENCAPSULATED_SSL:
-                try {
-                    await this.events.onHandshake(payload);
-                } catch (err) {
-                    this.logger.error('Failed to emit handshake event', err);
-                }
-                break;
-            case ControlMessageType.MESSAGE_SERVICE_DISCOVERY_REQUEST:
-                data = ServiceDiscoveryRequest.fromBinary(bufferPayload);
-                this.printReceive(data);
-                try {
-                    await this.events.onServiceDiscoveryRequest(data);
-                } catch (err) {
-                    this.logger.error(
-                        'Failed to emit service discovery request event',
-                        err,
-                    );
-                }
-                break;
             case ControlMessageType.MESSAGE_PING_REQUEST:
                 data = PingRequest.fromBinary(bufferPayload);
                 this.printReceive(data);
@@ -163,6 +121,7 @@ export class ControlService extends Service {
             data,
         );
     }
+
     private async sendVersionRequest(): Promise<void> {
         const payload = DataBuffer.fromSize(4)
             .appendUint16BE(GalConstants.PROTOCOL_MAJOR_VERSION)
@@ -177,7 +136,7 @@ export class ControlService extends Service {
         );
     }
 
-    public async sendHandshake(payload: DataBuffer): Promise<void> {
+    private async sendHandshake(payload: DataBuffer): Promise<void> {
         await this.sendPayloadWithId(
             ControlMessageType.MESSAGE_ENCAPSULATED_SSL,
             payload,
@@ -187,7 +146,7 @@ export class ControlService extends Service {
         );
     }
 
-    public async sendAuthComplete(): Promise<void> {
+    private async sendAuthComplete(): Promise<void> {
         const data = new AuthResponse({
             status: 0,
         });
@@ -232,7 +191,7 @@ export class ControlService extends Service {
         );
     }
 
-    public async sendDiscoveryResponse(
+    private async sendServiceDiscoveryResponse(
         data: ServiceDiscoveryResponse,
     ): Promise<void> {
         await this.sendEncryptedSpecificMessage(
@@ -241,18 +200,77 @@ export class ControlService extends Service {
         );
     }
 
+
+    private async doVersionQuery(signal: AbortSignal): Promise<void> {
+        await this.sendVersionRequest();
+        const message = await this.waitForSpecificMessage(
+            ControlMessageType.MESSAGE_VERSION_RESPONSE,
+            signal,
+        );
+        const payload = message.getPayload();
+
+        const majorCode = payload.readUint16BE();
+        const mainorCode = payload.readUint16BE();
+        const status = payload.readUint16BE() as MessageStatus;
+        if (status === MessageStatus.STATUS_NO_COMPATIBLE_VERSION) {
+            throw new Error('Mismatched verion');
+        }
+
+        this.logger.info(
+            `Major: ${majorCode}, minor: ${mainorCode}, status: ${status}`,
+        );
+    }
+
+    private async doHandshake(signal: AbortSignal): Promise<void> {
+        this.logger.info('Start handshake');
+
+        while (!this.cryptor.isHandshakeComplete()) {
+            const sentPayload = await this.cryptor.readHandshakeBuffer();
+            await this.sendHandshake(sentPayload);
+
+            const message = await this.waitForSpecificMessage(
+                ControlMessageType.MESSAGE_ENCAPSULATED_SSL,
+                signal,
+            );
+            const receivedPayload = message.getPayload();
+            await this.cryptor.writeHandshakeBuffer(receivedPayload);
+        }
+
+        await this.sendAuthComplete();
+
+        this.logger.info('Finished handshake');
+    }
+
+    private async doServiceDiscovery(signal: AbortSignal): Promise<void> {
+        const message = await this.waitForSpecificMessage(
+            ControlMessageType.MESSAGE_SERVICE_DISCOVERY_REQUEST,
+            signal,
+        );
+        const bufferPayload = message.getBufferPayload();
+
+        const request = ServiceDiscoveryRequest.fromBinary(bufferPayload);
+        this.printReceive(request);
+
+        this.logger.info(
+            `Discovery request, device name ${request.deviceName}`,
+        );
+
+        const response = await this.events.getServiceDiscoveryResponse();
+        await this.sendServiceDiscoveryResponse(response);
+    }
+
     public async start(): Promise<void> {
         await super.start();
 
-        this.pinger.start();
+        const abortSignal = AbortSignal.timeout(5000);
 
-        try {
-            await this.sendVersionRequest();
-        } catch (err) {
-            this.logger.error('Failed to send version request', err);
-            this.pinger.stop();
-            throw err;
-        }
+        await this.doVersionQuery(abortSignal);
+
+        await this.doHandshake(abortSignal);
+
+        await this.doServiceDiscovery(abortSignal);
+
+        this.pinger.start();
     }
 
     public async stop(): Promise<void> {

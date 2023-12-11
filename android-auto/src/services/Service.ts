@@ -140,7 +140,7 @@ export abstract class Service {
         }
     }
 
-    private waitForSpecificMessageWithSignal(
+    protected waitForSpecificMessage(
         messageId: number,
         signal: AbortSignal,
     ): Promise<Message> {
@@ -170,15 +170,6 @@ export abstract class Service {
         });
     }
 
-    public waitForSpecificMessageWithTimeout(
-        messageId: number,
-        ms: number,
-    ): Promise<Message> {
-        const signal = AbortSignal.timeout(ms);
-
-        return this.waitForSpecificMessageWithSignal(messageId, signal);
-    }
-
     protected abstract open(data: ChannelOpenRequest): Promise<void>;
 
     protected async sendChannelOpenResponse(status: boolean): Promise<void> {
@@ -194,7 +185,7 @@ export abstract class Service {
         );
     }
 
-    public async sendPayloadWithId(
+    protected async sendPayloadWithId(
         messageId: number,
         dataPayload: DataBuffer,
         printMessage: any,
@@ -220,7 +211,7 @@ export abstract class Service {
         }
     }
 
-    public async sendMessageWithId(
+    protected async sendMessageWithId(
         messageId: number,
         protoMessage: ProtoMessage,
         isEncrypted: boolean,
@@ -237,21 +228,21 @@ export abstract class Service {
         );
     }
 
-    public async sendPlainSpecificMessage(
+    protected async sendPlainSpecificMessage(
         messageId: number,
         message: ProtoMessage,
     ): Promise<void> {
         return this.sendMessageWithId(messageId, message, false, false);
     }
 
-    public async sendEncryptedSpecificMessage(
+    protected async sendEncryptedSpecificMessage(
         messageId: number,
         message: ProtoMessage,
     ): Promise<void> {
         return this.sendMessageWithId(messageId, message, true, false);
     }
 
-    public async sendEncryptedControlMessage(
+    protected async sendEncryptedControlMessage(
         messageId: number,
         message: ProtoMessage,
     ): Promise<void> {

@@ -128,7 +128,7 @@ export class BluetoothDeviceWifiConnector {
         }
     }
 
-    public async onMessage(message: BluetoothMessage): Promise<void> {
+    private async onMessage(message: BluetoothMessage): Promise<void> {
         let data;
 
         this.logger.debug('Receive message', message);

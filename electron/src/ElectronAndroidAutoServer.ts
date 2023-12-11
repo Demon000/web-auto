@@ -129,9 +129,10 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
         );
     }
     protected buildControlService(
+        cryptor: Cryptor,
         events: ControlServiceEvents,
     ): ControlService {
-        return new ControlService(this.config.controlConfig, events);
+        return new ControlService(cryptor, this.config.controlConfig, events);
     }
 
     protected buildServices(events: ServiceEvents): Service[] {
