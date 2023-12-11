@@ -304,9 +304,9 @@ export abstract class AndroidAutoServer {
 
         let handled;
         if (isControl) {
-            handled = await service.onControlMessage(message);
+            handled = await service.handleControlMessage(message);
         } else {
-            handled = await service.onSpecificMessage(message);
+            handled = await service.handleSpecificMessage(message);
         }
 
         if (!handled) {

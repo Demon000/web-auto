@@ -97,7 +97,7 @@ export abstract class Service {
         this.logger.debug(`Send ${extra}`, message);
     }
 
-    public async onControlMessage(message: Message): Promise<boolean> {
+    protected async onControlMessage(message: Message): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -114,8 +114,16 @@ export abstract class Service {
         return true;
     }
 
-    public async onSpecificMessage(_message: Message): Promise<boolean> {
+    public async handleControlMessage(message: Message): Promise<boolean> {
+        return this.onControlMessage(message);
+    }
+
+    protected async onSpecificMessage(_message: Message): Promise<boolean> {
         return false;
+    }
+
+    public async handleSpecificMessage(message: Message): Promise<boolean> {
+        return this.onControlMessage(message);
     }
 
     protected abstract open(data: ChannelOpenRequest): Promise<void>;
