@@ -1,5 +1,4 @@
 import { LoggerWrapper, getLogger } from '@web-auto/logging';
-import { EventEmitter } from 'eventemitter3';
 import {
     BluetoothMessage,
     BluetoothMessageCodec,
@@ -11,30 +10,20 @@ import { Duplex } from 'node:stream';
 import { type ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig.js';
 
 import {
-    SocketInfoResponse,
     SocketInfoRequest,
     NetworkInfo,
     ConnectStatus,
     SocketInfoResponseStatus,
 } from '@web-auto/android-auto-proto/bluetooth.js';
 
-enum InternalEvent {
-    CONNECTION_SUCCESS,
-    CONNECTION_FAIL,
-}
-
-interface InternalEvents {
-    [InternalEvent.CONNECTION_SUCCESS]: () => void;
-    [InternalEvent.CONNECTION_FAIL]: (err: Error) => void;
-}
-
-const TIMEOUT = 20000;
+type BluetoothMessageCallback = (message: BluetoothMessage) => void;
 
 export class BluetoothDeviceWifiConnector {
     private codec = new BluetoothMessageCodec();
-    private internalEmitter = new EventEmitter<InternalEvents>();
     private bluetoothSocket?: Duplex;
     protected logger: LoggerWrapper;
+
+    private messageCallbacks = new Map<number, BluetoothMessageCallback>();
 
     public constructor(
         private config: ElectronBluetoothDeviceHandlerConfig,
@@ -43,22 +32,6 @@ export class BluetoothDeviceWifiConnector {
         this.logger = getLogger(`${this.constructor.name}@${this.name}`);
 
         this.onData = this.onData.bind(this);
-    }
-
-    private onStatus(data: ConnectStatus): void {
-        if (data.status === SocketInfoResponseStatus.STATUS_SUCCESS) {
-            this.internalEmitter.emit(InternalEvent.CONNECTION_SUCCESS);
-        } else {
-            assert(data.status !== undefined);
-            this.internalEmitter.emit(
-                InternalEvent.CONNECTION_FAIL,
-                new Error(
-                    `Wi-Fi connection failed with ${
-                        SocketInfoResponseStatus[data.status]
-                    }`,
-                ),
-            );
-        }
     }
 
     public async sendMessage(message: BluetoothMessage): Promise<void> {
@@ -117,39 +90,40 @@ export class BluetoothDeviceWifiConnector {
         await this.sendMessage(message);
     }
 
-    public async onNetworkInfoRequest(): Promise<void> {
-        try {
-            await this.sendNetworkInfoResponse();
-        } catch (err) {
-            this.internalEmitter.emit(
-                InternalEvent.CONNECTION_FAIL,
-                err as Error,
-            );
+    private async handleMessage(message: BluetoothMessage): Promise<boolean> {
+        const callback = this.messageCallbacks.get(message.type);
+        if (callback === undefined) {
+            return false;
+        } else {
+            callback(message);
+            return true;
         }
     }
 
-    private async onMessage(message: BluetoothMessage): Promise<void> {
-        let data;
+    private waitForMessage(
+        type: number,
+        signal: AbortSignal,
+    ): Promise<BluetoothMessage> {
+        return new Promise((resolve, reject) => {
+            assert(!this.messageCallbacks.has(type));
 
-        this.logger.debug('Receive message', message);
+            const onAbort = () => {
+                this.logger.info(`Aborted wait for message with id ${type}`);
+                this.messageCallbacks.delete(type);
+                reject(new Error('Aborted'));
+            };
 
-        switch (message.type) {
-            case BluetoothMessageType.NETWORK_INFO_REQUEST:
-                await this.onNetworkInfoRequest();
-                break;
-            case BluetoothMessageType.SOCKET_INFO_RESPONSE:
-                data = SocketInfoResponse.fromBinary(message.payload.data);
-                this.logger.debug('Receive decoded message', data);
-                break;
-            case BluetoothMessageType.CONNECT_STATUS:
-                data = ConnectStatus.fromBinary(message.payload.data);
-                this.logger.debug('Receive decoded message', data);
-                this.onStatus(data);
-                break;
-            default:
-                this.logger.error('Receive unhandled message', message);
-                break;
-        }
+            const onMessage = (message: BluetoothMessage) => {
+                this.logger.info(`Received waited message with id ${type}`);
+                this.messageCallbacks.delete(type);
+                signal.removeEventListener('abort', onAbort);
+                resolve(message);
+            };
+
+            signal.addEventListener('abort', onAbort);
+
+            this.messageCallbacks.set(type, onMessage);
+        });
     }
 
     private async onData(buffer: Buffer): Promise<void> {
@@ -157,47 +131,74 @@ export class BluetoothDeviceWifiConnector {
 
         const messages = this.codec.decodeBuffer(buffer);
         for (const message of messages) {
-            await this.onMessage(message);
+            const handled = await this.handleMessage(message);
+            if (!handled) {
+                this.logger.error('Receive unhandled message', message);
+            }
         }
     }
 
-    public connect(socket: Duplex): Promise<void> {
+    public async doConnection(abortSignal: AbortSignal): Promise<void> {
+        await this.sendSocketInfoRequest();
+
+        await this.waitForMessage(
+            BluetoothMessageType.NETWORK_INFO_REQUEST,
+            abortSignal,
+        );
+
+        await this.sendNetworkInfoResponse();
+    }
+
+    public async waitForConnectStatus(abortSignal: AbortSignal): Promise<void> {
+        const message = await this.waitForMessage(
+            BluetoothMessageType.CONNECT_STATUS,
+            abortSignal,
+        );
+
+        const data = ConnectStatus.fromBinary(message.payload.data);
+
+        if (data.status !== SocketInfoResponseStatus.STATUS_SUCCESS) {
+            throw new Error('Connection failed');
+        }
+    }
+
+    public async connect(socket: Duplex): Promise<void> {
         this.bluetoothSocket = socket;
 
-        const timeout = setTimeout(() => {
-            this.internalEmitter.emit(
-                InternalEvent.CONNECTION_FAIL,
-                new Error('Timed out'),
-            );
-        }, TIMEOUT);
+        return new Promise((resolve, reject) => {
+            const abortController = new AbortController();
+            const abortSignal = abortController.signal;
 
-        const cleanup = () => {
-            socket.off('data', this.onData);
-            this.internalEmitter.removeAllListeners();
-            clearTimeout(timeout);
-        };
-
-        return new Promise<void>((resolve, reject) => {
-            this.internalEmitter.once(InternalEvent.CONNECTION_FAIL, (err) => {
-                reject(err);
-            });
-
-            this.internalEmitter.once(InternalEvent.CONNECTION_SUCCESS, () => {
-                resolve();
-            });
+            const timeout = setTimeout(() => {
+                abortController.abort();
+            }, 30000);
 
             socket.on('data', this.onData);
 
-            this.sendSocketInfoRequest().catch((err) => {
-                reject(err);
-            });
-        })
-            .then(() => {
-                cleanup();
-            })
-            .catch((err) => {
-                cleanup();
-                throw err;
-            });
+            const clearAndAbort = () => {
+                socket.off('data', this.onData);
+                clearTimeout(timeout);
+                abortController.abort();
+            };
+
+            this.waitForConnectStatus(abortSignal)
+                .then(() => {
+                    clearAndAbort();
+                    resolve();
+                })
+                .catch((err) => {
+                    this.logger.error('Failed waiting for connect status', err);
+                    clearAndAbort();
+                    reject(err);
+                });
+
+            this.doConnection(abortSignal)
+                .then(() => {})
+                .catch((err) => {
+                    this.logger.error('Failed connecting', err);
+                    clearAndAbort();
+                    reject(err);
+                });
+        });
     }
 }
