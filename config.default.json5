@@ -1,6 +1,14 @@
 {
     logging: {
         debug: false,
+        // To enable debugging:
+        // debug: true,
+        //
+        // To enable debugging for specific labels:
+        // debug: [
+        //     'ElectronBluetoothDeviceHandler',
+        //     'ControlService',
+        // ],
     },
     androidAuto: {
         cryptorConfig: {
@@ -56,10 +64,16 @@
             isSecondary: false,
         },
         tcpDeviceHandlerConfig: {
+            // Static IPs that can be connected to
+            // These will be Android devices with head unit servers
+            // started manually
             ips: ['192.168.0.103'],
         },
         usbDeviceHandlerConfig: {
+            // VID:PIDs to be ignored when looking up devices
             ignoredDevices: [[0x1462, 0x7c94]],
+            // Whether to try to USB devices that are already in AOAP mode
+            // If this options is set to false, these devices will be ignored
             handleAlreadyConnectedDevices: true,
         },
         bluetoothDeviceHandlerConfig: {
@@ -70,6 +84,7 @@
             // Timeout in milliseconds for the device to connect to the TCP socket
             tcpConnectionTimeoutMs: 5000,
             socketInfo: {
+                // IP address and port on which to expose the TCP server
                 ipAddress: '192.168.0.106',
                 port: 5000,
             },
@@ -94,6 +109,7 @@
         },
     },
     electronWindowBuilder: {
+        // Windows to be built
         windows: [
             {
                 name: 'Main Window',
@@ -101,7 +117,10 @@
                     id: 4693741488312405,
                 },
                 app: {
+                    // App name
                     name: 'web',
+                    // URL if running it separately (useful for development)
+                    // url: 'http://localhost:5173/web',
                 },
             },
         ],
