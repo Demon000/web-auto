@@ -21,6 +21,8 @@ export interface ServiceEvents {
     ) => Promise<void>;
 }
 
+type ServiceMessageCallback = (message: Message) => void;
+
 export abstract class Service {
     public static nextServiceId = 0;
 
@@ -28,6 +30,11 @@ export abstract class Service {
 
     public serviceId = Service.nextServiceId++;
     protected started = false;
+
+    private specificMessageCallbacks = new Map<
+        number,
+        ServiceMessageCallback
+    >();
 
     public constructor(protected events: ServiceEvents) {}
 
@@ -40,6 +47,7 @@ export abstract class Service {
         assert(this.started);
 
         this.started = false;
+        this.specificMessageCallbacks.clear();
     }
 
     protected async onChannelOpenRequest(
@@ -123,7 +131,52 @@ export abstract class Service {
     }
 
     public async handleSpecificMessage(message: Message): Promise<boolean> {
-        return this.onControlMessage(message);
+        const callback = this.specificMessageCallbacks.get(message.messageId);
+        if (callback === undefined) {
+            return this.onSpecificMessage(message);
+        } else {
+            callback(message);
+            return true;
+        }
+    }
+
+    private waitForSpecificMessageWithSignal(
+        messageId: number,
+        signal: AbortSignal,
+    ): Promise<Message> {
+        return new Promise((resolve, reject) => {
+            assert(!this.specificMessageCallbacks.has(messageId));
+
+            const onAbort = () => {
+                this.logger.info(
+                    `Aborted wait for message with id ${messageId}`,
+                );
+                this.specificMessageCallbacks.delete(messageId);
+                reject(new Error('Aborted'));
+            };
+
+            const onMessage = (message: Message) => {
+                this.logger.info(
+                    `Received waited message with id ${messageId}`,
+                );
+                this.specificMessageCallbacks.delete(messageId);
+                signal.removeEventListener('abort', onAbort);
+                resolve(message);
+            };
+
+            signal.addEventListener('abort', onAbort);
+
+            this.specificMessageCallbacks.set(messageId, onMessage);
+        });
+    }
+
+    public waitForSpecificMessageWithTimeout(
+        messageId: number,
+        ms: number,
+    ): Promise<Message> {
+        const signal = AbortSignal.timeout(ms);
+
+        return this.waitForSpecificMessageWithSignal(messageId, signal);
     }
 
     protected abstract open(data: ChannelOpenRequest): Promise<void>;
