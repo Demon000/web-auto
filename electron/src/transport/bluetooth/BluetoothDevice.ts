@@ -140,7 +140,10 @@ export class BluetoothDevice extends Device {
     public async connectWifi(bluetoothSocket: Duplex): Promise<void> {
         this.logger.info('Connecting to WiFi');
         try {
-            await this.wifiConnector.connect(bluetoothSocket);
+            await this.wifiConnector.connectWithTimeout(
+                bluetoothSocket,
+                this.config.wifiConnectionTimeoutMs,
+            );
         } catch (err) {
             this.logger.error('Failed to connect to WiFi', err);
             throw err;
@@ -153,7 +156,9 @@ export class BluetoothDevice extends Device {
 
         this.logger.info('Waiting for TCP connection');
         try {
-            socket = await this.tcpConnector.connect();
+            socket = await this.tcpConnector.connectWithTimeout(
+                this.config.tcpConnectionTimeoutMs,
+            );
         } catch (err) {
             this.logger.error('Failed to receive TCP connection', err);
             throw err;

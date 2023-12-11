@@ -5,6 +5,8 @@ import type {
 
 export interface ElectronBluetoothDeviceHandlerConfig {
     profileConnectionTimeoutMs: number;
+    wifiConnectionTimeoutMs: number;
+    tcpConnectionTimeoutMs: number;
     networkInfo: INetworkInfo;
     socketInfo: ISocketInfoRequest;
 }

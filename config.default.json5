@@ -63,7 +63,12 @@
             handleAlreadyConnectedDevices: true,
         },
         bluetoothDeviceHandlerConfig: {
-            profileConnectionTimeoutMs: 20000,
+            // Timeout in milliseconds for the device to connect to bluetooth
+            profileConnectionTimeoutMs: 10000,
+            // Timeout in milliseconds for the device to connect to the network
+            wifiConnectionTimeoutMs: 20000,
+            // Timeout in milliseconds for the device to connect to the TCP socket
+            tcpConnectionTimeoutMs: 5000,
             socketInfo: {
                 ipAddress: '192.168.0.106',
                 port: 5000,

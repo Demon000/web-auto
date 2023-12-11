@@ -162,7 +162,10 @@ export class BluetoothDeviceWifiConnector {
         }
     }
 
-    public async connect(socket: Duplex): Promise<void> {
+    public async connectWithTimeout(
+        socket: Duplex,
+        timeoutMs: number,
+    ): Promise<void> {
         this.bluetoothSocket = socket;
 
         return new Promise((resolve, reject) => {
@@ -171,7 +174,7 @@ export class BluetoothDeviceWifiConnector {
 
             const timeout = setTimeout(() => {
                 abortController.abort();
-            }, 30000);
+            }, timeoutMs);
 
             socket.on('data', this.onData);
 

@@ -13,8 +13,6 @@ interface InternalEvents {
     [InternalEvent.CONNECTION_FAIL]: (err: Error) => void;
 }
 
-const TIMEOUT = 10000;
-
 export class BluetoothDeviceTcpConnector {
     private internalEmitter = new EventEmitter<InternalEvents>();
     protected logger: LoggerWrapper;
@@ -34,13 +32,13 @@ export class BluetoothDeviceTcpConnector {
         this.internalEmitter.emit(InternalEvent.CONNECTION_SUCCESS, socket);
     }
 
-    public async connect(): Promise<Duplex> {
+    public async connectWithTimeout(timeoutMs: number): Promise<Duplex> {
         const timeout = setTimeout(() => {
             this.internalEmitter.emit(
                 InternalEvent.CONNECTION_FAIL,
                 new Error('Timed out'),
             );
-        }, TIMEOUT);
+        }, timeoutMs);
 
         const cleanup = () => {
             this.internalEmitter.removeAllListeners();
