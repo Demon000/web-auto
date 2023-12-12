@@ -27,6 +27,7 @@ import { type FrameData } from './messenger/FrameData.js';
 import { Message } from './messenger/Message.js';
 import { DataBuffer } from './utils/DataBuffer.js';
 import { FrameHeaderFlags } from './messenger/FrameHeader.js';
+import { Mutex } from 'async-mutex';
 
 export interface AndroidAutoServerConfig {
     controlConfig: ControlServiceConfig;
@@ -47,6 +48,7 @@ export abstract class AndroidAutoServer {
     private controlService?: ControlService;
     private serviceIdServiceMap = new Map<number, Service>();
     private deviceHandlers?: DeviceHandler[];
+    private connectionLock = new Mutex();
 
     public constructor(protected config: AndroidAutoServerConfig) {}
 
@@ -558,11 +560,14 @@ export abstract class AndroidAutoServer {
             await this.disconnectDevice(this.connectedDevice);
         }
 
+        const release = await this.connectionLock.acquire();
+
         this.logger.info(`Connecting device ${device.name}`);
         try {
             await device.connect();
         } catch (err) {
             this.logger.error(`Failed to connect to ${device.name}`, err);
+            release();
             return;
         }
 
@@ -579,6 +584,8 @@ export abstract class AndroidAutoServer {
             this.logger.error('Failed to start dependencies', err);
             await this.disconnectDeviceInternal(device, true);
         }
+
+        release();
     }
 
     public async disconnectDeviceInternal(
@@ -620,7 +627,9 @@ export abstract class AndroidAutoServer {
             return;
         }
 
+        const release = await this.connectionLock.acquire();
         await this.disconnectDeviceInternal(device);
+        release();
     }
 
     public getDeviceByName(name: string): Device | undefined {
