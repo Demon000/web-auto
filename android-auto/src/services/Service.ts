@@ -208,6 +208,7 @@ export abstract class Service {
             );
         } catch (err) {
             this.logger.error('Failed to emit message sent event', err);
+            throw err;
         }
     }
 

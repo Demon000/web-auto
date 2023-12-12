@@ -177,6 +177,7 @@ export abstract class AndroidAutoServer {
             await this.connectedDevice.transport.send(buffer);
         } catch (err) {
             this.logger.error('Failed to send', err);
+            throw err;
         }
     }
 
@@ -343,7 +344,11 @@ export abstract class AndroidAutoServer {
                 frameData.frameHeader.flags & FrameHeaderFlags.CONTROL
             );
 
-            await this.onReceiveMessage(serviceId, message, isControl);
+            try {
+                await this.onReceiveMessage(serviceId, message, isControl);
+            } catch (err) {
+                this.logger.error('Failed to handle received message', err);
+            }
         }
     }
     private async onDeviceTransportError(
