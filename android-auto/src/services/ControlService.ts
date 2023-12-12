@@ -33,6 +33,7 @@ export interface ControlServiceEvents extends ServiceEvents {
 
 export interface ControlServiceConfig {
     pingTimeoutMs: number;
+    startTimeoutMs: number;
 }
 
 export class ControlService extends Service {
@@ -200,7 +201,6 @@ export class ControlService extends Service {
         );
     }
 
-
     private async doVersionQuery(signal: AbortSignal): Promise<void> {
         await this.sendVersionRequest();
         const message = await this.waitForSpecificMessage(
@@ -262,7 +262,7 @@ export class ControlService extends Service {
     public async start(): Promise<void> {
         await super.start();
 
-        const abortSignal = AbortSignal.timeout(5000);
+        const abortSignal = AbortSignal.timeout(this.config.startTimeoutMs);
 
         await this.doVersionQuery(abortSignal);
 

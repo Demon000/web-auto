@@ -27,6 +27,7 @@
         },
         controlConfig: {
             pingTimeoutMs: 5000,
+            startTimeoutMs: 5000,
         },
         videoConfigs: [
             {
