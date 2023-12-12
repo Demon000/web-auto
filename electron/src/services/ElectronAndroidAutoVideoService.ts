@@ -121,6 +121,12 @@ export class ElectronAndroidAutoVideoService extends VideoService {
     protected async channelStart(data: Start): Promise<void> {
         await super.channelStart(data);
         this.codecState = CodecState.WAITING_FOR_CONFIG;
+
+        assert(this.configurationIndex !== undefined);
+        this.logger.info(
+            'Selected configuration',
+            this.videoConfigs[this.configurationIndex],
+        );
     }
 
     protected async setup(_data: Setup): Promise<void> {
@@ -220,6 +226,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
             let config;
             try {
                 config = this.parseH264CodecConfig(buffer);
+                this.logger.info('Parsed H264 config', config);
             } catch (err) {
                 this.logger.error('Failed to parse H264 config', err);
                 return;
