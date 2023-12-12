@@ -7,8 +7,6 @@ import type { FitMode } from 'object-fit-math/dist/types.d.ts';
 import { PointerAction, VideoFocusMode } from '@web-auto/android-auto-proto';
 import { VideoCodecConfig } from '@web-auto/android-auto-ipc';
 
-let marginHeight = 0;
-let marginWidth = 0;
 let marginVertical = 0;
 let marginHorizontal = 0;
 
@@ -82,8 +80,10 @@ const onCanvasResized = () => {
 const onCodecConfig = (data: VideoCodecConfig) => {
     const canvas = getCanvas();
 
-    canvas.width = data.width - marginWidth;
-    canvas.height = data.height - marginHeight;
+    marginHorizontal = data.cropLeft;
+    marginVertical = data.cropTop;
+    canvas.width = data.width - data.cropLeft - data.cropRight;
+    canvas.height = data.height - data.cropTop - data.cropBottom;
 
     try {
         decoder.configure(data.codec);
@@ -142,12 +142,6 @@ onMounted(async () => {
 
     canvasObserver = new ResizeObserver(onCanvasResized);
     canvasObserver.observe(canvas);
-
-    const videoConfig = await androidAutoVideoService.getVideoConfig();
-    marginHeight = videoConfig.heightMargin ?? 0;
-    marginWidth = videoConfig.widthMargin ?? 0;
-    marginVertical = Math.floor(marginHeight / 2);
-    marginHorizontal = Math.floor(marginWidth / 2);
 
     androidAutoVideoService.on('afterSetup', onAfterSetup);
     androidAutoVideoService.on('codecConfig', onCodecConfig);

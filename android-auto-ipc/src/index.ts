@@ -2,7 +2,6 @@ import type {
     IMediaPlaybackMetadata,
     IMediaPlaybackStatus,
     ITouchEvent,
-    IVideoConfiguration,
     IVideoFocusNotification,
     IVideoFocusRequestNotification,
 } from '@web-auto/android-auto-proto/interfaces.js';
@@ -24,7 +23,6 @@ export type VideoCodecConfig = {
 };
 
 export type AndroidAutoVideoService = {
-    getVideoConfig(): Promise<IVideoConfiguration>;
     sendVideoFocusNotification(data: IVideoFocusNotification): Promise<void>;
     isSetup(): Promise<boolean>;
 };

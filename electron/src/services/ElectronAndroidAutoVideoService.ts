@@ -68,16 +68,11 @@ export class ElectronAndroidAutoVideoService extends VideoService {
     ) {
         super(events);
 
-        ipcHandler.on('getVideoConfig', this.getVideoConfig.bind(this));
         ipcHandler.on(
             'sendVideoFocusNotification',
             this.sendVideoFocusNotificationObject.bind(this),
         );
         ipcHandler.on('isSetup', this.getIsSetup.bind(this));
-    }
-
-    public async getVideoConfig(): Promise<IVideoConfiguration> {
-        return this.videoConfigs[0];
     }
 
     public async sendVideoFocusNotificationObject(
@@ -100,7 +95,8 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         // TODO
     }
 
-    protected async channelStart(_data: Start): Promise<void> {
+    protected async channelStart(data: Start): Promise<void> {
+        await super.channelStart(data);
         this.codecState = CodecState.WAITING_FOR_CONFIG;
     }
 
@@ -121,6 +117,7 @@ export class ElectronAndroidAutoVideoService extends VideoService {
     }
 
     protected async channelStop(): Promise<void> {
+        await super.channelStop();
         this.codecBuffer = undefined;
         this.codecState = CodecState.STOPPED;
         this.ipcHandler.stop();
@@ -199,7 +196,10 @@ export class ElectronAndroidAutoVideoService extends VideoService {
         buffer: DataBuffer,
         _timestamp?: bigint,
     ): Promise<void> {
-        const videoCodecType = this.videoConfigs[0].videoCodecType;
+        assert(this.configurationIndex !== undefined);
+
+        const videoCodecType =
+            this.videoConfigs[this.configurationIndex].videoCodecType;
         assert(videoCodecType !== undefined);
 
         switch (videoCodecType) {
