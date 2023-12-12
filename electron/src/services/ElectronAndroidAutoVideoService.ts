@@ -21,15 +21,14 @@ import {
     VideoFocusNotification,
 } from '@web-auto/android-auto-proto';
 import assert from 'node:assert';
-import {
-    h264HasKeyFrame,
-    h264ParseConfiguration,
-    toHex,
-} from '../codec/h264.js';
 import type {
     IVideoConfiguration,
     IVideoFocusNotification,
 } from '@web-auto/android-auto-proto/interfaces.js';
+import {
+    annexBSplitNalu,
+    h264ParseConfiguration,
+} from '@yume-chan/scrcpy';
 
 enum CodecState {
     STOPPED,
@@ -37,6 +36,21 @@ enum CodecState {
     WAITING_FOR_FIRST_FRAME,
     STARTED,
 }
+
+const toHex = (value: number) =>
+    value.toString(16).padStart(2, '0').toUpperCase();
+
+const h264HasKeyFrame = (buffer: Uint8Array) => {
+    for (const nalu of annexBSplitNalu(buffer)) {
+        const naluType = nalu[0]! & 0x1f;
+
+        if (naluType === 5) {
+            return true;
+        }
+    }
+
+    return false;
+};
 
 export class ElectronAndroidAutoVideoService extends VideoService {
     private codecState = CodecState.STOPPED;
