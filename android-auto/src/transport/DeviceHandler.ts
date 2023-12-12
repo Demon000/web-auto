@@ -6,11 +6,13 @@ export interface DeviceHandlerEvents {
     onDeviceAvailable: (device: Device) => Promise<void>;
     onDeviceUnavailable: (device: Device) => Promise<void>;
 
+    onDeviceSelfConnection: (device: Device) => Promise<void>;
+    onDeviceSelfDisconnection: (
+        device: Device,
+        reason: string,
+    ) => Promise<void>;
+
     onDeviceStateUpdated: (device: Device) => Promise<void>;
-    onDeviceSelfConnect: (device: Device) => Promise<boolean>;
-    onDeviceConnected: (device: Device) => Promise<void>;
-    onDeviceDisconnect: (device: Device, reason: string) => Promise<void>;
-    onDeviceDisconnected: (device: Device) => Promise<void>;
 
     onDeviceTransportData: (
         device: Device,
@@ -26,11 +28,9 @@ export abstract class DeviceHandler {
 
     protected getDeviceEvents(): DeviceEvents {
         return {
+            onSelfConnection: this.events.onDeviceSelfConnection,
+            onSelfDisconnection: this.events.onDeviceSelfDisconnection,
             onStateUpdated: this.events.onDeviceStateUpdated,
-            onSelfConnect: this.events.onDeviceSelfConnect,
-            onConnected: this.events.onDeviceConnected,
-            onDisconnect: this.events.onDeviceDisconnect,
-            onDisconnected: this.events.onDeviceDisconnected,
             onTransportData: this.events.onDeviceTransportData,
             onTransportError: this.events.onDeviceTransportError,
         };

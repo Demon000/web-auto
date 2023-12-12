@@ -64,28 +64,27 @@ export class BluetoothDevice extends Device {
             this.logger.error(
                 `Unexpected bluetooth profile self-connection in state: ${this.state}`,
             );
+            return;
         }
 
         this.logger.info('Received bluetooth profile self-connection');
 
         await this.setState(DeviceState.SELF_CONNECTING);
 
-        let canConnect = false;
+        void this.events.onSelfConnection(this);
+    }
 
-        try {
-            canConnect = await this.events.onSelfConnect(this);
-        } catch (err) {
-            this.logger.error('Failed to emit self connect event', err);
+    public async rejectSelfConnection(): Promise<void> {
+        if (this.state !== DeviceState.SELF_CONNECTING) {
+            this.logger.error(
+                `Unexpected self-connection reject in state: ${this.state}`,
+            );
+            return;
         }
 
-        if (canConnect) {
-            this.logger.info('Bluetooth profile self-connection accepted');
-            await this.connect();
-        } else {
-            this.logger.info('Bluetooth profile self-connection denied');
-            await this.disconnectBluetoothProfile();
-            await this.disconnectBluetooth();
-        }
+        this.logger.info('Bluetooth profile self-connection denied');
+        await this.disconnectBluetoothProfile();
+        await this.disconnectBluetooth();
     }
 
     public async onBluetoothProfileSelfDisconnected(): Promise<void> {
@@ -95,7 +94,7 @@ export class BluetoothDevice extends Device {
             );
         }
 
-        await this.disconnect(
+        await this.selfDisconnect(
             BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE,
         );
     }

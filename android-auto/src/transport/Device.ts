@@ -14,10 +14,8 @@ export enum DeviceState {
 
 export interface DeviceEvents {
     onStateUpdated: (device: Device) => Promise<void>;
-    onSelfConnect: (device: Device) => Promise<boolean>;
-    onConnected: (device: Device) => Promise<void>;
-    onDisconnect: (device: Device, reason: string) => Promise<void>;
-    onDisconnected: (device: Device) => Promise<void>;
+    onSelfConnection: (device: Device) => Promise<void>;
+    onSelfDisconnection: (device: Device, reason: string) => Promise<void>;
     onTransportData: (device: Device, buffer: DataBuffer) => Promise<void>;
     onTransportError: (device: Device, err: Error) => Promise<void>;
 }
@@ -25,7 +23,6 @@ export interface DeviceEvents {
 export enum DeviceDisconnectReason {
     TRANSPORT = 'transport-disconnected',
     USER = 'user-requested',
-    START_FAILED = 'start-failed',
 }
 
 export abstract class Device {
@@ -45,6 +42,7 @@ export abstract class Device {
     }
 
     protected abstract connectImpl(events: TransportEvents): Promise<Transport>;
+    public async rejectSelfConnection(): Promise<void> {}
     protected async handleDisconnect(_reason: string): Promise<void> {}
 
     protected async setState(state: DeviceState): Promise<void> {
@@ -84,8 +82,6 @@ export abstract class Device {
         await this.transport.connect();
 
         await this.setState(DeviceState.CONNECTED);
-
-        void this.events.onConnected(this);
     }
 
     protected async onTransportData(data: DataBuffer): Promise<void> {
@@ -97,15 +93,17 @@ export abstract class Device {
     }
 
     protected async onTransportDisconnected(): Promise<void> {
-        await this.disconnect(DeviceDisconnectReason.TRANSPORT);
+        await this.selfDisconnect(DeviceDisconnectReason.TRANSPORT);
+    }
+
+    public async selfDisconnect(reason: string): Promise<void> {
+        void this.events.onSelfDisconnection(this, reason);
     }
 
     public async disconnect(reason?: string): Promise<void> {
         if (reason === undefined) {
             reason = DeviceDisconnectReason.USER;
         }
-
-        this.logger.info(`Disconnecting with reason ${reason}`);
 
         if (this.state !== DeviceState.CONNECTED) {
             this.logger.info(
@@ -114,11 +112,7 @@ export abstract class Device {
             return;
         }
 
-        try {
-            await this.events.onDisconnect(this, reason);
-        } catch (err) {
-            this.logger.error('Failed to emit disconnect event', err);
-        }
+        this.logger.info(`Disconnecting with reason ${reason}`);
 
         await this.setState(DeviceState.DISCONNECTING);
 
@@ -143,7 +137,5 @@ export abstract class Device {
         }
 
         await this.setState(DeviceState.AVAILABLE);
-
-        void this.events.onDisconnected(this);
     }
 }
