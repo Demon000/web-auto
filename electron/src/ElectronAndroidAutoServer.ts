@@ -155,14 +155,35 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
             new ElectronAndroidAutoAudioInputService(events),
             new ElectronAndroidAutoAudioOutputService(
                 AudioStreamType.AUDIO_STREAM_MEDIA,
+                [
+                    {
+                        samplingRate: 48000,
+                        numberOfChannels: 2,
+                        numberOfBits: 16,
+                    },
+                ],
                 events,
             ),
             new ElectronAndroidAutoAudioOutputService(
                 AudioStreamType.AUDIO_STREAM_GUIDANCE,
+                [
+                    {
+                        samplingRate: 48000,
+                        numberOfChannels: 1,
+                        numberOfBits: 16,
+                    },
+                ],
                 events,
             ),
             new ElectronAndroidAutoAudioOutputService(
                 AudioStreamType.AUDIO_STREAM_SYSTEM_AUDIO,
+                [
+                    {
+                        samplingRate: 16000,
+                        numberOfChannels: 1,
+                        numberOfBits: 16,
+                    },
+                ],
                 events,
             ),
             new DummySensorService(events),

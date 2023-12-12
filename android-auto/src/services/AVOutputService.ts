@@ -5,6 +5,8 @@ import { type ServiceEvents } from './Service.js';
 import { Ack, MediaMessageId, Start, Stop } from '@web-auto/android-auto-proto';
 
 export abstract class AVOutputService extends AVService {
+    protected configurationIndex?: number;
+
     public constructor(protected events: ServiceEvents) {
         super(events);
     }
@@ -106,8 +108,13 @@ export abstract class AVOutputService extends AVService {
         return true;
     }
 
-    protected abstract channelStart(data: Start): Promise<void>;
-    protected abstract channelStop(): Promise<void>;
+    protected async channelStart(data: Start): Promise<void> {
+        this.configurationIndex = data.configurationIndex;
+    }
+    protected async channelStop(): Promise<void> {
+        this.configurationIndex = undefined;
+    }
+
     protected abstract handleData(
         buffer: DataBuffer,
         timestamp?: bigint,
