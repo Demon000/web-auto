@@ -38,6 +38,10 @@ export abstract class Service {
 
     public constructor(protected events: ServiceEvents) {}
 
+    public name(): string {
+        return this.constructor.name;
+    }
+
     public async start(): Promise<void> {
         assert(!this.started);
 

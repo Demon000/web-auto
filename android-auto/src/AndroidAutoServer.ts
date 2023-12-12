@@ -286,7 +286,7 @@ export abstract class AndroidAutoServer {
 
             this.logger.error(
                 `Unhandled ${tag} message with id ${message.messageId} ` +
-                    `on service with id ${serviceId}`,
+                    `on service ${service.name()}`,
                 message.getPayload(),
             );
         }
