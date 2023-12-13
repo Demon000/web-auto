@@ -3,5 +3,8 @@
   "version": "1.0.0",
   "author": "Demon000",
   "license": "GPL-3.0",
-  "main": "index.cjs"
+  "main": "index.cjs",
+  "scripts": {
+    "build": ""
+  }
 }
