@@ -16,6 +16,7 @@
   },
   "scripts": {
     "build": "npm run build --workspaces",
+    "start-electron": "npm run start -w electron",
     "prepare": "ts-patch install && npx typia patch && npm run prepare -w=electron",
     "dev": "tsc -b --watch"
   },
