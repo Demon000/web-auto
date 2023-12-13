@@ -15,12 +15,7 @@ const onOpenClick = async () => {
 <template>
     <div class="mini-video">
         <AndroidAutoVideo></AndroidAutoVideo>
-        <md-fab
-            class="open"
-            size="large"
-            variant="primary"
-            @click="onOpenClick"
-        >
+        <md-fab class="open" variant="primary" @click="onOpenClick">
             <md-icon slot="icon">open_in_full</md-icon>
         </md-fab>
     </div>
