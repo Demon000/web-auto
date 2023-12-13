@@ -10,8 +10,10 @@ export default defineConfig({
                     isCustomElement(tag) {
                         return [
                             'md-icon',
+                            'md-icon-button',
                             'md-filled-icon-button',
                             'md-fab',
+                            'md-linear-progress',
                         ].includes(tag);
                     },
                 },

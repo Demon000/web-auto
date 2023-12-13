@@ -3,6 +3,8 @@ import {
     ChannelOpenRequest,
     InputSourceService,
     KeyBindingRequest,
+    KeyCode,
+    KeyEvent,
     Service,
     TouchEvent,
 } from '@web-auto/android-auto-proto';
@@ -13,6 +15,7 @@ import type {
 import type { IpcServiceHandler } from '@web-auto/electron-ipc/common.js';
 import type {
     IInputSourceService_TouchScreen,
+    IKeyEvent,
     ITouchEvent,
 } from '@web-auto/android-auto-proto/interfaces.js';
 
@@ -31,6 +34,7 @@ export class ElectronAndroidAutoInputService extends InputService {
             'sendTouchEvent',
             this.sendTouchEventObject.bind(this),
         );
+        this.ipcHandler.on('sendKeyEvent', this.sendKeyEventObject.bind(this));
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {}
@@ -38,6 +42,18 @@ export class ElectronAndroidAutoInputService extends InputService {
 
     private async sendTouchEventObject(data: ITouchEvent): Promise<void> {
         await this.sendTouchEvent(new TouchEvent(data));
+    }
+
+    private async sendKeyEventObject(data: IKeyEvent): Promise<void> {
+        await this.sendKeyEvent(new KeyEvent(data));
+    }
+
+    protected fillKeycdoes(inputSourceService: InputSourceService): void {
+        for (const keyCode of Object.values(KeyCode)) {
+            if (typeof keyCode === 'number') {
+                inputSourceService.keycodesSupported.push(keyCode);
+            }
+        }
     }
 
     protected fillChannelDescriptor(channelDescriptor: Service): void {
@@ -48,5 +64,7 @@ export class ElectronAndroidAutoInputService extends InputService {
             feedbackEventsSupported: [],
             displayId: 0,
         });
+
+        this.fillKeycdoes(channelDescriptor.inputSourceService);
     }
 }

@@ -1,4 +1,5 @@
 import type {
+    IKeyEvent,
     IMediaPlaybackMetadata,
     IMediaPlaybackStatus,
     ITouchEvent,
@@ -8,6 +9,7 @@ import type {
 
 export type AndroidAutoInputService = {
     sendTouchEvent: (touchEvent: ITouchEvent) => Promise<void>;
+    sendKeyEvent: (keyEvent: IKeyEvent) => Promise<void>;
 };
 
 export type AndroidAutoInputClient = Record<string, never>;

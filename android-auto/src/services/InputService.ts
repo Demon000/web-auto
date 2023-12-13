@@ -7,6 +7,7 @@ import {
     InputReport,
     KeyBindingRequest,
     KeyBindingResponse,
+    KeyEvent,
     TouchEvent,
 } from '@web-auto/android-auto-proto';
 
@@ -70,6 +71,22 @@ export abstract class InputService extends Service {
         const data = new InputReport({
             timestamp: microsecondsTime(),
             touchEvent,
+        });
+
+        await this.sendEncryptedSpecificMessage(
+            InputMessageId.INPUT_MESSAGE_INPUT_REPORT,
+            data,
+        );
+    }
+
+    protected async sendKeyEvent(keyEvent: KeyEvent): Promise<void> {
+        if (!this.started) {
+            return;
+        }
+
+        const data = new InputReport({
+            timestamp: microsecondsTime(),
+            keyEvent,
         });
 
         await this.sendEncryptedSpecificMessage(

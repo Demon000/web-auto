@@ -2,6 +2,7 @@ import type { PartialMessage } from '@bufbuild/protobuf';
 import type {
     AudioConfiguration,
     InputSourceService_TouchScreen,
+    KeyEvent,
     MediaPlaybackMetadata,
     MediaPlaybackStatus,
     TouchEvent,
@@ -11,6 +12,7 @@ import type {
 } from './protos_pb.js';
 
 export type ITouchEvent = PartialMessage<TouchEvent>;
+export type IKeyEvent = PartialMessage<KeyEvent>;
 export type IVideoConfiguration = PartialMessage<VideoConfiguration>;
 export type IAudioConfiguration = PartialMessage<AudioConfiguration>;
 export type IInputSourceService_TouchScreen =
