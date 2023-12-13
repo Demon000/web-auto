@@ -15,7 +15,7 @@
 -   Connection via TCP (Head unit server enabled on phone)
 -   Connection via USB
 -   Connection via Bluetooth
--   Video (H264)
+-   Video (H264 & H265)
 -   Audio input
 -   Audio output
 -   Media status (WIP)
