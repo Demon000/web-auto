@@ -6,20 +6,8 @@ export enum FrameHeaderFlags {
     ENCRYPTED = 1 << 3,
 }
 
-export type FrameHeaderOptions = {
+export type FrameHeader = {
     serviceId: number;
     flags: FrameHeaderFlags;
     payloadSize: number;
 };
-
-export class FrameHeader {
-    public readonly serviceId;
-    public readonly flags;
-    public payloadSize;
-
-    public constructor(options: FrameHeaderOptions) {
-        this.serviceId = options.serviceId;
-        this.flags = options.flags;
-        this.payloadSize = options.payloadSize;
-    }
-}

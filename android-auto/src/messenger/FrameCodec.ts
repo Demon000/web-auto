@@ -1,7 +1,7 @@
 import { getLogger } from '@web-auto/logging';
 import { DataBuffer } from '../utils/DataBuffer.js';
 import { type FrameData } from './FrameData.js';
-import { FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
+import { type FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
 
 export class FrameCodec {
     protected logger = getLogger(this.constructor.name);
@@ -52,11 +52,11 @@ export class FrameCodec {
 
         const payloadSize = buffer.readUint16BE();
 
-        return new FrameHeader({
+        return {
             serviceId,
             flags,
             payloadSize,
-        });
+        };
     }
 
     private decodeTotalSize(buffer: DataBuffer): number {

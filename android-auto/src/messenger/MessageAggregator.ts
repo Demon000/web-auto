@@ -1,5 +1,5 @@
 import { DataBuffer } from '../utils/DataBuffer.js';
-import { FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
+import { type FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
 import { getLogger } from '@web-auto/logging';
 import { Message } from './Message.js';
 import assert from 'node:assert';
@@ -92,7 +92,7 @@ export class MessageAggregator {
         }
         context.remainingSize -= size;
 
-        let flags: FrameHeaderFlags = 0;
+        let flags = FrameHeaderFlags.NONE;
         if (isEncrypted) {
             flags |= FrameHeaderFlags.ENCRYPTED;
         }
@@ -108,11 +108,11 @@ export class MessageAggregator {
 
         const payload = message.getRawPayload().subarray(offset, offset + size);
 
-        const frameHeader = new FrameHeader({
+        const frameHeader = {
             serviceId,
             flags,
             payloadSize: 0,
-        });
+        };
 
         let totalSize = 0;
         if (
