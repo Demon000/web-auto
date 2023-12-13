@@ -191,6 +191,10 @@ const translateCanvasPosition = (x: number, y: number): [number, number] => {
 const pointerMap = new Map<number, true>();
 
 const sendPointerEvent = (event: PointerEvent) => {
+    if (event.button !== 0) {
+        return;
+    }
+
     let action;
 
     switch (event.type) {
