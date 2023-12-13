@@ -2,6 +2,7 @@
 import DeviceSelector from './DeviceSelector.vue';
 import MiniVideo from './MiniVideo.vue';
 import MediaStatus from './MediaStatus.vue';
+import Assistant from './Assistant.vue';
 import AppBar from './AppBar.vue';
 import { Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { IDevice } from '@web-auto/android-auto-ipc';
@@ -47,6 +48,7 @@ onBeforeUnmount(() => {
             <template v-if="connectedDevice !== undefined">
                 <MiniVideo></MiniVideo>
                 <MediaStatus></MediaStatus>
+                <Assistant></Assistant>
             </template>
         </div>
     </div>
@@ -68,7 +70,7 @@ onBeforeUnmount(() => {
     flex-grow: 1;
 
     grid-template-rows: 1fr 1fr;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
 
     gap: 32px;
     width: 100%;
@@ -91,12 +93,20 @@ onBeforeUnmount(() => {
     grid-row-end: 2;
 
     grid-column-start: 2;
-    grid-column-end: 3;
+    grid-column-end: 4;
 }
 
 .main .media-status {
     grid-row-start: 2;
     grid-column-start: 2;
+
+    grid-row-end: 3;
+    grid-column-end: 2;
+}
+
+.main .assistant {
+    grid-row-start: 2;
+    grid-column-start: 3;
 
     grid-row-end: 3;
     grid-column-end: 3;

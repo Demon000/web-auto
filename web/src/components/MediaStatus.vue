@@ -9,6 +9,7 @@ import {
 
 import '@material/web/progress/linear-progress.js';
 import '@material/web/iconbutton/icon-button.js';
+import '@material/web/fab/fab.js';
 import { androidAutoInputService } from '../ipc.ts';
 
 const mediaStatuStore = useMediaStatusStore();
