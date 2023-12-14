@@ -22,45 +22,44 @@ import {
     type AndroidAutoMediaStatusService,
     type AndroidAutoMediaStatusClient,
 } from '@web-auto/android-auto-ipc';
-import { ElectronMediaStatusService } from './services/ElectronMediaStatusService.js';
-import { DummyNavigationStatusService } from './services/DummyNavigationService.js';
-import { DummySensorService } from './services/DummySensorService.js';
-import { ElectronAndroidAutoAudioInputService } from './services/ElectronAndroidAutoAudioInputService.js';
-import { ElectronAndroidAutoAudioOutputService } from './services/ElectronAndroidAutoAudioOutputService.js';
-import { ElectronAndroidAutoInputService } from './services/ElectronAndroidAutoInputService.js';
-import { ElectronAndroidAutoVideoService } from './services/ElectronAndroidAutoVideoService.js';
+import { NodeMediaStatusService } from './services/NodeMediaStatusService.js';
+import { NodeNavigationStatusService } from './services/NodeNavigationService.js';
+import { DummySensorService } from './services/NodeSensorService.js';
+import { NodeAudioInputService } from './services/NodeAudioInputService.js';
+import { NodeAudioOutputService } from './services/NodeAudioOutputService.js';
+import { NodeAutoInputService } from './services/NodeInputService.js';
+import { NodeVideoService } from './services/NodeVideoService.js';
 import {
-    ElectronUsbDeviceHandler,
+    UsbDeviceHandler,
     type ElectronUsbDeviceHandlerConfig,
-} from './transport/ElectronUsbDeviceHandler.js';
+} from './transport/UsbDeviceHandler.js';
 import {
-    ElectronTcpDeviceHandler,
-    type ElectronTcpDeviceHandlerConfig,
-} from './transport/ElectronTcpDeviceHandler.js';
-import { ElectronBluetoothDeviceHandler } from './transport/bluetooth/ElectronBluetoothDeviceHandler.js';
+    TcpDeviceHandler,
+    type TcpDeviceHandlerConfig,
+} from './transport/TcpDeviceHandler.js';
+import { ElectronBluetoothDeviceHandler } from './transport/bluetooth/BluetoothDeviceHandler.js';
 import { NodeCryptor, type NodeCryptorConfig } from './crypto/NodeCryptor.js';
-import type { ElectronBluetoothDeviceHandlerConfig } from './transport/bluetooth/ElectronBluetoothDeviceHandlerConfig.js';
-import {
-    type IpcServiceHandler,
-    type IpcServiceRegistry,
-} from '@web-auto/electron-ipc/common.js';
+import type { ElectronBluetoothDeviceHandlerConfig } from './transport/bluetooth/BluetoothDeviceHandlerConfig.js';
 import { AudioStreamType } from '@web-auto/android-auto-proto';
 import type {
     IInputSourceService_TouchScreen,
     IVideoConfiguration,
 } from '@web-auto/android-auto-proto/interfaces.js';
+import type {
+    IpcServiceHandler,
+    IpcServiceRegistry,
+} from '@web-auto/common-ipc';
 
-export interface ElectronAndroidAutoServerConfig
-    extends AndroidAutoServerConfig {
+export interface NodeAndroidAutoServerConfig extends AndroidAutoServerConfig {
     cryptorConfig: NodeCryptorConfig;
     videoConfigs: IVideoConfiguration[];
     touchScreenConfig: IInputSourceService_TouchScreen;
-    tcpDeviceHandlerConfig: ElectronTcpDeviceHandlerConfig;
+    tcpDeviceHandlerConfig: TcpDeviceHandlerConfig;
     usbDeviceHandlerConfig: ElectronUsbDeviceHandlerConfig;
     bluetoothDeviceHandlerConfig?: ElectronBluetoothDeviceHandlerConfig;
 }
 
-export class ElectronAndroidAutoServer extends AndroidAutoServer {
+export class NodeAndroidAutoServer extends AndroidAutoServer {
     private ipcHandler: IpcServiceHandler<
         AndroidAutoServerService,
         AndroidAutoServerClient
@@ -68,7 +67,7 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
 
     public constructor(
         protected ipcRegistry: IpcServiceRegistry,
-        protected config: ElectronAndroidAutoServerConfig,
+        protected config: NodeAndroidAutoServerConfig,
     ) {
         super(config);
 
@@ -97,14 +96,8 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
         events: DeviceHandlerEvents,
     ): DeviceHandler[] {
         const deviceHandlers: DeviceHandler[] = [
-            new ElectronUsbDeviceHandler(
-                this.config.usbDeviceHandlerConfig,
-                events,
-            ),
-            new ElectronTcpDeviceHandler(
-                this.config.tcpDeviceHandlerConfig,
-                events,
-            ),
+            new UsbDeviceHandler(this.config.usbDeviceHandlerConfig, events),
+            new TcpDeviceHandler(this.config.tcpDeviceHandlerConfig, events),
         ];
 
         if (this.config.bluetoothDeviceHandlerConfig !== undefined) {
@@ -152,8 +145,8 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
         >(AndroidAutoIpcNames.MEDIA_STATUS);
 
         return [
-            new ElectronAndroidAutoAudioInputService(events),
-            new ElectronAndroidAutoAudioOutputService(
+            new NodeAudioInputService(events),
+            new NodeAudioOutputService(
                 AudioStreamType.AUDIO_STREAM_MEDIA,
                 [
                     {
@@ -164,7 +157,7 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
                 ],
                 events,
             ),
-            new ElectronAndroidAutoAudioOutputService(
+            new NodeAudioOutputService(
                 AudioStreamType.AUDIO_STREAM_GUIDANCE,
                 [
                     {
@@ -175,7 +168,7 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
                 ],
                 events,
             ),
-            new ElectronAndroidAutoAudioOutputService(
+            new NodeAudioOutputService(
                 AudioStreamType.AUDIO_STREAM_SYSTEM_AUDIO,
                 [
                     {
@@ -187,14 +180,14 @@ export class ElectronAndroidAutoServer extends AndroidAutoServer {
                 events,
             ),
             new DummySensorService(events),
-            new DummyNavigationStatusService(events),
-            new ElectronMediaStatusService(mediaStatusIpcHandler, events),
-            new ElectronAndroidAutoInputService(
+            new NodeNavigationStatusService(events),
+            new NodeMediaStatusService(mediaStatusIpcHandler, events),
+            new NodeAutoInputService(
                 inputIpcHandler,
                 this.config.touchScreenConfig,
                 events,
             ),
-            new ElectronAndroidAutoVideoService(
+            new NodeVideoService(
                 videoIpcHandler,
                 this.config.videoConfigs,
                 events,

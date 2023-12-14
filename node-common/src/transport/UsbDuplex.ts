@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import { Duplex } from 'node:stream';
 
-export class ElectronUsbDuplex extends Duplex {
+export class UsbDuplex extends Duplex {
     private inEndpoint: USBEndpoint;
     private outEndpoint: USBEndpoint;
     private interfaceClaimed = false;

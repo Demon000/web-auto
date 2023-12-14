@@ -8,7 +8,6 @@ import type {
     AndroidAutoVideoService,
     VideoCodecConfig,
 } from '@web-auto/android-auto-ipc';
-import type { IpcServiceHandler } from '@web-auto/electron-ipc/common.js';
 import {
     type ChannelOpenRequest,
     type Service,
@@ -31,6 +30,7 @@ import {
     h265ParseConfiguration,
     h265ParseNaluHeader,
 } from '@yume-chan/scrcpy';
+import type { IpcServiceHandler } from '@web-auto/common-ipc';
 
 enum CodecState {
     STOPPED,
@@ -75,7 +75,7 @@ const h265HasKeyFrame = (buffer: Uint8Array) => {
     return false;
 };
 
-export class ElectronAndroidAutoVideoService extends VideoService {
+export class NodeVideoService extends VideoService {
     private codecState = CodecState.STOPPED;
     private codecBuffer?: DataBuffer;
 

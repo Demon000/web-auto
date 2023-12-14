@@ -35,7 +35,7 @@ enum RtAudioFormat {
     RTAUDIO_FLOAT64 = 0x20,
 }
 
-export class ElectronAndroidAutoAudioOutputService extends AudioOutputService {
+export class NodeAudioOutputService extends AudioOutputService {
     private rtaudio;
 
     public constructor(

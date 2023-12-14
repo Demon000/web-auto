@@ -10,9 +10,9 @@ import {
     MediaPlaybackStatusService,
     Service,
 } from '@web-auto/android-auto-proto';
-import type { IpcServiceHandler } from '@web-auto/electron-ipc/common.js';
+import type { IpcServiceHandler } from '@web-auto/common-ipc';
 
-export class ElectronMediaStatusService extends MediaStatusService {
+export class NodeMediaStatusService extends MediaStatusService {
     private metadata?: MediaPlaybackMetadata;
     private status?: MediaPlaybackStatus;
 

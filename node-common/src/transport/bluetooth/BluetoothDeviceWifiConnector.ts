@@ -7,7 +7,7 @@ import {
 } from '@web-auto/android-auto';
 import assert from 'node:assert';
 import { Duplex } from 'node:stream';
-import { type ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig.js';
+import { type ElectronBluetoothDeviceHandlerConfig } from './BluetoothDeviceHandlerConfig.js';
 
 import {
     SocketInfoRequest,

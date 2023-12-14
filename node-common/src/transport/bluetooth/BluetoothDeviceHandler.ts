@@ -7,7 +7,7 @@ import {
 } from '@web-auto/android-auto';
 import { BluetoothDevice } from './BluetoothDevice.js';
 import { AndroidAutoProfile } from './AndroidAutoProfile.js';
-import { type ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig.js';
+import { type ElectronBluetoothDeviceHandlerConfig } from './BluetoothDeviceHandlerConfig.js';
 import net from 'node:net';
 
 const AA_OBJECT_PATH = '/com/aa/aa';

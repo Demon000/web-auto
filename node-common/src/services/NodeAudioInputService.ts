@@ -13,7 +13,7 @@ import RtAudioPackage from 'audify';
 const RTAUDIO_SINT16 = 2;
 const { RtAudio } = RtAudioPackage;
 
-export class ElectronAndroidAutoAudioInputService extends AudioInputService {
+export class NodeAudioInputService extends AudioInputService {
     private rtaudio;
 
     public constructor(events: ServiceEvents) {

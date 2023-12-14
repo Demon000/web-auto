@@ -3,43 +3,52 @@ import { lilconfigSync } from 'lilconfig';
 import JSON5 from 'json5';
 
 import { app, BrowserWindow } from 'electron';
-import { ElectronWindowBuilder } from './ElectronWindowBuilder.js';
+import {
+    ElectronWindowBuilder,
+    type ElectronWindowBuilderConfig,
+} from './ElectronWindowBuilder.js';
 import { assert } from 'typia';
-import { type ElectronConfig } from './config.js';
-import { ElectronAndroidAutoServer } from './ElectronAndroidAutoServer.js';
+import {
+    NodeAndroidAutoServer,
+    type NodeCommonAndroidAutoConfig,
+} from '@web-auto/node-common';
 import { ElectronIpcServiceRegistry } from '@web-auto/electron-ipc/main.js';
 import { ANDROID_AUTO_IPC_REGISTRY_NAME } from '@web-auto/android-auto-ipc';
 
-const electronConfig = lilconfigSync('web-auto', {
+type ElectronAndroidAutoConfig = {
+    electronWindowBuilder: ElectronWindowBuilderConfig;
+} & NodeCommonAndroidAutoConfig;
+
+const config = lilconfigSync('web-auto', {
     loaders: {
         '.json5': (_filepath, content) => {
             return JSON5.parse(content);
         },
     },
     searchPlaces: ['config.json5'],
-}).search()?.config as ElectronConfig;
+}).search()?.config as ElectronAndroidAutoConfig;
 
-assert<ElectronConfig>(electronConfig);
+assert<ElectronAndroidAutoConfig>(config);
 
-setConfig(electronConfig.logging);
+setConfig(config.logging);
 
 const logger = getLogger('electron');
 
-logger.info('Electron config', electronConfig);
+logger.info('Electron config', config);
 
-let androidAutoServer: ElectronAndroidAutoServer | undefined;
+let androidAutoServer: NodeAndroidAutoServer | undefined;
 let androidAutoIpcServiceRegistry: ElectronIpcServiceRegistry | undefined;
 
-if (electronConfig.androidAuto !== undefined) {
+if (config.androidAuto !== undefined) {
     androidAutoIpcServiceRegistry = new ElectronIpcServiceRegistry(
         ANDROID_AUTO_IPC_REGISTRY_NAME,
     );
 
     androidAutoIpcServiceRegistry.register();
 
-    androidAutoServer = new ElectronAndroidAutoServer(
+    androidAutoServer = new NodeAndroidAutoServer(
         androidAutoIpcServiceRegistry,
-        electronConfig.androidAuto,
+        config.androidAuto,
     );
 
     androidAutoServer.build();
@@ -50,7 +59,7 @@ if (electronConfig.androidAuto !== undefined) {
 }
 
 const electronWindowBuilder = new ElectronWindowBuilder(
-    electronConfig.electronWindowBuilder,
+    config.electronWindowBuilder,
     androidAutoIpcServiceRegistry,
 );
 

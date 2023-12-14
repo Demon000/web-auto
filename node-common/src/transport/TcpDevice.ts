@@ -4,7 +4,7 @@ import {
     Transport,
     type TransportEvents,
 } from '@web-auto/android-auto';
-import { ElectronDuplexTransport } from './ElectronDuplexTransport.js';
+import { DuplexTransport } from './DuplexTransport.js';
 import { Socket } from 'node:net';
 
 export class TcpDevice extends Device {
@@ -32,7 +32,7 @@ export class TcpDevice extends Device {
                  */
                 socket.off('error', onSocketError);
 
-                const transport = new ElectronDuplexTransport(socket, events);
+                const transport = new DuplexTransport(socket, events);
 
                 resolve(transport);
             });

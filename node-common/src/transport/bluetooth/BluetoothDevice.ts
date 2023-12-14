@@ -7,11 +7,11 @@ import {
     type TransportEvents,
 } from '@web-auto/android-auto';
 import { Device as BluezDevice } from 'bluez';
-import { type ElectronBluetoothDeviceHandlerConfig } from './ElectronBluetoothDeviceHandlerConfig.js';
+import { type ElectronBluetoothDeviceHandlerConfig } from './BluetoothDeviceHandlerConfig.js';
 import { BluetoothDeviceWifiConnector } from './BluetoothDeviceWifiConnector.js';
 import { Server } from 'node:net';
 import { BluetoothDeviceTcpConnector } from './BluetoothDeviceTcpConnector.js';
-import { ElectronDuplexTransport } from '../ElectronDuplexTransport.js';
+import { DuplexTransport } from '../DuplexTransport.js';
 import { Duplex } from 'node:stream';
 import { BluetoothProfileHandler } from './BluetoothProfileHandler.js';
 
@@ -236,6 +236,6 @@ export class BluetoothDevice extends Device {
             throw err;
         }
 
-        return new ElectronDuplexTransport(tcpSocket, events);
+        return new DuplexTransport(tcpSocket, events);
     }
 }

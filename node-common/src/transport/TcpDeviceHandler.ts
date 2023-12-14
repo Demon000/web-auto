@@ -4,13 +4,13 @@ import {
 } from '@web-auto/android-auto';
 import { TcpDevice } from './TcpDevice.js';
 
-export interface ElectronTcpDeviceHandlerConfig {
+export interface TcpDeviceHandlerConfig {
     ips: string[];
 }
 
-export class ElectronTcpDeviceHandler extends DeviceHandler {
+export class TcpDeviceHandler extends DeviceHandler {
     public constructor(
-        private config: ElectronTcpDeviceHandlerConfig,
+        private config: TcpDeviceHandlerConfig,
         events: DeviceHandlerEvents,
     ) {
         super(events);

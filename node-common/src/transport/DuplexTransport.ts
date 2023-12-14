@@ -6,7 +6,7 @@ import {
 import { DataBuffer } from '@web-auto/android-auto';
 import { Duplex } from 'node:stream';
 
-export class ElectronDuplexTransport extends Transport {
+export class DuplexTransport extends Transport {
     public constructor(
         private socket: Duplex,
         events: TransportEvents,

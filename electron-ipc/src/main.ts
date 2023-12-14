@@ -5,7 +5,7 @@ import {
     type IpcService,
     type IpcServiceHandler,
     type IpcServiceRegistry,
-} from './common.js';
+} from '@web-auto/common-ipc';
 import assert from 'node:assert';
 
 export type ElectronIpcServiceHandlerExtra = {

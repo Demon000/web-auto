@@ -18,7 +18,7 @@ export interface ElectronUsbDeviceHandlerConfig {
     handleAlreadyConnectedDevices?: boolean;
 }
 
-export class ElectronUsbDeviceHandler extends DeviceHandler {
+export class UsbDeviceHandler extends DeviceHandler {
     protected usbDeviceMap = new Map<USBDevice, Device>();
     private usb;
     private aoapConnector: UsbAoapConnector;

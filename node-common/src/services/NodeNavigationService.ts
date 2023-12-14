@@ -9,7 +9,7 @@ import {
     Service,
 } from '@web-auto/android-auto-proto';
 
-export class DummyNavigationStatusService extends NavigationStatusService {
+export class NodeNavigationStatusService extends NavigationStatusService {
     protected async open(_data: ChannelOpenRequest): Promise<void> {
         // TODO
     }

@@ -7,10 +7,12 @@
       "prettier-config",
       "logging",
       "android-auto-proto",
+      "common-ipc",
       "android-auto-ipc",
       "electron-ipc",
       "android-auto",
       "web",
+      "node-common",
       "electron"
     ]
   },

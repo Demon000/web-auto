@@ -1,14 +1,16 @@
 import type { IpcRendererEvent } from 'electron';
 import {
     ELECTRON_IPC_COMMUNICATION_CHANNEL,
-    type IpcEvent,
-    type IpcService,
     type IpcPreloadExposed,
-    type IpcClient,
-    type IpcClientHandler,
-    type IpcClientRegistry,
 } from './common.js';
 import { EventEmitter } from 'eventemitter3';
+import type {
+    IpcClient,
+    IpcClientHandler,
+    IpcClientRegistry,
+    IpcEvent,
+    IpcService,
+} from '@web-auto/common-ipc';
 
 declare const window: {
     [ELECTRON_IPC_COMMUNICATION_CHANNEL]: IpcPreloadExposed;

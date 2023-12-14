@@ -12,14 +12,14 @@ import type {
     AndroidAutoInputService,
     AndroidAutoInputClient,
 } from '@web-auto/android-auto-ipc';
-import type { IpcServiceHandler } from '@web-auto/electron-ipc/common.js';
 import type {
     IInputSourceService_TouchScreen,
     IKeyEvent,
     ITouchEvent,
 } from '@web-auto/android-auto-proto/interfaces.js';
+import type { IpcServiceHandler } from '@web-auto/common-ipc';
 
-export class ElectronAndroidAutoInputService extends InputService {
+export class NodeAutoInputService extends InputService {
     public constructor(
         private ipcHandler: IpcServiceHandler<
             AndroidAutoInputService,

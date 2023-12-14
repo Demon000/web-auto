@@ -11,10 +11,13 @@
             "path": "../logging"
         },
         {
-            "path": "../node-common"
+            "path": "../android-auto"
         },
         {
-            "path": "../electron-ipc"
+            "path": "../android-auto-ipc"
+        },
+        {
+            "path": "../common-ipc"
         }
     ]
 }
