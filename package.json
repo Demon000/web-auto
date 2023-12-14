@@ -20,6 +20,7 @@
   },
   "scripts": {
     "build": "npm run build --workspaces",
+    "clean": "npm run clean --workspaces",
     "start-electron": "npm run start -w electron",
     "start-node": "npm run start -w node",
     "start-web": "npm run start -w web",

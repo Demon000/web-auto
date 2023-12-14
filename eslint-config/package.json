@@ -5,6 +5,7 @@
   "license": "GPL-3.0",
   "main": "index.cjs",
   "scripts": {
-    "build": ""
+    "build": "",
+    "clean": ""
   }
 }
