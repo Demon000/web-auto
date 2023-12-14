@@ -109,6 +109,12 @@
             },
         },
     },
+    nodeAndroidAuto: {
+        webSocketServer: {
+            port: 8081,
+            host: 'localhost',
+        },
+    },
     electronWindowBuilder: {
         // Windows to be built
         windows: [

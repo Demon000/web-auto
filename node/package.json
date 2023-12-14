@@ -1,0 +1,13 @@
+{
+  "name": "@web-auto/node",
+  "version": "1.0.0",
+  "author": "Demon000",
+  "license": "GPL-3.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "clean": "tsc --build --clean",
+    "lint": "eslint --fix .",
+    "start": "node ./dist/esm/main.js"
+  }
+}

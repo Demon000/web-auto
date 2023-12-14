@@ -1,0 +1,22 @@
+{
+  "name": "@web-auto/socket-ipc",
+  "version": "1.0.0",
+  "author": "Demon000",
+  "license": "GPL-3.0",
+  "type": "module",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    "./main.js": "./dist/esm/main.js",
+    "./renderer.js": "./dist/esm/renderer.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "tsc --build --clean",
+    "lint": "eslint --fix ."
+  },
+  "dependencies": {
+    "@types/ws": "^8.5.10",
+    "bson": "^6.2.0",
+    "ws": "^8.15.1"
+  }
+}

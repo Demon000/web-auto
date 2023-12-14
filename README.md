@@ -20,6 +20,21 @@
 1. `npm run prepare-electron`
 2. `npm run start-electron`
 
+### Node
+
+#### Server
+
+1. `npm run prepare-node`
+   (not necessary unless `prepare-electron` has been run previously)
+2. `npm run start-node`
+
+#### Web
+
+1. `cp web/.env.local.default web/.env.default`
+2. Open the `web/.env.default` file and configure it with the same parameters as
+   `nodeAndroidAuto.webSocketServer` from `config.json`.
+3. `npm run start-web`
+
 ## Features
 
 -   Connection via TCP (Head unit server enabled on phone)

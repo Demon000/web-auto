@@ -11,12 +11,23 @@ import {
     AndroidAutoMediaStatusService,
 } from '@web-auto/android-auto-ipc';
 import { ElectronIpcClientRegistry } from '@web-auto/electron-ipc/renderer.js';
+import { SocketIpcClientRegistry } from '@web-auto/socket-ipc/renderer.js';
 
-const androidAutoIpcClientRegistry = new ElectronIpcClientRegistry(
-    ANDROID_AUTO_IPC_REGISTRY_NAME,
-);
+let androidAutoIpcClientRegistry;
 
-androidAutoIpcClientRegistry.register();
+try {
+    androidAutoIpcClientRegistry = new ElectronIpcClientRegistry(
+        ANDROID_AUTO_IPC_REGISTRY_NAME,
+    );
+} catch (err) {
+    androidAutoIpcClientRegistry = new SocketIpcClientRegistry(
+        import.meta.env.VITE_SOCKET_IPC_CLIENT_HOST,
+        parseInt(import.meta.env.VITE_SOCKET_IPC_CLIENT_PORT),
+        ANDROID_AUTO_IPC_REGISTRY_NAME,
+    );
+}
+
+await androidAutoIpcClientRegistry.register();
 
 export const androidAutoServerService =
     androidAutoIpcClientRegistry.registerIpcClient<

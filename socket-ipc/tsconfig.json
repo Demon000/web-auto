@@ -1,0 +1,14 @@
+{
+    "extends": "../tsconfig/tsconfig.web.json",
+    "include": ["src/**/*"],
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist/esm",
+        "baseUrl": "."
+    },
+    "references": [
+        {
+            "path": "../common-ipc"
+        }
+    ]
+}

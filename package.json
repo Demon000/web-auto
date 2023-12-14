@@ -10,16 +10,21 @@
       "common-ipc",
       "android-auto-ipc",
       "electron-ipc",
+      "socket-ipc",
       "android-auto",
       "web",
       "node-common",
+      "node",
       "electron"
     ]
   },
   "scripts": {
     "build": "npm run build --workspaces",
     "start-electron": "npm run start -w electron",
+    "start-node": "npm run start -w node",
+    "start-web": "npm run dev -w web",
     "prepare-electron": "electron-rebuild -m node_modules/bluetooth-socket && electron-rebuild -m node_modules/usocket",
+    "prepare-node": "npm rebuild",
     "prepare": "ts-patch install && npx typia patch",
     "dev": "tsc -b --watch"
   },
