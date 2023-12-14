@@ -9,7 +9,7 @@
     "dev": "vite",
     "build": "vue-tsc && vite build --base /",
     "clean": "rm -rf ./dist",
-    "preview": "vite preview",
+    "preview": "vite preview --base /",
     "lint": "eslint --fix ."
   },
   "dependencies": {
