@@ -1,5 +1,11 @@
 # WebAuto
 
+## Dependencies
+
+### Ubuntu
+
+`sudo apt install nodejs npm protobuf-compiler`
+
 ## Installation
 
 1. `git clone https://github.com/Demon000/web-auto`
