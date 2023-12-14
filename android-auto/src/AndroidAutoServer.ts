@@ -468,7 +468,9 @@ export abstract class AndroidAutoServer {
             this.logger.error('Failed to start control service', err);
             try {
                 await this.stopServices();
+                this.logger.info('Stopping cryptor');
                 await this.cryptor.stop();
+                this.logger.info('Stopped cryptor');
                 this.frameCodec.stop();
             } catch (err) {
                 this.logger.error(
