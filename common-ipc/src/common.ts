@@ -22,11 +22,36 @@ export type IpcServiceHandler<L extends IpcService, R extends IpcClient> = R & {
     off<K extends keyof L>(name: K): void;
 };
 
-export interface IpcEvent {
-    handle: string;
-    name: string;
-    args: any[];
-}
+export type IpcEvent =
+    /* Replies unsupported. */
+    | {
+          id: number;
+          handle: string;
+          name: string;
+          args: any[];
+      }
+    | {
+          replyToId: number;
+          handle: string;
+          args: any[];
+      }
+    | {
+          replyToId: number;
+          handle: string;
+          err: string;
+      }
+    /* Replies supported. */
+    | {
+          handle: string;
+          name: string;
+          args: any[];
+      }
+    | {
+          result: any;
+      }
+    | {
+          err: string;
+      };
 
 export interface IpcServiceRegistry {
     registerIpcService<L extends IpcService, R extends IpcClient>(

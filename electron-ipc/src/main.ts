@@ -52,7 +52,7 @@ class ElectronIpcServiceHandlerHelper<L extends IpcService>
     }
 
     public send(name: string, ...args: any[]): void {
-        const ipcEvent = {
+        const ipcEvent: IpcEvent = {
             handle: this.handle,
             name,
             args,
@@ -76,12 +76,16 @@ class ElectronIpcServiceHandlerHelper<L extends IpcService>
         delete this.map[name];
     }
 
-    public handleInvoke(
+    public async handleInvoke(
         _event: IpcMainInvokeEvent,
         ipcEvent: IpcEvent,
     ): Promise<any> {
+        assert('name' in ipcEvent);
+
         const handlerFn = this.map[ipcEvent.name];
         assert(handlerFn !== undefined);
+
+        assert('args' in ipcEvent);
 
         return handlerFn(...(ipcEvent.args as any));
     }
@@ -138,16 +142,33 @@ export class ElectronIpcServiceRegistry implements IpcServiceRegistry {
         ipcMain.removeHandler(this.name);
     }
 
-    private handleInvoke(
+    private async handleInvoke(
         event: Electron.IpcMainInvokeEvent,
         ipcEvent: IpcEvent,
-    ): any {
+    ): Promise<any> {
+        assert('handle' in ipcEvent);
+
         for (const [name, ipcHandler] of this.ipcHandlers) {
             if (ipcEvent.handle !== name) {
                 continue;
             }
 
-            return ipcHandler.handleInvoke(event, ipcEvent);
+            let replyIpcEvent: IpcEvent;
+            try {
+                const result = await ipcHandler.handleInvoke(event, ipcEvent);
+                replyIpcEvent = {
+                    handle: ipcEvent.handle,
+                    result,
+                };
+            } catch (err) {
+                assert(err instanceof Error);
+                replyIpcEvent = {
+                    handle: ipcEvent.handle,
+                    err: err.message,
+                };
+            }
+
+            return replyIpcEvent;
         }
 
         throw new Error(`Unhandled IPC event for handler ${ipcEvent.handle}`);

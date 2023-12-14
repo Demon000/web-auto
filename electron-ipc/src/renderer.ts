@@ -1,4 +1,3 @@
-import type { IpcRendererEvent } from 'electron';
 import {
     ELECTRON_IPC_COMMUNICATION_CHANNEL,
     type IpcPreloadExposed,
@@ -13,30 +12,52 @@ import type {
 } from '@web-auto/common-ipc';
 
 declare const window: {
-    [ELECTRON_IPC_COMMUNICATION_CHANNEL]: IpcPreloadExposed;
+    [ELECTRON_IPC_COMMUNICATION_CHANNEL]?: IpcPreloadExposed;
 };
 
 const exposed = window[ELECTRON_IPC_COMMUNICATION_CHANNEL];
 
-export class IpcClientHandlerHelper<L extends IpcClient> {
+class IpcClientHandlerHelper<L extends IpcClient> {
     public emitter = new EventEmitter<L>();
 
     public constructor(
+        private exposed: IpcPreloadExposed,
         private channelName: string,
         private handle: string,
     ) {}
 
-    public send(name: string, ...args: any[]): Promise<any> {
-        const ipcEvent = {
+    public async send(name: string, ...args: any[]): Promise<any> {
+        const ipcEvent: IpcEvent = {
             handle: this.handle,
             name,
             args,
         };
 
-        return exposed.invoke(this.channelName, ipcEvent);
+        const replyIpcEvent = await this.exposed.invoke(
+            this.channelName,
+            ipcEvent,
+        );
+
+        if ('err' in replyIpcEvent) {
+            throw new Error(replyIpcEvent.err);
+        }
+
+        if ('result' in replyIpcEvent) {
+            return replyIpcEvent.result;
+        } else {
+            return undefined;
+        }
     }
 
-    public handleOn(_event: IpcRendererEvent, ipcEvent: IpcEvent): void {
+    public handleOn(ipcEvent: IpcEvent): void {
+        if (!('args' in ipcEvent)) {
+            throw new Error('Expected args in IPC event');
+        }
+
+        if (!('name' in ipcEvent)) {
+            throw new Error('Expected args in IPC event');
+        }
+
         this.emitter.emit(
             ipcEvent.name as EventEmitter.EventNames<L>,
             ...(ipcEvent.args as EventEmitter.EventArgs<
@@ -83,29 +104,40 @@ function createIpcServiceProxy<L extends IpcClient, R extends IpcService>(
 
 export class ElectronIpcClientRegistry implements IpcClientRegistry {
     private ipcHandlers = new Map<string, IpcClientHandlerHelper<any>>();
+    private exposed: IpcPreloadExposed;
 
     public constructor(private name: string) {
         this.handleOn = this.handleOn.bind(this);
+
+        if (exposed === undefined) {
+            throw new Error('Cannot create Electron IPC client registry');
+        }
+
+        this.exposed = exposed;
     }
 
-    public register() {
-        exposed.on(this.name, this.handleOn);
+    public async register(): Promise<void> {
+        this.exposed.on(this.name, this.handleOn);
     }
 
-    public unregister() {
-        exposed.off(this.name, this.handleOn);
+    public async unregister(): Promise<void> {
+        this.exposed.off(this.name, this.handleOn);
     }
 
     private handleOn(
-        event: Electron.IpcRendererEvent,
+        _event: Electron.IpcRendererEvent,
         ipcEvent: IpcEvent,
     ): void {
+        if (!('handle' in ipcEvent)) {
+            throw new Error('Expected handle in IPC event');
+        }
+
         for (const [name, ipcHandler] of this.ipcHandlers) {
             if (ipcEvent.handle !== name) {
                 continue;
             }
 
-            return ipcHandler.handleOn(event, ipcEvent);
+            return ipcHandler.handleOn(ipcEvent);
         }
 
         console.error(`Unhandled IPC event for handler ${ipcEvent.handle}`);
@@ -120,7 +152,11 @@ export class ElectronIpcClientRegistry implements IpcClientRegistry {
             );
         }
 
-        const ipcHandler = new IpcClientHandlerHelper<L>(this.name, handle);
+        const ipcHandler = new IpcClientHandlerHelper<L>(
+            this.exposed,
+            this.name,
+            handle,
+        );
         this.ipcHandlers.set(handle, ipcHandler);
 
         return createIpcServiceProxy(ipcHandler);
