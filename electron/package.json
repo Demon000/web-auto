@@ -9,7 +9,6 @@
     "clean": "tsc --build --clean",
     "lint": "eslint --fix .",
     "start": "electron ./dist/esm/main.js",
-    "start-debug": "electron --inspect-brk=5858 ./dist/esm/main.js",
-    "prepare": "electron-rebuild -o bluetooth-socket && electron-rebuild -o usocket"
+    "start-debug": "electron --inspect-brk=5858 ./dist/esm/main.js"
   }
 }

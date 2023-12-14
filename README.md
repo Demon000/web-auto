@@ -14,7 +14,11 @@
 4. Open the `config.json5` file and configure it
 5. `npm install`
 6. `npm run build`
-7. `npm run start-electron`
+
+### Electron
+
+1. `npm run prepare-electron`
+2. `npm run start-electron`
 
 ## Features
 

@@ -19,7 +19,8 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "start-electron": "npm run start -w electron",
-    "prepare": "ts-patch install && npx typia patch && npm run prepare -w=electron",
+    "prepare-electron": "electron-rebuild -m node_modules/bluetooth-socket && electron-rebuild -m node_modules/usocket",
+    "prepare": "ts-patch install && npx typia patch",
     "dev": "tsc -b --watch"
   },
   "dependencies": {
