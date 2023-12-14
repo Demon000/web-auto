@@ -94,17 +94,25 @@ const onCodecConfig = (data: VideoCodecConfig) => {
 };
 
 const showProjection = async () => {
-    await androidAutoVideoService.sendVideoFocusNotification({
-        focus: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
-        unsolicited: true,
-    });
+    try {
+        await androidAutoVideoService.sendVideoFocusNotification({
+            focus: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
+            unsolicited: true,
+        });
+    } catch (err) {
+        console.error(err);
+    }
 };
 
 const showNative = async () => {
-    await androidAutoVideoService.sendVideoFocusNotification({
-        focus: VideoFocusMode.VIDEO_FOCUS_NATIVE,
-        unsolicited: true,
-    });
+    try {
+        await androidAutoVideoService.sendVideoFocusNotification({
+            focus: VideoFocusMode.VIDEO_FOCUS_NATIVE,
+            unsolicited: true,
+        });
+    } catch (err) {
+        console.error(err);
+    }
 };
 
 const onAfterSetup = async () => {
