@@ -30,7 +30,7 @@
 
 #### Web
 
-1. `cp web/.env.local.default web/.env.default`
+1. `cp web/.env.local.default web/.env.local`
 2. Open the `web/.env.default` file and configure it with the same parameters as
    `nodeAndroidAuto.webSocketServer` from `config.json`.
 3. `npm run start-web`
