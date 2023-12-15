@@ -23,34 +23,30 @@ export type IpcServiceHandler<L extends IpcService, R extends IpcClient> = R & {
 };
 
 export type IpcEvent =
-    /* Replies unsupported. */
+    /* Client to server call */
     | {
           id: number;
           handle: string;
           name: string;
           args: any[];
       }
+    /* Server to client response */
     | {
           replyToId: number;
           handle: string;
-          args: any[];
+          result: any;
       }
+    /* Server to client error */
     | {
           replyToId: number;
           handle: string;
           err: string;
       }
-    /* Replies supported. */
+    /* Server to client message */
     | {
           handle: string;
           name: string;
           args: any[];
-      }
-    | {
-          result: any;
-      }
-    | {
-          err: string;
       };
 
 export interface IpcServiceRegistry {

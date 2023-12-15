@@ -76,10 +76,7 @@ class ElectronIpcServiceHandlerHelper<L extends IpcService>
         delete this.map[name];
     }
 
-    public async handleInvoke(
-        _event: IpcMainInvokeEvent,
-        ipcEvent: IpcEvent,
-    ): Promise<any> {
+    public async handleMessage(ipcEvent: IpcEvent): Promise<any> {
         assert('name' in ipcEvent);
 
         const handlerFn = this.map[ipcEvent.name];
@@ -135,18 +132,19 @@ export class ElectronIpcServiceRegistry implements IpcServiceRegistry {
     public constructor(private name: string) {}
 
     public register() {
-        ipcMain.handle(this.name, this.handleInvoke.bind(this));
+        ipcMain.on(this.name, this.handleMessage.bind(this));
     }
 
     public unregister() {
         ipcMain.removeHandler(this.name);
     }
 
-    private async handleInvoke(
+    private async handleMessage(
         event: Electron.IpcMainInvokeEvent,
         ipcEvent: IpcEvent,
     ): Promise<any> {
         assert('handle' in ipcEvent);
+        assert('id' in ipcEvent);
 
         for (const [name, ipcHandler] of this.ipcHandlers) {
             if (ipcEvent.handle !== name) {
@@ -155,20 +153,24 @@ export class ElectronIpcServiceRegistry implements IpcServiceRegistry {
 
             let replyIpcEvent: IpcEvent;
             try {
-                const result = await ipcHandler.handleInvoke(event, ipcEvent);
+                const result = await ipcHandler.handleMessage(ipcEvent);
                 replyIpcEvent = {
+                    replyToId: ipcEvent.id,
                     handle: ipcEvent.handle,
                     result,
                 };
             } catch (err) {
                 assert(err instanceof Error);
                 replyIpcEvent = {
+                    replyToId: ipcEvent.id,
                     handle: ipcEvent.handle,
                     err: err.message,
                 };
             }
 
-            return replyIpcEvent;
+            event.sender.send(this.name, replyIpcEvent);
+
+            return;
         }
 
         throw new Error(`Unhandled IPC event for handler ${ipcEvent.handle}`);

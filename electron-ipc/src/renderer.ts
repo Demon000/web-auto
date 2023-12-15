@@ -19,6 +19,8 @@ const exposed = window[ELECTRON_IPC_COMMUNICATION_CHANNEL];
 
 class IpcClientHandlerHelper<L extends IpcClient> {
     public emitter = new EventEmitter<L>();
+    private callbacksMap = new Map<number, (ipcEvent: IpcEvent) => void>();
+    private id = 0;
 
     public constructor(
         private exposed: IpcPreloadExposed,
@@ -26,45 +28,65 @@ class IpcClientHandlerHelper<L extends IpcClient> {
         private handle: string,
     ) {}
 
-    public async send(name: string, ...args: any[]): Promise<any> {
+    private getId(): number {
+        if (this.id >= Number.MAX_SAFE_INTEGER) {
+            this.id = 0;
+        }
+
+        return this.id++;
+    }
+
+    public send(name: string, ...args: any[]): Promise<any> {
+        const id = this.getId();
         const ipcEvent: IpcEvent = {
+            id,
             handle: this.handle,
             name,
             args,
         };
 
-        const replyIpcEvent = await this.exposed.invoke(
-            this.channelName,
-            ipcEvent,
-        );
+        return new Promise((resolve, reject) => {
+            this.exposed.send(this.channelName, ipcEvent);
 
-        if ('err' in replyIpcEvent) {
-            throw new Error(replyIpcEvent.err);
-        }
+            this.callbacksMap.set(id, (replyIpcEvent) => {
+                this.callbacksMap.delete(id);
 
-        if ('result' in replyIpcEvent) {
-            return replyIpcEvent.result;
-        } else {
-            return undefined;
-        }
+                if ('err' in replyIpcEvent) {
+                    reject(new Error(replyIpcEvent.err));
+                    return;
+                }
+
+                if ('result' in replyIpcEvent) {
+                    resolve(replyIpcEvent.result);
+                } else {
+                    resolve(undefined);
+                }
+            });
+        });
     }
 
     public handleOn(ipcEvent: IpcEvent): void {
-        if (!('args' in ipcEvent)) {
-            throw new Error('Expected args in IPC event');
-        }
+        if ('replyToId' in ipcEvent) {
+            const callback = this.callbacksMap.get(ipcEvent.replyToId);
+            if (callback === undefined) {
+                throw new Error(`Unhandled reply for id ${ipcEvent.replyToId}`);
+            }
 
-        if (!('name' in ipcEvent)) {
-            throw new Error('Expected args in IPC event');
-        }
+            callback(ipcEvent);
+        } else {
+            if (!('args' in ipcEvent)) {
+                console.error('Expected args in IPC event', ipcEvent);
+                return;
+            }
 
-        this.emitter.emit(
-            ipcEvent.name as EventEmitter.EventNames<L>,
-            ...(ipcEvent.args as EventEmitter.EventArgs<
-                L,
-                EventEmitter.EventNames<L>
-            >),
-        );
+            this.emitter.emit(
+                ipcEvent.name as EventEmitter.EventNames<L>,
+                ...(ipcEvent.args as EventEmitter.EventArgs<
+                    L,
+                    EventEmitter.EventNames<L>
+                >),
+            );
+        }
     }
 }
 
@@ -129,7 +151,8 @@ export class ElectronIpcClientRegistry implements IpcClientRegistry {
         ipcEvent: IpcEvent,
     ): void {
         if (!('handle' in ipcEvent)) {
-            throw new Error('Expected handle in IPC event');
+            console.error('Expected handle in IPC event', ipcEvent);
+            return;
         }
 
         for (const [name, ipcHandler] of this.ipcHandlers) {
