@@ -24,7 +24,7 @@
     "start-electron": "npm run start -w electron",
     "start-node": "npm run start -w node",
     "start-web": "npm run start -w web",
-    "prepare-electron": "electron-rebuild -m node_modules/bluetooth-socket && electron-rebuild -m node_modules/usocket",
+    "prepare-electron": "electron-rebuild -f -m node_modules/bluetooth-socket && electron-rebuild -f -m node_modules/usocket",
     "prepare-node": "npm rebuild",
     "prepare": "ts-patch install && npx typia patch",
     "dev": "tsc -b --watch"
