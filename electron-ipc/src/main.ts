@@ -193,7 +193,7 @@ export class ElectronIpcServiceRegistry implements IpcServiceRegistry {
     }
 
     public attachWindow(window: BrowserWindow): void {
-        for (const ipcHandler of this.ipcHandlers) {
+        for (const ipcHandler of this.ipcHandlers.values()) {
             ipcHandler.attachWindow(window);
         }
     }
