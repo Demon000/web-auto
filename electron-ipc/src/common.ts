@@ -11,5 +11,6 @@ export type IpcPreloadOnOffCallback = (
 export interface IpcPreloadExposed {
     on: (name: string, cb: IpcPreloadOnOffCallback) => void;
     off: (name: string, cb: IpcPreloadOnOffCallback) => void;
+    send: (name: string, ipcEvent: IpcEvent) => void;
     invoke: (name: string, ipcEvent: IpcEvent) => Promise<IpcEvent>;
 }

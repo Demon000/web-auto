@@ -1,15 +1,16 @@
+import type { IpcRendererEvent } from 'electron';
 import {
     ELECTRON_IPC_COMMUNICATION_CHANNEL,
     type IpcPreloadExposed,
 } from './common.js';
-import { EventEmitter } from 'eventemitter3';
-import type {
-    IpcClient,
-    IpcClientHandler,
-    IpcClientRegistry,
-    IpcEvent,
-    IpcService,
+import {
+    IpcMessenger,
+    type IpcSocket,
+    type IpcSocketDataCallback,
+    DummyIpcSerializer,
 } from '@web-auto/common-ipc';
+
+import { GenericIpcClientRegistry } from '@web-auto/common-ipc/renderer.js';
 
 declare const window: {
     [ELECTRON_IPC_COMMUNICATION_CHANNEL]?: IpcPreloadExposed;
@@ -17,155 +18,68 @@ declare const window: {
 
 const exposed = window[ELECTRON_IPC_COMMUNICATION_CHANNEL];
 
-class IpcClientHandlerHelper<L extends IpcClient> {
-    public emitter = new EventEmitter<L>();
-
-    public constructor(
-        private exposed: IpcPreloadExposed,
-        private channelName: string,
-        private handle: string,
-    ) {}
-
-    public async send(name: string, ...args: any[]): Promise<any> {
-        const ipcEvent: IpcEvent = {
-            handle: this.handle,
-            name,
-            args,
-        };
-
-        const replyIpcEvent = await this.exposed.invoke(
-            this.channelName,
-            ipcEvent,
-        );
-
-        if ('err' in replyIpcEvent) {
-            throw new Error(replyIpcEvent.err);
-        }
-
-        if ('result' in replyIpcEvent) {
-            return replyIpcEvent.result;
-        } else {
-            return undefined;
-        }
-    }
-
-    public handleOn(ipcEvent: IpcEvent): void {
-        if (!('args' in ipcEvent)) {
-            throw new Error('Expected args in IPC event');
-        }
-
-        if (!('name' in ipcEvent)) {
-            throw new Error('Expected args in IPC event');
-        }
-
-        this.emitter.emit(
-            ipcEvent.name as EventEmitter.EventNames<L>,
-            ...(ipcEvent.args as EventEmitter.EventArgs<
-                L,
-                EventEmitter.EventNames<L>
-            >),
-        );
-    }
-}
-
-function createIpcServiceProxy<L extends IpcClient, R extends IpcService>(
-    ipcHandler: IpcClientHandlerHelper<L>,
-): IpcClientHandler<L, R> {
-    return new Proxy(
-        {},
-        {
-            get(_target, property) {
-                if (typeof property === 'symbol') {
-                    throw new Error(
-                        `Cannot send symbol ${String(property)} via IPC`,
-                    );
-                }
-
-                return new Proxy(() => {}, {
-                    apply(_target, _thisArg, args) {
-                        switch (property) {
-                            case 'on':
-                            case 'off':
-                            case 'once':
-                                return Reflect.apply(
-                                    ipcHandler.emitter[property],
-                                    ipcHandler.emitter,
-                                    args,
-                                );
-                        }
-
-                        return ipcHandler.send(property, ...args);
-                    },
-                });
-            },
-        },
-    ) as IpcClientHandler<L, R>;
-}
-
-export class ElectronIpcClientRegistry implements IpcClientRegistry {
-    private ipcHandlers = new Map<string, IpcClientHandlerHelper<any>>();
-    private exposed: IpcPreloadExposed;
+class ElectronIpcSocket implements IpcSocket {
+    private dataCallback?: IpcSocketDataCallback;
 
     public constructor(private name: string) {
-        this.handleOn = this.handleOn.bind(this);
+        this.onDataInternal = this.onDataInternal.bind(this);
+    }
 
+    public async open(): Promise<void> {
         if (exposed === undefined) {
-            throw new Error('Cannot create Electron IPC client registry');
+            throw new Error('IPC communication not exposed');
         }
 
-        this.exposed = exposed;
+        exposed.on(this.name, this.onDataInternal);
     }
 
-    public async register(): Promise<void> {
-        this.exposed.on(this.name, this.handleOn);
-    }
-
-    public async unregister(): Promise<void> {
-        this.exposed.off(this.name, this.handleOn);
-    }
-
-    private handleOn(
-        _event: Electron.IpcRendererEvent,
-        ipcEvent: IpcEvent,
-    ): void {
-        if (!('handle' in ipcEvent)) {
-            throw new Error('Expected handle in IPC event');
+    public onDataInternal(_event: IpcRendererEvent, data: any): void {
+        if (this.dataCallback === undefined) {
+            console.error('Received data without callback', data);
+            return;
         }
 
-        for (const [name, ipcHandler] of this.ipcHandlers) {
-            if (ipcEvent.handle !== name) {
-                continue;
-            }
-
-            return ipcHandler.handleOn(ipcEvent);
-        }
-
-        console.error(`Unhandled IPC event for handler ${ipcEvent.handle}`);
+        this.dataCallback(data);
     }
 
-    public registerIpcClient<L extends IpcClient, R extends IpcService>(
-        handle: string,
-    ): IpcClientHandler<L, R> {
-        if (this.ipcHandlers.has(handle)) {
-            throw new Error(
-                `IPC handler for handle ${handle} already registered`,
-            );
+    public async close(): Promise<void> {
+        if (exposed === undefined) {
+            throw new Error('IPC communication not exposed');
         }
 
-        const ipcHandler = new IpcClientHandlerHelper<L>(
-            this.exposed,
-            this.name,
-            handle,
-        );
-        this.ipcHandlers.set(handle, ipcHandler);
-
-        return createIpcServiceProxy(ipcHandler);
+        exposed.off(this.name, this.onDataInternal);
     }
-    public unregisterIpcClient(handle: string): void {
-        if (!this.ipcHandlers.has(handle)) {
-            throw new Error(`IPC handler for handle ${handle} not registered`);
+
+    public send(data: any): void {
+        if (exposed === undefined) {
+            throw new Error('IPC communication not exposed');
         }
 
-        this.ipcHandlers.delete(handle);
+        exposed.send(this.name, data);
+    }
+
+    public onData(callback: IpcSocketDataCallback): void {
+        if (this.dataCallback !== undefined) {
+            throw new Error('Cannot attach data callback twice');
+        }
+
+        this.dataCallback = callback;
+    }
+
+    public offData(): void {
+        if (this.dataCallback === undefined) {
+            throw new Error('Cannot detach data callback twice');
+        }
+
+        this.dataCallback = undefined;
+    }
+}
+
+export class SocketIpcClientRegistry extends GenericIpcClientRegistry {
+    public constructor(name: string) {
+        const socket = new ElectronIpcSocket(name);
+        const serializer = new DummyIpcSerializer();
+        const messenger = new IpcMessenger(serializer, socket);
+        super(messenger);
     }
 }

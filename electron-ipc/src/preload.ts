@@ -9,6 +9,7 @@ export const expose = () => {
         on: (name, cb) => ipcRenderer.on(name, cb),
         off: (name, cb) => ipcRenderer.off(name, cb),
         invoke: (name, ipcEvent) => ipcRenderer.invoke(name, ipcEvent),
+        send: (name, ipcEvent) => ipcRenderer.send(name, ipcEvent),
     };
 
     contextBridge.exposeInMainWorld(
