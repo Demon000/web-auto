@@ -46,9 +46,9 @@ import type {
     IVideoConfiguration,
 } from '@web-auto/android-auto-proto/interfaces.js';
 import type {
-    IpcServiceHandler,
     IpcServiceRegistry,
-} from '@web-auto/common-ipc';
+    IpcServiceHandler,
+} from '@web-auto/common-ipc/main.js';
 
 export interface NodeAndroidAutoServerConfig extends AndroidAutoServerConfig {
     cryptorConfig: NodeCryptorConfig;

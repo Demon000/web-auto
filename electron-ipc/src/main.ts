@@ -1,202 +1,78 @@
-import { BrowserWindow, ipcMain, type IpcMainInvokeEvent } from 'electron';
 import {
-    type IpcEvent,
-    type IpcClient,
-    type IpcService,
-    type IpcServiceHandler,
-    type IpcServiceRegistry,
-} from '@web-auto/common-ipc';
-import assert from 'node:assert';
+    BrowserWindow,
+    ipcMain,
+    type IpcMainEvent,
+    type WebContents,
+} from 'electron';
+import { DummyIpcSerializer, BaseIpcSocket } from '@web-auto/common-ipc';
+import {
+    BaseIpcServiceRegistrySocketHandler,
+    GenericIpcServiceRegistry,
+} from '@web-auto/common-ipc/main.js';
 
-export type ElectronIpcServiceHandlerExtra = {
-    attachWindow(window: BrowserWindow): void;
-    detachWindow(window: BrowserWindow): void;
-};
-
-export type ElectronIpcServiceHandler<
-    L extends IpcService,
-    R extends IpcClient,
-> = IpcServiceHandler<L, R> & ElectronIpcServiceHandlerExtra;
-
-class ElectronIpcServiceHandlerHelper<L extends IpcService>
-    implements ElectronIpcServiceHandlerExtra
-{
-    private map: Partial<L> = {};
-
-    private windows: BrowserWindow[] = [];
-
+class ElectronServiceIpcSocket extends BaseIpcSocket {
     public constructor(
         private channelName: string,
-        private handle: string,
-    ) {}
+        private webContents: WebContents,
+    ) {
+        super();
+
+        this.onDataInternal = this.onDataInternal.bind(this);
+        this.onCloseInternal = this.onCloseInternal.bind(this);
+    }
+
+    public async open(): Promise<void> {
+        ipcMain.on(this.channelName, this.onDataInternal);
+        this.webContents.once('destroyed', this.onCloseInternal);
+    }
+
+    public async close(): Promise<void> {
+        ipcMain.off(this.channelName, this.onDataInternal);
+    }
+
+    public onDataInternal(event: IpcMainEvent, data: any): void {
+        if (event.sender !== this.webContents) {
+            return;
+        }
+
+        this.callOnData(data);
+    }
+
+    public onCloseInternal(): void {
+        this.callOnClose();
+    }
+
+    public send(data: any): void {
+        this.webContents.send(this.channelName, data);
+    }
+}
+
+export class ElectronIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistrySocketHandler {
+    public constructor(name: string) {
+        super(name);
+    }
 
     public attachWindow(window: BrowserWindow): void {
-        if (this.windows.includes(window)) {
-            return;
-        }
-
-        window.webContents.once('destroyed', () => {
-            this.detachWindow(window);
-        });
-
-        this.windows.push(window);
-    }
-
-    public detachWindow(window: BrowserWindow): void {
-        const index = this.windows.findIndex((w) => w == window);
-        if (index === -1) {
-            return;
-        }
-
-        this.windows.splice(index, 1);
-    }
-
-    public send(name: string, ...args: any[]): void {
-        const ipcEvent: IpcEvent = {
-            handle: this.handle,
-            name,
-            args,
-        };
-
-        for (const window of this.windows) {
-            window.webContents.send(this.channelName, ipcEvent);
-        }
-    }
-
-    public on<K extends keyof L, F extends L[K]>(
-        name: K,
-        cb: (...args: Parameters<F>) => ReturnType<F>,
-    ): void {
-        assert(!(name in this.map));
-        this.map[name] = cb as any;
-    }
-
-    public off<K extends keyof L>(name: K): void {
-        assert(name in this.map);
-        delete this.map[name];
-    }
-
-    public async handleMessage(ipcEvent: IpcEvent): Promise<any> {
-        assert('name' in ipcEvent);
-
-        const handlerFn = this.map[ipcEvent.name];
-        assert(handlerFn !== undefined);
-
-        assert('args' in ipcEvent);
-
-        return handlerFn(...(ipcEvent.args as any));
-    }
-}
-
-function createIpcClientProxy<L extends IpcService, R extends IpcClient>(
-    ipcHandler: ElectronIpcServiceHandlerHelper<L>,
-): ElectronIpcServiceHandler<L, R> {
-    return new Proxy(
-        {},
-        {
-            get(_target, property) {
-                if (typeof property === 'symbol') {
-                    throw new Error(
-                        `Cannot send symbol ${String(property)} via IPC`,
-                    );
-                }
-
-                return new Proxy(() => {}, {
-                    apply(_target, _thisArg, args) {
-                        switch (property) {
-                            case 'attachWindow':
-                            case 'detachWindow':
-                            case 'on':
-                            case 'off':
-                                return Reflect.apply(
-                                    ipcHandler[property],
-                                    ipcHandler,
-                                    args,
-                                );
-                        }
-
-                        return ipcHandler.send(property, ...args);
-                    },
-                });
-            },
-        },
-    ) as ElectronIpcServiceHandler<L, R>;
-}
-
-export class ElectronIpcServiceRegistry implements IpcServiceRegistry {
-    private ipcHandlers = new Map<
-        string,
-        ElectronIpcServiceHandlerHelper<any>
-    >();
-
-    public constructor(private name: string) {}
-
-    public register() {
-        ipcMain.on(this.name, this.handleMessage.bind(this));
-    }
-
-    public unregister() {
-        ipcMain.removeHandler(this.name);
-    }
-
-    private async handleMessage(
-        event: Electron.IpcMainInvokeEvent,
-        ipcEvent: IpcEvent,
-    ): Promise<any> {
-        assert('handle' in ipcEvent);
-        assert('id' in ipcEvent);
-
-        for (const [name, ipcHandler] of this.ipcHandlers) {
-            if (ipcEvent.handle !== name) {
-                continue;
-            }
-
-            let replyIpcEvent: IpcEvent;
-            try {
-                const result = await ipcHandler.handleMessage(ipcEvent);
-                replyIpcEvent = {
-                    replyToId: ipcEvent.id,
-                    handle: ipcEvent.handle,
-                    result,
-                };
-            } catch (err) {
-                assert(err instanceof Error);
-                replyIpcEvent = {
-                    replyToId: ipcEvent.id,
-                    handle: ipcEvent.handle,
-                    err: err.message,
-                };
-            }
-
-            event.sender.send(this.name, replyIpcEvent);
-
-            return;
-        }
-
-        throw new Error(`Unhandled IPC event for handler ${ipcEvent.handle}`);
-    }
-
-    public registerIpcService<L extends IpcService, R extends IpcClient>(
-        handle: string,
-    ): ElectronIpcServiceHandler<L, R> {
-        assert(!this.ipcHandlers.has(handle));
-        const ipcHandler = new ElectronIpcServiceHandlerHelper<L>(
+        const socket = new ElectronServiceIpcSocket(
             this.name,
-            handle,
+            window.webContents,
         );
-        this.ipcHandlers.set(handle, ipcHandler);
 
-        return createIpcClientProxy(ipcHandler);
+        this.addSocket(socket);
     }
+}
 
-    public unregisterIpcService(handle: string): void {
-        assert(this.ipcHandlers.has(handle));
-        this.ipcHandlers.delete(handle);
+export class ElectronIpcServiceRegistry extends GenericIpcServiceRegistry {
+    protected socketHandler: ElectronIpcServiceRegistrySocketHandler;
+
+    public constructor(name: string) {
+        const socketHandler = new ElectronIpcServiceRegistrySocketHandler(name);
+        const serializer = new DummyIpcSerializer();
+        super(socketHandler, serializer);
+        this.socketHandler = socketHandler;
     }
 
     public attachWindow(window: BrowserWindow): void {
-        for (const ipcHandler of this.ipcHandlers.values()) {
-            ipcHandler.attachWindow(window);
-        }
+        this.socketHandler.attachWindow(window);
     }
 }

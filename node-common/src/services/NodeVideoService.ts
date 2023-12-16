@@ -30,7 +30,7 @@ import {
     h265ParseConfiguration,
     h265ParseNaluHeader,
 } from '@yume-chan/scrcpy';
-import type { IpcServiceHandler } from '@web-auto/common-ipc';
+import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 
 enum CodecState {
     STOPPED,

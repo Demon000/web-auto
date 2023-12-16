@@ -6,7 +6,9 @@
   "type": "module",
   "types": "./dist/esm/index.d.ts",
   "exports": {
-    ".": "./dist/esm/common.js"
+    ".": "./dist/esm/common.js",
+    "./renderer.js": "./dist/esm/renderer.js",
+    "./main.js": "./dist/esm/main.js"
   },
   "scripts": {
     "build": "tsc",

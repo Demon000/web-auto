@@ -1,5 +1,3 @@
-import type { EventEmitter } from 'eventemitter3';
-
 export type IpcServiceFunction = (...args: any[]) => Promise<any>;
 export type IpcClientFunction = (...args: any[]) => void;
 
@@ -9,17 +7,6 @@ export type IpcService = {
 
 export type IpcClient = {
     [key: string]: IpcClientFunction;
-};
-
-export type IpcClientHandler<L extends IpcClient, R extends IpcService> = R &
-    Pick<EventEmitter<L>, 'on' | 'off' | 'once'>;
-
-export type IpcServiceHandler<L extends IpcService, R extends IpcClient> = R & {
-    on<K extends keyof L, F extends L[K]>(
-        name: K,
-        cb: (...args: Parameters<F>) => ReturnType<F>,
-    ): void;
-    off<K extends keyof L>(name: K): void;
 };
 
 export type IpcEvent =
@@ -49,15 +36,88 @@ export type IpcEvent =
           args: any[];
       };
 
-export interface IpcServiceRegistry {
-    registerIpcService<L extends IpcService, R extends IpcClient>(
-        handle: string,
-    ): IpcServiceHandler<L, R>;
+export interface IpcSerializer {
+    serialize(ipcEvent: IpcEvent): any;
+    deserialize(data: any): IpcEvent;
 }
 
-export interface IpcClientRegistry {
-    registerIpcClient<L extends IpcClient, R extends IpcService>(
-        handle: string,
-    ): IpcClientHandler<L, R>;
-    unregisterIpcClient(handle: string): void;
+export type IpcSocketDataCallback = (socket: IpcSocket, data: any) => void;
+export type IpcSocketCloseCallback = (socket: IpcSocket) => void;
+export type IpcSocket = {
+    send(data: any): void;
+    open(): Promise<void>;
+    close(): Promise<void>;
+    onData(callback: IpcSocketDataCallback): void;
+    offData(): void;
+    onClose(callback: IpcSocketCloseCallback): void;
+    offClose(): void;
+};
+
+export abstract class BaseIpcSocket implements IpcSocket {
+    protected dataCallback?: IpcSocketDataCallback;
+    protected closeCallback?: IpcSocketCloseCallback;
+
+    public abstract send(data: any): void;
+    public abstract open(): Promise<void>;
+    public abstract close(): Promise<void>;
+
+    public callOnData(data: any): void {
+        if (this.dataCallback === undefined) {
+            throw new Error('Received data without callback');
+        }
+
+        this.dataCallback(this, data);
+    }
+
+    public callOnClose(): void {
+        if (this.closeCallback === undefined) {
+            throw new Error('Received close without callback');
+        }
+
+        this.closeCallback(this);
+    }
+
+    public onData(callback: IpcSocketDataCallback): void {
+        if (this.dataCallback !== undefined) {
+            throw new Error('Cannot attach data callback twice');
+        }
+
+        this.dataCallback = callback;
+    }
+
+    public offData(): void {
+        if (this.dataCallback === undefined) {
+            throw new Error('Cannot detach unattached data callback');
+        }
+
+        this.dataCallback = undefined;
+    }
+
+    public onClose(callback: IpcSocketCloseCallback): void {
+        if (this.closeCallback !== undefined) {
+            throw new Error('Cannot attach close callback twice');
+        }
+
+        this.closeCallback = callback;
+    }
+
+    public offClose(): void {
+        if (this.closeCallback === undefined) {
+            throw new Error('Cannot detach unattached close callback');
+        }
+
+        this.closeCallback = undefined;
+    }
+}
+
+export class DummyIpcSerializer implements IpcSerializer {
+    public constructor() {}
+
+    public serialize(ipcEvent: IpcEvent): any {
+        return ipcEvent;
+    }
+
+    public deserialize(data: any): IpcEvent {
+        return data as IpcEvent;
+    }
 }
