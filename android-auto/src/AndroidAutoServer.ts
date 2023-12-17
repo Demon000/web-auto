@@ -8,7 +8,11 @@ import {
     type DeviceHandlerEvents,
 } from './transport/DeviceHandler.js';
 import { getLogger } from '@web-auto/logging';
-import { Device, DeviceState } from './transport/Device.js';
+import {
+    Device,
+    DeviceDisconnectReason,
+    DeviceState,
+} from './transport/Device.js';
 import {
     ANDROID_AUTO_CERTIFICATE,
     ANDROID_AUTO_PRIVATE_KEY,
@@ -584,7 +588,10 @@ export abstract class AndroidAutoServer {
             this.logger.info('Started dependencies');
         } catch (err) {
             this.logger.error('Failed to start dependencies', err);
-            await this.disconnectDeviceInternal(device, true);
+            await this.disconnectDeviceInternal(
+                device,
+                DeviceDisconnectReason.START_FAILED,
+            );
         }
 
         release();
@@ -592,11 +599,11 @@ export abstract class AndroidAutoServer {
 
     public async disconnectDeviceInternal(
         device: Device,
-        startFailed?: boolean,
+        reason?: string,
     ): Promise<void> {
         this.logger.info(`Disconnecting device ${device.name}`);
         try {
-            await device.disconnect();
+            await device.disconnect(reason);
         } catch (err) {
             this.logger.error(
                 `Failed to disconnect device ${device.name}`,
@@ -608,7 +615,7 @@ export abstract class AndroidAutoServer {
         this.connectedDevice = undefined;
         this.onDeviceDisconnectedCallback();
 
-        if (!startFailed) {
+        if (reason !== DeviceDisconnectReason.START_FAILED) {
             this.logger.info('Stopping dependencies');
             try {
                 await this.stopDependencies();
@@ -620,7 +627,10 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    public async disconnectDevice(device: Device): Promise<void> {
+    public async disconnectDevice(
+        device: Device,
+        reason?: string,
+    ): Promise<void> {
         if (!this.isDeviceConnected(device)) {
             this.logger.info(
                 `Cannot disconnect ${device.name}, ` +
@@ -630,7 +640,7 @@ export abstract class AndroidAutoServer {
         }
 
         const release = await this.connectionLock.acquire();
-        await this.disconnectDeviceInternal(device);
+        await this.disconnectDeviceInternal(device, reason);
         release();
     }
 

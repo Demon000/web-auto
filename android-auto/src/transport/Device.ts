@@ -23,6 +23,7 @@ export interface DeviceEvents {
 export enum DeviceDisconnectReason {
     TRANSPORT = 'transport-disconnected',
     USER = 'user-requested',
+    START_FAILED = 'start-failed',
 }
 
 export abstract class Device {
