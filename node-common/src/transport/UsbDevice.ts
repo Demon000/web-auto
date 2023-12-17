@@ -11,12 +11,16 @@ import { DuplexTransport } from './DuplexTransport.js';
 export const usbDeviceName = (device: USBDevice) => {
     let name;
 
-    if (device.productName !== undefined) {
+    if (device.productName !== undefined && device.productName.length !== 0) {
         name = device.productName;
-    } else if (device.manufacturerName !== undefined) {
+    } else if (
+        device.manufacturerName !== undefined &&
+        device.manufacturerName.length !== 0
+    ) {
         name = device.manufacturerName;
     } else {
-        name = `${device.vendorId}:${device.productId}`;
+        const toHex = (n: number) => n.toString(16).padStart(4, '0');
+        name = `${toHex(device.vendorId)}:${toHex(device.productId)}`;
     }
 
     return name;

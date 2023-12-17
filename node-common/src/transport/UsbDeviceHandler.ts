@@ -49,7 +49,7 @@ export class UsbDeviceHandler extends DeviceHandler {
     private async handleConnectedAoapDevice(
         usbDevice: USBDevice,
     ): Promise<void> {
-        this.logger.debug(`Found device ${name(usbDevice)} with AA`);
+        this.logger.info(`Found device ${name(usbDevice)} with AA`);
 
         const device = new UsbDevice(usbDevice, this.getDeviceEvents());
         this.usbDeviceMap.set(usbDevice, device);
@@ -71,7 +71,7 @@ export class UsbDeviceHandler extends DeviceHandler {
                     ignoredDevice[0] === device.vendorId &&
                     ignoredDevice[1] === device.productId
                 ) {
-                    this.logger.debug(`Ignoring device ${name(device)}`);
+                    this.logger.info(`Ignoring device ${name(device)}`);
                     return;
                 }
             }
@@ -135,6 +135,10 @@ export class UsbDeviceHandler extends DeviceHandler {
 
         const aoapDevices = await this.usb.getDevices();
         for (const device of aoapDevices) {
+            this.logger.info(
+                `Processing already connected device ${name(device)}`,
+            );
+
             if (this.isDeviceAoap(device)) {
                 if (
                     this.config.handleAlreadyConnectedDevices !== undefined &&
