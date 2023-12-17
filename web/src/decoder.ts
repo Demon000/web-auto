@@ -6,6 +6,8 @@ import {
 import { androidAutoVideoService } from './ipc.ts';
 import { VideoFocusMode } from '@web-auto/android-auto-proto';
 
+let acceptData = false;
+
 export const decoderWorker = new Worker(
     new URL('./codec/DecoderWorker.ts', import.meta.url),
     {
@@ -55,9 +57,14 @@ const onFirstFrameData = (buffer: Uint8Array) => {
         type: DecoderWorkerMessageType.DECODE_KEYFRAME,
         data: buffer,
     });
+    acceptData = true;
 };
 
 const onFrameData = (buffer: Uint8Array) => {
+    if (!acceptData) {
+        return;
+    }
+
     decoderWorker.postMessage({
         type: DecoderWorkerMessageType.DECODE_DELTA,
         data: buffer,
@@ -65,6 +72,7 @@ const onFrameData = (buffer: Uint8Array) => {
 };
 
 const onStop = () => {
+    acceptData = false;
     decoderWorker.postMessage({
         type: DecoderWorkerMessageType.RESET_DECODER,
     });
@@ -75,10 +83,6 @@ const onCodecConfig = (data: VideoCodecConfig) => {
         type: DecoderWorkerMessageType.CONFIGURE_DECODER,
         codec: data.codec,
     });
-
-    androidAutoVideoService.on('firstFrame', onFirstFrameData);
-    androidAutoVideoService.on('data', onFrameData);
-    androidAutoVideoService.on('stop', onStop);
 };
 
 androidAutoVideoService.isSetup().then((isSetup) => {
@@ -93,3 +97,6 @@ androidAutoVideoService.isSetup().then((isSetup) => {
 
 androidAutoVideoService.on('afterSetup', onAfterSetup);
 androidAutoVideoService.on('codecConfig', onCodecConfig);
+androidAutoVideoService.on('firstFrame', onFirstFrameData);
+androidAutoVideoService.on('data', onFrameData);
+androidAutoVideoService.on('stop', onStop);
