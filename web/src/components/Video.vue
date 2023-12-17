@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { androidAutoInputService } from '../ipc.js';
+import { androidAutoInputService, androidAutoVideoService } from '../ipc.js';
 import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 import { transformFittedPoint } from 'object-fit-math';
 import type { FitMode } from 'object-fit-math/dist/types.d.ts';
-import { PointerAction } from '@web-auto/android-auto-proto';
+import { PointerAction, VideoFocusMode } from '@web-auto/android-auto-proto';
 import { decoderWorker } from '../decoder.js';
 import { DecoderWorkerMessageType } from '../codec/DecoderWorkerMessages.js';
 
@@ -38,6 +38,21 @@ const onCanvasResized = (entries: ResizeObserverEntry[]) => {
     canvasObjectPosition = objectPositionSplit as [string, string];
 };
 
+const onFocusMode = async (
+    focusMode: VideoFocusMode | undefined,
+): Promise<void> => {
+    if (focusMode === undefined) {
+        return;
+    }
+
+    if (focusMode === VideoFocusMode.VIDEO_FOCUS_NATIVE) {
+        await androidAutoVideoService.sendVideoFocusNotification({
+            focus: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
+            unsolicited: true,
+        });
+    }
+};
+
 onMounted(async () => {
     const canvas = canvasRef.value;
     if (canvas === undefined) {
@@ -56,6 +71,8 @@ onMounted(async () => {
         },
         [offscreenCanvas],
     );
+
+    androidAutoVideoService.focusMode().then(onFocusMode);
 });
 
 onBeforeUnmount(async () => {

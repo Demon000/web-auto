@@ -31,10 +31,6 @@ const initialize = async () => {
     await mediaStatusStore.initialize();
 
     app.mount('#app');
-
-    await router.replace({
-        name: 'home',
-    });
 };
 
 initialize();

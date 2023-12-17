@@ -4,12 +4,37 @@ import AndroidAutoVideo from '../components/Video.vue';
 import '@material/web/fab/fab.js';
 import '@material/web/icon/icon.js';
 import router from '../router/index.ts';
+import { VideoFocusMode } from '@web-auto/android-auto-proto';
+import { IVideoFocusRequestNotification } from '@web-auto/android-auto-proto/interfaces.js';
+import { onMounted, onBeforeUnmount } from 'vue';
+import { androidAutoVideoService } from '../ipc.ts';
+
+const onFocusRequest = async (data: IVideoFocusRequestNotification) => {
+    if (data.mode === VideoFocusMode.VIDEO_FOCUS_NATIVE) {
+        await androidAutoVideoService.sendVideoFocusNotification({
+            focus: VideoFocusMode.VIDEO_FOCUS_NATIVE,
+            unsolicited: true,
+        });
+        await androidAutoVideoService.sendVideoFocusNotification({
+            focus: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
+            unsolicited: true,
+        });
+    }
+};
 
 const onOpenClick = async () => {
     await router.push({
         name: 'android-auto-video',
     });
 };
+
+onMounted(() => {
+    androidAutoVideoService.on('focusRequest', onFocusRequest);
+});
+
+onBeforeUnmount(() => {
+    androidAutoVideoService.off('focusRequest', onFocusRequest);
+});
 </script>
 
 <template>

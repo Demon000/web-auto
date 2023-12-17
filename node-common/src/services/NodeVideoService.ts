@@ -18,6 +18,7 @@ import {
     MediaSinkService,
     MediaCodecType,
     VideoFocusNotification,
+    VideoFocusMode,
 } from '@web-auto/android-auto-proto';
 import assert from 'node:assert';
 import type {
@@ -80,6 +81,7 @@ export class NodeVideoService extends VideoService {
     private codecBuffer?: DataBuffer;
 
     private isSetup = false;
+    private focusMode: VideoFocusMode | undefined = undefined;
 
     public constructor(
         private ipcHandler: IpcServiceHandler<
@@ -96,16 +98,22 @@ export class NodeVideoService extends VideoService {
             this.sendVideoFocusNotificationObject.bind(this),
         );
         ipcHandler.on('isSetup', this.getIsSetup.bind(this));
+        ipcHandler.on('focusMode', this.getFocusMode.bind(this));
     }
 
     public async sendVideoFocusNotificationObject(
         data: IVideoFocusNotification,
     ): Promise<void> {
         await this.sendVideoFocusIndication(new VideoFocusNotification(data));
+        this.focusMode = data.focus;
     }
 
     public async getIsSetup(): Promise<boolean> {
         return this.isSetup;
+    }
+
+    public async getFocusMode(): Promise<VideoFocusMode | undefined> {
+        return this.focusMode;
     }
 
     public async stop(): Promise<void> {
@@ -147,6 +155,7 @@ export class NodeVideoService extends VideoService {
 
     protected async channelStop(): Promise<void> {
         await super.channelStop();
+        this.focusMode = undefined;
         this.codecBuffer = undefined;
         this.codecState = CodecState.STOPPED;
         this.ipcHandler.stop();

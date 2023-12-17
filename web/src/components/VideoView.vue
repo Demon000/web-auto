@@ -8,6 +8,11 @@ import router from '../router/index.ts';
 
 const onFocusRequest = async (data: IVideoFocusRequestNotification) => {
     if (data.mode === VideoFocusMode.VIDEO_FOCUS_NATIVE) {
+        await androidAutoVideoService.sendVideoFocusNotification({
+            focus: VideoFocusMode.VIDEO_FOCUS_NATIVE,
+            unsolicited: true,
+        });
+
         await router.push({
             name: 'home',
         });
