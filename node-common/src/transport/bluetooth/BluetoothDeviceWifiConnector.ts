@@ -45,7 +45,7 @@ export class BluetoothDeviceWifiConnector {
             this.logger.debug('Send data', buffer);
 
             this.bluetoothSocket.write(buffer.data, undefined, (err) => {
-                if (err === undefined) {
+                if (err === undefined || err === null) {
                     resolve();
                 } else {
                     reject(err);
