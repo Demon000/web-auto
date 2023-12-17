@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import { H264WebCodecsDecoder } from '../codec/H264WebCodecsDecoder';
-import { androidAutoInputService, androidAutoVideoService } from '../ipc.js';
+import { androidAutoInputService } from '../ipc.js';
 import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 import { transformFittedPoint } from 'object-fit-math';
 import type { FitMode } from 'object-fit-math/dist/types.d.ts';
-import { PointerAction, VideoFocusMode } from '@web-auto/android-auto-proto';
-import { VideoCodecConfig } from '@web-auto/android-auto-ipc';
-
-let marginVertical = 0;
-let marginHorizontal = 0;
+import { PointerAction } from '@web-auto/android-auto-proto';
+import { decoderWorker } from '../decoder.js';
+import { DecoderWorkerMessageType } from '../codec/DecoderWorkerMessages.js';
 
 const canvasRef: Ref<HTMLCanvasElement | undefined> = ref(undefined);
-let context: CanvasRenderingContext2D | undefined;
 let canvasObserver: ResizeObserver | undefined;
 
 let canvasPosition: { x: number; y: number } = { x: 0, y: 0 };
@@ -19,47 +15,12 @@ let canvasSize: { width: number; height: number } = { width: 0, height: 0 };
 let canvasObjectFit: FitMode = 'contain';
 let canvasObjectPosition: [string, string] = ['0', '0'];
 
-const onDecoderFrame = (data?: VideoFrame) => {
-    const context = getContext();
-    const canvas = getCanvas();
-
-    if (data === undefined) {
-        context.clearRect(0, 0, canvas.width, canvas.height);
+const onCanvasResized = (entries: ResizeObserverEntry[]) => {
+    if (entries.length !== 1) {
         return;
     }
 
-    context.drawImage(
-        data,
-        marginHorizontal,
-        marginVertical,
-        canvas.width,
-        canvas.height,
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-    );
-};
-
-const decoder = new H264WebCodecsDecoder({
-    onFrame: onDecoderFrame,
-});
-
-function assert(conditional: boolean, message?: string): asserts conditional {
-    if (!conditional) throw new Error(message);
-}
-
-const getContext = () => {
-    assert(context !== undefined && context !== null);
-    return context;
-};
-
-const getCanvas = () => {
-    return getContext().canvas;
-};
-
-const onCanvasResized = () => {
-    const canvas = getCanvas();
+    const canvas = entries[0].target as HTMLCanvasElement;
 
     const canvasBoundingBox = canvas.getBoundingClientRect();
 
@@ -77,107 +38,41 @@ const onCanvasResized = () => {
     canvasObjectPosition = objectPositionSplit as [string, string];
 };
 
-const onCodecConfig = (data: VideoCodecConfig) => {
-    const canvas = getCanvas();
-
-    marginHorizontal = data.cropLeft;
-    marginVertical = data.cropTop;
-    canvas.width = data.width - data.cropLeft - data.cropRight;
-    canvas.height = data.height - data.cropTop - data.cropBottom;
-
-    try {
-        decoder.configure(data.codec);
-    } catch (err) {
-        console.error(err);
-        return;
-    }
-};
-
-const showProjection = async () => {
-    try {
-        await androidAutoVideoService.sendVideoFocusNotification({
-            focus: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
-            unsolicited: true,
-        });
-    } catch (err) {
-        console.error(err);
-    }
-};
-
-const showNative = async () => {
-    try {
-        await androidAutoVideoService.sendVideoFocusNotification({
-            focus: VideoFocusMode.VIDEO_FOCUS_NATIVE,
-            unsolicited: true,
-        });
-    } catch (err) {
-        console.error(err);
-    }
-};
-
-const onAfterSetup = async () => {
-    await showProjection();
-};
-
-const onFirstFrameData = (buffer: Uint8Array) => {
-    try {
-        decoder.decodeKeyFrame(buffer);
-    } catch (err) {
-        console.error(err);
-    }
-};
-
-const onFrameData = (buffer: Uint8Array) => {
-    try {
-        decoder.decode(buffer);
-    } catch (err) {
-        console.error(err);
-    }
-};
-
-const onStop = () => {
-    decoder.reset();
-};
-
 onMounted(async () => {
     const canvas = canvasRef.value;
-    assert(canvas !== undefined);
-
-    const localContext = canvas.getContext('2d');
-    assert(localContext !== null);
-
-    context = localContext;
+    if (canvas === undefined) {
+        return;
+    }
 
     canvasObserver = new ResizeObserver(onCanvasResized);
     canvasObserver.observe(canvas);
 
-    androidAutoVideoService.on('afterSetup', onAfterSetup);
-    androidAutoVideoService.on('codecConfig', onCodecConfig);
-    androidAutoVideoService.on('firstFrame', onFirstFrameData);
-    androidAutoVideoService.on('data', onFrameData);
-    androidAutoVideoService.on('stop', onStop);
-
-    await showProjection();
+    const offscreenCanvas = canvas.transferControlToOffscreen();
+    decoderWorker.postMessage(
+        {
+            type: DecoderWorkerMessageType.CREATE_RENDERER,
+            rendererName: import.meta.env.VITE_VIDEO_DECODER_RENDERER,
+            canvas: offscreenCanvas,
+        },
+        [offscreenCanvas],
+    );
 });
 
 onBeforeUnmount(async () => {
-    onDecoderFrame(undefined);
+    decoderWorker.postMessage({
+        type: DecoderWorkerMessageType.DESTROY_RENDERER,
+    });
 
-    await showNative();
-
-    androidAutoVideoService.off('stop', onStop);
-    androidAutoVideoService.off('data', onFrameData);
-    androidAutoVideoService.off('firstFrame', onFirstFrameData);
-    androidAutoVideoService.off('codecConfig', onCodecConfig);
-    androidAutoVideoService.off('afterSetup', onAfterSetup);
-
-    assert(canvasObserver !== undefined);
-    canvasObserver.disconnect();
+    if (canvasObserver !== undefined) {
+        canvasObserver.disconnect();
+    }
 });
 
-const translateCanvasPosition = (x: number, y: number): [number, number] => {
-    const canvas = getCanvas();
-
+const translateCanvasPosition = (
+    canvas: HTMLCanvasElement,
+    x: number,
+    y: number,
+): [number, number] => {
     x = x - canvasPosition.x;
     y = y - canvasPosition.y;
 
@@ -221,7 +116,12 @@ const sendPointerEvent = (event: PointerEvent) => {
         return;
     }
 
-    const [x, y] = translateCanvasPosition(event.x, event.y);
+    const canvas = canvasRef.value;
+    if (canvas === undefined) {
+        return;
+    }
+
+    const [x, y] = translateCanvasPosition(canvas, event.x, event.y);
     if (isNaN(x) || isNaN(y) || x < 0 || y < 0) {
         return;
     }
