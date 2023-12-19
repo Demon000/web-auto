@@ -29,3 +29,6 @@ coverage
 
 # Environment variables
 .env.local
+
+# Browser data
+browser-data
