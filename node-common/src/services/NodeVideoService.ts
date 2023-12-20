@@ -19,6 +19,7 @@ import {
     MediaCodecType,
     VideoFocusNotification,
     VideoFocusMode,
+    VideoFocusReason,
 } from '@web-auto/android-auto-proto';
 import assert from 'node:assert';
 import type {
@@ -80,9 +81,6 @@ export class NodeVideoService extends VideoService {
     private codecState = CodecState.STOPPED;
     private codecBuffer?: DataBuffer;
 
-    private isSetup = false;
-    private focusMode: VideoFocusMode | undefined = undefined;
-
     public constructor(
         private ipcHandler: IpcServiceHandler<
             AndroidAutoVideoService,
@@ -97,28 +95,21 @@ export class NodeVideoService extends VideoService {
             'sendVideoFocusNotification',
             this.sendVideoFocusNotificationObject.bind(this),
         );
-        ipcHandler.on('isSetup', this.getIsSetup.bind(this));
-        ipcHandler.on('focusMode', this.getFocusMode.bind(this));
+        ipcHandler.on('getChannelStarted', this.getChannelStarted.bind(this));
+    }
+
+    public async getChannelStarted(): Promise<boolean> {
+        return this.channelStarted;
     }
 
     public async sendVideoFocusNotificationObject(
         data: IVideoFocusNotification,
     ): Promise<void> {
         await this.sendVideoFocusIndication(new VideoFocusNotification(data));
-        this.focusMode = data.focus;
-    }
-
-    public async getIsSetup(): Promise<boolean> {
-        return this.isSetup;
-    }
-
-    public async getFocusMode(): Promise<VideoFocusMode | undefined> {
-        return this.focusMode;
     }
 
     public async stop(): Promise<void> {
         await this.channelStop();
-        this.isSetup = false;
         await super.stop();
     }
 
@@ -135,15 +126,11 @@ export class NodeVideoService extends VideoService {
             'Selected configuration',
             this.videoConfigs[this.configurationIndex],
         );
+        this.ipcHandler.channelStart();
     }
 
     protected async setup(_data: Setup): Promise<void> {
         // TODO
-    }
-
-    protected async afterSetup(): Promise<void> {
-        this.isSetup = true;
-        this.ipcHandler.afterSetup();
     }
 
     protected async focus(data: VideoFocusRequestNotification): Promise<void> {
@@ -153,12 +140,17 @@ export class NodeVideoService extends VideoService {
         });
     }
 
+    protected async afterSetup(): Promise<void> {
+        this.ipcHandler.focusRequest({
+            mode: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
+        });
+    }
+
     protected async channelStop(): Promise<void> {
         await super.channelStop();
-        this.focusMode = undefined;
         this.codecBuffer = undefined;
         this.codecState = CodecState.STOPPED;
-        this.ipcHandler.stop();
+        this.ipcHandler.channelStop();
     }
 
     protected parseH264CodecConfig(buffer: DataBuffer): VideoCodecConfig {

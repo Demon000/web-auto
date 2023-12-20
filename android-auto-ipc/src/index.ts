@@ -1,4 +1,3 @@
-import type { VideoFocusMode } from '@web-auto/android-auto-proto';
 import type {
     IKeyEvent,
     IMediaPlaybackMetadata,
@@ -27,16 +26,15 @@ export type VideoCodecConfig = {
 
 export type AndroidAutoVideoService = {
     sendVideoFocusNotification(data: IVideoFocusNotification): Promise<void>;
-    isSetup(): Promise<boolean>;
-    focusMode(): Promise<VideoFocusMode | undefined>;
+    getChannelStarted(): Promise<boolean>;
 };
 
 export type AndroidAutoVideoClient = {
     focusRequest(data: IVideoFocusRequestNotification): void;
-    afterSetup(): void;
     codecConfig(config: VideoCodecConfig): void;
     firstFrame(buffer: Buffer): void;
-    stop(): void;
+    channelStart(): void;
+    channelStop(): void;
     data(buffer: Buffer): void;
 };
 

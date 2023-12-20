@@ -1,36 +1,48 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue';
-import AndroidAutoVideo from '../components/Video.vue';
-import { androidAutoVideoService } from '../ipc.ts';
-import { IVideoFocusRequestNotification } from '@web-auto/android-auto-proto/interfaces.js';
+import Video from '../components/Video.vue';
+import { androidAutoInputService } from '../ipc.ts';
+import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
 import { VideoFocusMode } from '@web-auto/android-auto-proto';
 import router from '../router/index.ts';
+import { useVideoFocusModeStore } from '../stores/video-store.ts';
+import { watch } from 'vue';
+import { showNative, showProjected } from '../decoder.ts';
 
-const onFocusRequest = async (data: IVideoFocusRequestNotification) => {
-    if (data.mode === VideoFocusMode.VIDEO_FOCUS_NATIVE) {
-        await androidAutoVideoService.sendVideoFocusNotification({
-            focus: VideoFocusMode.VIDEO_FOCUS_NATIVE,
-            unsolicited: true,
-        });
+const videoFocusModeStore = useVideoFocusModeStore();
 
-        await router.push({
-            name: 'home',
-        });
-    }
+const sendTouchEvent = (touchEvent: ITouchEvent) => {
+    androidAutoInputService.sendTouchEvent(touchEvent);
 };
 
-onMounted(() => {
-    androidAutoVideoService.on('focusRequest', onFocusRequest);
-});
+const switchToHomeView = async () => {
+    await router.push({
+        name: 'home',
+    });
+};
 
-onBeforeUnmount(() => {
-    androidAutoVideoService.off('focusRequest', onFocusRequest);
-});
+watch(
+    () => videoFocusModeStore.requestedFocusMode,
+    async (mode?: VideoFocusMode) => {
+        if (mode === VideoFocusMode.VIDEO_FOCUS_NATIVE) {
+            /*
+             * Will unmount the video which will trigger a switch to native, which
+             * will respond to focus request.
+             */
+            switchToHomeView();
+        } else if (mode === VideoFocusMode.VIDEO_FOCUS_PROJECTED) {
+            showProjected();
+        }
+    },
+);
 </script>
 
 <template>
     <div class="video">
-        <AndroidAutoVideo></AndroidAutoVideo>
+        <Video
+            @touch-event="sendTouchEvent"
+            @video-visible="showProjected"
+            @video-hidden="showNative"
+        ></Video>
     </div>
 </template>
 

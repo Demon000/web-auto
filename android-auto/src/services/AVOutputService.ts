@@ -108,9 +108,14 @@ export abstract class AVOutputService extends AVService {
         return true;
     }
 
+    public get channelStarted(): boolean {
+        return this.configurationIndex !== undefined;
+    }
+
     protected async channelStart(data: Start): Promise<void> {
         this.configurationIndex = data.configurationIndex;
     }
+
     protected async channelStop(): Promise<void> {
         this.configurationIndex = undefined;
     }

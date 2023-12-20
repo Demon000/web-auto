@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useMediaStatusStore } from '../stores/media-status-store.ts';
 
 import {
     KeyCode,
@@ -10,12 +9,18 @@ import {
 import '@material/web/progress/linear-progress.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/fab/fab.js';
-import { androidAutoInputService } from '../ipc.ts';
+import {
+    IMediaPlaybackMetadata,
+    IMediaPlaybackStatus,
+} from '@web-auto/android-auto-proto/interfaces.js';
 
-const mediaStatuStore = useMediaStatusStore();
+const props = defineProps<{
+    metadata?: IMediaPlaybackMetadata;
+    status?: IMediaPlaybackStatus;
+}>();
 
 const albumArtUrl = computed(() => {
-    const albumArt = mediaStatuStore.metadata?.albumArt;
+    const albumArt = props.metadata?.albumArt;
     if (albumArt === undefined) {
         return undefined;
     }
@@ -25,66 +30,51 @@ const albumArtUrl = computed(() => {
     return URL.createObjectURL(blob);
 });
 
-const sendKey = (key: number) => {
-    androidAutoInputService.sendKeyEvent({
-        keys: [
-            {
-                down: true,
-                keycode: key,
-                metastate: 0,
-            },
-            {
-                down: false,
-                keycode: key,
-                metastate: 0,
-            },
-        ],
-    });
-};
+const emit = defineEmits<{
+    (e: 'press-key', keycode: KeyCode): void;
+}>();
 </script>
 
 <template>
     <div class="media-status">
         <img class="image" :src="albumArtUrl" />
         <div class="details">
-            <div class="song">{{ mediaStatuStore.metadata?.song }}</div>
-            <div class="artist">{{ mediaStatuStore.metadata?.artist }}</div>
+            <div class="song">{{ metadata?.song }}</div>
+            <div class="artist">{{ metadata?.artist }}</div>
 
             <md-linear-progress
                 class="progress"
                 v-if="
-                    mediaStatuStore.status?.playbackSeconds !== undefined &&
-                    mediaStatuStore.metadata?.durationSeconds !== undefined
+                    status?.playbackSeconds !== undefined &&
+                    metadata?.durationSeconds !== undefined
                 "
-                :value="
-                    mediaStatuStore.status?.playbackSeconds /
-                    mediaStatuStore.metadata?.durationSeconds
-                "
+                :value="status?.playbackSeconds / metadata?.durationSeconds"
                 buffer="1"
             ></md-linear-progress>
             <div class="controls">
                 <md-icon-button
-                    @click="sendKey(KeyCode.KEYCODE_MEDIA_PREVIOUS)"
+                    @click="emit('press-key', KeyCode.KEYCODE_MEDIA_PREVIOUS)"
                 >
                     <md-icon>skip_previous</md-icon>
                 </md-icon-button>
                 <md-fab
                     variant="primary"
-                    @click="sendKey(KeyCode.KEYCODE_MEDIA_PLAY_PAUSE)"
+                    @click="emit('press-key', KeyCode.KEYCODE_MEDIA_PLAY_PAUSE)"
                 >
                     <md-icon
                         slot="icon"
                         v-if="
-                            mediaStatuStore.status?.state ===
+                            status?.state ===
                                 MediaPlaybackStatus_State.PAUSED ||
-                            mediaStatuStore.status?.state ===
-                                MediaPlaybackStatus_State.STOPPED
+                            status?.state === MediaPlaybackStatus_State.STOPPED
                         "
                         >play_arrow</md-icon
                     >
                     <md-icon slot="icon" v-else> pause </md-icon>
                 </md-fab>
-                <md-icon-button @click="sendKey(KeyCode.KEYCODE_MEDIA_NEXT)">
+                <md-icon-button
+                    @click="emit('press-key', KeyCode.KEYCODE_MEDIA_NEXT)"
+                >
                     <md-icon>skip_next</md-icon>
                 </md-icon-button>
             </div>

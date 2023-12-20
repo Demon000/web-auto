@@ -17,10 +17,10 @@ export const decoderWorker = new Worker(
     postMessage(message: DecoderWorkerMessage, transfer?: Transferable[]): void;
 };
 
-const showProjected = async () => {
+export const setFocusMode = async (focus: VideoFocusMode) => {
     try {
         await androidAutoVideoService.sendVideoFocusNotification({
-            focus: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
+            focus,
             unsolicited: true,
         });
     } catch (err) {
@@ -28,15 +28,12 @@ const showProjected = async () => {
     }
 };
 
-const showNative = async () => {
-    try {
-        await androidAutoVideoService.sendVideoFocusNotification({
-            focus: VideoFocusMode.VIDEO_FOCUS_NATIVE,
-            unsolicited: true,
-        });
-    } catch (err) {
-        console.error(err);
-    }
+export const showProjected = async () => {
+    await setFocusMode(VideoFocusMode.VIDEO_FOCUS_PROJECTED);
+};
+
+export const showNative = async () => {
+    await setFocusMode(VideoFocusMode.VIDEO_FOCUS_NATIVE);
 };
 
 const toggleFocusMode = async () => {
@@ -44,12 +41,16 @@ const toggleFocusMode = async () => {
     await showProjected();
 };
 
-const onAfterSetup = () => {
-    showProjected()
-        .then(() => {})
-        .catch((err) => {
-            console.error('Failed to show projection mode', err);
-        });
+export const toggleFocusModeIfChannelStarted = async () => {
+    try {
+        const channelStarted =
+            await androidAutoVideoService.getChannelStarted();
+        if (channelStarted) {
+            toggleFocusMode();
+        }
+    } catch (err) {
+        console.error(err);
+    }
 };
 
 const onFirstFrameData = (buffer: Uint8Array) => {
@@ -57,7 +58,6 @@ const onFirstFrameData = (buffer: Uint8Array) => {
         type: DecoderWorkerMessageType.DECODE_KEYFRAME,
         data: buffer,
     });
-    acceptData = true;
 };
 
 const onFrameData = (buffer: Uint8Array) => {
@@ -71,13 +71,6 @@ const onFrameData = (buffer: Uint8Array) => {
     });
 };
 
-const onStop = () => {
-    acceptData = false;
-    decoderWorker.postMessage({
-        type: DecoderWorkerMessageType.RESET_DECODER,
-    });
-};
-
 const onCodecConfig = (data: VideoCodecConfig) => {
     decoderWorker.postMessage({
         type: DecoderWorkerMessageType.CONFIGURE_DECODER,
@@ -85,18 +78,26 @@ const onCodecConfig = (data: VideoCodecConfig) => {
     });
 };
 
-androidAutoVideoService.isSetup().then((isSetup) => {
-    if (isSetup) {
-        toggleFocusMode()
-            .then(() => {})
-            .catch((err) => {
-                console.error('Failed to toggle focus mode', err);
-            });
-    }
-});
+const onChannelStop = () => {
+    acceptData = false;
 
-androidAutoVideoService.on('afterSetup', onAfterSetup);
-androidAutoVideoService.on('codecConfig', onCodecConfig);
-androidAutoVideoService.on('firstFrame', onFirstFrameData);
-androidAutoVideoService.on('data', onFrameData);
-androidAutoVideoService.on('stop', onStop);
+    decoderWorker.postMessage({
+        type: DecoderWorkerMessageType.RESET_DECODER,
+    });
+
+    androidAutoVideoService.off('codecConfig', onCodecConfig);
+    androidAutoVideoService.off('firstFrame', onFirstFrameData);
+    androidAutoVideoService.off('data', onFrameData);
+    androidAutoVideoService.off('channelStop', onChannelStop);
+};
+
+const onChannelStart = () => {
+    acceptData = true;
+
+    androidAutoVideoService.on('codecConfig', onCodecConfig);
+    androidAutoVideoService.on('firstFrame', onFirstFrameData);
+    androidAutoVideoService.on('data', onFrameData);
+    androidAutoVideoService.on('channelStop', onChannelStop);
+};
+
+androidAutoVideoService.on('channelStart', onChannelStart);

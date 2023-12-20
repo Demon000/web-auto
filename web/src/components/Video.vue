@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { androidAutoInputService, androidAutoVideoService } from '../ipc.js';
 import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 import { transformFittedPoint } from 'object-fit-math';
 import type { FitMode } from 'object-fit-math/dist/types.d.ts';
-import { PointerAction, VideoFocusMode } from '@web-auto/android-auto-proto';
+import { PointerAction } from '@web-auto/android-auto-proto';
 import { decoderWorker } from '../decoder.js';
 import { DecoderWorkerMessageType } from '../codec/DecoderWorkerMessages.js';
+import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
+
+const emit = defineEmits<{
+    (e: 'video-visible'): void;
+    (e: 'video-hidden'): void;
+    (e: 'touch-event', touchEvent: ITouchEvent): void;
+}>();
 
 const canvasRef: Ref<HTMLCanvasElement | undefined> = ref(undefined);
 let canvasObserver: ResizeObserver | undefined;
@@ -38,20 +44,13 @@ const onCanvasResized = (entries: ResizeObserverEntry[]) => {
     canvasObjectPosition = objectPositionSplit as [string, string];
 };
 
-const onFocusMode = async (
-    focusMode: VideoFocusMode | undefined,
-): Promise<void> => {
-    if (focusMode === undefined) {
-        return;
-    }
+onMounted(() => {
+    emit('video-visible');
+});
 
-    if (focusMode === VideoFocusMode.VIDEO_FOCUS_NATIVE) {
-        await androidAutoVideoService.sendVideoFocusNotification({
-            focus: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
-            unsolicited: true,
-        });
-    }
-};
+onBeforeUnmount(() => {
+    emit('video-hidden');
+});
 
 onMounted(async () => {
     const canvas = canvasRef.value;
@@ -71,8 +70,6 @@ onMounted(async () => {
         },
         [offscreenCanvas],
     );
-
-    androidAutoVideoService.focusMode().then(onFocusMode);
 });
 
 onBeforeUnmount(async () => {
@@ -142,7 +139,8 @@ const sendPointerEvent = (event: PointerEvent) => {
     if (isNaN(x) || isNaN(y) || x < 0 || y < 0) {
         return;
     }
-    androidAutoInputService.sendTouchEvent({
+
+    emit('touch-event', {
         action,
         actionIndex: 0,
         pointerData: [

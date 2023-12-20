@@ -1,30 +1,18 @@
 <script setup lang="ts">
-import { androidAutoInputService } from '../ipc.ts';
-import { KeyCode } from '@web-auto/android-auto-proto';
-
 import '@material/web/fab/fab.js';
 
-const sendAssistantKey = () => {
-    androidAutoInputService.sendKeyEvent({
-        keys: [
-            {
-                down: true,
-                keycode: KeyCode.KEYCODE_SEARCH,
-                metastate: 0,
-            },
-            {
-                down: false,
-                keycode: KeyCode.KEYCODE_SEARCH,
-                metastate: 0,
-            },
-        ],
-    });
-};
+const emit = defineEmits<{
+    (e: 'press-assistant-key'): void;
+}>();
 </script>
 
 <template>
     <div class="assistant">
-        <md-fab variant="primary" size="large" @click="sendAssistantKey">
+        <md-fab
+            variant="primary"
+            size="large"
+            @click="emit('press-assistant-key')"
+        >
             <md-icon slot="icon">mic</md-icon>
         </md-fab>
     </div>

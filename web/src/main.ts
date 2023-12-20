@@ -15,6 +15,7 @@ import {
     applyTheme,
 } from '@material/material-color-utilities';
 import { useMediaStatusStore } from './stores/media-status-store.js';
+import { useVideoFocusModeStore } from './stores/video-store.js';
 
 const theme = themeFromSourceColor(argbFromHex('#60a8f0'));
 
@@ -26,9 +27,11 @@ app.use(createPinia());
 app.use(router);
 
 const mediaStatusStore = useMediaStatusStore();
+const videoFocusModeStore = useVideoFocusModeStore();
 
 const initialize = async () => {
     await mediaStatusStore.initialize();
+    await videoFocusModeStore.initialize();
 
     app.mount('#app');
 };

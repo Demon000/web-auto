@@ -1,46 +1,39 @@
 <script setup lang="ts">
-import AndroidAutoVideo from '../components/Video.vue';
+import Video from '../components/Video.vue';
+
+import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
+import { androidAutoInputService } from '../ipc.ts';
 
 import '@material/web/fab/fab.js';
 import '@material/web/icon/icon.js';
-import router from '../router/index.ts';
-import { VideoFocusMode } from '@web-auto/android-auto-proto';
-import { IVideoFocusRequestNotification } from '@web-auto/android-auto-proto/interfaces.js';
-import { onMounted, onBeforeUnmount } from 'vue';
-import { androidAutoVideoService } from '../ipc.ts';
 
-const onFocusRequest = async (data: IVideoFocusRequestNotification) => {
-    if (data.mode === VideoFocusMode.VIDEO_FOCUS_NATIVE) {
-        await androidAutoVideoService.sendVideoFocusNotification({
-            focus: VideoFocusMode.VIDEO_FOCUS_NATIVE,
-            unsolicited: true,
-        });
-        await androidAutoVideoService.sendVideoFocusNotification({
-            focus: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
-            unsolicited: true,
-        });
-    }
+const emit = defineEmits<{
+    (e: 'video-visible'): void;
+    (e: 'video-hidden'): void;
+    (e: 'expand-video'): void;
+}>();
+
+const emitVideoVisible = () => {
+    emit('video-visible');
 };
 
-const onOpenClick = async () => {
-    await router.push({
-        name: 'android-auto-video',
-    });
+const emitVideoHidden = () => {
+    emit('video-hidden');
 };
 
-onMounted(() => {
-    androidAutoVideoService.on('focusRequest', onFocusRequest);
-});
-
-onBeforeUnmount(() => {
-    androidAutoVideoService.off('focusRequest', onFocusRequest);
-});
+const sendTouchEvent = (touchEvent: ITouchEvent) => {
+    androidAutoInputService.sendTouchEvent(touchEvent);
+};
 </script>
 
 <template>
     <div class="mini-video">
-        <AndroidAutoVideo></AndroidAutoVideo>
-        <md-fab class="open" variant="primary" @click="onOpenClick">
+        <Video
+            @touch-event="sendTouchEvent"
+            @video-visible="emitVideoVisible"
+            @video-hidden="emitVideoHidden"
+        ></Video>
+        <md-fab class="open" variant="primary" @click="emit('expand-video')">
             <md-icon slot="icon">open_in_full</md-icon>
         </md-fab>
     </div>

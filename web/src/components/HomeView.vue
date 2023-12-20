@@ -4,9 +4,63 @@ import MiniVideo from './MiniVideo.vue';
 import MediaStatus from './MediaStatus.vue';
 import Assistant from './Assistant.vue';
 import AppBar from './AppBar.vue';
-import { Ref, computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { IDevice } from '@web-auto/android-auto-ipc';
-import { androidAutoServerService } from '../ipc.ts';
+import { androidAutoInputService, androidAutoServerService } from '../ipc.ts';
+import { KeyCode, VideoFocusMode } from '@web-auto/android-auto-proto';
+import { useMediaStatusStore } from '../stores/media-status-store.ts';
+import { useVideoFocusModeStore } from '../stores/video-store.ts';
+import router from '../router/index.ts';
+import {
+    showProjected,
+    showNative,
+    toggleFocusModeIfChannelStarted,
+} from '../decoder.ts';
+
+const mediaStatusStore = useMediaStatusStore();
+const videoFocusModeStore = useVideoFocusModeStore();
+
+const sendKey = (keycode: KeyCode) => {
+    androidAutoInputService.sendKeyEvent({
+        keys: [
+            {
+                down: true,
+                keycode,
+                metastate: 0,
+            },
+            {
+                down: false,
+                keycode,
+                metastate: 0,
+            },
+        ],
+    });
+};
+
+const sendAssistantKey = () => {
+    sendKey(KeyCode.KEYCODE_SEARCH);
+};
+
+const switchToVideoView = async () => {
+    await router.push({
+        name: 'android-auto-video',
+    });
+};
+
+watch(
+    () => videoFocusModeStore.requestedFocusMode,
+    async (mode?: VideoFocusMode) => {
+        if (mode === VideoFocusMode.VIDEO_FOCUS_NATIVE) {
+            await toggleFocusModeIfChannelStarted();
+        } else if (mode === VideoFocusMode.VIDEO_FOCUS_PROJECTED) {
+            await showProjected();
+        }
+    },
+);
+
+const onVideoVisible = async () => {
+    await toggleFocusModeIfChannelStarted();
+};
 
 const connectedDevice = computed(() => {
     for (const device of devices.value) {
@@ -46,9 +100,17 @@ onBeforeUnmount(() => {
         >
             <DeviceSelector></DeviceSelector>
             <template v-if="connectedDevice !== undefined">
-                <MiniVideo></MiniVideo>
-                <MediaStatus></MediaStatus>
-                <Assistant></Assistant>
+                <MiniVideo
+                    @video-visible="onVideoVisible"
+                    @video-hidden="showNative"
+                    @expand-video="switchToVideoView"
+                ></MiniVideo>
+                <MediaStatus
+                    @press-key="sendKey"
+                    :metadata="mediaStatusStore.metadata"
+                    :status="mediaStatusStore.status"
+                ></MediaStatus>
+                <Assistant @press-assistant-key="sendAssistantKey"></Assistant>
             </template>
         </div>
     </div>
