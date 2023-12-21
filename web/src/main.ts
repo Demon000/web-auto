@@ -37,6 +37,9 @@ const initialize = async () => {
     await videoFocusModeStore.initialize();
 
     app.mount('#app');
+    await router.replace({
+        name: 'home',
+    });
 };
 
 initialize();
