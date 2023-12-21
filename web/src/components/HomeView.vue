@@ -4,8 +4,7 @@ import MiniVideo from './MiniVideo.vue';
 import MediaStatus from './MediaStatus.vue';
 import Assistant from './Assistant.vue';
 import AppBar from './AppBar.vue';
-import { Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { IDevice } from '@web-auto/android-auto-ipc';
+import { watch } from 'vue';
 import { androidAutoInputService, androidAutoServerService } from '../ipc.ts';
 import { KeyCode, VideoFocusMode } from '@web-auto/android-auto-proto';
 import { useMediaStatusStore } from '../stores/media-status-store.ts';
@@ -16,9 +15,11 @@ import {
     showNative,
     toggleFocusModeIfChannelStarted,
 } from '../decoder.ts';
+import { useDeviceStore } from '../stores/device-store.ts';
 
 const mediaStatusStore = useMediaStatusStore();
 const videoFocusModeStore = useVideoFocusModeStore();
+const deviceStore = useDeviceStore();
 
 const sendKey = (keycode: KeyCode) => {
     androidAutoInputService.sendKeyEvent({
@@ -62,31 +63,21 @@ const onVideoVisible = async () => {
     await toggleFocusModeIfChannelStarted();
 };
 
-const connectedDevice = computed(() => {
-    for (const device of devices.value) {
-        if (device.state === 'connected') {
-            return device;
-        }
+const connectDevice = async (name: string) => {
+    try {
+        await androidAutoServerService.connectDeviceName(name);
+    } catch (err) {
+        console.error(err);
     }
-
-    return undefined;
-});
-
-const devices: Ref<IDevice[]> = ref([]);
-
-const onDevices = (updatedDevices: IDevice[]) => {
-    devices.value = updatedDevices;
 };
 
-onMounted(async () => {
-    devices.value = await androidAutoServerService.getDevices();
-
-    androidAutoServerService.on('devices', onDevices);
-});
-
-onBeforeUnmount(() => {
-    androidAutoServerService.off('devices', onDevices);
-});
+const disconnectDevice = async (name: string) => {
+    try {
+        await androidAutoServerService.disconnectDeviceName(name);
+    } catch (err) {
+        console.error(err);
+    }
+};
 </script>
 
 <template>
@@ -95,11 +86,16 @@ onBeforeUnmount(() => {
         <div
             class="main"
             :class="{
-                unconnected: connectedDevice === undefined,
+                unconnected: deviceStore.connectedDevice === undefined,
             }"
         >
-            <DeviceSelector></DeviceSelector>
-            <template v-if="connectedDevice !== undefined">
+            <DeviceSelector
+                :connected-device="deviceStore.notAvailableDevice"
+                :devices="deviceStore.devices"
+                @connect="connectDevice"
+                @disconnect="disconnectDevice"
+            ></DeviceSelector>
+            <template v-if="deviceStore.connectedDevice !== undefined">
                 <MiniVideo
                     @video-visible="onVideoVisible"
                     @video-hidden="showNative"

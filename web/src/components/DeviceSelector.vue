@@ -1,36 +1,24 @@
 <script setup lang="ts">
-import type { IDevice } from '@web-auto/android-auto-ipc';
+import { IDevice } from '@web-auto/android-auto-ipc';
 import Device from './Device.vue';
-import { androidAutoServerService } from '../ipc.js';
-import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 
-const connectedDevice = computed(() => {
-    for (const device of devices.value) {
-        if (device.state === 'available' || device.state === 'disconnected') {
-            continue;
-        }
+defineProps<{
+    devices: IDevice[];
+    connectedDevice?: IDevice;
+}>();
 
-        return device;
-    }
+const emit = defineEmits<{
+    (e: 'connect', name: string): void;
+    (e: 'disconnect', name: string): void;
+}>();
 
-    return undefined;
-});
-
-const devices: Ref<IDevice[]> = ref([]);
-
-const onDevices = (updatedDevices: IDevice[]) => {
-    devices.value = updatedDevices;
+const emitConnect = (name: string) => {
+    emit('connect', name);
 };
 
-onMounted(async () => {
-    devices.value = await androidAutoServerService.getDevices();
-
-    androidAutoServerService.on('devices', onDevices);
-});
-
-onBeforeUnmount(() => {
-    androidAutoServerService.off('devices', onDevices);
-});
+const emitDisconnect = (name: string) => {
+    emit('disconnect', name);
+};
 </script>
 
 <template>
@@ -39,12 +27,22 @@ onBeforeUnmount(() => {
 
         <template v-if="connectedDevice !== undefined">
             <div class="section-title">Active</div>
-            <device class="connected-device" :device="connectedDevice"></device>
+            <device
+                class="connected-device"
+                :device="connectedDevice"
+                @connect="emitConnect"
+                @disconnect="emitDisconnect"
+            ></device>
         </template>
 
         <div class="section-title">Available</div>
         <div class="devices" v-for="device in devices">
-            <device v-if="device !== connectedDevice" :device="device"></device>
+            <device
+                v-if="device !== connectedDevice"
+                :device="device"
+                @connect="emitConnect"
+                @disconnect="emitDisconnect"
+            ></device>
         </div>
     </div>
 </template>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { IDevice } from '@web-auto/android-auto-ipc';
-import { androidAutoServerService } from '../ipc.ts';
 
 import '@material/web/iconbutton/filled-icon-button.js';
 import '@material/web/icon/icon.js';
@@ -9,21 +8,10 @@ defineProps<{
     device: IDevice;
 }>();
 
-const onConnectClick = async (name: string) => {
-    try {
-        await androidAutoServerService.connectDeviceName(name);
-    } catch (err) {
-        console.error(err);
-    }
-};
-
-const onDisconnectClick = async (name: string) => {
-    try {
-        await androidAutoServerService.disconnectDeviceName(name);
-    } catch (err) {
-        console.error(err);
-    }
-};
+const emit = defineEmits<{
+    (e: 'connect', name: string): void;
+    (e: 'disconnect', name: string): void;
+}>();
 </script>
 
 <template>
@@ -39,7 +27,7 @@ const onDisconnectClick = async (name: string) => {
         <div class="button-container">
             <md-filled-icon-button
                 class="connect-button"
-                @click="onConnectClick(device.name)"
+                @click="emit('connect', device.name)"
                 v-if="device.state === 'available'"
             >
                 <md-icon>link</md-icon>
@@ -47,7 +35,7 @@ const onDisconnectClick = async (name: string) => {
 
             <md-filled-icon-button
                 class="disconnect-button"
-                @click="onDisconnectClick(device.name)"
+                @click="emit('disconnect', device.name)"
                 v-else-if="device.state === 'connected'"
             >
                 <md-icon>close</md-icon>
