@@ -35,6 +35,10 @@ export class NodeMediaStatusService extends MediaStatusService {
 
     public async stop(): Promise<void> {
         await super.stop();
+        this.metadata = undefined;
+        this.ipcHandler.metadata(undefined);
+        this.status = undefined;
+        this.ipcHandler.status(undefined);
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {
