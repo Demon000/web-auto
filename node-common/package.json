@@ -20,7 +20,6 @@
     "audify": "^1.8.2",
     "bluetooth-socket": "github:Demon000/node-bluetooth-socket#master",
     "bluez": "github:Demon000/node-bluez#master",
-    "import-meta-resolve": "^4.0.0",
     "json5": "^2.2.3",
     "lilconfig": "^3.0.0",
     "native-duplexpair": "^1.0.0",

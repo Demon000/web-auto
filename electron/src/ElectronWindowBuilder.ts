@@ -1,11 +1,10 @@
-import { BrowserWindow, screen, session } from 'electron';
-import path from 'node:path';
+import { BrowserWindow, net, screen, session } from 'electron';
+import { join, resolve } from 'node:path';
 import assert from 'node:assert';
 import { getLogger } from '@web-auto/logging';
 
-import { resolve } from 'import-meta-resolve';
 import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 import { ElectronIpcServiceRegistry } from '@web-auto/electron-ipc/main.js';
 
@@ -25,9 +24,16 @@ export interface ElectronWindowConfig {
     x?: number;
     y?: number;
     app: {
-        name: 'web';
-        url?: string;
-    };
+        preload: string;
+    } & (
+        | {
+              path: string;
+              index: string;
+          }
+        | {
+              url: string;
+          }
+    );
 }
 
 export interface ElectronWindowBuilderConfig {
@@ -55,41 +61,37 @@ export class ElectronWindowBuilder {
         config: ElectronWindowConfig,
         session: Electron.Session,
     ): Promise<void> {
-        const fileUrlStart = 'file://';
-        const indexPath = resolve(
-            `@web-auto/${config.app.name}`,
-            import.meta.url,
-        );
+        assert('path' in config.app);
 
-        assert(indexPath.startsWith(fileUrlStart));
-        const appPath = path.dirname(indexPath).slice(fileUrlStart.length);
+        const appPath = resolve('..', config.app.path);
+        const indexPath = join(appPath, config.app.index);
+        const indexUrl = pathToFileURL(indexPath);
 
-        session.protocol.interceptFileProtocol('file', (request, callback) => {
-            let url = request.url;
-            url = url.substring(7);
-            if (!url.startsWith(appPath)) {
-                url = path.join(appPath, url);
+        session.protocol.handle('file', (request) => {
+            const relativePath = fileURLToPath(request.url);
+            let absolutePath;
+            if (relativePath.startsWith(appPath)) {
+                absolutePath = relativePath;
+            } else {
+                absolutePath = join(appPath, relativePath);
             }
-
-            callback({ path: url });
+            const absoluteUrl = pathToFileURL(absolutePath);
+            return net.fetch(absoluteUrl.href);
         });
 
-        await window.loadURL(indexPath);
+        await window.loadURL(indexUrl.href);
     }
 
     private async loadUrl(
         window: BrowserWindow,
         config: ElectronWindowConfig,
     ): Promise<void> {
-        assert(config.app.url !== undefined);
+        assert('url' in config.app);
         await window.loadURL(config.app.url);
     }
 
     public async buildWindow(config: ElectronWindowConfig): Promise<void> {
-        const preloadPath = path.join(
-            __dirname,
-            `${config.app.name}-preload.mjs`,
-        );
+        const preloadPath = resolve('..', config.app.preload);
 
         const displays = screen.getAllDisplays();
         let display;
@@ -153,10 +155,10 @@ export class ElectronWindowBuilder {
         });
 
         try {
-            if (config.app.url === undefined) {
-                await this.loadFile(window, config, ses);
-            } else {
+            if ('url' in config.app) {
                 await this.loadUrl(window, config);
+            } else {
+                await this.loadFile(window, config, ses);
             }
         } catch (err) {
             this.logger.error('Cannot load window URL', err);

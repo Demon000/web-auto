@@ -7,9 +7,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc && vite build --base /",
+    "build": "vue-tsc && vite build",
     "clean": "rm -rf ./dist",
-    "start": "vite preview --base /",
+    "start": "vite preview",
     "lint": "eslint --fix ."
   },
   "dependencies": {
