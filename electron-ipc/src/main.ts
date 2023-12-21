@@ -1,13 +1,9 @@
-import {
-    BrowserWindow,
-    ipcMain,
-    type IpcMainEvent,
-    type WebContents,
-} from 'electron';
+import { app, ipcMain, type IpcMainEvent, type WebContents } from 'electron';
 import { DummyIpcSerializer, BaseIpcSocket } from '@web-auto/common-ipc';
 import {
     BaseIpcServiceRegistrySocketHandler,
     GenericIpcServiceRegistry,
+    type SocketMessageCallback,
 } from '@web-auto/common-ipc/main.js';
 
 class ElectronServiceIpcSocket extends BaseIpcSocket {
@@ -50,13 +46,25 @@ class ElectronServiceIpcSocket extends BaseIpcSocket {
 export class ElectronIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistrySocketHandler {
     public constructor(name: string) {
         super(name);
+
+        this.onWebContentsCreated = this.onWebContentsCreated.bind(this);
     }
 
-    public attachWindow(window: BrowserWindow): void {
-        const socket = new ElectronServiceIpcSocket(
-            this.name,
-            window.webContents,
-        );
+    public register(callback: SocketMessageCallback): void {
+        super.register(callback);
+
+        app.on('web-contents-created', this.onWebContentsCreated);
+    }
+
+    public unregister(): void {
+        app.off('web-contents-created', this.onWebContentsCreated);
+    }
+
+    public onWebContentsCreated(
+        _event: Electron.Event,
+        webContents: WebContents,
+    ): void {
+        const socket = new ElectronServiceIpcSocket(this.name, webContents);
 
         this.addSocket(socket);
     }
@@ -70,9 +78,5 @@ export class ElectronIpcServiceRegistry extends GenericIpcServiceRegistry {
         const serializer = new DummyIpcSerializer();
         super(socketHandler, serializer);
         this.socketHandler = socketHandler;
-    }
-
-    public attachWindow(window: BrowserWindow): void {
-        this.socketHandler.attachWindow(window);
     }
 }

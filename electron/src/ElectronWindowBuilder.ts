@@ -50,11 +50,6 @@ export class ElectronWindowBuilder {
         this.logger.info('Displays', displays);
     }
 
-    public createWebWindow(window: BrowserWindow): void {
-        assert(this.androidAutoIpcServiceRegistry !== undefined);
-        this.androidAutoIpcServiceRegistry.attachWindow(window);
-    }
-
     private async loadFile(
         window: BrowserWindow,
         config: ElectronWindowConfig,
@@ -156,16 +151,6 @@ export class ElectronWindowBuilder {
                 session: ses,
             },
         });
-
-        switch (config.app.name) {
-            case 'web':
-                this.createWebWindow(window);
-                break;
-            default:
-                this.logger.error(`Unknown app name ${config.app.name}`);
-                window.destroy();
-                return;
-        }
 
         try {
             if (config.app.url === undefined) {
