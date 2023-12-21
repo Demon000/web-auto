@@ -19,7 +19,6 @@ import {
     MediaCodecType,
     VideoFocusNotification,
     VideoFocusMode,
-    VideoFocusReason,
 } from '@web-auto/android-auto-proto';
 import assert from 'node:assert';
 import type {
