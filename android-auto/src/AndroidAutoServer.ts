@@ -602,6 +602,17 @@ export abstract class AndroidAutoServer {
         reason?: string,
     ): Promise<void> {
         this.logger.info(`Disconnecting device ${device.name}`);
+
+        if (reason !== DeviceDisconnectReason.START_FAILED) {
+            this.logger.info('Stopping dependencies');
+            try {
+                await this.stopDependencies();
+                this.logger.info('Stopped dependencies');
+            } catch (err) {
+                this.logger.error('Failed to stop dependencies', err);
+            }
+        }
+
         try {
             await device.disconnect(reason);
         } catch (err) {
@@ -614,17 +625,6 @@ export abstract class AndroidAutoServer {
         this.logger.info(`Disconnected device ${device.name}`);
         this.connectedDevice = undefined;
         this.onDeviceDisconnectedCallback();
-
-        if (reason !== DeviceDisconnectReason.START_FAILED) {
-            this.logger.info('Stopping dependencies');
-            try {
-                await this.stopDependencies();
-            } catch (err) {
-                this.logger.error('Failed to stop dependencies', err);
-                return;
-            }
-            this.logger.info('Stopped dependencies');
-        }
     }
 
     public async disconnectDevice(
