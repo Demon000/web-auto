@@ -5,6 +5,7 @@ import type {
     IpcEvent,
     IpcSerializer,
     IpcSocket,
+    IpcSubscribeEvent,
 } from './common.js';
 
 export type IpcServiceHandlerKey<L extends IpcService> = keyof L & string;
@@ -30,6 +31,10 @@ export type SocketMessageCallback = (socket: IpcSocket, data: any) => void;
 
 export interface IpcServiceRegistrySocketHandler {
     get sockets(): IpcSocket[];
+    socketsForHandleName(
+        handle: string,
+        name: string,
+    ): Iterable<IpcSocket> | undefined;
     register(callback: SocketMessageCallback): void;
     unregister(): void;
 }
@@ -39,6 +44,10 @@ export abstract class BaseIpcServiceRegistrySocketHandler
 {
     protected messageCallback?: SocketMessageCallback;
     public sockets: IpcSocket[] = [];
+    protected handleNameSocketsMap = new Map<
+        string,
+        Map<string, Map<IpcSocket, number>>
+    >();
 
     public constructor(protected name: string) {
         this.onData = this.onData.bind(this);
@@ -59,6 +68,23 @@ export abstract class BaseIpcServiceRegistrySocketHandler
         }
 
         this.messageCallback = undefined;
+    }
+
+    public socketsForHandleName(
+        handle: string,
+        name: string,
+    ): Iterable<IpcSocket> | undefined {
+        const handleMap = this.handleNameSocketsMap.get(handle);
+        if (handleMap === undefined) {
+            return undefined;
+        }
+
+        const sockets = handleMap.get(name);
+        if (sockets === undefined) {
+            return undefined;
+        }
+
+        return sockets.keys();
     }
 
     public addSocket(socket: IpcSocket): void {
@@ -87,7 +113,52 @@ export abstract class BaseIpcServiceRegistrySocketHandler
             return;
         }
 
+        this.unsubscribeAll(socket);
         this.sockets.splice(socketIndex, 1);
+    }
+
+    private unsubscribeAll(socket: IpcSocket): void {
+        for (const handleMap of this.handleNameSocketsMap.values()) {
+            for (const socketsMap of handleMap.values()) {
+                socketsMap.delete(socket);
+            }
+        }
+    }
+
+    public handleSocketSubscribe(
+        socket: IpcSocket,
+        ipcEvent: IpcSubscribeEvent,
+    ): void {
+        let handleMap = this.handleNameSocketsMap.get(ipcEvent.handle);
+        if (handleMap === undefined) {
+            handleMap = new Map();
+            this.handleNameSocketsMap.set(ipcEvent.handle, handleMap);
+        }
+
+        let socketsMap = handleMap.get(ipcEvent.name);
+        if (socketsMap === undefined) {
+            socketsMap = new Map();
+            handleMap.set(ipcEvent.name, socketsMap);
+        }
+
+        const modifier = ipcEvent.subscribe ? +1 : -1;
+        let value = socketsMap.get(socket);
+        if (value === undefined) {
+            value = 0;
+        }
+
+        value += modifier;
+
+        if (value < 0) {
+            console.error('Socket subscribe count < 0', ipcEvent, socket);
+            return;
+        }
+
+        if (value === 0) {
+            socketsMap.delete(socket);
+        } else {
+            socketsMap.set(socket, value);
+        }
     }
 }
 
@@ -111,7 +182,16 @@ export class IpcServiceHandlerHelper<L extends IpcService>
 
         const data = this.serializer.serialize(ipcEvent);
 
-        for (const socket of this.socketHandler.sockets) {
+        const sockets = this.socketHandler.socketsForHandleName(
+            this.handle,
+            name,
+        );
+
+        if (sockets === undefined) {
+            return;
+        }
+
+        for (const socket of sockets) {
             socket.send(data);
         }
     }
@@ -131,6 +211,7 @@ export class IpcServiceHandlerHelper<L extends IpcService>
 
     public async handleMessage(ipcEvent: IpcEvent): Promise<any> {
         assert('name' in ipcEvent);
+        assert('args' in ipcEvent);
 
         const handlerFn = this.map[ipcEvent.name];
         assert(handlerFn !== undefined);
@@ -195,6 +276,11 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
         data: Buffer,
     ): Promise<void> {
         const ipcEvent = this.serializer.deserialize(data) as IpcEvent;
+
+        if ('subscribe' in ipcEvent) {
+            this.socketHandler.handleSocketSubscribe(socket, ipcEvent);
+            return;
+        }
 
         assert('handle' in ipcEvent);
         assert('id' in ipcEvent);

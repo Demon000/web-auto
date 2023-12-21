@@ -108,6 +108,18 @@ export class IpcClientHandlerHelper<L extends IpcClient>
         }
     }
 
+    public subscribe(name: string, subscribe: boolean): void {
+        const ipcEvent: IpcEvent = {
+            handle: this.handle,
+            name,
+            subscribe,
+        };
+
+        const data = this.serializer.serialize(ipcEvent);
+
+        this.socket.send(data);
+    }
+
     public on<K extends IpcClientHandlerKey<L>, F extends L[K]>(
         name: K,
         cb: IpcClientHandlerCallback<L, K, F>,
@@ -119,6 +131,7 @@ export class IpcClientHandlerHelper<L extends IpcClient>
         }
 
         listeners.push(cb);
+        this.subscribe(name, true);
     }
 
     public off<K extends IpcClientHandlerKey<L>, F extends L[K]>(
@@ -136,6 +149,7 @@ export class IpcClientHandlerHelper<L extends IpcClient>
         }
 
         listeners.splice(index, 1);
+        this.subscribe(name, false);
     }
 }
 

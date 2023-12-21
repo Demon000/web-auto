@@ -9,6 +9,12 @@ export type IpcClient = {
     [key: string]: IpcClientFunction;
 };
 
+export type IpcSubscribeEvent = {
+    handle: string;
+    name: string;
+    subscribe: boolean;
+};
+
 export type IpcEvent =
     /* Client to server call */
     | {
@@ -34,7 +40,9 @@ export type IpcEvent =
           handle: string;
           name: string;
           args: any[];
-      };
+      }
+    /* Subscribe / unsubscribe. */
+    | IpcSubscribeEvent;
 
 export interface IpcSerializer {
     serialize(ipcEvent: IpcEvent): any;
