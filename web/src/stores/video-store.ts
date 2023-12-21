@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { Ref, nextTick, ref, triggerRef } from 'vue';
+import { Ref, nextTick, ref } from 'vue';
 import { androidAutoVideoService } from '../ipc.ts';
 import { VideoFocusMode } from '@web-auto/android-auto-proto';
 
