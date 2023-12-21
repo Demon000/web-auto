@@ -1,4 +1,3 @@
-import EventEmitter from 'eventemitter3';
 import type {
     IpcClient,
     IpcEvent,
@@ -7,12 +6,36 @@ import type {
     IpcSocket,
 } from './common.js';
 
-export type IpcClientHandler<L extends IpcClient, R extends IpcService> = R &
-    Pick<EventEmitter<L>, 'on' | 'off' | 'once'>;
+export type IpcClientHandlerKey<L extends IpcClient> = keyof L & string;
 
-export class IpcClientHandlerHelper<L extends IpcClient> {
-    public emitter = new EventEmitter<L>();
+export type IpcClientHandlerCallback<
+    L extends IpcClient,
+    K extends IpcClientHandlerKey<L>,
+    F extends L[K],
+> = (...args: Parameters<F>) => ReturnType<F>;
+
+export type IpcClientHandlerEmitter<L extends IpcClient> = {
+    on<K extends IpcClientHandlerKey<L>, F extends L[K]>(
+        name: K,
+        cb: IpcClientHandlerCallback<L, K, F>,
+    ): void;
+    off<K extends IpcClientHandlerKey<L>, F extends L[K]>(
+        name: K,
+        cb: IpcClientHandlerCallback<L, K, F>,
+    ): void;
+};
+
+export type IpcClientHandler<L extends IpcClient, R extends IpcService> = R &
+    IpcClientHandlerEmitter<L>;
+
+export class IpcClientHandlerHelper<L extends IpcClient>
+    implements IpcClientHandlerEmitter<L>
+{
     private callbacksMap = new Map<number, (ipcEvent: IpcEvent) => void>();
+    private listenersMap = new Map<
+        IpcClientHandlerKey<L>,
+        IpcClientHandlerCallback<L, any, any>[]
+    >();
     private id = 0;
 
     public constructor(
@@ -74,14 +97,45 @@ export class IpcClientHandlerHelper<L extends IpcClient> {
                 return;
             }
 
-            this.emitter.emit(
-                ipcEvent.name as EventEmitter.EventNames<L>,
-                ...(ipcEvent.args as EventEmitter.EventArgs<
-                    L,
-                    EventEmitter.EventNames<L>
-                >),
-            );
+            const listeners = this.listenersMap.get(ipcEvent.name);
+            if (listeners === undefined) {
+                return;
+            }
+
+            for (const listener of listeners) {
+                listener(...ipcEvent.args);
+            }
         }
+    }
+
+    public on<K extends IpcClientHandlerKey<L>, F extends L[K]>(
+        name: K,
+        cb: IpcClientHandlerCallback<L, K, F>,
+    ): void {
+        let listeners = this.listenersMap.get(name);
+        if (listeners === undefined) {
+            listeners = [];
+            this.listenersMap.set(name, listeners);
+        }
+
+        listeners.push(cb);
+    }
+
+    public off<K extends IpcClientHandlerKey<L>, F extends L[K]>(
+        name: K,
+        cb: IpcClientHandlerCallback<L, K, F>,
+    ): void {
+        const listeners = this.listenersMap.get(name);
+        if (listeners === undefined) {
+            throw new Error(`Listeners for ${String(name)} not added`);
+        }
+
+        const index = listeners.indexOf(cb);
+        if (index === -1) {
+            throw new Error(`Listener for ${String(name)} not added`);
+        }
+
+        listeners.splice(index, 1);
     }
 }
 
@@ -106,10 +160,9 @@ export const createIpcServiceProxy = <
                         switch (property) {
                             case 'on':
                             case 'off':
-                            case 'once':
                                 return Reflect.apply(
-                                    ipcHandler.emitter[property],
-                                    ipcHandler.emitter,
+                                    ipcHandler[property],
+                                    ipcHandler,
                                     args,
                                 );
                         }

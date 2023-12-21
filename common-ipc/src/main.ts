@@ -7,13 +7,18 @@ import type {
     IpcSocket,
 } from './common.js';
 
-export type IpcServiceHandler<L extends IpcService, R extends IpcClient> = R & {
-    on<K extends keyof L, F extends L[K]>(
+export type IpcServiceHandlerKey<L extends IpcService> = keyof L & string;
+
+export type IpcServiceHandlerEmitter<L extends IpcService> = {
+    on<K extends IpcServiceHandlerKey<L>, F extends L[K]>(
         name: K,
         cb: (...args: Parameters<F>) => ReturnType<F>,
     ): void;
-    off<K extends keyof L>(name: K): void;
+    off<K extends IpcServiceHandlerKey<L>>(name: K): void;
 };
+
+export type IpcServiceHandler<L extends IpcService, R extends IpcClient> = R &
+    IpcServiceHandlerEmitter<L>;
 
 export interface IpcServiceRegistry {
     registerIpcService<L extends IpcService, R extends IpcClient>(
@@ -86,7 +91,9 @@ export abstract class BaseIpcServiceRegistrySocketHandler
     }
 }
 
-export class IpcServiceHandlerHelper<L extends IpcService> {
+export class IpcServiceHandlerHelper<L extends IpcService>
+    implements IpcServiceHandlerEmitter<L>
+{
     private map: Partial<L> = {};
 
     public constructor(
@@ -109,7 +116,7 @@ export class IpcServiceHandlerHelper<L extends IpcService> {
         }
     }
 
-    public on<K extends keyof L, F extends L[K]>(
+    public on<K extends IpcServiceHandlerKey<L>, F extends L[K]>(
         name: K,
         cb: (...args: Parameters<F>) => ReturnType<F>,
     ): void {
@@ -117,7 +124,7 @@ export class IpcServiceHandlerHelper<L extends IpcService> {
         this.map[name] = cb as any;
     }
 
-    public off<K extends keyof L>(name: K): void {
+    public off<K extends IpcServiceHandlerKey<L>>(name: K): void {
         assert(name in this.map);
         delete this.map[name];
     }
