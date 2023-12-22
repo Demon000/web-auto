@@ -1,6 +1,4 @@
 node_modules
 dist
-tsconfig.tsbuildinfo
-tsconfig.cjs.tsbuildinfo
 config.json5
 web-auto.log
