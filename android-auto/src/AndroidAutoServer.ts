@@ -601,7 +601,9 @@ export abstract class AndroidAutoServer {
         device: Device,
         reason?: string,
     ): Promise<void> {
-        this.logger.info(`Disconnecting device ${device.name}`);
+        this.logger.info(
+            `Disconnecting device ${device.name} with reason ${reason}`,
+        );
 
         if (reason !== DeviceDisconnectReason.START_FAILED) {
             this.logger.info('Stopping dependencies');
