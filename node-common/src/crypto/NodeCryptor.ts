@@ -27,7 +27,8 @@ export class NodeCryptor extends Cryptor {
     ) {
         super(certificateBuffer, privateKeyBuffer);
     }
-    public async start(): Promise<void> {
+
+    public start(): void {
         assert(this.cleartext === undefined);
         assert(this.encrypted === undefined);
 
@@ -57,32 +58,18 @@ export class NodeCryptor extends Cryptor {
             this.connected = true;
         });
     }
-    public async stop(): Promise<void> {
-        const releaseEncrypt = await this.encryptMutex.acquire();
-        const releaseDecrypt = await this.decryptMutex.acquire();
-
+    public stop(): void {
         assert(this.cleartext !== undefined);
         assert(this.encrypted !== undefined);
 
-        await new Promise((resolve) => {
-            assert(this.cleartext !== undefined);
-            this.cleartext.once('close', resolve);
-            this.cleartext.destroy();
-        });
-
-        await new Promise((resolve) => {
-            assert(this.encrypted !== undefined);
-            this.encrypted.once('close', resolve);
-            this.encrypted.destroy();
-        });
+        this.cleartext.destroy();
+        this.encrypted.destroy();
 
         this.cleartext = undefined;
         this.encrypted = undefined;
         this.connected = false;
-
-        releaseDecrypt();
-        releaseEncrypt();
     }
+
     public isHandshakeComplete(): boolean {
         return this.connected;
     }

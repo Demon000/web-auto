@@ -455,7 +455,7 @@ export abstract class AndroidAutoServer {
 
         this.logger.info('Starting cryptor');
         try {
-            await this.cryptor.start();
+            this.cryptor.start();
         } catch (err) {
             this.logger.info('Failed to start cryptor');
             this.frameCodec.stop();
@@ -473,7 +473,7 @@ export abstract class AndroidAutoServer {
             try {
                 await this.stopServices();
                 this.logger.info('Stopping cryptor');
-                await this.cryptor.stop();
+                this.cryptor.stop();
                 this.logger.info('Stopped cryptor');
                 this.frameCodec.stop();
             } catch (err) {
@@ -508,7 +508,7 @@ export abstract class AndroidAutoServer {
 
         this.logger.info('Stopping cryptor');
         try {
-            await this.cryptor.stop();
+            this.cryptor.stop();
             this.logger.info('Stopped cryptor');
         } catch (err) {
             this.logger.error('Failed to stop cryptor', err);
