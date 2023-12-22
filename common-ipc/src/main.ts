@@ -106,6 +106,7 @@ export abstract class BaseIpcServiceRegistrySocketHandler
     }
 
     protected onClose(socket: IpcSocket): void {
+        socket.offClose();
         socket.offData();
         const socketIndex = this.sockets.indexOf(socket);
         if (socketIndex === -1) {
