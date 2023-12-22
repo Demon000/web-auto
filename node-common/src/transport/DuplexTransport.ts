@@ -62,9 +62,7 @@ export class DuplexTransport extends Transport {
             return;
         }
 
-        this.socket.off('error', this.onError);
-        this.socket.off('data', this.onData);
-        this.socket.off('close', this.onClose);
+        this.detachEvents();
 
         this.state = TransportState.DISCONNECTED;
 
