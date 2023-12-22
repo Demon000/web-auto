@@ -126,13 +126,13 @@ export class BluetoothDevice extends Device {
 
     protected async handleDisconnect(reason: string): Promise<void> {
         switch (reason) {
-            case DeviceDisconnectReason.TRANSPORT:
-            case DeviceDisconnectReason.USER:
+            case BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE:
+                await this.disconnectBluetooth();
+                break;
+            default:
                 await this.disconnectBluetoothProfile();
                 await this.disconnectBluetooth();
                 break;
-            case BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE:
-                await this.disconnectBluetooth();
         }
     }
 
