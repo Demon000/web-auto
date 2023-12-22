@@ -42,12 +42,12 @@ export abstract class Service {
         return this.constructor.name;
     }
 
-    public async start(): Promise<void> {
+    public start(): void {
         assert(!this.started);
 
         this.started = true;
     }
-    public async stop(): Promise<void> {
+    public stop(): void {
         assert(this.started);
 
         this.started = false;

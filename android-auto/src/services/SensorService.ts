@@ -123,11 +123,11 @@ export abstract class SensorService extends Service {
         }
     }
 
-    public async stop(): Promise<void> {
-        await super.stop();
+    public stop(): void {
+        super.stop();
 
         for (const sensor of this.sensors) {
-            await sensor.stop();
+            sensor.stop();
         }
     }
 }

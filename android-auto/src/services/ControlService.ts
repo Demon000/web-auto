@@ -259,9 +259,12 @@ export class ControlService extends Service {
         await this.sendServiceDiscoveryResponse(response);
     }
 
-    public async start(): Promise<void> {
-        await super.start();
+    public start(): void {
+        super.start();
+        this.pinger.start();
+    }
 
+    public async doStart(): Promise<void> {
         const abortSignal = AbortSignal.timeout(this.config.startTimeoutMs);
 
         await this.doVersionQuery(abortSignal);
@@ -269,13 +272,11 @@ export class ControlService extends Service {
         await this.doHandshake(abortSignal);
 
         await this.doServiceDiscovery(abortSignal);
-
-        this.pinger.start();
     }
 
-    public async stop(): Promise<void> {
-        await super.stop();
+    public stop(): void {
         this.pinger.stop();
+        super.stop();
     }
 
     protected fillChannelDescriptor(_channelDescriptor: ProtoService): void {

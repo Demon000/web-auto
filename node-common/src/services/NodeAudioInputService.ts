@@ -46,8 +46,8 @@ export class NodeAudioInputService extends AudioInputService {
         );
     }
 
-    public async stop(): Promise<void> {
-        await super.stop();
+    public stop(): void {
+        super.stop();
         this.rtaudio.closeStream();
     }
 

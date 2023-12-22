@@ -24,6 +24,7 @@ export enum DeviceDisconnectReason {
     TRANSPORT = 'transport-disconnected',
     USER = 'user-requested',
     START_FAILED = 'start-failed',
+    DO_START_FAILED = 'do-start-failed',
 }
 
 export abstract class Device {

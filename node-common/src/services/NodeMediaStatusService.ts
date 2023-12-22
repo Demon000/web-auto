@@ -29,12 +29,8 @@ export class NodeMediaStatusService extends MediaStatusService {
         this.ipcHandler.on('getStatus', this.getStatus.bind(this));
     }
 
-    public async start(): Promise<void> {
-        await super.start();
-    }
-
-    public async stop(): Promise<void> {
-        await super.stop();
+    public stop(): void {
+        super.stop();
         this.metadata = undefined;
         this.ipcHandler.metadata(undefined);
         this.status = undefined;

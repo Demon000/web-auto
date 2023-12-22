@@ -10,9 +10,9 @@ export abstract class Sensor {
         protected events: SensorEvents,
     ) {}
 
-    public async start(): Promise<void> {}
+    public start(): void {}
 
-    public async stop(): Promise<void> {}
+    public stop(): void {}
 
     public abstract emit(): Promise<void>;
 }

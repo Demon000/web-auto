@@ -107,9 +107,9 @@ export class NodeVideoService extends VideoService {
         await this.sendVideoFocusIndication(new VideoFocusNotification(data));
     }
 
-    public async stop(): Promise<void> {
-        await this.channelStop();
-        await super.stop();
+    public stop(): void {
+        this.syncChannelStop();
+        super.stop();
     }
 
     protected async open(_data: ChannelOpenRequest): Promise<void> {
@@ -145,11 +145,15 @@ export class NodeVideoService extends VideoService {
         });
     }
 
-    protected async channelStop(): Promise<void> {
-        await super.channelStop();
+    protected syncChannelStop(): void {
         this.codecBuffer = undefined;
         this.codecState = CodecState.STOPPED;
         this.ipcHandler.channelStop();
+    }
+
+    protected async channelStop(): Promise<void> {
+        await super.channelStop();
+        this.syncChannelStop();
     }
 
     protected parseH264CodecConfig(buffer: DataBuffer): VideoCodecConfig {
