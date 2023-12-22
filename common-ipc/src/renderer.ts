@@ -61,6 +61,7 @@ export class IpcClientHandlerHelper<L extends IpcClient>
             args,
         };
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const data = this.serializer.serialize(ipcEvent);
 
         return new Promise((resolve, reject) => {
@@ -103,6 +104,7 @@ export class IpcClientHandlerHelper<L extends IpcClient>
             }
 
             for (const listener of listeners) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 listener(...ipcEvent.args);
             }
         }
@@ -115,6 +117,7 @@ export class IpcClientHandlerHelper<L extends IpcClient>
             subscribe,
         };
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const data = this.serializer.serialize(ipcEvent);
 
         this.socket.send(data);
@@ -174,13 +177,15 @@ export const createIpcServiceProxy = <
                         switch (property) {
                             case 'on':
                             case 'off':
-                                return Reflect.apply(
+                                Reflect.apply(
                                     ipcHandler[property],
                                     ipcHandler,
                                     args,
                                 );
+                                return;
                         }
 
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                         return ipcHandler.send(property, ...args);
                     },
                 });
@@ -202,16 +207,13 @@ export class GenericIpcClientRegistry implements IpcClientRegistry {
     public constructor(
         private serializer: IpcSerializer,
         private socket: IpcSocket,
-    ) {
-        this.onData = this.onData.bind(this);
-        this.onClose = this.onClose.bind(this);
-    }
+    ) {}
 
     public async register(): Promise<void> {
         await this.socket.open();
 
-        this.socket.onData(this.onData);
-        this.socket.onClose(this.onClose);
+        this.socket.onData(this.onData.bind(this));
+        this.socket.onClose(this.onClose.bind(this));
     }
 
     private onClose(): void {

@@ -120,14 +120,17 @@ export class DataBuffer {
     }
 
     public appendUint8(data: number): this {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         return this.handleAppend(data, 1, this.data.writeUint8);
     }
 
     public appendUint16BE(data: number): this {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         return this.handleAppend(data, 2, this.data.writeUint16BE);
     }
 
     public appendUint32BE(data: number): this {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         return this.handleAppend(data, 4, this.data.writeUint32BE);
     }
 
@@ -145,14 +148,17 @@ export class DataBuffer {
     }
 
     public readUint8(): number {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         return this.handleRead(1, this.data.readUint8);
     }
 
     public readUint16BE(): number {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         return this.handleRead(2, this.data.readUint16BE);
     }
 
     public readUint32BE(): number {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         return this.handleRead(4, this.data.readUint32BE);
     }
 

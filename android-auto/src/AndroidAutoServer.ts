@@ -215,7 +215,7 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    private async getServiceDiscoveryResponse(): Promise<ServiceDiscoveryResponse> {
+    private getServiceDiscoveryResponse(): ServiceDiscoveryResponse {
         assert(this.controlService !== undefined);
         assert(this.services !== undefined);
 
@@ -248,7 +248,15 @@ export abstract class AndroidAutoServer {
         return data;
     }
 
-    private async onPingTimeout(): Promise<void> {
+    private onPingTimeout(): void {
+        this.onPingTimeoutAsync()
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error('Failed to handle ping timeout', err);
+            });
+    }
+
+    private async onPingTimeoutAsync(): Promise<void> {
         if (this.connectedDevice === undefined) {
             this.logger.error(
                 'Cannot send ping timeout without a connected device',
@@ -260,7 +268,7 @@ export abstract class AndroidAutoServer {
             `Pinger timed out, disconnecting ${this.connectedDevice.name}`,
         );
 
-        await this.disconnectDevice(this.connectedDevice);
+        await this.disconnectDeviceAsync(this.connectedDevice);
     }
 
     private async onReceiveMessage(
@@ -316,7 +324,18 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    private async onDeviceTransportData(
+    private onDeviceTransportData(device: Device, buffer: DataBuffer): void {
+        this.onDeviceTransportDataAsync(device, buffer)
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error(
+                    'Failed to handle device transport data',
+                    err,
+                );
+            });
+    }
+
+    private async onDeviceTransportDataAsync(
         device: Device,
         buffer: DataBuffer,
     ): Promise<void> {
@@ -355,10 +374,8 @@ export abstract class AndroidAutoServer {
                 });
         }
     }
-    private async onDeviceTransportError(
-        device: Device,
-        err: Error,
-    ): Promise<void> {
+
+    private onDeviceTransportError(device: Device, err: Error): void {
         if (!this.isDeviceConnected(device)) {
             this.logger.error(
                 `Cannot accept error from ${device.name}, ` +
@@ -383,7 +400,7 @@ export abstract class AndroidAutoServer {
         this.onDevicesUpdatedCallback(devices);
     }
 
-    private async onDeviceAvailable(device: Device): Promise<void> {
+    private onDeviceAvailable(device: Device): void {
         this.nameDeviceMap.set(device.name, device);
 
         this.logger.info(`New available device ${device.name}`);
@@ -391,7 +408,7 @@ export abstract class AndroidAutoServer {
         this.callOnDevicesUpdated();
     }
 
-    private async onDeviceStateUpdated(device: Device): Promise<void> {
+    private onDeviceStateUpdated(device: Device): void {
         assert(this.nameDeviceMap.has(device.name));
 
         this.callOnDevicesUpdated();
@@ -517,7 +534,7 @@ export abstract class AndroidAutoServer {
         this.frameCodec.stop();
     }
 
-    private async onDeviceUnavailable(device: Device): Promise<void> {
+    private onDeviceUnavailable(device: Device): void {
         this.logger.info(`Device ${device.name} no longer available`);
 
         this.nameDeviceMap.delete(device.name);
@@ -536,7 +553,16 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    public async connectDevice(device: Device): Promise<void> {
+    public connectDevice(device: Device): void {
+        this.connectDeviceAsync(device).then(
+            () => {},
+            (err) => {
+                this.logger.error('Failed to connect device', err);
+            },
+        );
+    }
+
+    public async connectDeviceAsync(device: Device): Promise<void> {
         assert(this.controlService !== undefined);
 
         if (
@@ -565,7 +591,7 @@ export abstract class AndroidAutoServer {
         }
 
         if (this.connectedDevice !== undefined) {
-            await this.disconnectDevice(this.connectedDevice);
+            await this.disconnectDeviceAsync(this.connectedDevice);
         }
 
         const release = await this.connectionLock.acquire();
@@ -641,7 +667,15 @@ export abstract class AndroidAutoServer {
         this.onDeviceDisconnectedCallback();
     }
 
-    public async disconnectDevice(
+    public disconnectDevice(device: Device, reason?: string): void {
+        this.disconnectDeviceAsync(device, reason)
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error('Failed to disconnect device', err);
+            });
+    }
+
+    public async disconnectDeviceAsync(
         device: Device,
         reason?: string,
     ): Promise<void> {
@@ -702,7 +736,7 @@ export abstract class AndroidAutoServer {
         this.started = false;
 
         if (this.connectedDevice !== undefined) {
-            await this.disconnectDevice(this.connectedDevice);
+            await this.disconnectDeviceAsync(this.connectedDevice);
         }
 
         for (const deviceHandler of this.deviceHandlers) {

@@ -53,10 +53,7 @@ export abstract class BaseIpcServiceRegistrySocketHandler
         Map<string, Map<IpcSocket, number>>
     >();
 
-    public constructor(protected name: string) {
-        this.onData = this.onData.bind(this);
-        this.onClose = this.onClose.bind(this);
-    }
+    public constructor(protected name: string) {}
 
     public register(callback: SocketMessageCallback): void {
         if (this.messageCallback !== undefined) {
@@ -95,8 +92,8 @@ export abstract class BaseIpcServiceRegistrySocketHandler
         socket
             .open()
             .then(() => {
-                socket.onData(this.onData);
-                socket.onClose(this.onClose);
+                socket.onData(this.onData.bind(this));
+                socket.onClose(this.onClose.bind(this));
                 this.sockets.push(socket);
             })
             .catch((err) => {
@@ -188,6 +185,7 @@ export class IpcServiceHandlerHelper<L extends IpcService>
             args,
         };
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const data = this.serializer.serialize(ipcEvent);
 
         const sockets = this.socketHandler.socketsForHandleName(
@@ -217,14 +215,15 @@ export class IpcServiceHandlerHelper<L extends IpcService>
         this.handlersMap.delete(name);
     }
 
-    public async handleMessage(ipcEvent: IpcEvent): Promise<any> {
+    public handleMessage(ipcEvent: IpcEvent): Promise<any> {
         assert('name' in ipcEvent);
         assert('args' in ipcEvent);
 
         const handlerFn = this.handlersMap.get(ipcEvent.name);
         assert(handlerFn !== undefined);
 
-        return handlerFn(...(ipcEvent.args as any));
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        return handlerFn(...ipcEvent.args);
     }
 }
 
@@ -246,13 +245,15 @@ export const createIpcClientProxy = <L extends IpcService, R extends IpcClient>(
                         switch (property) {
                             case 'on':
                             case 'off':
-                                return Reflect.apply(
+                                Reflect.apply(
                                     ipcHandler[property],
                                     ipcHandler,
                                     args,
                                 );
+                                return;
                         }
 
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                         return ipcHandler.send(property, ...args);
                     },
                 });
@@ -267,23 +268,29 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
     public constructor(
         protected socketHandler: BaseIpcServiceRegistrySocketHandler,
         private serializer: IpcSerializer,
-    ) {
-        this.handleMessage = this.handleMessage.bind(this);
-    }
+    ) {}
 
     public register(): void {
-        this.socketHandler.register(this.handleMessage);
+        this.socketHandler.register(this.handleMessage.bind(this));
     }
 
     public unregister(): void {
         this.socketHandler.unregister();
     }
 
-    private async handleMessage(
+    private handleMessage(socket: IpcSocket, data: Buffer): void {
+        this.handleMessageAsync(socket, data)
+            .then(() => {})
+            .catch((err) => {
+                console.error(err);
+            });
+    }
+
+    private async handleMessageAsync(
         socket: IpcSocket,
         data: Buffer,
     ): Promise<void> {
-        const ipcEvent = this.serializer.deserialize(data) as IpcEvent;
+        const ipcEvent = this.serializer.deserialize(data);
 
         if ('subscribe' in ipcEvent) {
             this.socketHandler.handleSocketSubscribe(socket, ipcEvent);
@@ -300,10 +307,12 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
 
             let replyIpcEvent: IpcEvent;
             try {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 const result = await ipcHandler.handleMessage(ipcEvent);
                 replyIpcEvent = {
                     replyToId: ipcEvent.id,
                     handle: ipcEvent.handle,
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     result,
                 };
             } catch (err) {
@@ -315,7 +324,9 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
                 };
             }
 
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const data = this.serializer.serialize(replyIpcEvent);
+
             socket.send(data);
 
             return;

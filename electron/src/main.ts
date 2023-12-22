@@ -2,7 +2,7 @@ import { getLogger, setConfig } from '@web-auto/logging';
 import { lilconfigSync } from 'lilconfig';
 import JSON5 from 'json5';
 
-import { app, BrowserWindow } from 'electron';
+import { app } from 'electron';
 import {
     ElectronWindowBuilder,
     type ElectronWindowBuilderConfig,
@@ -22,6 +22,7 @@ type ElectronAndroidAutoConfig = {
 const config = lilconfigSync('web-auto', {
     loaders: {
         '.json5': (_filepath, content) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return JSON5.parse(content);
         },
     },
@@ -64,23 +65,25 @@ const electronWindowBuilder = new ElectronWindowBuilder(
 );
 
 app.whenReady()
-    .then(() => {
+    .then(async () => {
         electronWindowBuilder.logDisplays();
 
-        electronWindowBuilder.buildWindows();
-
-        app.on('activate', function () {
-            if (BrowserWindow.getAllWindows().length === 0) {
-                electronWindowBuilder.buildWindows();
-            }
-        });
+        try {
+            await electronWindowBuilder.buildWindows();
+        } catch (err) {
+            logger.error('Failed to build windows', err);
+        }
     })
     .catch((err) => {
         console.error(err);
     });
 
 let cleanupRan = false;
-app.on('before-quit', async (event) => {
+
+const beforeQuit = async (event: {
+    preventDefault: () => void;
+    readonly defaultPrevented: boolean;
+}) => {
     if (cleanupRan) {
         return;
     }
@@ -97,6 +100,14 @@ app.on('before-quit', async (event) => {
 
     cleanupRan = true;
     app.quit();
+};
+
+app.on('before-quit', (event) => {
+    beforeQuit(event)
+        .then(() => {})
+        .catch((err) => {
+            logger.error('Failed to stop', err);
+        });
 });
 
 app.on('window-all-closed', () => {

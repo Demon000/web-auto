@@ -26,7 +26,9 @@ class SocketClientIpcSocket extends BaseIpcSocket {
 
             const onOpen = () => {
                 this.socket = socket;
+                // eslint-disable-next-line @typescript-eslint/unbound-method
                 socket.addEventListener('close', this.onCloseInternal);
+                // eslint-disable-next-line @typescript-eslint/unbound-method
                 socket.addEventListener('message', this.onDataInternal);
                 cleanup();
                 resolve();
@@ -57,7 +59,9 @@ class SocketClientIpcSocket extends BaseIpcSocket {
 
         const socket = this.socket;
 
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         socket.removeEventListener('close', this.onCloseInternal);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         socket.removeEventListener('message', this.onDataInternal);
 
         return new Promise((resolve) => {
@@ -77,6 +81,7 @@ class SocketClientIpcSocket extends BaseIpcSocket {
             throw new Error('Cannot call send before calling open');
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         this.socket.send(data);
     }
 }

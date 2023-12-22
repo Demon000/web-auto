@@ -22,13 +22,18 @@ class SocketServiceIpcSocket extends BaseIpcSocket {
         this.onCloseInternal = this.onCloseInternal.bind(this);
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async open(): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.socket.addEventListener('message', this.onDataInternal);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.socket.addEventListener('close', this.onCloseInternal);
     }
 
     public async close(): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.socket.removeEventListener('message', this.onDataInternal);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.socket.removeEventListener('close', this.onCloseInternal);
 
         return new Promise((resolve) => {
@@ -56,6 +61,7 @@ class SocketServiceIpcSocket extends BaseIpcSocket {
             throw new Error('Cannot call send before calling open');
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         this.socket.send(data);
     }
 }
@@ -78,14 +84,18 @@ export class SocketIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistr
     public register(callback: SocketMessageCallback) {
         super.register(callback);
 
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.wss.on('connection', this.onConnection);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.server.prependListener('upgrade', this.onServerUpgrade);
     }
 
     public unregister() {
         super.unregister();
 
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.server.removeListener('upgrade', this.onServerUpgrade);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.wss.off('connection', this.onConnection);
     }
 

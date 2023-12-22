@@ -213,11 +213,13 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
         return ipcDevices;
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async getDevicesObjects(): Promise<IDevice[]> {
         const devices = this.getDevices();
         return this.devicesFromImpl(devices);
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async getConnectedDeviceObject(): Promise<IDevice | undefined> {
         const device = this.getConnectedDevice();
         if (device === undefined) {
@@ -233,7 +235,7 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
             throw new Error(`Unknown device ${name}`);
         }
 
-        await this.connectDevice(device);
+        await this.connectDeviceAsync(device);
     }
 
     public async disconnectDeviceName(name: string): Promise<void> {
@@ -242,7 +244,7 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
             throw new Error(`Unknown device ${name}`);
         }
 
-        await this.disconnectDevice(device);
+        await this.disconnectDeviceAsync(device);
     }
 
     protected onDevicesUpdatedCallback(devices: Device[]): void {

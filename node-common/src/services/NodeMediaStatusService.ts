@@ -41,14 +41,17 @@ export class NodeMediaStatusService extends MediaStatusService {
         // TODO
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async getMetadata(): Promise<MediaPlaybackMetadata | undefined> {
         return this.metadata;
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async getStatus(): Promise<MediaPlaybackStatus | undefined> {
         return this.status;
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async handleMetadata(data: MediaPlaybackMetadata): Promise<void> {
         this.metadata = data;
         this.ipcHandler.metadata({
@@ -56,6 +59,7 @@ export class NodeMediaStatusService extends MediaStatusService {
         });
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async handlePlayback(data: MediaPlaybackStatus): Promise<void> {
         this.status = data;
         this.ipcHandler.status({

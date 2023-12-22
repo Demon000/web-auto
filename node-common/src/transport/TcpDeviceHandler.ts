@@ -16,18 +16,19 @@ export class TcpDeviceHandler extends DeviceHandler {
         super(events);
     }
 
-    protected async makeDeviceAvailable(ip: string): Promise<void> {
+    protected makeDeviceAvailable(ip: string): void {
         const device = new TcpDevice(ip, this.getDeviceEvents());
         try {
-            await this.events.onDeviceAvailable(device);
+            this.events.onDeviceAvailable(device);
         } catch (err) {
             this.logger.error('Failed to emit device available event', err);
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async waitForDevices(): Promise<void> {
         for (const ip of this.config.ips) {
-            await this.makeDeviceAvailable(ip);
+            this.makeDeviceAvailable(ip);
         }
     }
 }

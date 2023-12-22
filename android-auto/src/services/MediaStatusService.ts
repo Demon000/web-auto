@@ -31,7 +31,7 @@ export abstract class MediaStatusService extends Service {
         const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId) {
+        switch (message.messageId as MediaPlaybackStatusMessageId) {
             case MediaPlaybackStatusMessageId.MEDIA_PLAYBACK_METADATA:
                 data = MediaPlaybackMetadata.fromBinary(bufferPayload);
                 this.printReceive(data);

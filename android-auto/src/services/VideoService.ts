@@ -13,7 +13,7 @@ export abstract class VideoService extends AVOutputService {
         const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId) {
+        switch (message.messageId as MediaMessageId) {
             case MediaMessageId.MEDIA_MESSAGE_VIDEO_FOCUS_REQUEST:
                 data = VideoFocusRequestNotification.fromBinary(bufferPayload);
                 this.printReceive(data);

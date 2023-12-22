@@ -27,8 +27,8 @@ import assert from 'node:assert';
 import type { Cryptor } from 'src/crypto/Cryptor.js';
 
 export interface ControlServiceEvents extends ServiceEvents {
-    getServiceDiscoveryResponse: () => Promise<ServiceDiscoveryResponse>;
-    onPingTimeout: () => Promise<void>;
+    getServiceDiscoveryResponse: () => ServiceDiscoveryResponse;
+    onPingTimeout: () => void;
 }
 
 export interface ControlServiceConfig {
@@ -158,7 +158,15 @@ export class ControlService extends Service {
         );
     }
 
-    private async sendPingRequest(data: PingRequest): Promise<void> {
+    private sendPingRequest(data: PingRequest): void {
+        this.sendPingRequestAsync(data)
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error('Failed to send ping request', err);
+            });
+    }
+
+    private async sendPingRequestAsync(data: PingRequest): Promise<void> {
         try {
             await this.sendPlainSpecificMessage(
                 ControlMessageType.MESSAGE_PING_REQUEST,
@@ -259,7 +267,7 @@ export class ControlService extends Service {
             `Discovery request, device name ${request.deviceName}`,
         );
 
-        const response = await this.events.getServiceDiscoveryResponse();
+        const response = this.events.getServiceDiscoveryResponse();
         await this.sendServiceDiscoveryResponse(response);
     }
 

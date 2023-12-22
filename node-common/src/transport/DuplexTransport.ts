@@ -18,35 +18,42 @@ export class DuplexTransport extends Transport {
         this.onClose = this.onClose.bind(this);
     }
 
-    private async onData(data: Buffer): Promise<void> {
+    private onData(data: Buffer): void {
         const buffer = DataBuffer.fromBuffer(data);
-        await this.events.onData(buffer);
+        this.events.onData(buffer);
     }
 
-    private async onError(err: Error): Promise<void> {
-        await this.events.onError(err);
+    private onError(err: Error): void {
+        this.events.onError(err);
     }
 
     private detachEvents(): void {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.socket.off('error', this.onError);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.socket.off('data', this.onData);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.socket.off('close', this.onClose);
     }
 
     private attachEvents(): void {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.socket.on('data', this.onData);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.socket.on('error', this.onError);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.socket.on('close', this.onClose);
     }
 
-    private async onClose(): Promise<void> {
+    private onClose(): void {
         this.detachEvents();
 
         this.state = TransportState.DISCONNECTED;
 
-        await this.events.onDisconnected();
+        this.events.onDisconnected();
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async connect(): Promise<void> {
         if (this.state !== TransportState.AVAILABLE) {
             return;

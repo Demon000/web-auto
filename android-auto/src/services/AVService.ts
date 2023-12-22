@@ -35,7 +35,7 @@ export abstract class AVService extends Service {
         const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId) {
+        switch (message.messageId as MediaMessageId) {
             case MediaMessageId.MEDIA_MESSAGE_SETUP:
                 data = Setup.fromBinary(bufferPayload);
                 this.printReceive(data);

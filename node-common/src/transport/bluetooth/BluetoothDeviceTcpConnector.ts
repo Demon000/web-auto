@@ -43,6 +43,7 @@ export class BluetoothDeviceTcpConnector {
         const cleanup = () => {
             this.internalEmitter.removeAllListeners();
             clearTimeout(timeout);
+            // eslint-disable-next-line @typescript-eslint/unbound-method
             this.tcpServer.off('connection', this.onConnect);
         };
 
@@ -60,6 +61,7 @@ export class BluetoothDeviceTcpConnector {
                 },
             );
 
+            // eslint-disable-next-line @typescript-eslint/unbound-method
             this.tcpServer.once('connection', this.onConnect);
         })
             .then((socket) => {

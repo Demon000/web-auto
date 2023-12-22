@@ -55,7 +55,7 @@ export class BluetoothProfile implements Profile {
         }
 
         try {
-            await handler.connect(fd);
+            handler.connect(fd);
         } catch (err) {
             this.logger.error(`Failed to connect address ${address}`, err);
         }

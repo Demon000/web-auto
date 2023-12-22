@@ -93,7 +93,9 @@ export class NodeCryptor extends Cryptor {
     private readSync(readable: Readable): DataBuffer {
         const buffer = DataBuffer.empty();
         let chunk;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         while (null !== (chunk = readable.read())) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             const chunkBuffer = DataBuffer.fromBuffer(chunk);
             buffer.appendBuffer(chunkBuffer);
         }

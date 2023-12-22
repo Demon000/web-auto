@@ -23,6 +23,7 @@ type NodeAndroidAutoConfig = {
 const config = lilconfigSync('web-auto', {
     loaders: {
         '.json5': (_filepath, content) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return JSON5.parse(content);
         },
     },

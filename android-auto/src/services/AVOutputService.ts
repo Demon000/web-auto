@@ -82,7 +82,7 @@ export abstract class AVOutputService extends AVService {
         const payload = message.getPayload();
         let data;
 
-        switch (message.messageId) {
+        switch (message.messageId as MediaMessageId) {
             case MediaMessageId.MEDIA_MESSAGE_DATA:
                 this.printReceive('data');
                 await this.onAvMediaWithTimestampIndication(payload);
@@ -112,10 +112,12 @@ export abstract class AVOutputService extends AVService {
         return this.configurationIndex !== undefined;
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async channelStart(data: Start): Promise<void> {
         this.configurationIndex = data.configurationIndex;
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async channelStop(): Promise<void> {
         this.configurationIndex = undefined;
     }

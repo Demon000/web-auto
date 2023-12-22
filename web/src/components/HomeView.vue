@@ -22,20 +22,25 @@ const videoFocusModeStore = useVideoFocusModeStore();
 const deviceStore = useDeviceStore();
 
 const sendKey = (keycode: KeyCode) => {
-    androidAutoInputService.sendKeyEvent({
-        keys: [
-            {
-                down: true,
-                keycode,
-                metastate: 0,
-            },
-            {
-                down: false,
-                keycode,
-                metastate: 0,
-            },
-        ],
-    });
+    androidAutoInputService
+        .sendKeyEvent({
+            keys: [
+                {
+                    down: true,
+                    keycode,
+                    metastate: 0,
+                },
+                {
+                    down: false,
+                    keycode,
+                    metastate: 0,
+                },
+            ],
+        })
+        .then(() => {})
+        .catch((err) => {
+            console.error('Failed to send key event', err);
+        });
 };
 
 const sendAssistantKey = () => {

@@ -7,6 +7,7 @@ export class BsonIpcSerializer implements IpcSerializer {
     }
 
     public deserialize(data: any): IpcEvent {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         return BSON.deserialize(data, {
             useBigInt64: true,
             promoteBuffers: true,

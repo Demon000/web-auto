@@ -46,7 +46,7 @@ export const toggleFocusModeIfChannelStarted = async () => {
         const channelStarted =
             await androidAutoVideoService.getChannelStarted();
         if (channelStarted) {
-            toggleFocusMode();
+            await toggleFocusMode();
         }
     } catch (err) {
         console.error(err);

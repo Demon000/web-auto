@@ -113,7 +113,7 @@ export abstract class Service {
         const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId) {
+        switch (message.messageId as ControlMessageType) {
             case ControlMessageType.MESSAGE_CHANNEL_OPEN_REQUEST:
                 data = ChannelOpenRequest.fromBinary(bufferPayload);
                 this.printReceive(data);
@@ -130,6 +130,7 @@ export abstract class Service {
         return this.onControlMessage(message);
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async onSpecificMessage(_message: Message): Promise<boolean> {
         return false;
     }

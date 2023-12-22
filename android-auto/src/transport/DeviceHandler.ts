@@ -3,22 +3,16 @@ import { DataBuffer } from '../index.js';
 import { Device, type DeviceEvents } from './Device.js';
 
 export interface DeviceHandlerEvents {
-    onDeviceAvailable: (device: Device) => Promise<void>;
-    onDeviceUnavailable: (device: Device) => Promise<void>;
+    onDeviceAvailable: (device: Device) => void;
+    onDeviceUnavailable: (device: Device) => void;
 
-    onDeviceSelfConnection: (device: Device) => Promise<void>;
-    onDeviceSelfDisconnection: (
-        device: Device,
-        reason: string,
-    ) => Promise<void>;
+    onDeviceSelfConnection: (device: Device) => void;
+    onDeviceSelfDisconnection: (device: Device, reason: string) => void;
 
-    onDeviceStateUpdated: (device: Device) => Promise<void>;
+    onDeviceStateUpdated: (device: Device) => void;
 
-    onDeviceTransportData: (
-        device: Device,
-        buffer: DataBuffer,
-    ) => Promise<void>;
-    onDeviceTransportError: (device: Device, err: Error) => Promise<void>;
+    onDeviceTransportData: (device: Device, buffer: DataBuffer) => void;
+    onDeviceTransportError: (device: Device, err: Error) => void;
 }
 
 export abstract class DeviceHandler {

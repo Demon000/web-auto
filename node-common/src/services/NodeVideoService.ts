@@ -97,6 +97,7 @@ export class NodeVideoService extends VideoService {
         ipcHandler.on('getChannelStarted', this.getChannelStarted.bind(this));
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async getChannelStarted(): Promise<boolean> {
         return this.channelStarted;
     }
@@ -132,6 +133,7 @@ export class NodeVideoService extends VideoService {
         // TODO
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async focus(data: VideoFocusRequestNotification): Promise<void> {
         this.ipcHandler.focusRequest({
             mode: data.mode,
@@ -139,6 +141,7 @@ export class NodeVideoService extends VideoService {
         });
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async afterSetup(): Promise<void> {
         this.ipcHandler.focusRequest({
             mode: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
@@ -305,6 +308,7 @@ export class NodeVideoService extends VideoService {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async handleData(
         buffer: DataBuffer,
         _timestamp?: bigint,

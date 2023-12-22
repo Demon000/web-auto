@@ -17,12 +17,17 @@ class ElectronServiceIpcSocket extends BaseIpcSocket {
         this.onCloseInternal = this.onCloseInternal.bind(this);
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async open(): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         ipcMain.on(this.channelName, this.onDataInternal);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.webContents.once('destroyed', this.onCloseInternal);
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async close(): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         ipcMain.off(this.channelName, this.onDataInternal);
     }
 
@@ -53,10 +58,12 @@ export class ElectronIpcServiceRegistrySocketHandler extends BaseIpcServiceRegis
     public register(callback: SocketMessageCallback): void {
         super.register(callback);
 
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         app.on('web-contents-created', this.onWebContentsCreated);
     }
 
     public unregister(): void {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         app.off('web-contents-created', this.onWebContentsCreated);
     }
 

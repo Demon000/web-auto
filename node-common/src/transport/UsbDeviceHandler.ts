@@ -46,16 +46,14 @@ export class UsbDeviceHandler extends DeviceHandler {
         );
     }
 
-    private async handleConnectedAoapDevice(
-        usbDevice: USBDevice,
-    ): Promise<void> {
+    private handleConnectedAoapDevice(usbDevice: USBDevice): void {
         this.logger.info(`Found device ${name(usbDevice)} with AA`);
 
         const device = new UsbDevice(usbDevice, this.getDeviceEvents());
         this.usbDeviceMap.set(usbDevice, device);
 
         try {
-            await this.events.onDeviceAvailable(device);
+            this.events.onDeviceAvailable(device);
         } catch (err) {
             this.logger.error('Failed to emit device available event', err);
         }
@@ -80,14 +78,16 @@ export class UsbDeviceHandler extends DeviceHandler {
         await this.aoapConnector.connect(device);
     }
 
-    private async handleConnectedDevice(
-        event: USBConnectionEvent,
-    ): Promise<void> {
+    private handleConnectedDevice(event: USBConnectionEvent): void {
         const device = event.device;
         if (this.isDeviceAoap(device)) {
-            await this.handleConnectedAoapDevice(device);
+            this.handleConnectedAoapDevice(device);
         } else {
-            await this.connectUnknownDevice(device);
+            this.connectUnknownDevice(device)
+                .then(() => {})
+                .catch((err) => {
+                    this.logger.error('Failed to handle unknown device', err);
+                });
         }
     }
 
@@ -107,9 +107,7 @@ export class UsbDeviceHandler extends DeviceHandler {
         }
     }
 
-    private async handleDisconnectedDevice(
-        event: USBConnectionEvent,
-    ): Promise<void> {
+    private handleDisconnectedDevice(event: USBConnectionEvent): void {
         const usbDevice = event.device;
         const device = this.usbDeviceMap.get(usbDevice);
         if (device === undefined) {
@@ -117,7 +115,7 @@ export class UsbDeviceHandler extends DeviceHandler {
         }
 
         try {
-            await this.events.onDeviceUnavailable(device);
+            this.events.onDeviceUnavailable(device);
         } catch (err) {
             this.logger.error('Failed to emit device unavailable event', err);
         }
@@ -128,7 +126,9 @@ export class UsbDeviceHandler extends DeviceHandler {
     public async waitForDevices(): Promise<void> {
         this.logger.info('Starting new device connection handler');
 
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.usb.addEventListener('connect', this.handleConnectedDevice);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.usb.addEventListener('disconnect', this.handleDisconnectedDevice);
 
         this.logger.info('Processing already connected devices');
@@ -158,10 +158,13 @@ export class UsbDeviceHandler extends DeviceHandler {
         this.logger.info('Finshed processing already connected devices');
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async stopWaitingForDevices(): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.usb.removeEventListener('connect', this.handleConnectedDevice);
         this.usb.removeEventListener(
             'disconnect',
+            // eslint-disable-next-line @typescript-eslint/unbound-method
             this.handleDisconnectedDevice,
         );
 

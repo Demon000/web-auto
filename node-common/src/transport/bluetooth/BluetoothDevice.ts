@@ -1,10 +1,10 @@
 import {
     Device,
-    DeviceDisconnectReason,
     type DeviceEvents,
     DeviceState,
     Transport,
     type TransportEvents,
+    DeviceDisconnectReason,
 } from '@web-auto/android-auto';
 import { Device as BluezDevice } from 'bluez';
 import { type ElectronBluetoothDeviceHandlerConfig } from './BluetoothDeviceHandlerConfig.js';
@@ -59,7 +59,7 @@ export class BluetoothDevice extends Device {
         this.logger.error('Received bluetooth profile error', err);
     }
 
-    public async onBluetoothProfileSelfConnected(): Promise<void> {
+    public onBluetoothProfileSelfConnected(): void {
         if (this.state !== DeviceState.AVAILABLE) {
             this.logger.error(
                 `Unexpected bluetooth profile self-connection in state: ${this.state}`,
@@ -69,9 +69,9 @@ export class BluetoothDevice extends Device {
 
         this.logger.info('Received bluetooth profile self-connection');
 
-        await this.setState(DeviceState.SELF_CONNECTING);
+        this.setState(DeviceState.SELF_CONNECTING);
 
-        void this.events.onSelfConnection(this);
+        this.events.onSelfConnection(this);
     }
 
     public async rejectSelfConnection(): Promise<void> {
@@ -87,16 +87,14 @@ export class BluetoothDevice extends Device {
         await this.disconnectBluetooth();
     }
 
-    public async onBluetoothProfileSelfDisconnected(): Promise<void> {
+    public onBluetoothProfileSelfDisconnected(): void {
         if (this.state !== DeviceState.AVAILABLE) {
             this.logger.error(
                 `Unexpected bluetooth profile disconnection in state: ${this.state}`,
             );
         }
 
-        await this.selfDisconnect(
-            BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE,
-        );
+        this.selfDisconnect(BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE);
     }
 
     private async disconnectBluetooth(): Promise<void> {
@@ -125,7 +123,9 @@ export class BluetoothDevice extends Device {
     }
 
     protected async handleDisconnect(reason: string): Promise<void> {
-        switch (reason) {
+        switch (
+            reason as BluetoothDeviceDisconnectReason | DeviceDisconnectReason
+        ) {
             case BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE:
                 await this.disconnectBluetooth();
                 break;

@@ -26,6 +26,7 @@ export class Pinger {
 
     public schedulePingTimeout(): void {
         assert(this.pingTimeout === undefined);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.pingTimeout = setTimeout(this.onPingTimeout, 5000);
     }
 
@@ -35,7 +36,7 @@ export class Pinger {
         this.pingTimeout = undefined;
     }
 
-    public async onPingTimeout(): Promise<void> {
+    public onPingTimeout(): void {
         const isTimeoutPing =
             this.pingReceivedTime !== undefined &&
             this.pingSentTime !== undefined &&

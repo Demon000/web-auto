@@ -170,14 +170,9 @@ export class ElectronWindowBuilder {
         }
     }
 
-    public buildWindows(): void {
+    public async buildWindows(): Promise<void> {
         for (const windowConfig of this.config.windows) {
-            this.buildWindow(windowConfig).catch((e) =>
-                this.logger.error('Failed to build window with config', {
-                    config: windowConfig,
-                    err: e,
-                }),
-            );
+            await this.buildWindow(windowConfig);
         }
     }
 }

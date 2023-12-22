@@ -44,12 +44,12 @@ module.exports = {
         '@typescript-eslint/no-empty-interface': 'off',
 
         // TODO
-        // '@typescript-eslint/strict-boolean-expressions': [
-        //     'error',
-        //     {
-        //         allowNullableBoolean: true,
-        //     },
-        // ],
+        '@typescript-eslint/strict-boolean-expressions': [
+            'error',
+            {
+                allowNullableBoolean: true,
+            },
+        ],
 
         'no-constant-condition': [
             'error',

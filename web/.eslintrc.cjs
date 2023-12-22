@@ -9,8 +9,15 @@ module.exports = {
         '@vue/eslint-config-prettier/skip-formatting',
         '@web-auto/eslint-config',
     ],
+    rules: {
+        'vue/multi-word-component-names': ['off'],
+        'vue/no-deprecated-slot-attribute': ['off'],
+    },
+    parser: 'vue-eslint-parser',
     parserOptions: {
-        ecmaVersion: 'latest',
-        project: ['tsconfig.json'],
+        parser: '@typescript-eslint/parser',
+        sourceType: 'module',
+        tsconfigRootDir: __dirname,
+        project: './tsconfig.json',
     },
 };

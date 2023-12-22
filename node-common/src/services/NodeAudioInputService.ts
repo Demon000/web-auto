@@ -27,6 +27,7 @@ export class NodeAudioInputService extends AudioInputService {
         // TODO
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async open(_data: ChannelOpenRequest): Promise<void> {
         this.rtaudio.openStream(
             null,
@@ -37,10 +38,14 @@ export class NodeAudioInputService extends AudioInputService {
             this.sampleRate(),
             this.chunkSize(),
             this.constructor.name,
-            async (data) => {
-                void this.sendAvMediaWithTimestampIndication(
+            (data) => {
+                this.sendAvMediaWithTimestampIndication(
                     DataBuffer.fromBuffer(data),
-                );
+                )
+                    .then(() => {})
+                    .catch((err) => {
+                        this.logger.error('Failed to send data', err);
+                    });
             },
             null,
         );
@@ -51,6 +56,7 @@ export class NodeAudioInputService extends AudioInputService {
         this.rtaudio.closeStream();
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async inputOpen(data: MicrophoneRequest): Promise<void> {
         if (data.open) {
             this.rtaudio.start();

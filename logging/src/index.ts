@@ -17,6 +17,7 @@ type TransformableInfoWithMetadata = TransformableInfo & {
 };
 
 const printfCommon = (i: TransformableInfoWithMetadata, colors: boolean) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { timestamp, level, label, message, metadata } = i;
     let m;
     if (metadata !== undefined) {
@@ -89,12 +90,14 @@ export class LoggerWrapper {
 
     public error(message: string, metadata?: any): void {
         this.logger.error(message, {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             metadata,
         });
     }
 
     public info(message: string, metadata?: any): void {
         this.logger.info(message, {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             metadata,
         });
     }
@@ -105,6 +108,7 @@ export class LoggerWrapper {
         }
 
         this.logger.debug(message, {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             metadata,
         });
     }

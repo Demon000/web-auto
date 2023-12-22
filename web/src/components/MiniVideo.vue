@@ -22,7 +22,12 @@ const emitVideoHidden = () => {
 };
 
 const sendTouchEvent = (touchEvent: ITouchEvent) => {
-    androidAutoInputService.sendTouchEvent(touchEvent);
+    androidAutoInputService
+        .sendTouchEvent(touchEvent)
+        .then(() => {})
+        .catch((err) => {
+            console.error('Failed to send touch event', err);
+        });
 };
 </script>
 

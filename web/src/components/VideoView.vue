@@ -11,7 +11,12 @@ import { showNative, showProjected } from '../decoder.ts';
 const videoFocusModeStore = useVideoFocusModeStore();
 
 const sendTouchEvent = (touchEvent: ITouchEvent) => {
-    androidAutoInputService.sendTouchEvent(touchEvent);
+    androidAutoInputService
+        .sendTouchEvent(touchEvent)
+        .then(() => {})
+        .catch((err) => {
+            console.error('Failed to send touch event', err);
+        });
 };
 
 const switchToHomeView = async () => {
@@ -28,9 +33,9 @@ watch(
              * Will unmount the video which will trigger a switch to native, which
              * will respond to focus request.
              */
-            switchToHomeView();
+            await switchToHomeView();
         } else if (mode === VideoFocusMode.VIDEO_FOCUS_PROJECTED) {
-            showProjected();
+            await showProjected();
         }
     },
 );

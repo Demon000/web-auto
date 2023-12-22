@@ -54,7 +54,7 @@ export abstract class SensorService extends Service {
         try {
             assert(data.type !== undefined);
             const sensor = this.getSensor(data.type);
-            await sensor.start();
+            sensor.start();
         } catch (err) {
             this.logger.error('Failed to start sensor', {
                 data,
@@ -70,7 +70,7 @@ export abstract class SensorService extends Service {
         const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId) {
+        switch (message.messageId as SensorMessageId) {
             case SensorMessageId.SENSOR_MESSAGE_REQUEST:
                 data = SensorRequest.fromBinary(bufferPayload);
                 this.printReceive(data);

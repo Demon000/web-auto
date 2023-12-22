@@ -13,11 +13,11 @@ export enum DeviceState {
 }
 
 export interface DeviceEvents {
-    onStateUpdated: (device: Device) => Promise<void>;
-    onSelfConnection: (device: Device) => Promise<void>;
-    onSelfDisconnection: (device: Device, reason: string) => Promise<void>;
-    onTransportData: (device: Device, buffer: DataBuffer) => Promise<void>;
-    onTransportError: (device: Device, err: Error) => Promise<void>;
+    onStateUpdated: (device: Device) => void;
+    onSelfConnection: (device: Device) => void;
+    onSelfDisconnection: (device: Device, reason: string) => void;
+    onTransportData: (device: Device, buffer: DataBuffer) => void;
+    onTransportError: (device: Device, err: Error) => void;
 }
 
 export enum DeviceDisconnectReason {
@@ -47,10 +47,10 @@ export abstract class Device {
     public async rejectSelfConnection(): Promise<void> {}
     protected async handleDisconnect(_reason: string): Promise<void> {}
 
-    protected async setState(state: DeviceState): Promise<void> {
+    protected setState(state: DeviceState): void {
         this.state = state;
         try {
-            await this.events.onStateUpdated(this);
+            this.events.onStateUpdated(this);
         } catch (err) {
             this.logger.error('Failed to emit state updated event', err);
         }
@@ -67,7 +67,7 @@ export abstract class Device {
             throw new Error('Device not availalbe');
         }
 
-        await this.setState(DeviceState.CONNECTING);
+        this.setState(DeviceState.CONNECTING);
 
         try {
             this.transport = await this.connectImpl({
@@ -77,29 +77,29 @@ export abstract class Device {
             });
         } catch (err) {
             this.logger.error('Failed to connect', err);
-            await this.setState(DeviceState.AVAILABLE);
+            this.setState(DeviceState.AVAILABLE);
             throw err;
         }
 
         await this.transport.connect();
 
-        await this.setState(DeviceState.CONNECTED);
+        this.setState(DeviceState.CONNECTED);
     }
 
-    protected async onTransportData(data: DataBuffer): Promise<void> {
-        await this.events.onTransportData(this, data);
+    protected onTransportData(data: DataBuffer): void {
+        this.events.onTransportData(this, data);
     }
 
-    protected async onTransportError(err: Error): Promise<void> {
-        await this.events.onTransportError(this, err);
+    protected onTransportError(err: Error): void {
+        this.events.onTransportError(this, err);
     }
 
-    protected async onTransportDisconnected(): Promise<void> {
-        await this.selfDisconnect(DeviceDisconnectReason.TRANSPORT);
+    protected onTransportDisconnected(): void {
+        this.selfDisconnect(DeviceDisconnectReason.TRANSPORT);
     }
 
-    public async selfDisconnect(reason: string): Promise<void> {
-        void this.events.onSelfDisconnection(this, reason);
+    public selfDisconnect(reason: string): void {
+        this.events.onSelfDisconnection(this, reason);
     }
 
     public async disconnect(reason?: string): Promise<void> {
@@ -116,7 +116,7 @@ export abstract class Device {
 
         this.logger.info(`Disconnecting with reason ${reason}`);
 
-        await this.setState(DeviceState.DISCONNECTING);
+        this.setState(DeviceState.DISCONNECTING);
 
         assert(this.transport !== undefined);
 
@@ -138,6 +138,6 @@ export abstract class Device {
             this.logger.error('Failed to handle disconnect', err);
         }
 
-        await this.setState(DeviceState.AVAILABLE);
+        this.setState(DeviceState.AVAILABLE);
     }
 }

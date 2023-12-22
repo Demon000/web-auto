@@ -17,11 +17,11 @@ export class UsbDuplex extends Duplex {
             device.configuration.interfaces[0].alternate.endpoints;
         for (const endpoint of endpoints) {
             if (endpoint.direction == 'in') {
-                inEndpoint = endpoint as USBEndpoint;
+                inEndpoint = endpoint;
             }
 
             if (endpoint.direction == 'out') {
-                outEndpoint = endpoint as USBEndpoint;
+                outEndpoint = endpoint;
             }
 
             if (inEndpoint && outEndpoint) {
@@ -62,6 +62,7 @@ export class UsbDuplex extends Duplex {
                 callback(null);
             })
             .catch((err) => {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 callback(err);
             });
     }
@@ -102,6 +103,7 @@ export class UsbDuplex extends Duplex {
             .catch((err) => {
                 clearTimeout(timeout);
                 if (callbackCalled) return;
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 callback(err);
             });
     }
@@ -114,6 +116,7 @@ export class UsbDuplex extends Duplex {
                 this.inEndpoint.packetSize,
             );
         } catch (e: any) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             this.destroy(e);
             return;
         }

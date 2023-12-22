@@ -27,11 +27,15 @@ class ElectronClientIpcSocket extends BaseIpcSocket {
         this.exposed = exposed;
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async open(): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.exposed.on(this.channelName, this.onDataInternal);
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async close(): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.exposed.off(this.channelName, this.onDataInternal);
     }
 
@@ -45,6 +49,7 @@ class ElectronClientIpcSocket extends BaseIpcSocket {
     }
 
     public send(data: any): void {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         this.exposed.send(this.channelName, data);
     }
 }

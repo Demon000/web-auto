@@ -52,7 +52,7 @@ export abstract class AudioInputService extends AVService {
         const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId) {
+        switch (message.messageId as MediaMessageId) {
             case MediaMessageId.MEDIA_MESSAGE_MICROPHONE_REQUEST:
                 data = MicrophoneRequest.fromBinary(bufferPayload);
                 this.printReceive(data);

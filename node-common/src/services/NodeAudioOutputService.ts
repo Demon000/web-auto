@@ -61,6 +61,7 @@ export class NodeAudioOutputService extends AudioOutputService {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async open(_data: ChannelOpenRequest): Promise<void> {
         this.rtaudio.openStream(
             {
@@ -76,6 +77,7 @@ export class NodeAudioOutputService extends AudioOutputService {
         );
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async channelStart(_data: Start): Promise<void> {
         this.rtaudio.start();
     }
@@ -84,6 +86,7 @@ export class NodeAudioOutputService extends AudioOutputService {
         // TODO
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async channelStop(): Promise<void> {
         this.rtaudio.stop();
     }
@@ -93,6 +96,7 @@ export class NodeAudioOutputService extends AudioOutputService {
         this.rtaudio.closeStream();
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async handleData(
         buffer: DataBuffer,
         _timestamp?: bigint,

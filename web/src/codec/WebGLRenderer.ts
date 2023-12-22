@@ -37,7 +37,7 @@ export class WebGLRenderer implements Renderer {
     ) {
         this.canvas = canvas;
 
-        let gl = canvas.getContext(type) as WebGLCommonRenderingContext;
+        const gl = canvas.getContext(type) as WebGLCommonRenderingContext;
         if (gl === null) {
             throw new Error('Failed to create canvas context');
         }
@@ -50,7 +50,11 @@ export class WebGLRenderer implements Renderer {
 
         gl.shaderSource(vertexShader, WebGLRenderer.vertexShaderSource);
         gl.compileShader(vertexShader);
-        if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+        const vertexShaderCompileStatus = gl.getShaderParameter(
+            vertexShader,
+            gl.COMPILE_STATUS,
+        ) as boolean | null;
+        if (vertexShaderCompileStatus === null || !vertexShaderCompileStatus) {
             throw gl.getShaderInfoLog(vertexShader);
         }
 
@@ -61,7 +65,14 @@ export class WebGLRenderer implements Renderer {
 
         gl.shaderSource(fragmentShader, WebGLRenderer.fragmentShaderSource);
         gl.compileShader(fragmentShader);
-        if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+        const fragmentSharedCompileStatus = gl.getShaderParameter(
+            fragmentShader,
+            gl.COMPILE_STATUS,
+        ) as boolean | null;
+        if (
+            fragmentSharedCompileStatus === null ||
+            !fragmentSharedCompileStatus
+        ) {
             throw gl.getShaderInfoLog(fragmentShader);
         }
 
@@ -73,7 +84,11 @@ export class WebGLRenderer implements Renderer {
         gl.attachShader(shaderProgram, vertexShader);
         gl.attachShader(shaderProgram, fragmentShader);
         gl.linkProgram(shaderProgram);
-        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        const programLinkStatus = gl.getProgramParameter(
+            shaderProgram,
+            gl.LINK_STATUS,
+        ) as boolean | null;
+        if (programLinkStatus === null || !programLinkStatus) {
             throw gl.getProgramInfoLog(shaderProgram);
         }
         gl.useProgram(shaderProgram);

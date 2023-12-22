@@ -32,7 +32,15 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         this.androidAutoProfile = new AndroidAutoProfile();
     }
 
-    private async onDeviceAdded(address: string): Promise<void> {
+    private onDeviceAdded(address: string): void {
+        this.onDeviceAddedAsync(address)
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error('Failed to handle device added', err);
+            });
+    }
+
+    private async onDeviceAddedAsync(address: string): Promise<void> {
         this.logger.info(`Bluetooth device added ${address}`);
         assert(this.adapter !== undefined);
         assert(this.tcpServer !== undefined);
@@ -58,13 +66,13 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         this.addressDeviceMap.set(address, device);
 
         try {
-            await this.events.onDeviceAvailable(device);
+            this.events.onDeviceAvailable(device);
         } catch (err) {
             this.logger.error('Failed to emit device available event', err);
         }
     }
 
-    private async onDeviceRemoved(address: string): Promise<void> {
+    private onDeviceRemoved(address: string): void {
         this.logger.debug(`Bluetooth device removed ${address}`);
         const device = this.addressDeviceMap.get(address);
         if (device === undefined) {
@@ -72,7 +80,7 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         }
 
         try {
-            await this.events.onDeviceUnavailable(device);
+            this.events.onDeviceUnavailable(device);
         } catch (err) {
             this.logger.error('Failed to emit device unavailable event', err);
         }
@@ -137,22 +145,26 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         this.logger.info('Processing paired devices');
         const devices = await this.adapter.listDevices();
         for (const props of Object.values(devices)) {
-            if (!props.Address) {
+            if (props.Address === undefined) {
                 continue;
             }
 
-            await this.onDeviceAdded(props.Address);
+            await this.onDeviceAddedAsync(props.Address);
         }
         this.logger.info('Finished processing paired devices');
 
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.adapter.on('DeviceAdded', this.onDeviceAdded);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.adapter.on('DeviceRemoved', this.onDeviceRemoved);
     }
 
     public async stopWaitingForDevices(): Promise<void> {
         if (this.adapter !== undefined) {
             this.logger.info('Stopping new device discovery');
+            // eslint-disable-next-line @typescript-eslint/unbound-method
             this.adapter.off('DeviceAdded', this.onDeviceAdded);
+            // eslint-disable-next-line @typescript-eslint/unbound-method
             this.adapter.off('DeviceRemoved', this.onDeviceRemoved);
 
             await this.adapter.StopDiscovery();

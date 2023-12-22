@@ -4,8 +4,8 @@ import BluetoothSocket from 'bluetooth-socket';
 import { getLogger, type LoggerWrapper } from '@web-auto/logging';
 
 export interface BluetoothProfileEvents {
-    onUnhandledConnection: (socket: BluetoothSocket) => Promise<void>;
-    onUnhandledDisconnected: () => Promise<void>;
+    onUnhandledConnection: (socket: BluetoothSocket) => void;
+    onUnhandledDisconnected: () => void;
     onError: (err: Error) => void;
 }
 
@@ -25,15 +25,16 @@ export class BluetoothProfileHandler {
         this.onError = this.onError.bind(this);
     }
 
-    private async onDisconnect(): Promise<void> {
+    private onDisconnect(): void {
         assert(this.socket !== undefined);
 
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.socket.off('error', this.onError);
 
         this.socket = undefined;
 
         if (this.disconnectionCallback === undefined) {
-            await this.events.onUnhandledDisconnected();
+            this.events.onUnhandledDisconnected();
         } else {
             this.disconnectionCallback();
         }
@@ -43,17 +44,19 @@ export class BluetoothProfileHandler {
         this.events.onError(err);
     }
 
-    public async connect(fd: number): Promise<void> {
+    public connect(fd: number): void {
         assert(this.socket === undefined);
 
         this.socket = new BluetoothSocket(fd);
 
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.socket.once('error', this.onError);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         this.socket.once('close', this.onDisconnect);
 
         if (this.connectionCallback === undefined) {
             this.logger.info('Connection expected');
-            await this.events.onUnhandledConnection(this.socket);
+            this.events.onUnhandledConnection(this.socket);
         } else {
             this.logger.info('Connection unexpected');
             this.connectionCallback(this.socket);

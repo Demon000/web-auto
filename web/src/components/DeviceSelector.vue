@@ -36,7 +36,7 @@ const emitDisconnect = (name: string) => {
         </template>
 
         <div class="section-title">Available</div>
-        <div class="devices" v-for="device in devices">
+        <div class="devices" v-for="device in devices" :key="device.name">
             <device
                 v-if="device !== connectedDevice"
                 :device="device"

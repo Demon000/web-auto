@@ -39,7 +39,7 @@ export abstract class InputService extends Service {
         const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId) {
+        switch (message.messageId as InputMessageId) {
             case InputMessageId.INPUT_MESSAGE_KEY_BINDING_REQUEST:
                 data = KeyBindingRequest.fromBinary(bufferPayload);
                 this.printReceive(data);

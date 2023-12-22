@@ -42,4 +42,8 @@ const initialize = async () => {
     });
 };
 
-initialize();
+initialize()
+    .then(() => {})
+    .catch((err) => {
+        console.error('Failed to initialize', err);
+    });

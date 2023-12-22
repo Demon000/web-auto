@@ -90,7 +90,7 @@ export class BluetoothDeviceWifiConnector {
         await this.sendMessage(message);
     }
 
-    private async handleMessage(message: BluetoothMessage): Promise<boolean> {
+    private handleMessage(message: BluetoothMessage): boolean {
         const callback = this.messageCallbacks.get(message.type);
         if (callback === undefined) {
             return false;
@@ -126,12 +126,12 @@ export class BluetoothDeviceWifiConnector {
         });
     }
 
-    private async onData(buffer: Buffer): Promise<void> {
+    private onData(buffer: Buffer): void {
         this.logger.debug('Receive data', buffer);
 
         const messages = this.codec.decodeBuffer(buffer);
         for (const message of messages) {
-            const handled = await this.handleMessage(message);
+            const handled = this.handleMessage(message);
             if (!handled) {
                 this.logger.error('Receive unhandled message', message);
             }
@@ -176,9 +176,11 @@ export class BluetoothDeviceWifiConnector {
                 abortController.abort();
             }, timeoutMs);
 
+            // eslint-disable-next-line @typescript-eslint/unbound-method
             socket.on('data', this.onData);
 
             const clearAndAbort = () => {
+                // eslint-disable-next-line @typescript-eslint/unbound-method
                 socket.off('data', this.onData);
                 clearTimeout(timeout);
                 abortController.abort();
