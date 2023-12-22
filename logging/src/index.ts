@@ -1,11 +1,10 @@
-import { join } from 'node:path';
 import { inspect } from 'node:util';
 import { format, transports, loggers, Logger } from 'winston';
 import { type TransformableInfo } from 'logform';
 
 export const LOGGER_NAME = 'logger';
 
-import { dirname } from 'path';
+import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -64,7 +63,7 @@ const fileTransport = new transports.File({
         format.errors({ stack: true }),
         format.printf(printfFile),
     ),
-    dirname: join(__dirname, '..', '..'),
+    dirname: resolve(__dirname, '..', '..', '..'),
     filename: 'web-auto.log',
 });
 
