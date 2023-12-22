@@ -9,11 +9,15 @@ import type {
 } from './common.js';
 
 export type IpcServiceHandlerKey<L extends IpcService> = keyof L & string;
+export type IpcServiceHandlerCallback<
+    L extends IpcService,
+    K extends IpcServiceHandlerKey<L>,
+> = L[K];
 
 export type IpcServiceHandlerEmitter<L extends IpcService> = {
-    on<K extends IpcServiceHandlerKey<L>, F extends L[K]>(
+    on<K extends IpcServiceHandlerKey<L>>(
         name: K,
-        cb: (...args: Parameters<F>) => ReturnType<F>,
+        cb: IpcServiceHandlerCallback<L, K>,
     ): void;
     off<K extends IpcServiceHandlerKey<L>>(name: K): void;
 };
@@ -166,7 +170,10 @@ export abstract class BaseIpcServiceRegistrySocketHandler
 export class IpcServiceHandlerHelper<L extends IpcService>
     implements IpcServiceHandlerEmitter<L>
 {
-    private map: Partial<L> = {};
+    private handlersMap = new Map<
+        IpcServiceHandlerKey<L>,
+        IpcServiceHandlerCallback<L, IpcServiceHandlerKey<L>>
+    >();
 
     public constructor(
         private socketHandler: IpcServiceRegistrySocketHandler,
@@ -197,24 +204,24 @@ export class IpcServiceHandlerHelper<L extends IpcService>
         }
     }
 
-    public on<K extends IpcServiceHandlerKey<L>, F extends L[K]>(
+    public on<K extends IpcServiceHandlerKey<L>>(
         name: K,
-        cb: (...args: Parameters<F>) => ReturnType<F>,
+        cb: IpcServiceHandlerCallback<L, K>,
     ): void {
-        assert(!(name in this.map));
-        this.map[name] = cb as any;
+        assert(!this.handlersMap.has(name));
+        this.handlersMap.set(name, cb);
     }
 
     public off<K extends IpcServiceHandlerKey<L>>(name: K): void {
-        assert(name in this.map);
-        delete this.map[name];
+        assert(this.handlersMap.has(name));
+        this.handlersMap.delete(name);
     }
 
     public async handleMessage(ipcEvent: IpcEvent): Promise<any> {
         assert('name' in ipcEvent);
         assert('args' in ipcEvent);
 
-        const handlerFn = this.map[ipcEvent.name];
+        const handlerFn = this.handlersMap.get(ipcEvent.name);
         assert(handlerFn !== undefined);
 
         return handlerFn(...(ipcEvent.args as any));
