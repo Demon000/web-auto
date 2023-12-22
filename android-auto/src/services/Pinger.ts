@@ -4,8 +4,8 @@ import { getLogger } from '@web-auto/logging';
 import { microsecondsTime, milliToMicro } from './../utils/time.js';
 
 export interface PingerEvents {
-    onPingRequest: (request: PingRequest) => Promise<void>;
-    onPingTimeout: () => Promise<void>;
+    onPingRequest: (request: PingRequest) => void;
+    onPingTimeout: () => void;
 }
 
 export class Pinger {
@@ -42,11 +42,7 @@ export class Pinger {
             this.pingReceivedTime - this.pingSentTime > this.pingTimeoutUs;
 
         if (isTimeoutPing) {
-            try {
-                await this.events.onPingTimeout();
-            } catch (err) {
-                this.logger.error('Failed to emit ping timeout event', err);
-            }
+            this.events.onPingTimeout();
             return;
         }
 
@@ -58,11 +54,7 @@ export class Pinger {
             timestamp: this.pingSentTime,
         });
 
-        try {
-            await this.events.onPingRequest(data);
-        } catch (err) {
-            this.logger.error('Failed to emit ping request event', err);
-        }
+        this.events.onPingRequest(data);
 
         this.schedulePingTimeout();
     }

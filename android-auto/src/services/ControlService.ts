@@ -159,10 +159,14 @@ export class ControlService extends Service {
     }
 
     private async sendPingRequest(data: PingRequest): Promise<void> {
-        await this.sendPlainSpecificMessage(
-            ControlMessageType.MESSAGE_PING_REQUEST,
-            data,
-        );
+        try {
+            await this.sendPlainSpecificMessage(
+                ControlMessageType.MESSAGE_PING_REQUEST,
+                data,
+            );
+        } catch (err) {
+            this.logger.error('Failed to send ping request', err);
+        }
     }
 
     private async sendAudioFocusResponse(
