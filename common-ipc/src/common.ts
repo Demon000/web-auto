@@ -62,8 +62,8 @@ export type IpcSocket = {
 };
 
 export abstract class BaseIpcSocket implements IpcSocket {
-    protected dataCallback?: IpcSocketDataCallback;
-    protected closeCallback?: IpcSocketCloseCallback;
+    protected dataCallback: IpcSocketDataCallback | undefined;
+    protected closeCallback: IpcSocketCloseCallback | undefined;
 
     public abstract send(data: any): void;
     public abstract open(): Promise<void>;

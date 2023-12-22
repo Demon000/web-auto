@@ -13,8 +13,8 @@ import {
 import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 
 export class NodeMediaStatusService extends MediaStatusService {
-    private metadata?: MediaPlaybackMetadata;
-    private status?: MediaPlaybackStatus;
+    private metadata: MediaPlaybackMetadata | undefined;
+    private status: MediaPlaybackStatus | undefined;
 
     public constructor(
         private ipcHandler: IpcServiceHandler<
@@ -29,7 +29,7 @@ export class NodeMediaStatusService extends MediaStatusService {
         this.ipcHandler.on('getStatus', this.getStatus.bind(this));
     }
 
-    public stop(): void {
+    public override stop(): void {
         super.stop();
         this.metadata = undefined;
         this.ipcHandler.metadata(undefined);

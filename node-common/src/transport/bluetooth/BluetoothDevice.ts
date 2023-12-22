@@ -29,7 +29,6 @@ export class BluetoothDevice extends Device {
     public constructor(
         private config: ElectronBluetoothDeviceHandlerConfig,
         private device: BluezDevice,
-        address: string,
         tcpServer: Server,
         name: string,
         events: DeviceEvents,
@@ -74,7 +73,7 @@ export class BluetoothDevice extends Device {
         this.events.onSelfConnection(this);
     }
 
-    public async rejectSelfConnection(): Promise<void> {
+    public override async rejectSelfConnection(): Promise<void> {
         if (this.state !== DeviceState.SELF_CONNECTING) {
             this.logger.error(
                 `Unexpected self-connection reject in state: ${this.state}`,
@@ -122,7 +121,7 @@ export class BluetoothDevice extends Device {
         this.logger.info('Disconnected from Bluetooth profile');
     }
 
-    protected async handleDisconnect(reason: string): Promise<void> {
+    protected override async handleDisconnect(reason: string): Promise<void> {
         switch (
             reason as BluetoothDeviceDisconnectReason | DeviceDisconnectReason
         ) {

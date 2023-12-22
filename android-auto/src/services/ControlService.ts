@@ -42,7 +42,7 @@ export class ControlService extends Service {
     public constructor(
         private cryptor: Cryptor,
         private config: ControlServiceConfig,
-        protected events: ControlServiceEvents,
+        protected override events: ControlServiceEvents,
     ) {
         super(events);
 
@@ -78,7 +78,9 @@ export class ControlService extends Service {
         );
     }
 
-    protected async onSpecificMessage(message: Message): Promise<boolean> {
+    protected override async onSpecificMessage(
+        message: Message,
+    ): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         const messageId = message.messageId as ControlMessageType;
         let data;
@@ -271,7 +273,7 @@ export class ControlService extends Service {
         await this.sendServiceDiscoveryResponse(response);
     }
 
-    public start(): void {
+    public override start(): void {
         super.start();
         this.pinger.start();
     }
@@ -286,7 +288,7 @@ export class ControlService extends Service {
         await this.doServiceDiscovery(abortSignal);
     }
 
-    public stop(): void {
+    public override stop(): void {
         this.pinger.stop();
         super.stop();
     }

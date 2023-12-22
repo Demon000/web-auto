@@ -13,14 +13,16 @@ export abstract class AudioOutputService extends AVOutputService {
     public constructor(
         private audioType: AudioStreamType,
         private configs: IAudioConfiguration[],
-        protected events: ServiceEvents,
+        events: ServiceEvents,
     ) {
         super(events);
     }
 
     protected channelConfig(): IAudioConfiguration {
         assert(this.configurationIndex !== undefined);
-        return this.configs[this.configurationIndex];
+        const config = this.configs[this.configurationIndex];
+        assert(config !== undefined);
+        return config;
     }
 
     protected channelCount(): number {

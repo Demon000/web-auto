@@ -51,7 +51,7 @@ export class NodeAudioInputService extends AudioInputService {
         );
     }
 
-    public stop(): void {
+    public override stop(): void {
         super.stop();
         this.rtaudio.closeStream();
     }

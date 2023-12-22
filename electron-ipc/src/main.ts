@@ -55,14 +55,14 @@ export class ElectronIpcServiceRegistrySocketHandler extends BaseIpcServiceRegis
         this.onWebContentsCreated = this.onWebContentsCreated.bind(this);
     }
 
-    public register(callback: SocketMessageCallback): void {
+    public override register(callback: SocketMessageCallback): void {
         super.register(callback);
 
         // eslint-disable-next-line @typescript-eslint/unbound-method
         app.on('web-contents-created', this.onWebContentsCreated);
     }
 
-    public unregister(): void {
+    public override unregister(): void {
         // eslint-disable-next-line @typescript-eslint/unbound-method
         app.off('web-contents-created', this.onWebContentsCreated);
     }
@@ -78,7 +78,7 @@ export class ElectronIpcServiceRegistrySocketHandler extends BaseIpcServiceRegis
 }
 
 export class ElectronIpcServiceRegistry extends GenericIpcServiceRegistry {
-    protected socketHandler: ElectronIpcServiceRegistrySocketHandler;
+    protected override socketHandler: ElectronIpcServiceRegistrySocketHandler;
 
     public constructor(name: string) {
         const socketHandler = new ElectronIpcServiceRegistrySocketHandler(name);

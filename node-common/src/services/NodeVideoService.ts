@@ -78,7 +78,7 @@ const h265HasKeyFrame = (buffer: Uint8Array) => {
 
 export class NodeVideoService extends VideoService {
     private codecState = CodecState.STOPPED;
-    private codecBuffer?: DataBuffer;
+    private codecBuffer: DataBuffer | undefined;
 
     public constructor(
         private ipcHandler: IpcServiceHandler<
@@ -86,7 +86,7 @@ export class NodeVideoService extends VideoService {
             AndroidAutoVideoClient
         >,
         private videoConfigs: IVideoConfiguration[],
-        protected events: ServiceEvents,
+        events: ServiceEvents,
     ) {
         super(events);
 
@@ -108,7 +108,7 @@ export class NodeVideoService extends VideoService {
         await this.sendVideoFocusIndication(new VideoFocusNotification(data));
     }
 
-    public stop(): void {
+    public override stop(): void {
         this.syncChannelStop();
         super.stop();
     }
@@ -117,7 +117,7 @@ export class NodeVideoService extends VideoService {
         // TODO
     }
 
-    protected async channelStart(data: Start): Promise<void> {
+    protected override async channelStart(data: Start): Promise<void> {
         await super.channelStart(data);
         this.codecState = CodecState.WAITING_FOR_CONFIG;
 
@@ -136,13 +136,12 @@ export class NodeVideoService extends VideoService {
     // eslint-disable-next-line @typescript-eslint/require-await
     protected async focus(data: VideoFocusRequestNotification): Promise<void> {
         this.ipcHandler.focusRequest({
-            mode: data.mode,
-            reason: data.reason,
+            ...data,
         });
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    protected async afterSetup(): Promise<void> {
+    protected override async afterSetup(): Promise<void> {
         this.ipcHandler.focusRequest({
             mode: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
         });
@@ -154,7 +153,7 @@ export class NodeVideoService extends VideoService {
         this.ipcHandler.channelStop();
     }
 
-    protected async channelStop(): Promise<void> {
+    protected override async channelStop(): Promise<void> {
         await super.channelStop();
         this.syncChannelStop();
     }
@@ -314,9 +313,10 @@ export class NodeVideoService extends VideoService {
         _timestamp?: bigint,
     ): Promise<void> {
         assert(this.configurationIndex !== undefined);
+        const config = this.videoConfigs[this.configurationIndex];
+        assert(config);
 
-        const videoCodecType =
-            this.videoConfigs[this.configurationIndex].videoCodecType;
+        const videoCodecType = config.videoCodecType;
         assert(videoCodecType !== undefined);
 
         switch (videoCodecType) {

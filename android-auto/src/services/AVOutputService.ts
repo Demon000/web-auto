@@ -5,9 +5,9 @@ import { type ServiceEvents } from './Service.js';
 import { Ack, MediaMessageId, Start, Stop } from '@web-auto/android-auto-proto';
 
 export abstract class AVOutputService extends AVService {
-    protected configurationIndex?: number;
+    protected configurationIndex: number | undefined;
 
-    public constructor(protected events: ServiceEvents) {
+    public constructor(events: ServiceEvents) {
         super(events);
     }
 
@@ -77,7 +77,9 @@ export abstract class AVOutputService extends AVService {
         }
     }
 
-    public async onSpecificMessage(message: Message): Promise<boolean> {
+    public override async onSpecificMessage(
+        message: Message,
+    ): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         const payload = message.getPayload();
         let data;

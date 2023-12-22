@@ -61,7 +61,6 @@ if (config.androidAuto !== undefined) {
 
 const electronWindowBuilder = new ElectronWindowBuilder(
     config.electronWindowBuilder,
-    androidAutoIpcServiceRegistry,
 );
 
 app.whenReady()

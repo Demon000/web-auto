@@ -5,7 +5,7 @@ import { type FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
 
 export class FrameCodec {
     protected logger = getLogger(this.constructor.name);
-    private buffer?: DataBuffer;
+    private buffer: DataBuffer | undefined;
 
     public start() {}
 

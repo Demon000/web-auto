@@ -9,7 +9,9 @@ import { Message } from '../messenger/Message.js';
 import { AVOutputService } from './AVOutputService.js';
 
 export abstract class VideoService extends AVOutputService {
-    public async onSpecificMessage(message: Message): Promise<boolean> {
+    public override async onSpecificMessage(
+        message: Message,
+    ): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;
 

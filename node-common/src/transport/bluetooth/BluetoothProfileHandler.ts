@@ -10,9 +10,9 @@ export interface BluetoothProfileEvents {
 }
 
 export class BluetoothProfileHandler {
-    public socket?: BluetoothSocket;
-    private connectionCallback?: (socket: Duplex) => void;
-    private disconnectionCallback?: () => void;
+    public socket: BluetoothSocket | undefined;
+    private connectionCallback: ((socket: Duplex) => void) | undefined;
+    private disconnectionCallback: (() => void) | undefined;
     protected logger: LoggerWrapper;
 
     public constructor(

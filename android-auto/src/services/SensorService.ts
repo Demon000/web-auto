@@ -17,7 +17,7 @@ import assert from 'node:assert';
 
 export abstract class SensorService extends Service {
     protected sensors: Sensor[];
-    public constructor(protected events: ServiceEvents) {
+    public constructor(events: ServiceEvents) {
         super(events);
 
         this.sensors = this.buildSensors({
@@ -66,7 +66,9 @@ export abstract class SensorService extends Service {
         return this.sendSensorStartResponse(data.type, true);
     }
 
-    public async onSpecificMessage(message: Message): Promise<boolean> {
+    public override async onSpecificMessage(
+        message: Message,
+    ): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;
 
@@ -123,7 +125,7 @@ export abstract class SensorService extends Service {
         }
     }
 
-    public stop(): void {
+    public override stop(): void {
         super.stop();
 
         for (const sensor of this.sensors) {

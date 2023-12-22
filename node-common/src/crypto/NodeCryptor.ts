@@ -14,16 +14,16 @@ export class NodeCryptor extends Cryptor {
     private logger = getLogger(this.constructor.name);
 
     private connected = false;
-    private cleartext?: TLSSocket;
-    private encrypted?: Duplex;
+    private cleartext: TLSSocket | undefined;
+    private encrypted: Duplex | undefined;
 
     private encryptMutex = new Mutex();
     private decryptMutex = new Mutex();
 
     public constructor(
         private config: NodeCryptorConfig,
-        protected certificateBuffer: Buffer,
-        protected privateKeyBuffer: Buffer,
+        certificateBuffer: Buffer,
+        privateKeyBuffer: Buffer,
     ) {
         super(certificateBuffer, privateKeyBuffer);
     }

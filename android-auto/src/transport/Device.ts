@@ -28,7 +28,7 @@ export enum DeviceDisconnectReason {
 }
 
 export abstract class Device {
-    public transport?: Transport;
+    public transport: Transport | undefined;
     public state = DeviceState.AVAILABLE;
     public name: string;
     protected logger: LoggerWrapper;

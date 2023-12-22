@@ -42,7 +42,7 @@ export interface AndroidAutoServerConfig {
 export abstract class AndroidAutoServer {
     private logger = getLogger(this.constructor.name);
     private nameDeviceMap = new Map<string, Device>();
-    private connectedDevice?: Device;
+    private connectedDevice: Device | undefined;
     private started = false;
 
     private cryptor?: Cryptor;
@@ -235,7 +235,6 @@ export abstract class AndroidAutoServer {
                     highLatencyThresholdMs: 200,
                     trackedPingCount: 5,
                 },
-                wirelessTcpConfiguration: undefined,
             },
 
             services: [],
@@ -424,6 +423,7 @@ export abstract class AndroidAutoServer {
         this.logger.info('Stopping services');
         for (; i >= 0; i--) {
             const service = this.services[i];
+            assert(service !== undefined);
             try {
                 service.stop();
             } catch (err) {
@@ -445,6 +445,7 @@ export abstract class AndroidAutoServer {
         try {
             for (; i < this.services.length; i++) {
                 const service = this.services[i];
+                assert(service !== undefined);
                 service.start();
             }
         } catch (err) {

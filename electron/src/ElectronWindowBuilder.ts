@@ -3,12 +3,7 @@ import { join, resolve } from 'node:path';
 import assert from 'node:assert';
 import { getLogger } from '@web-auto/logging';
 
-import { dirname } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-
-import { ElectronIpcServiceRegistry } from '@web-auto/electron-ipc/main.js';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export interface ElectronWindowConfig {
     name: string;
@@ -44,12 +39,7 @@ export interface ElectronWindowBuilderConfig {
 export class ElectronWindowBuilder {
     private logger = getLogger(this.constructor.name);
 
-    public constructor(
-        private config: ElectronWindowBuilderConfig,
-        private androidAutoIpcServiceRegistry:
-            | ElectronIpcServiceRegistry
-            | undefined,
-    ) {}
+    public constructor(private config: ElectronWindowBuilderConfig) {}
 
     public logDisplays(): void {
         const displays = screen.getAllDisplays();

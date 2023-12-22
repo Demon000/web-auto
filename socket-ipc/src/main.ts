@@ -81,7 +81,7 @@ export class SocketIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistr
         this.wss = new WebSocketServer({ noServer: true });
     }
 
-    public register(callback: SocketMessageCallback) {
+    public override register(callback: SocketMessageCallback) {
         super.register(callback);
 
         // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -90,7 +90,7 @@ export class SocketIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistr
         this.server.prependListener('upgrade', this.onServerUpgrade);
     }
 
-    public unregister() {
+    public override unregister() {
         super.unregister();
 
         // eslint-disable-next-line @typescript-eslint/unbound-method

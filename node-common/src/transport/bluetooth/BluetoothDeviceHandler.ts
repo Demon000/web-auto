@@ -57,7 +57,6 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         const device = new BluetoothDevice(
             this.config,
             bluezDevice,
-            address,
             this.tcpServer,
             name,
             this.getDeviceEvents(),
@@ -159,7 +158,7 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         this.adapter.on('DeviceRemoved', this.onDeviceRemoved);
     }
 
-    public async stopWaitingForDevices(): Promise<void> {
+    public override async stopWaitingForDevices(): Promise<void> {
         if (this.adapter !== undefined) {
             this.logger.info('Stopping new device discovery');
             // eslint-disable-next-line @typescript-eslint/unbound-method

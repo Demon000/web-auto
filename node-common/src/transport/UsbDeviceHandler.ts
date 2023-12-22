@@ -159,7 +159,7 @@ export class UsbDeviceHandler extends DeviceHandler {
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    public async stopWaitingForDevices(): Promise<void> {
+    public override async stopWaitingForDevices(): Promise<void> {
         // eslint-disable-next-line @typescript-eslint/unbound-method
         this.usb.removeEventListener('connect', this.handleConnectedDevice);
         this.usb.removeEventListener(

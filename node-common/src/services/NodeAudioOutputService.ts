@@ -78,7 +78,7 @@ export class NodeAudioOutputService extends AudioOutputService {
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    protected async channelStart(_data: Start): Promise<void> {
+    protected override async channelStart(_data: Start): Promise<void> {
         this.rtaudio.start();
     }
 
@@ -87,11 +87,11 @@ export class NodeAudioOutputService extends AudioOutputService {
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    protected async channelStop(): Promise<void> {
+    protected override async channelStop(): Promise<void> {
         this.rtaudio.stop();
     }
 
-    public stop(): void {
+    public override stop(): void {
         super.stop();
         this.rtaudio.closeStream();
     }

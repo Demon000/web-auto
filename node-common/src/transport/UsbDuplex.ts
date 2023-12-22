@@ -11,10 +11,13 @@ export class UsbDuplex extends Duplex {
 
         assert(device.configuration !== undefined);
 
+        const intf = device.configuration.interfaces[0];
+        assert(intf !== undefined);
+
         let inEndpoint: USBEndpoint | undefined;
         let outEndpoint: USBEndpoint | undefined;
-        const endpoints =
-            device.configuration.interfaces[0].alternate.endpoints;
+
+        const endpoints = intf.alternate.endpoints;
         for (const endpoint of endpoints) {
             if (endpoint.direction == 'in') {
                 inEndpoint = endpoint;
@@ -53,7 +56,7 @@ export class UsbDuplex extends Duplex {
         }
     }
 
-    public _destroy(
+    public override _destroy(
         _err: Error | null,
         callback: (err: Error | null) => void,
     ): void {
@@ -78,7 +81,7 @@ export class UsbDuplex extends Duplex {
         }
     }
 
-    public _write(
+    public override _write(
         chunk: any,
         _encoding: string,
         callback: (err: Error | null) => void,
@@ -145,7 +148,7 @@ export class UsbDuplex extends Duplex {
         );
     }
 
-    public _read() {
+    public override _read() {
         void this.readAsync();
     }
 }

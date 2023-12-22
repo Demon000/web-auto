@@ -46,7 +46,7 @@ export interface IpcServiceRegistrySocketHandler {
 export abstract class BaseIpcServiceRegistrySocketHandler
     implements IpcServiceRegistrySocketHandler
 {
-    protected messageCallback?: SocketMessageCallback;
+    protected messageCallback: SocketMessageCallback | undefined;
     public sockets: IpcSocket[] = [];
     protected handleNameSocketsMap = new Map<
         string,

@@ -14,7 +14,7 @@ import {
 } from '@web-auto/android-auto-proto';
 
 export abstract class AudioInputService extends AVService {
-    public constructor(protected events: ServiceEvents) {
+    public constructor(events: ServiceEvents) {
         super(events);
     }
 
@@ -48,7 +48,9 @@ export abstract class AudioInputService extends AVService {
 
     protected async onAckIndication(_data: Ack): Promise<void> {}
 
-    public async onSpecificMessage(message: Message): Promise<boolean> {
+    public override async onSpecificMessage(
+        message: Message,
+    ): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;
 

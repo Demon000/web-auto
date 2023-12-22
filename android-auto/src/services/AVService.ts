@@ -8,9 +8,9 @@ import { Message } from '../messenger/Message.js';
 import { Service, type ServiceEvents } from './Service.js';
 
 export abstract class AVService extends Service {
-    protected session?: number;
+    protected session: number | undefined;
 
-    public constructor(protected events: ServiceEvents) {
+    public constructor(events: ServiceEvents) {
         super(events);
     }
 
@@ -31,7 +31,9 @@ export abstract class AVService extends Service {
         return this.sendSetupResponse(status);
     }
 
-    public async onSpecificMessage(message: Message): Promise<boolean> {
+    public override async onSpecificMessage(
+        message: Message,
+    ): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;
 

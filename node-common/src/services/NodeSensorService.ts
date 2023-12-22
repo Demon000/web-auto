@@ -8,7 +8,7 @@ import {
 import { ChannelOpenRequest } from '@web-auto/android-auto-proto';
 
 export class DummySensorService extends SensorService {
-    protected buildSensors(events: SensorEvents): Sensor[] {
+    protected override buildSensors(events: SensorEvents): Sensor[] {
         return [
             new DummyDrivingStatusSensor(events),
             new DummyNightDataSensor(events),

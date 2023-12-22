@@ -44,7 +44,7 @@ export class UsbDevice extends Device {
         return transport;
     }
 
-    protected async handleDisconnect(reason: string): Promise<void> {
+    protected override async handleDisconnect(reason: string): Promise<void> {
         switch (reason as DeviceDisconnectReason) {
             case DeviceDisconnectReason.USER:
                 await this.device.reset();

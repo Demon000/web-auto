@@ -12,7 +12,7 @@ import {
 } from '@web-auto/android-auto-proto';
 
 export abstract class InputService extends Service {
-    public constructor(protected events: ServiceEvents) {
+    public constructor(events: ServiceEvents) {
         super(events);
     }
 
@@ -35,7 +35,9 @@ export abstract class InputService extends Service {
         return this.sendBindingResponse(status);
     }
 
-    public async onSpecificMessage(message: Message): Promise<boolean> {
+    public override async onSpecificMessage(
+        message: Message,
+    ): Promise<boolean> {
         const bufferPayload = message.getBufferPayload();
         let data;
 

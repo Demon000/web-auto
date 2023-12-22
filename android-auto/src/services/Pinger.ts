@@ -10,9 +10,9 @@ export interface PingerEvents {
 
 export class Pinger {
     protected logger = getLogger(this.constructor.name);
-    private pingTimeout?: ReturnType<typeof setTimeout>;
-    private pingReceivedTime?: bigint;
-    private pingSentTime?: bigint;
+    private pingTimeout: ReturnType<typeof setTimeout> | undefined;
+    private pingReceivedTime: bigint | undefined;
+    private pingSentTime: bigint | undefined;
     private started = false;
     private pingTimeoutUs: bigint;
 

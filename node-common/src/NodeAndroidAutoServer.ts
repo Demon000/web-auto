@@ -67,7 +67,7 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
 
     public constructor(
         protected ipcRegistry: IpcServiceRegistry,
-        protected config: NodeAndroidAutoServerConfig,
+        protected override config: NodeAndroidAutoServerConfig,
     ) {
         super(config);
 
