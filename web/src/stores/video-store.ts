@@ -1,15 +1,24 @@
 import { defineStore } from 'pinia';
 import { Ref, nextTick, ref } from 'vue';
-import { androidAutoVideoService } from '../ipc.ts';
 import { VideoFocusMode } from '@web-auto/android-auto-proto';
+import {
+    AndroidAutoVideoClient,
+    AndroidAutoVideoService,
+} from '@web-auto/android-auto-ipc';
+import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
 
 export const useVideoFocusModeStore = defineStore('video-focus-mode', () => {
     const requestedFocusMode: Ref<VideoFocusMode | undefined> = ref(undefined);
 
-    async function initialize() {
+    async function initialize(
+        service: IpcClientHandler<
+            AndroidAutoVideoClient,
+            AndroidAutoVideoService
+        >,
+    ) {
         requestedFocusMode.value = undefined;
 
-        androidAutoVideoService.on('focusRequest', async (data) => {
+        service.on('focusRequest', async (data) => {
             requestedFocusMode.value = data.mode;
             await nextTick();
             requestedFocusMode.value = undefined;

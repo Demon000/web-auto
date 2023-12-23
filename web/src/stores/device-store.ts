@@ -1,15 +1,24 @@
 import { defineStore } from 'pinia';
 import { Ref, computed, ref } from 'vue';
-import { androidAutoServerService } from '../ipc.ts';
-import { IDevice } from '@web-auto/android-auto-ipc';
+import {
+    AndroidAutoServerClient,
+    AndroidAutoServerService,
+    IDevice,
+} from '@web-auto/android-auto-ipc';
+import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
 
 export const useDeviceStore = defineStore('device', () => {
     const devices: Ref<IDevice[]> = ref([]);
 
-    async function initialize() {
-        devices.value = await androidAutoServerService.getDevices();
+    async function initialize(
+        service: IpcClientHandler<
+            AndroidAutoServerClient,
+            AndroidAutoServerService
+        >,
+    ) {
+        devices.value = await service.getDevices();
 
-        androidAutoServerService.on('devices', (newDevices) => {
+        service.on('devices', (newDevices) => {
             devices.value = newDevices;
         });
     }

@@ -4,21 +4,30 @@ import {
 } from '@web-auto/android-auto-proto/interfaces.js';
 import { defineStore } from 'pinia';
 import { Ref, ref } from 'vue';
-import { androidAutoMediaStatusService } from '../ipc.ts';
+import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
+import {
+    AndroidAutoMediaStatusClient,
+    AndroidAutoMediaStatusService,
+} from '@web-auto/android-auto-ipc';
 
 export const useMediaStatusStore = defineStore('media-status', () => {
     const status: Ref<IMediaPlaybackStatus | undefined> = ref(undefined);
     const metadata: Ref<IMediaPlaybackMetadata | undefined> = ref(undefined);
 
-    async function initialize() {
-        metadata.value = await androidAutoMediaStatusService.getMetadata();
-        status.value = await androidAutoMediaStatusService.getStatus();
+    async function initialize(
+        service: IpcClientHandler<
+            AndroidAutoMediaStatusClient,
+            AndroidAutoMediaStatusService
+        >,
+    ) {
+        metadata.value = await service.getMetadata();
+        status.value = await service.getStatus();
 
-        androidAutoMediaStatusService.on('metadata', (newMetadata) => {
+        service.on('metadata', (newMetadata) => {
             metadata.value = newMetadata;
         });
 
-        androidAutoMediaStatusService.on('status', (newStatus) => {
+        service.on('status', (newStatus) => {
             status.value = newStatus;
         });
     }

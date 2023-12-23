@@ -17,6 +17,11 @@ import {
 import { useMediaStatusStore } from './stores/media-status-store.js';
 import { useVideoFocusModeStore } from './stores/video-store.js';
 import { useDeviceStore } from './stores/device-store.js';
+import {
+    androidAutoMediaStatusService,
+    androidAutoServerService,
+    androidAutoVideoService,
+} from './ipc.js';
 
 const theme = themeFromSourceColor(argbFromHex('#60a8f0'));
 
@@ -32,9 +37,9 @@ const mediaStatusStore = useMediaStatusStore();
 const videoFocusModeStore = useVideoFocusModeStore();
 
 const initialize = async () => {
-    await deviceStore.initialize();
-    await mediaStatusStore.initialize();
-    await videoFocusModeStore.initialize();
+    await deviceStore.initialize(androidAutoServerService);
+    await mediaStatusStore.initialize(androidAutoMediaStatusService);
+    await videoFocusModeStore.initialize(androidAutoVideoService);
 
     app.mount('#app');
     await router.replace({
