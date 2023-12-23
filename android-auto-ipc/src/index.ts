@@ -71,6 +71,7 @@ export type AndroidAutoMediaStatusClient = {
 export enum AndroidAutoIpcNames {
     SERVER = 'server',
     VIDEO = 'video',
+    CLUSTER_VIDEO = 'cluster-video',
     INPUT = 'input',
     MEDIA_STATUS = 'media-status',
 }

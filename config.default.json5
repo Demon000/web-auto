@@ -77,6 +77,31 @@
                 density: 240,
             },
         ],
+        clusterVideoConfigs: [
+            {
+                // _480p = 1
+                // _720p = 2
+                // _1080p = 3
+                // _1440p = 4
+                // _2160p = 5
+                // _720p_p = 6
+                // _1080p_p = 7
+                // _1440p_p = 8
+                // _2160p_p = 9
+                codecResolution: 1,
+                // _30 = 1
+                // _60 = 2
+                frameRate: 1,
+                // H264_BP = 3
+                // VP9 = 5
+                // AV1 = 6
+                // H265 = 7
+                videoCodecType: 3,
+                heightMargin: 0,
+                widthMargin: 0,
+                density: 160,
+            },
+        ],
         touchScreenConfig: {
             width: 1920,
             height: 1080,
@@ -156,6 +181,20 @@
                     // URL if running it separately (useful for development)
                     // When using url, do not specify path, or index
                     // url: 'http://localhost:5173/',
+                },
+            },
+            {
+                name: 'Cluster window',
+                app: {
+                    // Path to app root
+                    path: './web/dist',
+                    // Index path relative to app root
+                    index: 'cluster/index.html',
+                    // Name of preload script
+                    preload: './electron-ipc/preload-run.mjs',
+                    // URL if running it separately (useful for development)
+                    // When using url, do not specify path, or index
+                    // url: 'http://localhost:5173/cluster/',
                 },
             },
         ],

@@ -85,7 +85,7 @@ export class NodeVideoService extends VideoService {
             AndroidAutoVideoService,
             AndroidAutoVideoClient
         >,
-        private videoConfigs: IVideoConfiguration[],
+        protected videoConfigs: IVideoConfiguration[],
         events: ServiceEvents,
     ) {
         super(events);

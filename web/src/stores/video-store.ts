@@ -8,22 +8,79 @@ import {
 import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
 
 export const useVideoFocusModeStore = defineStore('video-focus-mode', () => {
+    let service:
+        | IpcClientHandler<AndroidAutoVideoClient, AndroidAutoVideoService>
+        | undefined = undefined;
+
     const requestedFocusMode: Ref<VideoFocusMode | undefined> = ref(undefined);
 
     async function initialize(
-        service: IpcClientHandler<
+        localService: IpcClientHandler<
             AndroidAutoVideoClient,
             AndroidAutoVideoService
         >,
     ) {
         requestedFocusMode.value = undefined;
 
-        service.on('focusRequest', async (data) => {
+        service = localService;
+
+        localService.on('focusRequest', async (data) => {
             requestedFocusMode.value = data.mode;
             await nextTick();
             requestedFocusMode.value = undefined;
         });
     }
 
-    return { requestedFocusMode, initialize };
+    const setFocusMode = async (focus: VideoFocusMode) => {
+        if (service === undefined) {
+            throw new Error('Cannot call before calling initialize');
+        }
+
+        try {
+            await service.sendVideoFocusNotification({
+                focus,
+                unsolicited: true,
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const showProjected = async () => {
+        await setFocusMode(VideoFocusMode.VIDEO_FOCUS_PROJECTED);
+    };
+
+    const showNative = async () => {
+        await setFocusMode(VideoFocusMode.VIDEO_FOCUS_NATIVE);
+    };
+
+    const toggleFocusMode = async () => {
+        await showNative();
+        await showProjected();
+    };
+
+    const toggleFocusModeIfChannelStarted = async () => {
+        if (service === undefined) {
+            throw new Error('Cannot call before calling initialize');
+        }
+
+        try {
+            const channelStarted = await service.getChannelStarted();
+            if (channelStarted) {
+                await toggleFocusMode();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    return {
+        requestedFocusMode,
+        setFocusMode,
+        showProjected,
+        showNative,
+        toggleFocusMode,
+        toggleFocusModeIfChannelStarted,
+        initialize,
+    };
 });

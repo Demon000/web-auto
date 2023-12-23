@@ -2,39 +2,34 @@
 import Video from '../components/Video.vue';
 
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
-import { androidAutoInputService } from '../ipc.ts';
 
 import '@material/web/fab/fab.js';
 import '@material/web/icon/icon.js';
 
 const emit = defineEmits<{
-    (e: 'video-visible'): void;
+    (e: 'video-visible', offscreenCanvas: OffscreenCanvas): void;
     (e: 'video-hidden'): void;
+    (e: 'touch-event', touchEvent: ITouchEvent): void;
     (e: 'expand-video'): void;
 }>();
 
-const emitVideoVisible = () => {
-    emit('video-visible');
+const emitVideoVisible = (offscreenCanvas: OffscreenCanvas) => {
+    emit('video-visible', offscreenCanvas);
 };
 
 const emitVideoHidden = () => {
     emit('video-hidden');
 };
 
-const sendTouchEvent = (touchEvent: ITouchEvent) => {
-    androidAutoInputService
-        .sendTouchEvent(touchEvent)
-        .then(() => {})
-        .catch((err) => {
-            console.error('Failed to send touch event', err);
-        });
+const emitTouchEvent = (touchEvent: ITouchEvent) => {
+    emit('touch-event', touchEvent);
 };
 </script>
 
 <template>
     <div class="mini-video">
         <Video
-            @touch-event="sendTouchEvent"
+            @touch-event="emitTouchEvent"
             @video-visible="emitVideoVisible"
             @video-hidden="emitVideoHidden"
         ></Video>

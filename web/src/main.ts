@@ -2,6 +2,7 @@ import './common.js';
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
+import { decoder } from './decoder.js';
 
 import App from './App.vue';
 import router from './router/index.js';
@@ -28,6 +29,8 @@ const initialize = async () => {
     await deviceStore.initialize(androidAutoServerService);
     await mediaStatusStore.initialize(androidAutoMediaStatusService);
     await videoFocusModeStore.initialize(androidAutoVideoService);
+
+    decoder.start();
 
     app.mount('#app');
     await router.replace({

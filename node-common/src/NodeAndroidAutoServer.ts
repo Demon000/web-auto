@@ -49,10 +49,13 @@ import type {
     IpcServiceRegistry,
     IpcServiceHandler,
 } from '@web-auto/common-ipc/main.js';
+import { NodeClusterVideoService } from './services/NodeClusterVideoService.js';
+import { NodeClusterInputService } from './services/NodeClusterInputService.js';
 
 export interface NodeAndroidAutoServerConfig extends AndroidAutoServerConfig {
     cryptorConfig: NodeCryptorConfig;
     videoConfigs: IVideoConfiguration[];
+    clusterVideoConfigs: IVideoConfiguration[];
     touchScreenConfig: IInputSourceService_TouchScreen;
     tcpDeviceHandlerConfig: TcpDeviceHandlerConfig;
     usbDeviceHandlerConfig: ElectronUsbDeviceHandlerConfig;
@@ -139,6 +142,11 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
             AndroidAutoVideoClient
         >(AndroidAutoIpcNames.VIDEO);
 
+        const clusterVideoIpcHandler = this.ipcRegistry.registerIpcService<
+            AndroidAutoVideoService,
+            AndroidAutoVideoClient
+        >(AndroidAutoIpcNames.CLUSTER_VIDEO);
+
         const mediaStatusIpcHandler = this.ipcRegistry.registerIpcService<
             AndroidAutoMediaStatusService,
             AndroidAutoMediaStatusClient
@@ -192,6 +200,12 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
                 this.config.videoConfigs,
                 events,
             ),
+            new NodeClusterVideoService(
+                clusterVideoIpcHandler,
+                this.config.clusterVideoConfigs,
+                events,
+            ),
+            new NodeClusterInputService(events),
         ];
     }
 

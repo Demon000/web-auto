@@ -6,7 +6,7 @@ import { VideoFocusMode } from '@web-auto/android-auto-proto';
 import router from '../router/index.ts';
 import { useVideoFocusModeStore } from '../stores/video-store.ts';
 import { watch } from 'vue';
-import { showNative, showProjected } from '../decoder.ts';
+import { decoder } from '../decoder.ts';
 
 const videoFocusModeStore = useVideoFocusModeStore();
 
@@ -35,18 +35,28 @@ watch(
              */
             await switchToHomeView();
         } else if (mode === VideoFocusMode.VIDEO_FOCUS_PROJECTED) {
-            await showProjected();
+            await videoFocusModeStore.showProjected();
         }
     },
 );
+
+const onVideoVisible = async (offscreenCanvas: OffscreenCanvas) => {
+    decoder.createRenderer(offscreenCanvas);
+    await videoFocusModeStore.toggleFocusModeIfChannelStarted();
+};
+
+const onVideoHidden = async () => {
+    await videoFocusModeStore.showNative();
+    decoder.destroyRenderer();
+};
 </script>
 
 <template>
     <div class="video">
         <Video
             @touch-event="sendTouchEvent"
-            @video-visible="showProjected"
-            @video-hidden="showNative"
+            @video-visible="onVideoVisible"
+            @video-hidden="onVideoHidden"
         ></Video>
     </div>
 </template>

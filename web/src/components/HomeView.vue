@@ -10,12 +10,9 @@ import { KeyCode, VideoFocusMode } from '@web-auto/android-auto-proto';
 import { useMediaStatusStore } from '../stores/media-status-store.ts';
 import { useVideoFocusModeStore } from '../stores/video-store.ts';
 import router from '../router/index.ts';
-import {
-    showProjected,
-    showNative,
-    toggleFocusModeIfChannelStarted,
-} from '../decoder.ts';
 import { useDeviceStore } from '../stores/device-store.ts';
+import { decoder } from '../decoder.ts';
+import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
 
 const mediaStatusStore = useMediaStatusStore();
 const videoFocusModeStore = useVideoFocusModeStore();
@@ -43,6 +40,14 @@ const sendKey = (keycode: KeyCode) => {
         });
 };
 
+const sendTouchEvent = (touchEvent: ITouchEvent) => {
+    androidAutoInputService
+        .sendTouchEvent(touchEvent)
+        .then(() => {})
+        .catch((err) => {
+            console.error('Failed to send touch event', err);
+        });
+};
 const sendAssistantKey = () => {
     sendKey(KeyCode.KEYCODE_SEARCH);
 };
@@ -57,15 +62,21 @@ watch(
     () => videoFocusModeStore.requestedFocusMode,
     async (mode?: VideoFocusMode) => {
         if (mode === VideoFocusMode.VIDEO_FOCUS_NATIVE) {
-            await toggleFocusModeIfChannelStarted();
+            await videoFocusModeStore.toggleFocusModeIfChannelStarted();
         } else if (mode === VideoFocusMode.VIDEO_FOCUS_PROJECTED) {
-            await showProjected();
+            await videoFocusModeStore.showProjected();
         }
     },
 );
 
-const onVideoVisible = async () => {
-    await toggleFocusModeIfChannelStarted();
+const onVideoVisible = async (offscreenCanvas: OffscreenCanvas) => {
+    decoder.createRenderer(offscreenCanvas);
+    await videoFocusModeStore.toggleFocusModeIfChannelStarted();
+};
+
+const onVideoHidden = async () => {
+    await videoFocusModeStore.showNative();
+    decoder.destroyRenderer();
 };
 
 const connectDevice = async (name: string) => {
@@ -103,8 +114,9 @@ const disconnectDevice = async (name: string) => {
             <template v-if="deviceStore.connectedDevice !== undefined">
                 <MiniVideo
                     @video-visible="onVideoVisible"
-                    @video-hidden="showNative"
+                    @video-hidden="onVideoHidden"
                     @expand-video="switchToVideoView"
+                    @touch-event="sendTouchEvent"
                 ></MiniVideo>
                 <MediaStatus
                     @press-key="sendKey"

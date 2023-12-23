@@ -3,12 +3,10 @@ import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 import { transformFittedPoint } from 'object-fit-math';
 import type { FitMode } from 'object-fit-math/dist/types.d.ts';
 import { PointerAction } from '@web-auto/android-auto-proto';
-import { decoderWorker } from '../decoder.js';
-import { DecoderWorkerMessageType } from '../codec/DecoderWorkerMessages.js';
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
 
 const emit = defineEmits<{
-    (e: 'video-visible'): void;
+    (e: 'video-visible', offscreenCanvas: OffscreenCanvas): void;
     (e: 'video-hidden'): void;
     (e: 'touch-event', touchEvent: ITouchEvent): void;
 }>();
@@ -44,14 +42,6 @@ const onCanvasResized = (entries: ResizeObserverEntry[]) => {
     canvasObjectPosition = objectPositionSplit as [string, string];
 };
 
-onMounted(() => {
-    emit('video-visible');
-});
-
-onBeforeUnmount(() => {
-    emit('video-hidden');
-});
-
 onMounted(async () => {
     const canvas = canvasRef.value;
     if (canvas === undefined) {
@@ -62,20 +52,12 @@ onMounted(async () => {
     canvasObserver.observe(canvas);
 
     const offscreenCanvas = canvas.transferControlToOffscreen();
-    decoderWorker.postMessage(
-        {
-            type: DecoderWorkerMessageType.CREATE_RENDERER,
-            rendererName: import.meta.env.VITE_VIDEO_DECODER_RENDERER,
-            canvas: offscreenCanvas,
-        },
-        [offscreenCanvas],
-    );
+
+    emit('video-visible', offscreenCanvas);
 });
 
 onBeforeUnmount(async () => {
-    decoderWorker.postMessage({
-        type: DecoderWorkerMessageType.DESTROY_RENDERER,
-    });
+    emit('video-hidden');
 
     if (canvasObserver !== undefined) {
         canvasObserver.disconnect();

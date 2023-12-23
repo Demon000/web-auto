@@ -47,6 +47,12 @@ export const androidAutoVideoService =
         AndroidAutoVideoService
     >(AndroidAutoIpcNames.VIDEO);
 
+export const androidAutoClusterVideoService =
+    androidAutoIpcClientRegistry.registerIpcClient<
+        AndroidAutoVideoClient,
+        AndroidAutoVideoService
+    >(AndroidAutoIpcNames.CLUSTER_VIDEO);
+
 export const androidAutoMediaStatusService =
     androidAutoIpcClientRegistry.registerIpcClient<
         AndroidAutoMediaStatusClient,

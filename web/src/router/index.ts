@@ -3,7 +3,7 @@ import HomeView from '../components/HomeView.vue';
 import VideoView from '../components/VideoView.vue';
 
 const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
+    history: createWebHistory(window.location.pathname),
     routes: [
         {
             path: '/',
