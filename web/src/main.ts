@@ -1,7 +1,4 @@
-import '@fontsource/roboto';
-import 'material-symbols';
-
-import './assets/main.css';
+import './common.js';
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
@@ -9,11 +6,6 @@ import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router/index.js';
 
-import {
-    argbFromHex,
-    themeFromSourceColor,
-    applyTheme,
-} from '@material/material-color-utilities';
 import { useMediaStatusStore } from './stores/media-status-store.js';
 import { useVideoFocusModeStore } from './stores/video-store.js';
 import { useDeviceStore } from './stores/device-store.js';
@@ -22,10 +14,6 @@ import {
     androidAutoServerService,
     androidAutoVideoService,
 } from './ipc.js';
-
-const theme = themeFromSourceColor(argbFromHex('#60a8f0'));
-
-applyTheme(theme, { target: document.body, dark: true });
 
 const app = createApp(App);
 
