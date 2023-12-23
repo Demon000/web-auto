@@ -1,6 +1,8 @@
 import {
+    NavigationCurrentPosition,
     NavigationNextTurnDistanceEvent,
     NavigationNextTurnEvent,
+    NavigationState,
     NavigationStatus,
     NavigationStatusMessageId,
 } from '@web-auto/android-auto-proto';
@@ -35,6 +37,22 @@ export abstract class NavigationStatusService extends Service {
         await this.handleTurn(data);
     }
 
+    protected abstract handleCurrentPosition(
+        data: NavigationCurrentPosition,
+    ): Promise<void>;
+
+    protected async onCurrentPosition(
+        data: NavigationCurrentPosition,
+    ): Promise<void> {
+        await this.handleCurrentPosition(data);
+    }
+
+    protected abstract handleState(data: NavigationState): Promise<void>;
+
+    protected async onState(data: NavigationState): Promise<void> {
+        await this.handleState(data);
+    }
+
     public override async onSpecificMessage(
         message: Message,
     ): Promise<boolean> {
@@ -57,6 +75,16 @@ export abstract class NavigationStatusService extends Service {
                 data = NavigationNextTurnEvent.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onTurn(data);
+                break;
+            case NavigationStatusMessageId.INSTRUMENT_CLUSTER_NAVIGATION_STATE:
+                data = NavigationState.fromBinary(bufferPayload);
+                this.printReceive(data);
+                await this.onState(data);
+                break;
+            case NavigationStatusMessageId.INSTRUMENT_CLUSTER_NAVIGATION_CURRENT_POSITION:
+                data = NavigationCurrentPosition.fromBinary(bufferPayload);
+                this.printReceive(data);
+                await this.onCurrentPosition(data);
                 break;
             default:
                 return super.onSpecificMessage(message);
