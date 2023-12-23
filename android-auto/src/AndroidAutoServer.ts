@@ -1,8 +1,4 @@
-import {
-    HeadUnitInfo,
-    DriverPosition,
-    ServiceDiscoveryResponse,
-} from '@web-auto/android-auto-proto';
+import { ServiceDiscoveryResponse } from '@web-auto/android-auto-proto';
 import {
     DeviceHandler,
     type DeviceHandlerEvents,
@@ -32,10 +28,15 @@ import { Message } from './messenger/Message.js';
 import { DataBuffer } from './utils/DataBuffer.js';
 import { FrameHeaderFlags } from './messenger/FrameHeader.js';
 import { Mutex } from 'async-mutex';
+import type {
+    IHeadUnitInfo,
+    IServiceDiscoveryResponse,
+} from '@web-auto/android-auto-proto/interfaces.js';
 
 export interface AndroidAutoServerConfig {
     controlConfig: ControlServiceConfig;
-    headunitInfo: HeadUnitInfo;
+    headunitInfo: IHeadUnitInfo;
+    serviceDiscoveryResponse: IServiceDiscoveryResponse;
     deviceNameWhitelist?: string[];
 }
 
@@ -220,23 +221,9 @@ export abstract class AndroidAutoServer {
         assert(this.services !== undefined);
 
         const data = new ServiceDiscoveryResponse({
+            ...this.config.serviceDiscoveryResponse,
             ...this.config.headunitInfo,
             headunitInfo: this.config.headunitInfo,
-            driverPosition: DriverPosition.LEFT,
-
-            canPlayNativeMediaDuringVr: false,
-            sessionConfiguration: 0,
-            displayName: '',
-            probeForSupport: false,
-            connectionConfiguration: {
-                pingConfiguration: {
-                    timeoutMs: 3000,
-                    intervalMs: 1000,
-                    highLatencyThresholdMs: 200,
-                    trackedPingCount: 5,
-                },
-            },
-
             services: [],
         });
 

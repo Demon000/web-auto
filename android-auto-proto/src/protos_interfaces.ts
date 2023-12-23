@@ -1,10 +1,12 @@
 import type { PartialMessage } from '@bufbuild/protobuf';
 import type {
     AudioConfiguration,
+    HeadUnitInfo,
     InputSourceService_TouchScreen,
     KeyEvent,
     MediaPlaybackMetadata,
     MediaPlaybackStatus,
+    ServiceDiscoveryResponse,
     TouchEvent,
     VideoConfiguration,
     VideoFocusNotification,
@@ -22,3 +24,6 @@ export type IVideoFocusRequestNotification =
     PartialMessage<VideoFocusRequestNotification>;
 export type IMediaPlaybackMetadata = PartialMessage<MediaPlaybackMetadata>;
 export type IMediaPlaybackStatus = PartialMessage<MediaPlaybackStatus>;
+export type IServiceDiscoveryResponse =
+    PartialMessage<ServiceDiscoveryResponse>;
+export type IHeadUnitInfo = PartialMessage<HeadUnitInfo>;
