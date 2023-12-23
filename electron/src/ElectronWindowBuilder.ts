@@ -1,35 +1,51 @@
-import { BrowserWindow, net, screen, session } from 'electron';
+import {
+    BrowserWindow,
+    net,
+    screen,
+    session,
+    type BrowserWindowConstructorOptions,
+} from 'electron';
 import { join, resolve } from 'node:path';
 import assert from 'node:assert';
 import { getLogger } from '@web-auto/logging';
 
 import { fileURLToPath, pathToFileURL } from 'url';
 
-export interface ElectronWindowConfig {
+export type ElectronWindowDisplayConfig =
+    | {
+          id: number;
+      }
+    | {
+          label: string;
+      };
+
+export type ElectronWindowAppConfig = {
+    preload: string;
+} & (
+    | {
+          path: string;
+          index: string;
+      }
+    | {
+          url: string;
+      }
+);
+
+export type ElectronWindowConfig = {
     name: string;
-    display?:
-        | {
-              id: number;
-          }
-        | {
-              label: string;
-          };
-    width?: number;
-    height?: number;
-    x?: number;
-    y?: number;
-    app: {
-        preload: string;
-    } & (
-        | {
-              path: string;
-              index: string;
-          }
-        | {
-              url: string;
-          }
-    );
-}
+    display?: ElectronWindowDisplayConfig;
+    app: ElectronWindowAppConfig;
+} & (
+    | {
+          width?: number;
+          height?: number;
+          x?: number;
+          y?: number;
+      }
+    | {
+          fullscreen: boolean;
+      }
+);
 
 export interface ElectronWindowBuilderConfig {
     openDevTools?: boolean;
@@ -112,29 +128,9 @@ export class ElectronWindowBuilder {
 
         assert(display !== undefined);
 
-        if (config.width === undefined) {
-            config.width = display.workAreaSize.width;
-        }
-
-        if (config.height === undefined) {
-            config.height = display.workAreaSize.height;
-        }
-
-        if (config.x === undefined) {
-            config.x = display.bounds.x;
-        }
-
-        if (config.y === undefined) {
-            config.y = display.bounds.y;
-        }
-
         const ses = session.fromPartition(`persist:${config.name}`);
-        const window = new BrowserWindow({
-            width: config.width,
-            height: config.height,
-            x: config.x,
-            y: config.y,
-            fullscreen: true,
+        const options: BrowserWindowConstructorOptions = {
+            useContentSize: true,
             webPreferences: {
                 preload: preloadPath,
                 nodeIntegration: false,
@@ -142,7 +138,29 @@ export class ElectronWindowBuilder {
                 sandbox: false,
                 session: ses,
             },
-        });
+        };
+
+        if ('fullscreen' in config) {
+            options.fullscreen = config.fullscreen;
+        } else {
+            if (config.width !== undefined) {
+                options.width = config.width;
+            }
+
+            if (config.height !== undefined) {
+                options.height = config.height;
+            }
+
+            if (config.x !== undefined) {
+                options.x = config.x;
+            }
+
+            if (config.y !== undefined) {
+                options.y = config.y;
+            }
+        }
+
+        const window = new BrowserWindow(options);
 
         try {
             if ('url' in config.app) {

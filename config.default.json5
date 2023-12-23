@@ -168,9 +168,6 @@
         windows: [
             {
                 name: 'Main Window',
-                display: {
-                    id: 4693741488312405,
-                },
                 app: {
                     // Path to app root
                     path: './web/dist',
