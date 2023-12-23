@@ -63,6 +63,8 @@ const electronWindowBuilder = new ElectronWindowBuilder(
     config.electronWindowBuilder,
 );
 
+app.commandLine.appendSwitch('--enable-features', 'OverlayScrollbar');
+
 app.whenReady()
     .then(async () => {
         electronWindowBuilder.logDisplays();
