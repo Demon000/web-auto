@@ -155,7 +155,7 @@
                     preload: './electron-ipc/preload-run.mjs',
                     // URL if running it separately (useful for development)
                     // When using url, do not specify path, or index
-                    // url: 'http://localhost:5173/web',
+                    // url: 'http://localhost:5173/',
                 },
             },
         ],
