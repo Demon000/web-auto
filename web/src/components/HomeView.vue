@@ -76,7 +76,6 @@ const onVideoVisible = async (offscreenCanvas: OffscreenCanvas) => {
 
 const onVideoHidden = async () => {
     await videoFocusModeStore.showNative();
-    decoder.destroyRenderer();
 };
 
 const connectDevice = async (name: string) => {

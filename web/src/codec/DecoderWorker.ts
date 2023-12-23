@@ -84,12 +84,9 @@ const onMessage = (event: MessageEvent) => {
 
     switch (message.type) {
         case DecoderWorkerMessageType.CREATE_RENDERER:
+            renderer?.free();
             createRenderer(message.rendererName, message.canvas);
             renderLastFrame();
-            break;
-        case DecoderWorkerMessageType.DESTROY_RENDERER:
-            renderer?.free();
-            renderer = null;
             break;
         case DecoderWorkerMessageType.CONFIGURE_DECODER:
             decoder.configure({

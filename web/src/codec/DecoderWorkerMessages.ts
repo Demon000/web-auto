@@ -7,7 +7,6 @@ export enum DecoderWorkerRenderer {
 
 export enum DecoderWorkerMessageType {
     CREATE_RENDERER,
-    DESTROY_RENDERER,
     CONFIGURE_DECODER,
     DECODE_KEYFRAME,
     DECODE_DELTA,
@@ -19,9 +18,6 @@ export type DecoderWorkerMessage =
           type: DecoderWorkerMessageType.CREATE_RENDERER;
           rendererName: string;
           canvas: OffscreenCanvas;
-      }
-    | {
-          type: DecoderWorkerMessageType.DESTROY_RENDERER;
       }
     | {
           type: DecoderWorkerMessageType.CONFIGURE_DECODER;

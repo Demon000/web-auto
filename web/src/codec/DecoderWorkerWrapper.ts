@@ -45,12 +45,6 @@ export class DecoderWorker {
         );
     }
 
-    public destroyRenderer(): void {
-        this.worker.postMessage({
-            type: DecoderWorkerMessageType.DESTROY_RENDERER,
-        });
-    }
-
     private onFirstFrameData(buffer: Uint8Array): void {
         this.worker.postMessage({
             type: DecoderWorkerMessageType.DECODE_KEYFRAME,
