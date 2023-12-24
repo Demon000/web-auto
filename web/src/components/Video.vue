@@ -42,7 +42,7 @@ const onCanvasResized = (entries: ResizeObserverEntry[]) => {
     canvasObjectPosition = objectPositionSplit as [string, string];
 };
 
-onMounted(async () => {
+onMounted(() => {
     const canvas = canvasRef.value;
     if (canvas === undefined) {
         return;
@@ -56,7 +56,7 @@ onMounted(async () => {
     emit('video-visible', offscreenCanvas);
 });
 
-onBeforeUnmount(async () => {
+onBeforeUnmount(() => {
     emit('video-hidden');
 
     if (canvasObserver !== undefined) {
