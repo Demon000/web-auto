@@ -153,7 +153,7 @@
                 // DYNAMIC = 1
                 apType: 0,
                 macAddr: '3A:AE:4A:AE:EA:A6',
-                psk: 'parolamea9',
+                psk: 'wifipass',
             },
         },
     },
