@@ -55,10 +55,10 @@ export class BluetoothProfileHandler {
         this.socket.once('close', this.onDisconnect);
 
         if (this.connectionCallback === undefined) {
-            this.logger.info('Connection expected');
+            this.logger.info('Connection unexpected');
             this.events.onUnhandledConnection(this.socket);
         } else {
-            this.logger.info('Connection unexpected');
+            this.logger.info('Connection expected');
             this.connectionCallback(this.socket);
         }
     }
