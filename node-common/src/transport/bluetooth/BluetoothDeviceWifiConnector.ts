@@ -158,7 +158,10 @@ export class BluetoothDeviceWifiConnector {
         const data = ConnectStatus.fromBinary(message.payload.data);
 
         if (data.status !== SocketInfoResponseStatus.STATUS_SUCCESS) {
-            throw new Error('Connection failed');
+            assert(data.status !== undefined);
+            throw new Error(
+                `Connection failed: ${SocketInfoResponseStatus[data.status]}`,
+            );
         }
     }
 
