@@ -12,7 +12,7 @@ import {
     type MessageEvent,
     type CloseEvent,
 } from 'ws';
-import { BsonIpcSerializer } from './common.js';
+import { MessagePackIpcSerializer } from './common.js';
 
 class SocketServiceIpcSocket extends BaseIpcSocket {
     public constructor(private socket: WebSocket) {
@@ -123,7 +123,7 @@ export class SocketIpcServiceRegistry extends GenericIpcServiceRegistry {
             name,
             server,
         );
-        const serializer = new BsonIpcSerializer();
+        const serializer = new MessagePackIpcSerializer();
         super(socketHandler, serializer);
     }
 }

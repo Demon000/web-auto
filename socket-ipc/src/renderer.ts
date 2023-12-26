@@ -1,6 +1,6 @@
 import { GenericIpcClientRegistry } from '@web-auto/common-ipc/renderer.js';
 
-import { BsonIpcSerializer } from './common.js';
+import { MessagePackIpcSerializer } from './common.js';
 import { BaseIpcSocket } from '@web-auto/common-ipc';
 
 class SocketClientIpcSocket extends BaseIpcSocket {
@@ -91,7 +91,7 @@ export class SocketIpcClientRegistry extends GenericIpcClientRegistry {
         const socket = new SocketClientIpcSocket(
             `ws://${host}:${port}/${name}`,
         );
-        const serializer = new BsonIpcSerializer();
+        const serializer = new MessagePackIpcSerializer();
         super(serializer, socket);
     }
 }
