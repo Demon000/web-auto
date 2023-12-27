@@ -17,6 +17,7 @@ import {
     type Service as ProtoService,
     GalConstants,
     VoiceSessionNotification,
+    BatteryStatusNotification,
 } from '@web-auto/android-auto-proto';
 
 import { Message } from '../messenger/Message.js';
@@ -83,6 +84,10 @@ export class ControlService extends Service {
         _data: VoiceSessionNotification,
     ): Promise<void> {}
 
+    protected async onBatteryStatusNotification(
+        _data: BatteryStatusNotification,
+    ): Promise<void> {}
+
     protected override async onSpecificMessage(
         message: Message,
     ): Promise<boolean> {
@@ -115,6 +120,11 @@ export class ControlService extends Service {
                 data = VoiceSessionNotification.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onVoiceSessionNotification(data);
+                break;
+            case ControlMessageType.MESSAGE_BATTERY_STATUS_NOTIFICATION:
+                data = BatteryStatusNotification.fromBinary(bufferPayload);
+                this.printReceive(data);
+                await this.onBatteryStatusNotification(data);
                 break;
             default:
                 return super.onSpecificMessage(message);
