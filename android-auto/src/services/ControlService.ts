@@ -16,6 +16,7 @@ import {
     ServiceDiscoveryResponse,
     type Service as ProtoService,
     GalConstants,
+    VoiceSessionNotification,
 } from '@web-auto/android-auto-proto';
 
 import { Message } from '../messenger/Message.js';
@@ -78,6 +79,10 @@ export class ControlService extends Service {
         );
     }
 
+    protected async onVoiceSessionNotification(
+        _data: VoiceSessionNotification,
+    ): Promise<void> {}
+
     protected override async onSpecificMessage(
         message: Message,
     ): Promise<boolean> {
@@ -105,6 +110,11 @@ export class ControlService extends Service {
                 data = NavFocusRequestNotification.fromBinary(bufferPayload);
                 this.printReceive(data);
                 await this.onNavigationFocusRequest(data);
+                break;
+            case ControlMessageType.MESSAGE_VOICE_SESSION_NOTIFICATION:
+                data = VoiceSessionNotification.fromBinary(bufferPayload);
+                this.printReceive(data);
+                await this.onVoiceSessionNotification(data);
                 break;
             default:
                 return super.onSpecificMessage(message);
