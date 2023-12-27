@@ -73,11 +73,13 @@ export class ControlService extends Service {
     }
 
     private async onNavigationFocusRequest(
-        _data: NavFocusRequestNotification,
+        data: NavFocusRequestNotification,
     ): Promise<void> {
-        return this.sendNavigationFocusResponse(
-            NavFocusType.NAV_FOCUS_PROJECTED,
-        );
+        if (data.focusType === undefined) {
+            return;
+        }
+
+        return this.sendNavigationFocusResponse(data.focusType);
     }
 
     protected async onVoiceSessionNotification(
