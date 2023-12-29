@@ -1,7 +1,6 @@
 import { Transport, type TransportEvents } from './Transport.js';
 import { LoggerWrapper, getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
-import { DataBuffer } from '../utils/DataBuffer.js';
 
 export enum DeviceState {
     AVAILABLE = 'available',

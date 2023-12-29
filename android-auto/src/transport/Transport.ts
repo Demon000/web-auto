@@ -1,5 +1,3 @@
-import { DataBuffer } from '../utils/DataBuffer.js';
-
 export enum TransportState {
     AVAILABLE,
     CONNECTED,

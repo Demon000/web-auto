@@ -1,5 +1,4 @@
 import { getLogger } from '@web-auto/logging';
-import { DataBuffer } from '../utils/DataBuffer.js';
 import { type FrameData } from './FrameData.js';
 import { type FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
 

@@ -7,7 +7,6 @@ import {
     ServiceDiscoveryResponse,
 } from '@web-auto/android-auto-proto';
 import { Message } from '../messenger/Message.js';
-import { DataBuffer } from '../utils/DataBuffer.js';
 import { getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
 import { Message as ProtoMessage } from '@bufbuild/protobuf';

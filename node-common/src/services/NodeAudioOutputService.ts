@@ -1,6 +1,5 @@
 import {
     AudioOutputService,
-    DataBuffer,
     type ServiceEvents,
 } from '@web-auto/android-auto';
 import {

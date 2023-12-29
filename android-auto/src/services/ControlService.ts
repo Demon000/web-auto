@@ -21,7 +21,6 @@ import {
 } from '@web-auto/android-auto-proto';
 
 import { Message } from '../messenger/Message.js';
-import { DataBuffer } from '../utils/DataBuffer.js';
 
 import { Service, type ServiceEvents } from './Service.js';
 import { Pinger } from './Pinger.js';

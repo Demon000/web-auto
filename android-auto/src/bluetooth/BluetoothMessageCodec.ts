@@ -1,4 +1,3 @@
-import { DataBuffer } from '../utils/DataBuffer.js';
 import { getLogger } from '@web-auto/logging';
 import { BluetoothMessage } from './BluetoothMessage.js';
 

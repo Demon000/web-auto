@@ -3,7 +3,6 @@ import {
     BluetoothMessage,
     BluetoothMessageCodec,
     BluetoothMessageType,
-    DataBuffer,
 } from '@web-auto/android-auto';
 import assert from 'node:assert';
 import { Duplex } from 'node:stream';

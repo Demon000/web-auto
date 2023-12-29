@@ -1,5 +1,4 @@
 import { getLogger } from '@web-auto/logging';
-import { DataBuffer } from '../index.js';
 import { Device, type DeviceEvents } from './Device.js';
 
 export interface DeviceHandlerEvents {

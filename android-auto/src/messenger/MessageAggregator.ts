@@ -1,4 +1,3 @@
-import { DataBuffer } from '../utils/DataBuffer.js';
 import { type FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
 import { getLogger } from '@web-auto/logging';
 import { Message } from './Message.js';

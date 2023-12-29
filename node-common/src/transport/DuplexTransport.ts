@@ -3,7 +3,6 @@ import {
     type TransportEvents,
     TransportState,
 } from '@web-auto/android-auto';
-import { DataBuffer } from '@web-auto/android-auto';
 import { Duplex } from 'node:stream';
 
 export class DuplexTransport extends Transport {

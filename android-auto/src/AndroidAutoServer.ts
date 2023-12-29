@@ -25,7 +25,6 @@ import {
 import assert from 'node:assert';
 import { type FrameData } from './messenger/FrameData.js';
 import { Message } from './messenger/Message.js';
-import { DataBuffer } from './utils/DataBuffer.js';
 import { FrameHeaderFlags } from './messenger/FrameHeader.js';
 import { Mutex } from 'async-mutex';
 import type {

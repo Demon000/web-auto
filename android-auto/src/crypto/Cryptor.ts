@@ -1,5 +1,3 @@
-import { DataBuffer } from '../utils/DataBuffer.js';
-
 export abstract class Cryptor {
     public constructor(
         protected certificateBuffer: Buffer,
