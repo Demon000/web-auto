@@ -20,7 +20,7 @@ export class Message {
             let size = 2;
 
             if (options.dataPayload !== undefined) {
-                size += options.dataPayload.size;
+                size += options.dataPayload.byteLength;
             }
 
             this.payload = DataBuffer.fromSize(size);

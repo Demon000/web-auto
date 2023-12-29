@@ -56,10 +56,10 @@ export class MessageAggregator {
             });
 
             if (frameHeader.flags & FrameHeaderFlags.LAST) {
-                if (totalSize !== 0 && totalSize !== payload.size) {
+                if (totalSize !== 0 && totalSize !== payload.byteLength) {
                     this.logger.error(
                         `Received compound message for service ${frameHeader.serviceId} ` +
-                            `but size ${data.payload.size} does not ` +
+                            `but size ${data.payload.byteLength} does not ` +
                             `match total size ${totalSize}`,
                     );
                 }
@@ -84,7 +84,7 @@ export class MessageAggregator {
         isControl: boolean,
         context: SplitMessageContext,
     ): FrameData {
-        const offset = message.payload.size - context.remainingSize;
+        const offset = message.payload.byteLength - context.remainingSize;
         let size = context.remainingSize;
         if (size > MAX_FRAME_PAYLOAD_SIZE) {
             size = MAX_FRAME_PAYLOAD_SIZE;
@@ -118,7 +118,7 @@ export class MessageAggregator {
             flags & FrameHeaderFlags.FIRST &&
             !(flags & FrameHeaderFlags.LAST)
         ) {
-            totalSize = message.getRawPayload().size;
+            totalSize = message.getRawPayload().byteLength;
         }
 
         return {
@@ -138,7 +138,7 @@ export class MessageAggregator {
             message,
         });
         const context = {
-            remainingSize: message.payload.size,
+            remainingSize: message.payload.byteLength,
         };
         const frameDatas: FrameData[] = [];
 

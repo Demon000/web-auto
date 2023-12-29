@@ -156,7 +156,7 @@ export abstract class AndroidAutoServer {
 
         await this.encryptFrameData(frameData);
 
-        frameHeader.payloadSize = frameData.payload.size;
+        frameHeader.payloadSize = frameData.payload.byteLength;
 
         let buffer;
         try {

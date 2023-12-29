@@ -7,7 +7,7 @@ export class BluetoothMessageCodec {
     public encodeMessage(message: BluetoothMessage): Uint8Array {
         const buffer = DataBuffer.empty();
 
-        buffer.appendUint16BE(message.payload.size);
+        buffer.appendUint16BE(message.payload.byteLength);
         buffer.appendUint16BE(message.type);
         buffer.appendBuffer(message.payload);
 

@@ -105,12 +105,12 @@ export class NodeCryptor extends Cryptor {
     private async read(readable: Readable): Promise<Uint8Array> {
         return new Promise((resolve, reject) => {
             const buffer = this.readSync(readable);
-            if (buffer.size) {
+            if (buffer.byteLength) {
                 resolve(buffer);
             } else {
                 readable.once('readable', () => {
                     const buffer = this.readSync(readable);
-                    if (buffer.size) {
+                    if (buffer.byteLength) {
                         resolve(buffer);
                     } else {
                         reject(buffer);
