@@ -5,7 +5,7 @@ export enum TransportState {
 }
 
 export interface TransportEvents {
-    onData: (data: DataBuffer) => void;
+    onData: (data: Uint8Array) => void;
     onError: (err: Error) => void;
     onDisconnected: () => void;
 }
@@ -17,5 +17,5 @@ export abstract class Transport {
 
     public abstract connect(): Promise<void>;
     public abstract disconnect(): Promise<void>;
-    public abstract send(buffer: DataBuffer): Promise<void>;
+    public abstract send(buffer: Uint8Array): Promise<void>;
 }

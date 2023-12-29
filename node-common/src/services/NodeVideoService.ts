@@ -77,7 +77,7 @@ const h265HasKeyFrame = (buffer: Uint8Array) => {
 
 export class NodeVideoService extends VideoService {
     private codecState = CodecState.STOPPED;
-    private codecBuffer: DataBuffer | undefined;
+    private codecBuffer: Uint8Array | undefined;
 
     public constructor(
         private ipcHandler: IpcServiceHandler<
@@ -157,7 +157,7 @@ export class NodeVideoService extends VideoService {
         this.syncChannelStop();
     }
 
-    protected parseH264CodecConfig(buffer: DataBuffer): VideoCodecConfig {
+    protected parseH264CodecConfig(buffer: Uint8Array): VideoCodecConfig {
         const {
             profileIndex,
             constraintSet,
@@ -185,7 +185,7 @@ export class NodeVideoService extends VideoService {
         };
     }
 
-    protected parseH265CodecConfig(buffer: DataBuffer): VideoCodecConfig {
+    protected parseH265CodecConfig(buffer: Uint8Array): VideoCodecConfig {
         const {
             generalProfileSpace,
             generalProfileIndex,
@@ -222,7 +222,7 @@ export class NodeVideoService extends VideoService {
         };
     }
 
-    protected handleH264(buffer: DataBuffer): void {
+    protected handleH264(buffer: Uint8Array): void {
         if (this.codecState === CodecState.STARTED) {
             this.ipcHandler.data(buffer.data);
         } else if (this.codecState === CodecState.WAITING_FOR_CONFIG) {
@@ -264,7 +264,7 @@ export class NodeVideoService extends VideoService {
         }
     }
 
-    protected handleH265(buffer: DataBuffer): void {
+    protected handleH265(buffer: Uint8Array): void {
         if (this.codecState === CodecState.STARTED) {
             this.ipcHandler.data(buffer.data);
         } else if (this.codecState === CodecState.WAITING_FOR_CONFIG) {
@@ -308,7 +308,7 @@ export class NodeVideoService extends VideoService {
 
     // eslint-disable-next-line @typescript-eslint/require-await
     protected async handleData(
-        buffer: DataBuffer,
+        buffer: Uint8Array,
         _timestamp?: bigint,
     ): Promise<void> {
         assert(this.configurationIndex !== undefined);

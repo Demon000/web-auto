@@ -160,7 +160,7 @@ export class ControlService extends Service {
         );
     }
 
-    private async sendHandshake(payload: DataBuffer): Promise<void> {
+    private async sendHandshake(payload: Uint8Array): Promise<void> {
         await this.sendPayloadWithId(
             ControlMessageType.MESSAGE_ENCAPSULATED_SSL,
             payload,

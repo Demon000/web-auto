@@ -97,7 +97,7 @@ export class NodeAudioOutputService extends AudioOutputService {
 
     // eslint-disable-next-line @typescript-eslint/require-await
     protected async handleData(
-        buffer: DataBuffer,
+        buffer: Uint8Array,
         _timestamp?: bigint,
     ): Promise<void> {
         this.rtaudio.write(buffer.data);

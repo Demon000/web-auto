@@ -10,7 +10,7 @@ export abstract class AVOutputService extends AVService {
         super(events);
     }
 
-    protected async onAvMediaIndication(buffer: DataBuffer): Promise<void> {
+    protected async onAvMediaIndication(buffer: Uint8Array): Promise<void> {
         try {
             await this.handleData(buffer);
         } catch (err) {
@@ -29,7 +29,7 @@ export abstract class AVOutputService extends AVService {
     }
 
     protected async onAvMediaWithTimestampIndication(
-        payload: DataBuffer,
+        payload: Uint8Array,
     ): Promise<void> {
         const timestamp = payload.readUint64BE();
         const buffer = payload.readBuffer();
@@ -124,7 +124,7 @@ export abstract class AVOutputService extends AVService {
     }
 
     protected abstract handleData(
-        buffer: DataBuffer,
+        buffer: Uint8Array,
         timestamp?: bigint,
     ): Promise<void>;
 

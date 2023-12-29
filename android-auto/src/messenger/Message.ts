@@ -1,15 +1,15 @@
 export type MessageOptions =
     | {
-          dataPayload?: DataBuffer;
+          dataPayload?: Uint8Array;
           messageId: number;
       }
     | {
-          rawPayload: DataBuffer;
+          rawPayload: Uint8Array;
       };
 
 export class Message {
     public messageId: number;
-    public payload: DataBuffer;
+    public payload: Uint8Array;
 
     public constructor(options: MessageOptions) {
         if ('rawPayload' in options) {
@@ -31,7 +31,7 @@ export class Message {
         }
     }
 
-    public getPayload(): DataBuffer {
+    public getPayload(): Uint8Array {
         return this.payload.subarray(2);
     }
 
@@ -39,7 +39,7 @@ export class Message {
         return this.getPayload().data;
     }
 
-    public getRawPayload(): DataBuffer {
+    public getRawPayload(): Uint8Array {
         return this.payload;
     }
 }

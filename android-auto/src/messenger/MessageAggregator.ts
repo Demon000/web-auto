@@ -6,7 +6,7 @@ import { type FrameData } from './FrameData.js';
 
 interface AggregatorData {
     frameHeader: FrameHeader;
-    payload: DataBuffer;
+    payload: Uint8Array;
 }
 
 interface SplitMessageContext {

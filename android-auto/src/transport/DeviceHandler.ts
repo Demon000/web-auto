@@ -10,7 +10,7 @@ export interface DeviceHandlerEvents {
 
     onDeviceStateUpdated: (device: Device) => void;
 
-    onDeviceTransportData: (device: Device, buffer: DataBuffer) => void;
+    onDeviceTransportData: (device: Device, buffer: Uint8Array) => void;
     onDeviceTransportError: (device: Device, err: Error) => void;
 }
 

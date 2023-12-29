@@ -91,7 +91,7 @@ export abstract class AudioInputService extends AVService {
     }
 
     protected async sendAvMediaWithTimestampIndication(
-        buffer: DataBuffer,
+        buffer: Uint8Array,
     ): Promise<void> {
         const payload = DataBuffer.empty();
         const timestamp = microsecondsTime();

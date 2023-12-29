@@ -15,7 +15,7 @@ export interface DeviceEvents {
     onStateUpdated: (device: Device) => void;
     onSelfConnection: (device: Device) => void;
     onSelfDisconnection: (device: Device, reason: string) => void;
-    onTransportData: (device: Device, buffer: DataBuffer) => void;
+    onTransportData: (device: Device, buffer: Uint8Array) => void;
     onTransportError: (device: Device, err: Error) => void;
 }
 
@@ -85,7 +85,7 @@ export abstract class Device {
         this.setState(DeviceState.CONNECTED);
     }
 
-    protected onTransportData(data: DataBuffer): void {
+    protected onTransportData(data: Uint8Array): void {
         this.events.onTransportData(this, data);
     }
 

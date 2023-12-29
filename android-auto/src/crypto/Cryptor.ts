@@ -8,9 +8,9 @@ export abstract class Cryptor {
     public abstract stop(): void;
 
     public abstract isHandshakeComplete(): boolean;
-    public abstract readHandshakeBuffer(): Promise<DataBuffer>;
-    public abstract writeHandshakeBuffer(buffer: DataBuffer): Promise<void>;
+    public abstract readHandshakeBuffer(): Promise<Uint8Array>;
+    public abstract writeHandshakeBuffer(buffer: Uint8Array): Promise<void>;
 
-    public abstract encrypt(buffer: DataBuffer): Promise<DataBuffer>;
-    public abstract decrypt(buffer: DataBuffer): Promise<DataBuffer>;
+    public abstract encrypt(buffer: Uint8Array): Promise<Uint8Array>;
+    public abstract decrypt(buffer: Uint8Array): Promise<Uint8Array>;
 }

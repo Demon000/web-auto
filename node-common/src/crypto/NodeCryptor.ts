@@ -74,7 +74,7 @@ export class NodeCryptor extends Cryptor {
         return this.connected;
     }
 
-    public async readHandshakeBuffer(): Promise<DataBuffer> {
+    public async readHandshakeBuffer(): Promise<Uint8Array> {
         if (this.encrypted === undefined) {
             throw new Error('Cannot read handshake buffer after stop');
         }
@@ -82,7 +82,7 @@ export class NodeCryptor extends Cryptor {
         return await this.read(this.encrypted);
     }
 
-    public async writeHandshakeBuffer(buffer: DataBuffer): Promise<void> {
+    public async writeHandshakeBuffer(buffer: Uint8Array): Promise<void> {
         if (this.encrypted === undefined) {
             throw new Error('Cannot write handshake buffer after stop');
         }
@@ -90,7 +90,7 @@ export class NodeCryptor extends Cryptor {
         await this.write(this.encrypted, buffer);
     }
 
-    private readSync(readable: Readable): DataBuffer {
+    private readSync(readable: Readable): Uint8Array {
         const buffer = DataBuffer.empty();
         let chunk;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -102,7 +102,7 @@ export class NodeCryptor extends Cryptor {
         return buffer;
     }
 
-    private async read(readable: Readable): Promise<DataBuffer> {
+    private async read(readable: Readable): Promise<Uint8Array> {
         return new Promise((resolve, reject) => {
             const buffer = this.readSync(readable);
             if (buffer.size) {
@@ -122,7 +122,7 @@ export class NodeCryptor extends Cryptor {
 
     private async write(
         writeable: Writable,
-        buffer: DataBuffer,
+        buffer: Uint8Array,
     ): Promise<void> {
         return new Promise((resolve, reject) => {
             const canWrite = writeable.write(buffer.data, (err) => {
@@ -136,7 +136,7 @@ export class NodeCryptor extends Cryptor {
         });
     }
 
-    public async encrypt(buffer: DataBuffer): Promise<DataBuffer> {
+    public async encrypt(buffer: Uint8Array): Promise<Uint8Array> {
         if (this.cleartext === undefined || this.encrypted === undefined) {
             throw new Error('Cannot encrypt after stop');
         }
@@ -153,7 +153,7 @@ export class NodeCryptor extends Cryptor {
         }
     }
 
-    public async decrypt(buffer: DataBuffer): Promise<DataBuffer> {
+    public async decrypt(buffer: Uint8Array): Promise<Uint8Array> {
         if (this.cleartext === undefined || this.encrypted === undefined) {
             throw new Error('Cannot decrypt after stop');
         }

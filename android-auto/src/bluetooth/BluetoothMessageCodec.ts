@@ -4,7 +4,7 @@ import { BluetoothMessage } from './BluetoothMessage.js';
 export class BluetoothMessageCodec {
     protected logger = getLogger(this.constructor.name);
 
-    public encodeMessage(message: BluetoothMessage): DataBuffer {
+    public encodeMessage(message: BluetoothMessage): Uint8Array {
         const buffer = DataBuffer.empty();
 
         buffer.appendUint16BE(message.payload.size);
@@ -14,7 +14,7 @@ export class BluetoothMessageCodec {
         return buffer;
     }
 
-    public decodeMessage(buffer: DataBuffer): BluetoothMessage {
+    public decodeMessage(buffer: Uint8Array): BluetoothMessage {
         const size = buffer.readUint16BE();
         const type = buffer.readUint16BE();
         const payload = buffer.readBuffer(size);

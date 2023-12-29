@@ -78,7 +78,7 @@ export class DuplexTransport extends Transport {
         });
     }
 
-    public async send(buffer: DataBuffer): Promise<void> {
+    public async send(buffer: Uint8Array): Promise<void> {
         if (this.state === TransportState.DISCONNECTED) {
             throw new Error('Cannot send to disconnected tranport');
         }

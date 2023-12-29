@@ -309,7 +309,7 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    private onDeviceTransportData(device: Device, buffer: DataBuffer): void {
+    private onDeviceTransportData(device: Device, buffer: Uint8Array): void {
         this.onDeviceTransportDataAsync(device, buffer)
             .then(() => {})
             .catch((err) => {
@@ -322,7 +322,7 @@ export abstract class AndroidAutoServer {
 
     private async onDeviceTransportDataAsync(
         device: Device,
-        buffer: DataBuffer,
+        buffer: Uint8Array,
     ): Promise<void> {
         assert(this.frameCodec !== undefined);
         assert(this.messageAggregator !== undefined);

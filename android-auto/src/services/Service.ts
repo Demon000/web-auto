@@ -191,7 +191,7 @@ export abstract class Service {
 
     protected async sendPayloadWithId(
         messageId: number,
-        dataPayload: DataBuffer,
+        dataPayload: Uint8Array,
         printMessage: any,
         isEncrypted: boolean,
         isControl: boolean,
