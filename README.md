@@ -6,6 +6,10 @@
 
 `sudo apt install nodejs npm protobuf-compiler`
 
+If using `androidAuto.tcpDeviceHandlerConfig.scanOptions` config:
+
+`sudo apt install nmap`
+
 ## Installation
 
 1. `git clone https://github.com/Demon000/web-auto`

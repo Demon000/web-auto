@@ -117,6 +117,12 @@
             // These will be Android devices with head unit servers
             // started manually
             ips: ['192.168.0.103'],
+            // Automatic scan for IPs with Android Auto head unit server available
+            scanOptions: {
+                interfaces: ['wlp4s0'],
+                mask: '192.168.1.1/24',
+                intervalMs: 5000,
+            },
         },
         usbDeviceHandlerConfig: {
             // VID:PIDs to be ignored when looking up devices
