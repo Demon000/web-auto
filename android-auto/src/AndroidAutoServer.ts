@@ -677,7 +677,12 @@ export abstract class AndroidAutoServer {
             return;
         }
 
-        await this.disconnectDeviceInternal(device, reason);
+        try {
+            await this.disconnectDeviceInternal(device, reason);
+        } catch (err) {
+            this.logger.error('Failed to disconnect device', err);
+        }
+
         release();
     }
 
