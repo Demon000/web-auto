@@ -1,1 +1,1 @@
-export * from './DataBuffer.js';
+export * from './buffer.js';
