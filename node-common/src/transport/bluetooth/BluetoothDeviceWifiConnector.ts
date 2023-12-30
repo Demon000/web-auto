@@ -125,7 +125,7 @@ export class BluetoothDeviceWifiConnector {
         });
     }
 
-    private onData(buffer: Buffer): void {
+    private onData(buffer: Uint8Array): void {
         this.logger.debug('Receive data', buffer);
 
         const messages = this.codec.decodeBuffer(buffer);

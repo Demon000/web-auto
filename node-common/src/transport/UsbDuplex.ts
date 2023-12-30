@@ -70,7 +70,7 @@ export class UsbDuplex extends Duplex {
             });
     }
 
-    private async writeAsync(buffer: Buffer): Promise<void> {
+    private async writeAsync(buffer: Uint8Array): Promise<void> {
         const result = await this.device.transferOut(
             this.outEndpoint.endpointNumber,
             buffer,

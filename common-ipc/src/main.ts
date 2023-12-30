@@ -278,7 +278,7 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
         this.socketHandler.unregister();
     }
 
-    private handleMessage(socket: IpcSocket, data: Buffer): void {
+    private handleMessage(socket: IpcSocket, data: Uint8Array): void {
         this.handleMessageAsync(socket, data)
             .then(() => {})
             .catch((err) => {
@@ -288,7 +288,7 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
 
     private async handleMessageAsync(
         socket: IpcSocket,
-        data: Buffer,
+        data: Uint8Array,
     ): Promise<void> {
         const ipcEvent = this.serializer.deserialize(data);
 

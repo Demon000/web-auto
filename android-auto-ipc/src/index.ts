@@ -32,10 +32,10 @@ export type AndroidAutoVideoService = {
 export type AndroidAutoVideoClient = {
     focusRequest(data: IVideoFocusRequestNotification): void;
     codecConfig(config: VideoCodecConfig): void;
-    firstFrame(buffer: Buffer): void;
+    firstFrame(buffer: Uint8Array): void;
     channelStart(): void;
     channelStop(): void;
-    data(buffer: Buffer): void;
+    data(buffer: Uint8Array): void;
 };
 
 export interface IDevice {

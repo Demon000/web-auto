@@ -21,7 +21,7 @@ export class BluetoothMessageCodec {
         return new BluetoothMessage(type, payload);
     }
 
-    public decodeBuffer(data: Buffer): BluetoothMessage[] {
+    public decodeBuffer(data: Uint8Array): BluetoothMessage[] {
         const buffer = DataBuffer.fromBuffer(data);
 
         const messages = [];

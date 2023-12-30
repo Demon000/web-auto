@@ -35,7 +35,7 @@ export class Message {
         return this.payload.subarray(2);
     }
 
-    public getBufferPayload(): Buffer {
+    public getBufferPayload(): Uint8Array {
         return this.getPayload().data;
     }
 

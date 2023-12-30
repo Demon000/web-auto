@@ -17,7 +17,7 @@ export class DuplexTransport extends Transport {
         this.onClose = this.onClose.bind(this);
     }
 
-    private onData(data: Buffer): void {
+    private onData(data: Uint8Array): void {
         const buffer = DataBuffer.fromBuffer(data);
         this.events.onData(buffer);
     }
