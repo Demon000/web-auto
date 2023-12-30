@@ -168,6 +168,8 @@
         windows: [
             {
                 name: 'Main Window',
+                width: 1280,
+                height: 720,
                 app: {
                     // Path to app root
                     path: './web/dist',
@@ -182,6 +184,8 @@
             },
             {
                 name: 'Cluster window',
+                width: 800,
+                height: 480,
                 app: {
                     // Path to app root
                     path: './web/dist',
