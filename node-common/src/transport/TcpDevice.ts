@@ -6,6 +6,7 @@ import {
 } from '@web-auto/android-auto';
 import { DuplexTransport } from './DuplexTransport.js';
 import { Socket } from 'node:net';
+import { TCP_SERVER_PORT } from './tcp.js';
 
 export class TcpDevice extends Device {
     public constructor(
@@ -37,7 +38,7 @@ export class TcpDevice extends Device {
                 resolve(transport);
             });
 
-            socket.connect(5277, this.ip);
+            socket.connect(TCP_SERVER_PORT, this.ip);
         });
     }
 }
