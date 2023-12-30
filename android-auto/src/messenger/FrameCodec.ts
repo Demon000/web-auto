@@ -1,6 +1,7 @@
 import { getLogger } from '@web-auto/logging';
 import { type FrameData } from './FrameData.js';
 import { type FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
+import { BufferWriter, BufferReader } from '../utils/buffer.js';
 
 export class FrameCodec {
     protected logger = getLogger(this.constructor.name);
@@ -14,7 +15,7 @@ export class FrameCodec {
 
     public encodeFrameHeader(
         frameheader: FrameHeader,
-        buffer: Uint8Array,
+        buffer: BufferWriter,
     ): void {
         buffer.appendUint8(frameheader.serviceId);
         buffer.appendUint8(frameheader.flags);
@@ -28,7 +29,7 @@ export class FrameCodec {
 
         this.logger.debug('Encode frame data', frameData);
 
-        const buffer = DataBuffer.empty();
+        const buffer = BufferWriter.empty();
         this.encodeFrameHeader(frameHeader, buffer);
 
         if (totalSize !== 0) {
@@ -39,10 +40,10 @@ export class FrameCodec {
 
         this.logger.debug('Encoded buffer', buffer);
 
-        return buffer;
+        return buffer.data;
     }
 
-    private decodeFrameHeader(buffer: Uint8Array): FrameHeader {
+    private decodeFrameHeader(buffer: BufferReader): FrameHeader {
         const firstByte = buffer.readUint8();
         const secondByte = buffer.readUint8();
 
@@ -58,11 +59,11 @@ export class FrameCodec {
         };
     }
 
-    private decodeTotalSize(buffer: Uint8Array): number {
+    private decodeTotalSize(buffer: BufferReader): number {
         return buffer.readUint32BE();
     }
 
-    private decodeOne(buffer: Uint8Array): FrameData {
+    private decodeOne(buffer: BufferReader): FrameData {
         const frameHeader = this.decodeFrameHeader(buffer);
 
         let totalSize = 0;
@@ -82,7 +83,7 @@ export class FrameCodec {
         };
     }
 
-    private tryDecodeOne(buffer: Uint8Array): FrameData | undefined {
+    private tryDecodeOne(buffer: BufferReader): FrameData | undefined {
         const initialReadOffset = buffer.getReadOffset();
         this.logger.debug(`Buffer read offset: ${initialReadOffset}`);
 
@@ -97,18 +98,18 @@ export class FrameCodec {
         }
     }
 
-    public decodeBuffer(buffer: Uint8Array): FrameData[] {
-        this.logger.debug('Decode buffer', buffer);
-
+    public decodeBuffer(arr: Uint8Array): FrameData[] {
+        this.logger.debug('Decode buffer', arr);
         if (this.buffer !== undefined) {
+            arr = BufferWriter.concat(this.buffer, arr);
             this.logger.debug(
                 'Remaining buffer exists, add to it',
                 this.buffer,
             );
-            buffer = this.buffer.appendBuffer(buffer);
-            this.logger.debug('Decoding entire buffer', buffer);
+            this.logger.debug('Decoding entire buffer', arr);
         }
 
+        const buffer = BufferReader.fromBuffer(arr);
         const frameDatas: FrameData[] = [];
         while (buffer.readBufferSize() !== 0) {
             const frameData = this.tryDecodeOne(buffer);

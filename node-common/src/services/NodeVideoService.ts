@@ -1,7 +1,4 @@
-import {
-    type ServiceEvents,
-    VideoService,
-} from '@web-auto/android-auto';
+import { type ServiceEvents, VideoService } from '@web-auto/android-auto';
 import type {
     AndroidAutoVideoClient,
     AndroidAutoVideoService,
@@ -31,6 +28,7 @@ import {
     h265ParseNaluHeader,
 } from '@yume-chan/scrcpy';
 import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
+import { BufferWriter } from '@web-auto/android-auto';
 
 enum CodecState {
     STOPPED,
@@ -168,7 +166,7 @@ export class NodeVideoService extends VideoService {
             cropBottom,
             croppedWidth,
             croppedHeight,
-        } = h264ParseConfiguration(buffer.data);
+        } = h264ParseConfiguration(buffer);
 
         const codec = `avc1.${[profileIndex, constraintSet, levelIndex]
             .map(toHex)
@@ -199,7 +197,7 @@ export class NodeVideoService extends VideoService {
             cropBottom,
             croppedWidth,
             croppedHeight,
-        } = h265ParseConfiguration(buffer.data);
+        } = h265ParseConfiguration(buffer);
 
         const codec = [
             'hev1',
@@ -224,7 +222,7 @@ export class NodeVideoService extends VideoService {
 
     protected handleH264(buffer: Uint8Array): void {
         if (this.codecState === CodecState.STARTED) {
-            this.ipcHandler.data(buffer.data);
+            this.ipcHandler.data(buffer);
         } else if (this.codecState === CodecState.WAITING_FOR_CONFIG) {
             assert(this.codecBuffer === undefined);
 
@@ -244,14 +242,16 @@ export class NodeVideoService extends VideoService {
         } else if (this.codecState === CodecState.WAITING_FOR_FIRST_FRAME) {
             assert(this.codecBuffer !== undefined);
 
-            if (!h264HasKeyFrame(buffer.data)) {
+            if (!h264HasKeyFrame(buffer)) {
                 this.logger.error('Failed to find H264 keyframe');
                 return;
             }
 
-            this.codecBuffer.appendBuffer(buffer);
-
-            this.ipcHandler.firstFrame(this.codecBuffer.data);
+            const firstFrameBuffer = BufferWriter.concat(
+                this.codecBuffer,
+                buffer,
+            );
+            this.ipcHandler.firstFrame(firstFrameBuffer);
 
             this.codecBuffer = undefined;
             this.codecState = CodecState.STARTED;
@@ -266,7 +266,7 @@ export class NodeVideoService extends VideoService {
 
     protected handleH265(buffer: Uint8Array): void {
         if (this.codecState === CodecState.STARTED) {
-            this.ipcHandler.data(buffer.data);
+            this.ipcHandler.data(buffer);
         } else if (this.codecState === CodecState.WAITING_FOR_CONFIG) {
             assert(this.codecBuffer === undefined);
 
@@ -286,14 +286,16 @@ export class NodeVideoService extends VideoService {
         } else if (this.codecState === CodecState.WAITING_FOR_FIRST_FRAME) {
             assert(this.codecBuffer !== undefined);
 
-            if (!h265HasKeyFrame(buffer.data)) {
+            if (!h265HasKeyFrame(buffer)) {
                 this.logger.error('Failed to find H265 keyframe');
                 return;
             }
 
-            this.codecBuffer.appendBuffer(buffer);
-
-            this.ipcHandler.firstFrame(this.codecBuffer.data);
+            const firstFrameBuffer = BufferWriter.concat(
+                this.codecBuffer,
+                buffer,
+            );
+            this.ipcHandler.firstFrame(firstFrameBuffer);
 
             this.codecBuffer = undefined;
             this.codecState = CodecState.STARTED;

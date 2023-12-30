@@ -3,10 +3,11 @@ import { getLogger } from '@web-auto/logging';
 import { Message } from './Message.js';
 import assert from 'node:assert';
 import { type FrameData } from './FrameData.js';
+import { BufferWriter } from '../utils/buffer.js';
 
 interface AggregatorData {
     frameHeader: FrameHeader;
-    payload: Uint8Array;
+    writer: BufferWriter;
 }
 
 interface SplitMessageContext {
@@ -37,9 +38,12 @@ export class MessageAggregator {
         } else if (frameHeader.flags & FrameHeaderFlags.FIRST) {
             assert(!this.serviceIdAggregatorMap.has(frameHeader.serviceId));
 
+            const writer = BufferWriter.fromSize(payload.byteLength);
+            writer.appendBuffer(payload);
+
             const data = {
                 frameHeader,
-                payload,
+                writer,
             };
 
             this.logger.debug('Creating new aggregated data', data);
@@ -49,7 +53,7 @@ export class MessageAggregator {
             const data = this.serviceIdAggregatorMap.get(frameHeader.serviceId);
             assert(data !== undefined);
 
-            data.payload.appendBuffer(payload);
+            data.writer.appendBuffer(payload);
             this.logger.debug('Adding frame data to aggregated data', {
                 frameData,
                 aggregatedData: data,
@@ -59,7 +63,7 @@ export class MessageAggregator {
                 if (totalSize !== 0 && totalSize !== payload.byteLength) {
                     this.logger.error(
                         `Received compound message for service ${frameHeader.serviceId} ` +
-                            `but size ${data.payload.byteLength} does not ` +
+                            `but size ${data.writer.data.byteLength} does not ` +
                             `match total size ${totalSize}`,
                     );
                 }
@@ -67,7 +71,7 @@ export class MessageAggregator {
                 this.serviceIdAggregatorMap.delete(frameHeader.serviceId);
 
                 const message = new Message({
-                    rawPayload: data.payload,
+                    rawPayload: data.writer.data,
                 });
                 this.logger.debug('Aggregated message', message);
                 return message;

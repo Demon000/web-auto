@@ -1,3 +1,5 @@
+import { BufferWriter, BufferReader } from '../utils/buffer.js';
+
 export type MessageOptions =
     | {
           dataPayload?: Uint8Array;
@@ -14,7 +16,8 @@ export class Message {
     public constructor(options: MessageOptions) {
         if ('rawPayload' in options) {
             this.payload = options.rawPayload;
-            this.messageId = this.payload.readUint16BE();
+            const reader = BufferReader.fromBuffer(options.rawPayload);
+            this.messageId = reader.readUint16BE();
         } else {
             this.messageId = options.messageId;
             let size = 2;
@@ -23,11 +26,12 @@ export class Message {
                 size += options.dataPayload.byteLength;
             }
 
-            this.payload = DataBuffer.fromSize(size);
-            this.payload.appendUint16BE(options.messageId);
+            const writer = BufferWriter.fromSize(size);
+            writer.appendUint16BE(options.messageId);
             if (options.dataPayload !== undefined) {
-                this.payload.appendBuffer(options.dataPayload);
+                writer.appendBuffer(options.dataPayload);
             }
+            this.payload = writer.data;
         }
     }
 
@@ -36,7 +40,7 @@ export class Message {
     }
 
     public getBufferPayload(): Uint8Array {
-        return this.getPayload().data;
+        return this.getPayload();
     }
 
     public getRawPayload(): Uint8Array {

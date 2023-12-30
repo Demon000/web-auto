@@ -1,3 +1,4 @@
+import { BufferReader } from '../utils/buffer.js';
 import { Message } from '../messenger/Message.js';
 import { AVService } from './AVService.js';
 import { type ServiceEvents } from './Service.js';
@@ -31,8 +32,9 @@ export abstract class AVOutputService extends AVService {
     protected async onAvMediaWithTimestampIndication(
         payload: Uint8Array,
     ): Promise<void> {
-        const timestamp = payload.readUint64BE();
-        const buffer = payload.readBuffer();
+        const reader = BufferReader.fromBuffer(payload);
+        const timestamp = reader.readUint64BE();
+        const buffer = reader.readBuffer();
 
         try {
             await this.handleData(buffer, timestamp);

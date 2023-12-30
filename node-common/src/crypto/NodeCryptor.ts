@@ -1,4 +1,4 @@
-import { Cryptor, DataBuffer } from '@web-auto/android-auto';
+import { BufferWriter, Cryptor } from '@web-auto/android-auto';
 import DuplexPair from 'native-duplexpair';
 import { Duplex, Readable, Writable } from 'node:stream';
 import { TLSSocket, connect } from 'node:tls';
@@ -91,15 +91,14 @@ export class NodeCryptor extends Cryptor {
     }
 
     private readSync(readable: Readable): Uint8Array {
-        const buffer = DataBuffer.empty();
+        const buffer = BufferWriter.empty();
         let chunk;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         while (null !== (chunk = readable.read())) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            const chunkBuffer = DataBuffer.fromBuffer(chunk);
-            buffer.appendBuffer(chunkBuffer);
+            buffer.appendBuffer(chunk as Uint8Array);
         }
-        return buffer;
+        return buffer.data;
     }
 
     private async read(readable: Readable): Promise<Uint8Array> {
@@ -125,7 +124,7 @@ export class NodeCryptor extends Cryptor {
         buffer: Uint8Array,
     ): Promise<void> {
         return new Promise((resolve, reject) => {
-            const canWrite = writeable.write(buffer.data, (err) => {
+            const canWrite = writeable.write(buffer, (err) => {
                 if (err !== undefined && err !== null) {
                     return reject(err);
                 }

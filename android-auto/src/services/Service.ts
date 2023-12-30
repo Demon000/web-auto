@@ -222,7 +222,7 @@ export abstract class Service {
         isEncrypted: boolean,
         isControl: boolean,
     ): Promise<void> {
-        const dataPayload = DataBuffer.fromBuffer(protoMessage.toBinary());
+        const dataPayload = protoMessage.toBinary();
 
         return this.sendPayloadWithId(
             messageId,

@@ -43,7 +43,7 @@ export class BluetoothDeviceWifiConnector {
 
             this.logger.debug('Send data', buffer);
 
-            this.bluetoothSocket.write(buffer.data, undefined, (err) => {
+            this.bluetoothSocket.write(buffer, undefined, (err) => {
                 if (err === undefined || err === null) {
                     resolve();
                 } else {
@@ -65,7 +65,7 @@ export class BluetoothDeviceWifiConnector {
 
         const message = new BluetoothMessage(
             BluetoothMessageType.SOCKET_INFO_REQUEST,
-            DataBuffer.fromBuffer(data.toBinary()),
+            data.toBinary(),
         );
 
         await this.sendMessage(message);
@@ -83,7 +83,7 @@ export class BluetoothDeviceWifiConnector {
 
         const message = new BluetoothMessage(
             BluetoothMessageType.NETWORK_INFO_RESPONSE,
-            DataBuffer.fromBuffer(data.toBinary()),
+            data.toBinary(),
         );
 
         await this.sendMessage(message);
@@ -154,7 +154,7 @@ export class BluetoothDeviceWifiConnector {
             abortSignal,
         );
 
-        const data = ConnectStatus.fromBinary(message.payload.data);
+        const data = ConnectStatus.fromBinary(message.payload);
 
         if (data.status !== SocketInfoResponseStatus.STATUS_SUCCESS) {
             assert(data.status !== undefined);

@@ -25,7 +25,8 @@ import { Message } from '../messenger/Message.js';
 import { Service, type ServiceEvents } from './Service.js';
 import { Pinger } from './Pinger.js';
 import assert from 'node:assert';
-import type { Cryptor } from 'src/crypto/Cryptor.js';
+import type { Cryptor } from '../crypto/Cryptor.js';
+import { BufferWriter, BufferReader } from '../utils/buffer.js';
 
 export interface ControlServiceEvents extends ServiceEvents {
     getServiceDiscoveryResponse: () => ServiceDiscoveryResponse;
@@ -147,13 +148,13 @@ export class ControlService extends Service {
     }
 
     private async sendVersionRequest(): Promise<void> {
-        const payload = DataBuffer.fromSize(4)
+        const writer = BufferWriter.fromSize(4)
             .appendUint16BE(GalConstants.PROTOCOL_MAJOR_VERSION)
             .appendUint16BE(GalConstants.PROTOCOL_MINOR_VERSION);
 
         await this.sendPayloadWithId(
             ControlMessageType.MESSAGE_VERSION_REQUEST,
-            payload,
+            writer.data,
             'version request',
             false,
             false,
@@ -243,10 +244,10 @@ export class ControlService extends Service {
             signal,
         );
         const payload = message.getPayload();
-
-        const majorCode = payload.readUint16BE();
-        const mainorCode = payload.readUint16BE();
-        const status = payload.readUint16BE() as MessageStatus;
+        const reader = BufferReader.fromBuffer(payload);
+        const majorCode = reader.readUint16BE();
+        const mainorCode = reader.readUint16BE();
+        const status = reader.readUint16BE() as MessageStatus;
         if (status === MessageStatus.STATUS_NO_COMPATIBLE_VERSION) {
             throw new Error('Mismatched verion');
         }

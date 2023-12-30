@@ -18,8 +18,7 @@ export class DuplexTransport extends Transport {
     }
 
     private onData(data: Uint8Array): void {
-        const buffer = DataBuffer.fromBuffer(data);
-        this.events.onData(buffer);
+        this.events.onData(data);
     }
 
     private onError(err: Error): void {
@@ -84,7 +83,7 @@ export class DuplexTransport extends Transport {
         }
 
         return new Promise((resolve, reject) => {
-            this.socket.write(buffer.data, (err) => {
+            this.socket.write(buffer, (err) => {
                 if (err !== undefined && err !== null) {
                     return reject(err);
                 }

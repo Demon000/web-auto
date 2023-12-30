@@ -1,20 +1,23 @@
 import { getLogger } from '@web-auto/logging';
 import { BluetoothMessage } from './BluetoothMessage.js';
+import { BufferWriter, BufferReader } from '../utils/buffer.js';
 
 export class BluetoothMessageCodec {
     protected logger = getLogger(this.constructor.name);
 
     public encodeMessage(message: BluetoothMessage): Uint8Array {
-        const buffer = DataBuffer.empty();
+        const buffer = BufferWriter.fromSize(
+            2 + 2 + message.payload.byteLength,
+        );
 
         buffer.appendUint16BE(message.payload.byteLength);
         buffer.appendUint16BE(message.type);
         buffer.appendBuffer(message.payload);
 
-        return buffer;
+        return buffer.data;
     }
 
-    public decodeMessage(buffer: Uint8Array): BluetoothMessage {
+    public decodeMessage(buffer: BufferReader): BluetoothMessage {
         const size = buffer.readUint16BE();
         const type = buffer.readUint16BE();
         const payload = buffer.readBuffer(size);
@@ -22,7 +25,7 @@ export class BluetoothMessageCodec {
     }
 
     public decodeBuffer(data: Uint8Array): BluetoothMessage[] {
-        const buffer = DataBuffer.fromBuffer(data);
+        const buffer = BufferReader.fromBuffer(data);
 
         const messages = [];
         while (buffer.readBufferSize() !== 0) {

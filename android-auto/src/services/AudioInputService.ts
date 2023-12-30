@@ -11,6 +11,7 @@ import {
     MicrophoneResponse,
     Service,
 } from '@web-auto/android-auto-proto';
+import { BufferWriter } from '../utils/buffer.js';
 
 export abstract class AudioInputService extends AVService {
     public constructor(events: ServiceEvents) {
@@ -93,15 +94,15 @@ export abstract class AudioInputService extends AVService {
     protected async sendAvMediaWithTimestampIndication(
         buffer: Uint8Array,
     ): Promise<void> {
-        const payload = DataBuffer.empty();
+        const writer = BufferWriter.fromSize(8 + buffer.byteLength);
         const timestamp = microsecondsTime();
 
-        payload.appendUint64BE(timestamp);
-        payload.appendBuffer(buffer);
+        writer.appendUint64BE(timestamp);
+        writer.appendBuffer(buffer);
 
         await this.sendPayloadWithId(
             MediaMessageId.MEDIA_MESSAGE_DATA,
-            payload,
+            writer.data,
             'data',
             true,
             false,

@@ -1,7 +1,4 @@
-import {
-    AudioOutputService,
-    type ServiceEvents,
-} from '@web-auto/android-auto';
+import { AudioOutputService, type ServiceEvents } from '@web-auto/android-auto';
 import {
     AudioStreamType,
     ChannelOpenRequest,
@@ -11,6 +8,7 @@ import {
 import type { IAudioConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
 import RtAudioPackage from 'audify';
 import assert from 'node:assert';
+import { bufferWrapUint8Array } from '@web-auto/android-auto';
 
 const { RtAudio } = RtAudioPackage;
 
@@ -100,6 +98,7 @@ export class NodeAudioOutputService extends AudioOutputService {
         buffer: Uint8Array,
         _timestamp?: bigint,
     ): Promise<void> {
-        this.rtaudio.write(buffer.data);
+        const data = bufferWrapUint8Array(buffer);
+        this.rtaudio.write(data);
     }
 }
