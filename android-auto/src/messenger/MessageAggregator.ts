@@ -137,7 +137,6 @@ export class MessageAggregator {
     ): FrameData[] {
         this.logger.debug('Split message', {
             message,
-            buffer: message.getBufferPayload().toString('hex'),
         });
         const context = {
             remainingSize: message.payload.size,
