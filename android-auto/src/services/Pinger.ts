@@ -10,7 +10,7 @@ export interface PingerEvents {
 
 export class Pinger {
     protected logger = getLogger(this.constructor.name);
-    private pingTimeout: ReturnType<typeof setTimeout> | undefined;
+    private pingInterval: ReturnType<typeof setInterval> | undefined;
     private pingReceivedTime: bigint | undefined;
     private pingSentTime: bigint | undefined;
     private started = false;
@@ -25,15 +25,15 @@ export class Pinger {
     }
 
     public schedulePingTimeout(): void {
-        assert(this.pingTimeout === undefined);
+        assert(this.pingInterval === undefined);
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.pingTimeout = setTimeout(this.onPingTimeout, 5000);
+        this.pingInterval = setInterval(this.onPingTimeout, 5000);
     }
 
     public cancelPing(): void {
-        assert(this.pingTimeout !== undefined);
-        clearTimeout(this.pingTimeout);
-        this.pingTimeout = undefined;
+        assert(this.pingInterval !== undefined);
+        clearInterval(this.pingInterval);
+        this.pingInterval = undefined;
     }
 
     public onPingTimeout(): void {
@@ -47,7 +47,6 @@ export class Pinger {
             return;
         }
 
-        this.pingTimeout = undefined;
         this.pingSentTime = microsecondsTime();
         this.pingReceivedTime = undefined;
 
@@ -56,8 +55,6 @@ export class Pinger {
         });
 
         this.events.onPingRequest(data);
-
-        this.schedulePingTimeout();
     }
 
     public onPingResponse(data: PingResponse): void {
