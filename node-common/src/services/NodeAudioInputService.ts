@@ -2,7 +2,6 @@ import { AudioInputService, type ServiceEvents } from '@web-auto/android-auto';
 import {
     ChannelOpenRequest,
     MicrophoneRequest,
-    Setup,
 } from '@web-auto/android-auto-proto';
 import RtAudioPackage from 'audify';
 
@@ -17,10 +16,6 @@ export class NodeAudioInputService extends AudioInputService {
 
         this.rtaudio = new RtAudio();
         this.session = 0;
-    }
-
-    protected async setup(_data: Setup): Promise<void> {
-        // TODO
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await

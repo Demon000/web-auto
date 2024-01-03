@@ -2,7 +2,6 @@ import { AudioOutputService, type ServiceEvents } from '@web-auto/android-auto';
 import {
     AudioStreamType,
     ChannelOpenRequest,
-    Setup,
     Start,
 } from '@web-auto/android-auto-proto';
 import type { IAudioConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
@@ -77,10 +76,6 @@ export class NodeAudioOutputService extends AudioOutputService {
     // eslint-disable-next-line @typescript-eslint/require-await
     protected override async channelStart(_data: Start): Promise<void> {
         this.rtaudio.start();
-    }
-
-    protected async setup(_data: Setup): Promise<void> {
-        // TODO
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await

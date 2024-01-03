@@ -50,7 +50,7 @@ export abstract class AVService extends Service {
         return true;
     }
 
-    protected abstract setup(data: Setup): Promise<void>;
+    protected async setup(_data: Setup): Promise<void> {}
     protected async afterSetup(): Promise<void> {}
 
     protected async sendSetupResponse(status: boolean): Promise<void> {

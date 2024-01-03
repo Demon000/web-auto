@@ -6,7 +6,6 @@ import type {
 } from '@web-auto/android-auto-ipc';
 import {
     type Service,
-    type Setup,
     type Start,
     type VideoFocusRequestNotification,
     DisplayType,
@@ -119,10 +118,6 @@ export class NodeVideoService extends VideoService {
             this.videoConfigs[this.configurationIndex],
         );
         this.ipcHandler.channelStart();
-    }
-
-    protected async setup(_data: Setup): Promise<void> {
-        // TODO
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
