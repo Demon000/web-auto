@@ -102,6 +102,26 @@
                 density: 160,
             },
         ],
+        sensorConfigs: [
+            {
+                name: 'DummyDrivingStatusSensor',
+                config: {
+                    // DRIVE_STATUS_UNRESTRICTED = 0
+                    // DRIVE_STATUS_NO_VIDEO = 1
+                    // DRIVE_STATUS_NO_KEYBOARD_INPUT = 2
+                    // DRIVE_STATUS_NO_VOICE_INPUT = 4
+                    // DRIVE_STATUS_NO_CONFIG = 8
+                    // DRIVE_STATUS_LIMIT_MESSAGE_LEN = 16
+                    status: 0,
+                },
+            },
+            {
+                name: 'DummyNightDataSensor',
+                config: {
+                    nightMode: true,
+                },
+            },
+        ],
         touchScreenConfig: {
             width: 1920,
             height: 1080,

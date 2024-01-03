@@ -5,8 +5,15 @@ import {
     SensorType,
 } from '@web-auto/android-auto-proto';
 
+export interface DummyDrivingStatusSensorConfig {
+    status: DrivingStatus;
+}
+
 export class DummyDrivingStatusSensor extends Sensor {
-    public constructor(events: SensorEvents) {
+    public constructor(
+        private config: DummyDrivingStatusSensorConfig,
+        events: SensorEvents,
+    ) {
         super(SensorType.SENSOR_DRIVING_STATUS_DATA, events);
     }
 
@@ -15,7 +22,7 @@ export class DummyDrivingStatusSensor extends Sensor {
             new SensorBatch({
                 drivingStatusData: [
                     {
-                        status: DrivingStatus.DRIVE_STATUS_UNRESTRICTED,
+                        status: this.config.status,
                     },
                 ],
             }),

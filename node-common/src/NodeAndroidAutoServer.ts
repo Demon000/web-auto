@@ -9,6 +9,7 @@ import {
     type ControlServiceEvents,
     type DeviceHandlerEvents,
     type ServiceEvents,
+    SensorService,
 } from '@web-auto/android-auto';
 import {
     AndroidAutoIpcNames,
@@ -24,7 +25,6 @@ import {
 } from '@web-auto/android-auto-ipc';
 import { NodeMediaStatusService } from './services/NodeMediaStatusService.js';
 import { NodeNavigationStatusService } from './services/NodeNavigationService.js';
-import { DummySensorService } from './services/NodeSensorService.js';
 import { NodeAudioInputService } from './services/NodeAudioInputService.js';
 import { NodeAudioOutputService } from './services/NodeAudioOutputService.js';
 import { NodeAutoInputService } from './services/NodeInputService.js';
@@ -51,8 +51,13 @@ import type {
 } from '@web-auto/common-ipc/main.js';
 import { NodeClusterVideoService } from './services/NodeClusterVideoService.js';
 import { NodeClusterInputService } from './services/NodeClusterInputService.js';
+import {
+    NodeSensorsBuilder,
+    type NodeSensorConfig,
+} from './services/NodeSensorBuilder.js';
 
 export interface NodeAndroidAutoServerConfig extends AndroidAutoServerConfig {
+    sensorConfigs: NodeSensorConfig[];
     cryptorConfig: NodeCryptorConfig;
     videoConfigs: IVideoConfiguration[];
     clusterVideoConfigs: IVideoConfiguration[];
@@ -152,6 +157,12 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
             AndroidAutoMediaStatusClient
         >(AndroidAutoIpcNames.MEDIA_STATUS);
 
+        const sensorsBuilder = new NodeSensorsBuilder(
+            this.config.sensorConfigs,
+        );
+
+        const sensorService = new SensorService(sensorsBuilder, events);
+
         return [
             new NodeAudioInputService(events),
             new NodeAudioOutputService(
@@ -187,7 +198,7 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
                 ],
                 events,
             ),
-            new DummySensorService(events),
+            sensorService,
             new NodeNavigationStatusService(events),
             new NodeMediaStatusService(mediaStatusIpcHandler, events),
             new NodeAutoInputService(

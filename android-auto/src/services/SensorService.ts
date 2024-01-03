@@ -15,18 +15,19 @@ import { Sensor, type SensorEvents } from '../sensors/Sensor.js';
 import { Service, type ServiceEvents } from './Service.js';
 import assert from 'node:assert';
 
-export abstract class SensorService extends Service {
+export interface SensorsBuilder {
+    buildSensors(events: SensorEvents): Sensor[];
+}
+
+export class SensorService extends Service {
     protected sensors: Sensor[];
-    public constructor(events: ServiceEvents) {
+
+    public constructor(builder: SensorsBuilder, events: ServiceEvents) {
         super(events);
 
-        this.sensors = this.buildSensors({
+        this.sensors = builder.buildSensors({
             onData: this.sendEventIndication.bind(this),
         });
-    }
-
-    protected buildSensors(_events: SensorEvents): Sensor[] {
-        return [];
     }
 
     protected findSensor(sensorType: SensorType): Sensor | undefined {
