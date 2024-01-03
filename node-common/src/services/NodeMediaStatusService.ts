@@ -4,7 +4,6 @@ import type {
     AndroidAutoMediaStatusService,
 } from '@web-auto/android-auto-ipc';
 import {
-    ChannelOpenRequest,
     MediaPlaybackMetadata,
     MediaPlaybackStatus,
     MediaPlaybackStatusService,
@@ -35,10 +34,6 @@ export class NodeMediaStatusService extends MediaStatusService {
         this.ipcHandler.metadata(undefined);
         this.status = undefined;
         this.ipcHandler.status(undefined);
-    }
-
-    protected async open(_data: ChannelOpenRequest): Promise<void> {
-        // TODO
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await

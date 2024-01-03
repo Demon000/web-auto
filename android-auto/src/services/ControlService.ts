@@ -4,7 +4,6 @@ import {
     AudioFocusRequestType,
     AudioFocusStateType,
     AuthResponse,
-    ChannelOpenRequest,
     ControlMessageType,
     MessageStatus,
     NavFocusNotification,
@@ -317,9 +316,5 @@ export class ControlService extends Service {
 
     protected fillChannelDescriptor(_channelDescriptor: ProtoService): void {
         throw new Error('Control service does not support discovery');
-    }
-
-    protected open(_data: ChannelOpenRequest): Promise<void> {
-        throw new Error('Control service does not support openning channel');
     }
 }

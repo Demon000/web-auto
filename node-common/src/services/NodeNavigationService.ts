@@ -1,6 +1,5 @@
 import { NavigationStatusService } from '@web-auto/android-auto';
 import {
-    ChannelOpenRequest,
     NavigationCurrentPosition,
     NavigationNextTurnDistanceEvent,
     NavigationNextTurnEvent,
@@ -12,10 +11,6 @@ import {
 } from '@web-auto/android-auto-proto';
 
 export class NodeNavigationStatusService extends NavigationStatusService {
-    protected async open(_data: ChannelOpenRequest): Promise<void> {
-        // TODO
-    }
-
     protected async handleCurrentPosition(
         _data: NavigationCurrentPosition,
     ): Promise<void> {

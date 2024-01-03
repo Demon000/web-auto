@@ -174,7 +174,7 @@ export abstract class Service {
         });
     }
 
-    protected abstract open(data: ChannelOpenRequest): Promise<void>;
+    protected async open(_data: ChannelOpenRequest): Promise<void> {}
 
     protected async sendChannelOpenResponse(status: boolean): Promise<void> {
         const data = new ChannelOpenResponse({

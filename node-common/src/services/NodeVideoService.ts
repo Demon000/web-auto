@@ -5,7 +5,6 @@ import type {
     VideoCodecConfig,
 } from '@web-auto/android-auto-ipc';
 import {
-    type ChannelOpenRequest,
     type Service,
     type Setup,
     type Start,
@@ -108,10 +107,6 @@ export class NodeVideoService extends VideoService {
     public override stop(): void {
         this.syncChannelStop();
         super.stop();
-    }
-
-    protected async open(_data: ChannelOpenRequest): Promise<void> {
-        // TODO
     }
 
     protected override async channelStart(data: Start): Promise<void> {

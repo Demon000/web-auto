@@ -59,7 +59,7 @@ export class NodeAudioOutputService extends AudioOutputService {
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    protected async open(_data: ChannelOpenRequest): Promise<void> {
+    protected override async open(_data: ChannelOpenRequest): Promise<void> {
         this.rtaudio.openStream(
             {
                 nChannels: this.channelCount(),

@@ -1,6 +1,5 @@
 import { InputService, type ServiceEvents } from '@web-auto/android-auto';
 import {
-    ChannelOpenRequest,
     InputSourceService,
     KeyBindingRequest,
     KeyCode,
@@ -37,7 +36,6 @@ export class NodeAutoInputService extends InputService {
         this.ipcHandler.on('sendKeyEvent', this.sendKeyEventObject.bind(this));
     }
 
-    protected async open(_data: ChannelOpenRequest): Promise<void> {}
     protected async bind(_data: KeyBindingRequest): Promise<void> {}
 
     private async sendTouchEventObject(data: ITouchEvent): Promise<void> {

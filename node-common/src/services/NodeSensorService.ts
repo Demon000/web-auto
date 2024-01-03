@@ -5,7 +5,6 @@ import {
     type SensorEvents,
     SensorService,
 } from '@web-auto/android-auto';
-import { ChannelOpenRequest } from '@web-auto/android-auto-proto';
 
 export class DummySensorService extends SensorService {
     protected override buildSensors(events: SensorEvents): Sensor[] {
@@ -13,9 +12,5 @@ export class DummySensorService extends SensorService {
             new DummyDrivingStatusSensor(events),
             new DummyNightDataSensor(events),
         ];
-    }
-
-    protected async open(_data: ChannelOpenRequest): Promise<void> {
-        // TODO
     }
 }
