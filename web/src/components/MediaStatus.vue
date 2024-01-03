@@ -37,7 +37,11 @@ const emit = defineEmits<{
 
 <template>
     <div class="media-status">
-        <img class="image" :src="albumArtUrl" />
+        <img
+            v-if="albumArtUrl !== undefined"
+            class="image"
+            :src="albumArtUrl"
+        />
         <div class="details">
             <div class="song">{{ metadata?.song }}</div>
             <div class="artist">{{ metadata?.artist }}</div>
