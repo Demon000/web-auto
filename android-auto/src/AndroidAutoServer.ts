@@ -39,41 +39,39 @@ export interface AndroidAutoServerConfig {
     deviceNameWhitelist?: string[];
 }
 
+export interface AndroidAutoServerBuilder {
+    buildDeviceHandlers(events: DeviceHandlerEvents): DeviceHandler[];
+
+    buildCryptor(certificateBuffer: Buffer, privateKeyBuffer: Buffer): Cryptor;
+
+    buildControlService(
+        cryptor: Cryptor,
+        events: ControlServiceEvents,
+    ): ControlService;
+
+    buildServices(events: ServiceEvents): Service[];
+}
+
 export abstract class AndroidAutoServer {
     private logger = getLogger(this.constructor.name);
     private nameDeviceMap = new Map<string, Device>();
     private connectedDevice: Device | undefined;
     private started = false;
 
-    private cryptor?: Cryptor;
-    private frameCodec?: FrameCodec;
-    private messageAggregator?: MessageAggregator;
-    private services?: Service[];
-    private controlService?: ControlService;
+    private cryptor: Cryptor;
+    private frameCodec: FrameCodec;
+    private messageAggregator: MessageAggregator;
+    private services: Service[];
+    private controlService: ControlService;
     private serviceIdServiceMap = new Map<number, Service>();
-    private deviceHandlers?: DeviceHandler[];
+    private deviceHandlers: DeviceHandler[];
     private connectionLock = new Mutex();
 
-    public constructor(protected config: AndroidAutoServerConfig) {}
-
-    protected abstract buildDeviceHandlers(
-        events: DeviceHandlerEvents,
-    ): DeviceHandler[];
-
-    protected abstract buildCryptor(
-        certificateBuffer: Buffer,
-        privateKeyBuffer: Buffer,
-    ): Cryptor;
-
-    protected abstract buildControlService(
-        cryptor: Cryptor,
-        events: ControlServiceEvents,
-    ): ControlService;
-
-    protected abstract buildServices(events: ServiceEvents): Service[];
-
-    public build(): void {
-        this.deviceHandlers = this.buildDeviceHandlers({
+    public constructor(
+        protected config: AndroidAutoServerConfig,
+        builder: AndroidAutoServerBuilder,
+    ) {
+        this.deviceHandlers = builder.buildDeviceHandlers({
             onDeviceAvailable: this.onDeviceAvailable.bind(this),
             onDeviceSelfConnection: this.connectDevice.bind(this),
             onDeviceSelfDisconnection: this.disconnectDevice.bind(this),
@@ -83,7 +81,7 @@ export abstract class AndroidAutoServer {
             onDeviceTransportError: this.onDeviceTransportError.bind(this),
         });
 
-        this.cryptor = this.buildCryptor(
+        this.cryptor = builder.buildCryptor(
             ANDROID_AUTO_CERTIFICATE,
             ANDROID_AUTO_PRIVATE_KEY,
         );
@@ -91,14 +89,14 @@ export abstract class AndroidAutoServer {
         this.frameCodec = new FrameCodec();
         this.messageAggregator = new MessageAggregator();
 
-        this.controlService = this.buildControlService(this.cryptor, {
+        this.controlService = builder.buildControlService(this.cryptor, {
             getServiceDiscoveryResponse:
                 this.getServiceDiscoveryResponse.bind(this),
             onMessageSent: this.onSendMessage.bind(this),
             onPingTimeout: this.onPingTimeout.bind(this),
         });
 
-        this.services = this.buildServices({
+        this.services = builder.buildServices({
             onMessageSent: this.onSendMessage.bind(this),
         });
 
@@ -129,8 +127,6 @@ export abstract class AndroidAutoServer {
     }
 
     private async encryptFrameData(frameData: FrameData): Promise<void> {
-        assert(this.cryptor !== undefined);
-
         const frameHeader = frameData.frameHeader;
 
         if (!(frameHeader.flags & FrameHeaderFlags.ENCRYPTED)) {
@@ -149,9 +145,6 @@ export abstract class AndroidAutoServer {
     }
 
     private async onSendFrameData(frameData: FrameData): Promise<void> {
-        assert(this.cryptor !== undefined);
-        assert(this.frameCodec !== undefined);
-
         const frameHeader = frameData.frameHeader;
 
         await this.encryptFrameData(frameData);
@@ -201,8 +194,6 @@ export abstract class AndroidAutoServer {
             return;
         }
 
-        assert(this.messageAggregator !== undefined);
-
         const frameDatas = this.messageAggregator.split(
             serviceId,
             message,
@@ -216,9 +207,6 @@ export abstract class AndroidAutoServer {
     }
 
     private getServiceDiscoveryResponse(): ServiceDiscoveryResponse {
-        assert(this.controlService !== undefined);
-        assert(this.services !== undefined);
-
         const data = new ServiceDiscoveryResponse({
             ...this.config.serviceDiscoveryResponse,
             ...this.config.headunitInfo,
@@ -290,8 +278,6 @@ export abstract class AndroidAutoServer {
     }
 
     private async decryptFrameData(frameData: FrameData): Promise<void> {
-        assert(this.cryptor !== undefined);
-
         const frameHeader = frameData.frameHeader;
 
         if (!(frameHeader.flags & FrameHeaderFlags.ENCRYPTED)) {
@@ -324,9 +310,6 @@ export abstract class AndroidAutoServer {
         device: Device,
         buffer: Uint8Array,
     ): Promise<void> {
-        assert(this.frameCodec !== undefined);
-        assert(this.messageAggregator !== undefined);
-
         if (!this.isDeviceConnected(device)) {
             this.logger.error(
                 `Cannot accept data from ${device.name}, ` +
@@ -400,8 +383,6 @@ export abstract class AndroidAutoServer {
     }
 
     private stopServices(i?: number): void {
-        assert(this.services !== undefined);
-
         if (i === undefined) {
             i = this.services.length - 1;
         }
@@ -424,8 +405,6 @@ export abstract class AndroidAutoServer {
     }
 
     private startServices(): void {
-        assert(this.services !== undefined);
-
         this.logger.info('Starting services');
         let i = 0;
         try {
@@ -450,11 +429,6 @@ export abstract class AndroidAutoServer {
     }
 
     private startDependencies(): void {
-        assert(this.frameCodec !== undefined);
-        assert(this.cryptor !== undefined);
-        assert(this.services !== undefined);
-        assert(this.controlService !== undefined);
-
         this.frameCodec.start();
 
         this.logger.info('Starting cryptor');
@@ -492,10 +466,6 @@ export abstract class AndroidAutoServer {
     }
 
     private stopDependencies(): void {
-        assert(this.controlService !== undefined);
-        assert(this.cryptor !== undefined);
-        assert(this.frameCodec !== undefined);
-
         this.logger.info('Stopping control service');
         try {
             this.controlService.stop();
@@ -550,8 +520,6 @@ export abstract class AndroidAutoServer {
     }
 
     public async connectDeviceAsync(device: Device): Promise<void> {
-        assert(this.controlService !== undefined);
-
         if (
             this.connectedDevice !== undefined &&
             device.state === DeviceState.SELF_CONNECTING
@@ -695,8 +663,6 @@ export abstract class AndroidAutoServer {
     }
 
     public async start(): Promise<void> {
-        assert(this.deviceHandlers !== undefined);
-
         if (this.started) {
             return;
         }
@@ -717,8 +683,6 @@ export abstract class AndroidAutoServer {
     }
 
     public async stop(): Promise<void> {
-        assert(this.deviceHandlers !== undefined);
-
         if (!this.started) {
             return;
         }

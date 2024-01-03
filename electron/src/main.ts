@@ -52,8 +52,6 @@ if (config.androidAuto !== undefined) {
         config.androidAuto,
     );
 
-    androidAutoServer.build();
-
     androidAutoServer.start().catch((err) => {
         logger.error('Failed to start android auto server', err);
     });

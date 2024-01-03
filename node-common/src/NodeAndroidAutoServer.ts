@@ -1,71 +1,16 @@
-import {
-    AndroidAutoServer,
-    Device,
-    type AndroidAutoServerConfig,
-    ControlService,
-    Cryptor,
-    DeviceHandler,
-    Service,
-    type ControlServiceEvents,
-    type DeviceHandlerEvents,
-    type ServiceEvents,
-    SensorService,
-} from '@web-auto/android-auto';
+import { AndroidAutoServer, Device } from '@web-auto/android-auto';
 import {
     AndroidAutoIpcNames,
-    type AndroidAutoInputService,
     type AndroidAutoServerClient,
     type AndroidAutoServerService,
     type IDevice,
-    type AndroidAutoInputClient,
-    type AndroidAutoVideoService,
-    type AndroidAutoVideoClient,
-    type AndroidAutoMediaStatusService,
-    type AndroidAutoMediaStatusClient,
 } from '@web-auto/android-auto-ipc';
-import { NodeMediaStatusService } from './services/NodeMediaStatusService.js';
-import { NodeNavigationStatusService } from './services/NodeNavigationService.js';
-import { NodeAudioInputService } from './services/NodeAudioInputService.js';
-import { NodeAudioOutputService } from './services/NodeAudioOutputService.js';
-import { NodeAutoInputService } from './services/NodeInputService.js';
-import { NodeVideoService } from './services/NodeVideoService.js';
-import {
-    UsbDeviceHandler,
-    type ElectronUsbDeviceHandlerConfig,
-} from './transport/UsbDeviceHandler.js';
-import {
-    TcpDeviceHandler,
-    type TcpDeviceHandlerConfig,
-} from './transport/TcpDeviceHandler.js';
-import { ElectronBluetoothDeviceHandler } from './transport/bluetooth/BluetoothDeviceHandler.js';
-import { NodeCryptor, type NodeCryptorConfig } from './crypto/NodeCryptor.js';
-import type { ElectronBluetoothDeviceHandlerConfig } from './transport/bluetooth/BluetoothDeviceHandlerConfig.js';
-import { AudioStreamType } from '@web-auto/android-auto-proto';
-import type {
-    IInputSourceService_TouchScreen,
-    IVideoConfiguration,
-} from '@web-auto/android-auto-proto/interfaces.js';
 import type {
     IpcServiceRegistry,
     IpcServiceHandler,
 } from '@web-auto/common-ipc/main.js';
-import { NodeClusterVideoService } from './services/NodeClusterVideoService.js';
-import { NodeClusterInputService } from './services/NodeClusterInputService.js';
-import {
-    NodeSensorsBuilder,
-    type NodeSensorConfig,
-} from './services/NodeSensorBuilder.js';
-
-export interface NodeAndroidAutoServerConfig extends AndroidAutoServerConfig {
-    sensorConfigs: NodeSensorConfig[];
-    cryptorConfig: NodeCryptorConfig;
-    videoConfigs: IVideoConfiguration[];
-    clusterVideoConfigs: IVideoConfiguration[];
-    touchScreenConfig: IInputSourceService_TouchScreen;
-    tcpDeviceHandlerConfig: TcpDeviceHandlerConfig;
-    usbDeviceHandlerConfig: ElectronUsbDeviceHandlerConfig;
-    bluetoothDeviceHandlerConfig?: ElectronBluetoothDeviceHandlerConfig;
-}
+import type { NodeAndroidAutoServerConfig } from './config.js';
+import { NodeAndroidAutoServerBuilder } from './NodeAndroidAutoServerBuilder.js';
 
 export class NodeAndroidAutoServer extends AndroidAutoServer {
     private ipcHandler: IpcServiceHandler<
@@ -77,7 +22,9 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
         protected ipcRegistry: IpcServiceRegistry,
         protected override config: NodeAndroidAutoServerConfig,
     ) {
-        super(config);
+        const builder = new NodeAndroidAutoServerBuilder(ipcRegistry, config);
+
+        super(config, builder);
 
         this.ipcHandler = this.ipcRegistry.registerIpcService<
             AndroidAutoServerService,
@@ -98,126 +45,6 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
             'getConnectedDevice',
             this.getConnectedDeviceObject.bind(this),
         );
-    }
-
-    protected buildDeviceHandlers(
-        events: DeviceHandlerEvents,
-    ): DeviceHandler[] {
-        const deviceHandlers: DeviceHandler[] = [
-            new UsbDeviceHandler(this.config.usbDeviceHandlerConfig, events),
-            new TcpDeviceHandler(this.config.tcpDeviceHandlerConfig, events),
-        ];
-
-        if (this.config.bluetoothDeviceHandlerConfig !== undefined) {
-            deviceHandlers.push(
-                new ElectronBluetoothDeviceHandler(
-                    this.config.bluetoothDeviceHandlerConfig,
-                    events,
-                ),
-            );
-        }
-
-        return deviceHandlers;
-    }
-    protected buildCryptor(
-        certificateBuffer: Buffer,
-        privateKeyBuffer: Buffer,
-    ): Cryptor {
-        return new NodeCryptor(
-            this.config.cryptorConfig,
-            certificateBuffer,
-            privateKeyBuffer,
-        );
-    }
-    protected buildControlService(
-        cryptor: Cryptor,
-        events: ControlServiceEvents,
-    ): ControlService {
-        return new ControlService(cryptor, this.config.controlConfig, events);
-    }
-
-    protected buildServices(events: ServiceEvents): Service[] {
-        const inputIpcHandler = this.ipcRegistry.registerIpcService<
-            AndroidAutoInputService,
-            AndroidAutoInputClient
-        >(AndroidAutoIpcNames.INPUT);
-
-        const videoIpcHandler = this.ipcRegistry.registerIpcService<
-            AndroidAutoVideoService,
-            AndroidAutoVideoClient
-        >(AndroidAutoIpcNames.VIDEO);
-
-        const clusterVideoIpcHandler = this.ipcRegistry.registerIpcService<
-            AndroidAutoVideoService,
-            AndroidAutoVideoClient
-        >(AndroidAutoIpcNames.CLUSTER_VIDEO);
-
-        const mediaStatusIpcHandler = this.ipcRegistry.registerIpcService<
-            AndroidAutoMediaStatusService,
-            AndroidAutoMediaStatusClient
-        >(AndroidAutoIpcNames.MEDIA_STATUS);
-
-        const sensorsBuilder = new NodeSensorsBuilder(
-            this.config.sensorConfigs,
-        );
-
-        const sensorService = new SensorService(sensorsBuilder, events);
-
-        return [
-            new NodeAudioInputService(events),
-            new NodeAudioOutputService(
-                AudioStreamType.AUDIO_STREAM_MEDIA,
-                [
-                    {
-                        samplingRate: 48000,
-                        numberOfChannels: 2,
-                        numberOfBits: 16,
-                    },
-                ],
-                events,
-            ),
-            new NodeAudioOutputService(
-                AudioStreamType.AUDIO_STREAM_GUIDANCE,
-                [
-                    {
-                        samplingRate: 48000,
-                        numberOfChannels: 1,
-                        numberOfBits: 16,
-                    },
-                ],
-                events,
-            ),
-            new NodeAudioOutputService(
-                AudioStreamType.AUDIO_STREAM_SYSTEM_AUDIO,
-                [
-                    {
-                        samplingRate: 16000,
-                        numberOfChannels: 1,
-                        numberOfBits: 16,
-                    },
-                ],
-                events,
-            ),
-            sensorService,
-            new NodeNavigationStatusService(events),
-            new NodeMediaStatusService(mediaStatusIpcHandler, events),
-            new NodeAutoInputService(
-                inputIpcHandler,
-                this.config.touchScreenConfig,
-                events,
-            ),
-            new NodeVideoService(
-                videoIpcHandler,
-                this.config.videoConfigs,
-                events,
-            ),
-            new NodeClusterVideoService(
-                clusterVideoIpcHandler,
-                this.config.clusterVideoConfigs,
-                events,
-            ),
-            new NodeClusterInputService(events),
-        ];
     }
 
     protected deviceFromImpl(device: Device): IDevice {
