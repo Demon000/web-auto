@@ -230,6 +230,7 @@ export class ControlService extends Service {
     private async sendServiceDiscoveryResponse(
         data: ServiceDiscoveryResponse,
     ): Promise<void> {
+        this.logger.info('Service discovery', data.toJson());
         await this.sendEncryptedSpecificMessage(
             ControlMessageType.MESSAGE_SERVICE_DISCOVERY_RESPONSE,
             data,
