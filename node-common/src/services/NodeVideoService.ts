@@ -13,6 +13,7 @@ import {
     MediaCodecType,
     VideoFocusNotification,
     VideoFocusMode,
+    KeyCode,
 } from '@web-auto/android-auto-proto';
 import assert from 'node:assert';
 import type {
@@ -331,5 +332,10 @@ export class NodeVideoService extends VideoService {
             displayId: 0,
             displayType: DisplayType.MAIN,
         });
+
+        if (this.displayType === DisplayType.AUXILIARY) {
+            channelDescriptor.mediaSinkService.initialContentKeycode =
+                KeyCode.KEYCODE_NAVIGATION;
+        }
     }
 }
