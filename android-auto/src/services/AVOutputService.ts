@@ -7,8 +7,8 @@ import { Ack, MediaMessageId, Start, Stop } from '@web-auto/android-auto-proto';
 export abstract class AVOutputService extends AVService {
     protected configurationIndex: number | undefined;
 
-    public constructor(events: ServiceEvents) {
-        super(events);
+    public constructor(priorities: number[], events: ServiceEvents) {
+        super(priorities, events);
     }
 
     protected async onAvMediaIndication(buffer: Uint8Array): Promise<void> {

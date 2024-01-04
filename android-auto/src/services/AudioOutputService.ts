@@ -13,9 +13,10 @@ export abstract class AudioOutputService extends AVOutputService {
     public constructor(
         private audioType: AudioStreamType,
         private configs: IAudioConfiguration[],
+        priorities: number[],
         events: ServiceEvents,
     ) {
-        super(events);
+        super(priorities, events);
     }
 
     protected channelConfig(): IAudioConfiguration {

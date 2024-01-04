@@ -39,7 +39,7 @@ export class NodeAudioOutputService extends AudioOutputService {
         configs: IAudioConfiguration[],
         events: ServiceEvents,
     ) {
-        super(audioType, configs, events);
+        super(audioType, configs, [0], events);
 
         assert(configs.length === 1);
         this.configurationIndex = 0;

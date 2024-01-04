@@ -82,9 +82,12 @@ export class NodeVideoService extends VideoService {
             AndroidAutoVideoClient
         >,
         protected videoConfigs: IVideoConfiguration[],
+        protected displayId: number,
+        protected displayType: DisplayType,
+        priorities: number[],
         events: ServiceEvents,
     ) {
-        super(events);
+        super(priorities, events);
 
         ipcHandler.on(
             'sendVideoFocusNotification',
@@ -329,8 +332,8 @@ export class NodeVideoService extends VideoService {
     protected fillChannelDescriptor(channelDescriptor: Service): void {
         channelDescriptor.mediaSinkService = new MediaSinkService({
             videoConfigs: this.videoConfigs,
-            displayId: 0,
-            displayType: DisplayType.MAIN,
+            displayId: this.displayId,
+            displayType: this.displayType,
         });
 
         if (this.displayType === DisplayType.AUXILIARY) {

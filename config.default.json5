@@ -52,54 +52,82 @@
             pingTimeoutMs: 5000,
             startTimeoutMs: 5000,
         },
-        videoConfigs: [
+        displayConfigs: [
             {
-                // _480p = 1
-                // _720p = 2
-                // _1080p = 3
-                // _1440p = 4
-                // _2160p = 5
-                // _720p_p = 6
-                // _1080p_p = 7
-                // _1440p_p = 8
-                // _2160p_p = 9
-                codecResolution: 3,
-                // _30 = 1
-                // _60 = 2
-                frameRate: 2,
-                // H264_BP = 3
-                // VP9 = 5
-                // AV1 = 6
-                // H265 = 7
-                videoCodecType: 3,
-                heightMargin: 0,
-                widthMargin: 0,
+                id: 0,
+                width: 1920,
+                height: 1080,
+                touch: true,
+                // DISPLAY_TYPE_MAIN = 0
+                // DISPLAY_TYPE_CLUSTER = 1
+                // DISPLAY_TYPE_AUXILIARY = 2
+                type: 0,
                 density: 240,
+
+                /*
+                 * List of supported resolutions and framerates in order of priority.
+                 */
+                resolutionConfigs: [
+                    {
+                        // VIDEO_800x480 = 1
+                        // VIDEO_1280x720 = 2
+                        // VIDEO_1920x1080 = 3
+                        // VIDEO_2560x1440 = 4
+                        // VIDEO_3840x2160 = 5
+                        // VIDEO_720x1280 = 6
+                        // VIDEO_1080x1920 = 7
+                        // VIDEO_1440x2560 = 8
+                        // VIDEO_2160x3840 = 9
+                        resolution: 3,
+                        // VIDEO_FPS_60 = 1
+                        // VIDEO_FPS_30 = 2
+                        framerate: 1,
+                        //  MEDIA_CODEC_VIDEO_H264_BP = 3
+                        //  MEDIA_CODEC_VIDEO_VP9 = 5
+                        //  MEDIA_CODEC_VIDEO_AV1 = 6
+                        //  MEDIA_CODEC_VIDEO_H265 = 7
+                        codec: 3,
+                    },
+                    {
+                        resolution: 3,
+                        framerate: 2,
+                        codec: 3,
+                    },
+                    {
+                        resolution: 2,
+                        framerate: 1,
+                        codec: 3,
+                    },
+                    {
+                        resolution: 2,
+                        framerate: 2,
+                        codec: 3,
+                    },
+                    {
+                        resolution: 1,
+                        framerate: 1,
+                        codec: 3,
+                    },
+                    {
+                        resolution: 1,
+                        framerate: 2,
+                        codec: 3,
+                    },
+                ],
             },
-        ],
-        clusterVideoConfigs: [
             {
-                // _480p = 1
-                // _720p = 2
-                // _1080p = 3
-                // _1440p = 4
-                // _2160p = 5
-                // _720p_p = 6
-                // _1080p_p = 7
-                // _1440p_p = 8
-                // _2160p_p = 9
-                codecResolution: 1,
-                // _30 = 1
-                // _60 = 2
-                frameRate: 1,
-                // H264_BP = 3
-                // VP9 = 5
-                // AV1 = 6
-                // H265 = 7
-                videoCodecType: 3,
-                heightMargin: 0,
-                widthMargin: 0,
-                density: 160,
+                id: 1,
+                width: 800,
+                height: 480,
+                type: 1,
+                density: 240,
+                resolutionConfigs: [
+                    {
+                        resolution: 1,
+                        framerate: 1,
+                        codec: 3,
+                    },
+                ],
             },
         ],
         sensorConfigs: [
@@ -122,16 +150,6 @@
                 },
             },
         ],
-        touchScreenConfig: {
-            width: 1920,
-            height: 1080,
-
-            // CAPACITIVE = 1
-            // RESISTIVE = 2
-            // INFRARED = 3
-            type: 1,
-            isSecondary: false,
-        },
         tcpDeviceHandlerConfig: {
             // Static IPs that can be connected to
             // These will be Android devices with head unit servers

@@ -15,7 +15,7 @@ import { BufferWriter } from '../utils/buffer.js';
 
 export abstract class AudioInputService extends AVService {
     public constructor(events: ServiceEvents) {
-        super(events);
+        super([0], events);
     }
 
     protected channelCount(): number {

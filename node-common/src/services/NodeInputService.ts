@@ -1,6 +1,7 @@
 import { InputService, type ServiceEvents } from '@web-auto/android-auto';
 import {
     InputSourceService,
+    InputSourceService_TouchScreen,
     KeyBindingRequest,
     KeyCode,
     KeyEvent,
@@ -20,14 +21,18 @@ import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 
 export class NodeAutoInputService extends InputService {
     public constructor(
-        private ipcHandler: IpcServiceHandler<
-            AndroidAutoInputService,
-            AndroidAutoInputClient
-        >,
-        private touchScreenConfig: IInputSourceService_TouchScreen,
+        private ipcHandler:
+            | IpcServiceHandler<AndroidAutoInputService, AndroidAutoInputClient>
+            | undefined,
+        private touchScreenConfig: IInputSourceService_TouchScreen | undefined,
+        private displayId: number,
         events: ServiceEvents,
     ) {
         super(events);
+
+        if (this.ipcHandler === undefined) {
+            return;
+        }
 
         this.ipcHandler.on(
             'sendTouchEvent',
@@ -57,11 +62,17 @@ export class NodeAutoInputService extends InputService {
     protected fillChannelDescriptor(channelDescriptor: Service): void {
         channelDescriptor.inputSourceService = new InputSourceService({
             keycodesSupported: [],
-            touchscreen: [this.touchScreenConfig],
+            touchscreen: [],
             touchpad: [],
             feedbackEventsSupported: [],
-            displayId: 0,
+            displayId: this.displayId,
         });
+
+        if (this.touchScreenConfig !== undefined) {
+            channelDescriptor.inputSourceService.touchscreen.push(
+                new InputSourceService_TouchScreen(this.touchScreenConfig),
+            );
+        }
 
         this.fillKeycodes(channelDescriptor.inputSourceService);
     }

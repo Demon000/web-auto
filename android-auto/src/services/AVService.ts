@@ -10,7 +10,10 @@ import { Service, type ServiceEvents } from './Service.js';
 export abstract class AVService extends Service {
     protected session: number | undefined;
 
-    public constructor(events: ServiceEvents) {
+    public constructor(
+        protected priorities: number[],
+        events: ServiceEvents,
+    ) {
         super(events);
     }
 
@@ -57,7 +60,7 @@ export abstract class AVService extends Service {
         const data = new Config({
             maxUnacked: 1,
             status: status ? Config_Status.READY : Config_Status.WAIT,
-            configurationIndices: [0],
+            configurationIndices: this.priorities,
         });
 
         await this.sendEncryptedSpecificMessage(
