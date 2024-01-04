@@ -46,7 +46,7 @@ export class NodeAutoInputService extends InputService {
         await this.sendKeyEvent(new KeyEvent(data));
     }
 
-    protected fillKeycdoes(inputSourceService: InputSourceService): void {
+    protected fillKeycodes(inputSourceService: InputSourceService): void {
         for (const keyCode of Object.values(KeyCode)) {
             if (typeof keyCode === 'number') {
                 inputSourceService.keycodesSupported.push(keyCode);
@@ -63,6 +63,6 @@ export class NodeAutoInputService extends InputService {
             displayId: 0,
         });
 
-        this.fillKeycdoes(channelDescriptor.inputSourceService);
+        this.fillKeycodes(channelDescriptor.inputSourceService);
     }
 }
