@@ -30,11 +30,11 @@ export abstract class AudioInputService extends AVService {
         return 2048;
     }
 
-    protected abstract inputOpen(data: MicrophoneRequest): Promise<void>;
+    protected abstract inputOpen(data: MicrophoneRequest): void;
 
     protected async onInputOpenRequest(data: MicrophoneRequest): Promise<void> {
         try {
-            await this.inputOpen(data);
+            this.inputOpen(data);
         } catch (err) {
             this.logger.error('Failed to open input', {
                 data,

@@ -18,8 +18,7 @@ export class NodeAudioInputService extends AudioInputService {
         this.session = 0;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    protected override async open(_data: ChannelOpenRequest): Promise<void> {
+    protected override open(_data: ChannelOpenRequest): void {
         this.rtaudio.openStream(
             null,
             {
@@ -45,8 +44,7 @@ export class NodeAudioInputService extends AudioInputService {
         this.rtaudio.closeStream();
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    protected async inputOpen(data: MicrophoneRequest): Promise<void> {
+    protected inputOpen(data: MicrophoneRequest): void {
         if (data.open) {
             this.rtaudio.start();
         } else {

@@ -13,7 +13,7 @@ export abstract class AVOutputService extends AVService {
 
     protected async onAvMediaIndication(buffer: Uint8Array): Promise<void> {
         try {
-            await this.handleData(buffer);
+            this.handleData(buffer);
         } catch (err) {
             this.logger.error('Failed to handle data', {
                 buffer,
@@ -37,7 +37,7 @@ export abstract class AVOutputService extends AVService {
         const buffer = reader.readBuffer();
 
         try {
-            await this.handleData(buffer, timestamp);
+            this.handleData(buffer, timestamp);
         } catch (err) {
             this.logger.error('Failed to handle data', {
                 buffer,
@@ -54,9 +54,9 @@ export abstract class AVOutputService extends AVService {
         }
     }
 
-    protected async onStopIndication(data: Stop): Promise<void> {
+    protected onStopIndication(data: Stop): void {
         try {
-            await this.channelStop();
+            this.channelStop();
         } catch (err) {
             this.logger.error('Failed to stop channel', {
                 data,
@@ -65,11 +65,11 @@ export abstract class AVOutputService extends AVService {
         }
     }
 
-    protected async onStartIndication(data: Start): Promise<void> {
+    protected onStartIndication(data: Start): void {
         this.session = data.sessionId;
 
         try {
-            await this.channelStart(data);
+            this.channelStart(data);
         } catch (err) {
             this.logger.error('Failed to start channel', {
                 data,
@@ -97,12 +97,12 @@ export abstract class AVOutputService extends AVService {
             case MediaMessageId.MEDIA_MESSAGE_START:
                 data = Start.fromBinary(bufferPayload);
                 this.printReceive(data);
-                await this.onStartIndication(data);
+                this.onStartIndication(data);
                 break;
             case MediaMessageId.MEDIA_MESSAGE_STOP:
                 data = Stop.fromBinary(bufferPayload);
                 this.printReceive(data);
-                await this.onStopIndication(data);
+                this.onStopIndication(data);
                 break;
             default:
                 return super.onSpecificMessage(message);
@@ -115,20 +115,15 @@ export abstract class AVOutputService extends AVService {
         return this.configurationIndex !== undefined;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    protected async channelStart(data: Start): Promise<void> {
+    protected channelStart(data: Start): void {
         this.configurationIndex = data.configurationIndex;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    protected async channelStop(): Promise<void> {
+    protected channelStop(): void {
         this.configurationIndex = undefined;
     }
 
-    protected abstract handleData(
-        buffer: Uint8Array,
-        timestamp?: bigint,
-    ): Promise<void>;
+    protected abstract handleData(buffer: Uint8Array, timestamp?: bigint): void;
 
     protected async sendAvMediaAckIndication(): Promise<void> {
         if (this.session === undefined) {

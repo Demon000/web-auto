@@ -59,7 +59,7 @@ export abstract class Service {
         let status = false;
 
         try {
-            await this.open(data);
+            this.open(data);
             status = true;
         } catch (err) {
             this.logger.error('Failed to open channel', {
@@ -174,7 +174,7 @@ export abstract class Service {
         });
     }
 
-    protected async open(_data: ChannelOpenRequest): Promise<void> {}
+    protected open(_data: ChannelOpenRequest): void {}
 
     protected async sendChannelOpenResponse(status: boolean): Promise<void> {
         const data = new ChannelOpenResponse({

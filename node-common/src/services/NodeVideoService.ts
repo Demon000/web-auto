@@ -108,12 +108,13 @@ export class NodeVideoService extends VideoService {
     }
 
     public override stop(): void {
-        this.syncChannelStop();
+        this.channelStop();
         super.stop();
     }
 
-    protected override async channelStart(data: Start): Promise<void> {
-        await super.channelStart(data);
+    protected override channelStart(data: Start): void {
+        super.channelStart(data);
+
         this.codecState = CodecState.WAITING_FOR_CONFIG;
 
         assert(this.configurationIndex !== undefined);
@@ -138,15 +139,11 @@ export class NodeVideoService extends VideoService {
         });
     }
 
-    protected syncChannelStop(): void {
+    protected override channelStop(): void {
+        super.channelStop();
         this.codecBuffer = undefined;
         this.codecState = CodecState.STOPPED;
         this.ipcHandler.channelStop();
-    }
-
-    protected override async channelStop(): Promise<void> {
-        await super.channelStop();
-        this.syncChannelStop();
     }
 
     protected parseH264CodecConfig(buffer: Uint8Array): VideoCodecConfig {
@@ -302,11 +299,7 @@ export class NodeVideoService extends VideoService {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    protected async handleData(
-        buffer: Uint8Array,
-        _timestamp?: bigint,
-    ): Promise<void> {
+    protected handleData(buffer: Uint8Array, _timestamp?: bigint): void {
         assert(this.configurationIndex !== undefined);
         const config = this.videoConfigs[this.configurationIndex];
         assert(config);
