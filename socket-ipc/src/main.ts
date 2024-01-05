@@ -15,26 +15,25 @@ import {
 import { MessagePackIpcSerializer } from './common.js';
 
 class SocketServiceIpcSocket extends BaseIpcSocket {
+    private onDataInternalBound: (event: MessageEvent) => void;
+    private onCloseInternalBound: (_event: CloseEvent) => void;
+
     public constructor(private socket: WebSocket) {
         super();
 
-        this.onDataInternal = this.onDataInternal.bind(this);
-        this.onCloseInternal = this.onCloseInternal.bind(this);
+        this.onDataInternalBound = this.onDataInternal.bind(this);
+        this.onCloseInternalBound = this.onCloseInternal.bind(this);
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
     public async open(): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.socket.addEventListener('message', this.onDataInternal);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.socket.addEventListener('close', this.onCloseInternal);
+        this.socket.addEventListener('message', this.onDataInternalBound);
+        this.socket.addEventListener('close', this.onCloseInternalBound);
     }
 
     public async close(): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.socket.removeEventListener('message', this.onDataInternal);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.socket.removeEventListener('close', this.onCloseInternal);
+        this.socket.removeEventListener('message', this.onDataInternalBound);
+        this.socket.removeEventListener('close', this.onCloseInternalBound);
 
         return new Promise((resolve) => {
             const onClose = () => {
@@ -68,6 +67,12 @@ class SocketServiceIpcSocket extends BaseIpcSocket {
 
 export class SocketIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistrySocketHandler {
     private wss: WebSocketServer;
+    private onServerUpgradeBound: (
+        req: InstanceType<typeof IncomingMessage>,
+        socket: Duplex,
+        head: Buffer,
+    ) => void;
+    private onConnectionBound: (webSocket: WebSocket) => void;
 
     public constructor(
         name: string,
@@ -75,8 +80,8 @@ export class SocketIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistr
     ) {
         super(name);
 
-        this.onServerUpgrade = this.onServerUpgrade.bind(this);
-        this.onConnection = this.onConnection.bind(this);
+        this.onServerUpgradeBound = this.onServerUpgrade.bind(this);
+        this.onConnectionBound = this.onConnection.bind(this);
 
         this.wss = new WebSocketServer({ noServer: true });
     }
@@ -84,19 +89,15 @@ export class SocketIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistr
     public override register(callback: SocketMessageCallback) {
         super.register(callback);
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.wss.on('connection', this.onConnection);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.server.prependListener('upgrade', this.onServerUpgrade);
+        this.wss.on('connection', this.onConnectionBound);
+        this.server.prependListener('upgrade', this.onServerUpgradeBound);
     }
 
     public override unregister() {
         super.unregister();
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.server.removeListener('upgrade', this.onServerUpgrade);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.wss.off('connection', this.onConnection);
+        this.server.removeListener('upgrade', this.onServerUpgradeBound);
+        this.wss.off('connection', this.onConnectionBound);
     }
 
     private onServerUpgrade(

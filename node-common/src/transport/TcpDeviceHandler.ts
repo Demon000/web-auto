@@ -21,6 +21,7 @@ export interface TcpDeviceHandlerConfig {
 }
 
 export class TcpDeviceHandler extends DeviceHandler {
+    private scanBound: () => void;
     private scanInternval: ReturnType<typeof setInterval> | undefined;
     protected ipDeviceMap = new Map<string, Device>();
     private arp;
@@ -31,7 +32,7 @@ export class TcpDeviceHandler extends DeviceHandler {
     ) {
         super(events);
 
-        this.scan = this.scan.bind(this);
+        this.scanBound = this.scan.bind(this);
 
         if (this.config.scanOptions !== undefined) {
             this.arp = new Arpping({
@@ -116,8 +117,7 @@ export class TcpDeviceHandler extends DeviceHandler {
 
         assert(this.scanInternval === undefined);
         this.scanInternval = setInterval(
-            // eslint-disable-next-line @typescript-eslint/unbound-method
-            this.scan,
+            this.scanBound,
             this.config.scanOptions.intervalMs,
         );
         this.scan();

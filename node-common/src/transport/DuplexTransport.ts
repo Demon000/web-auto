@@ -6,15 +6,19 @@ import {
 import { Duplex } from 'node:stream';
 
 export class DuplexTransport extends Transport {
+    private onDataBound: (data: Uint8Array) => void;
+    private onErrorBound: (err: Error) => void;
+    private onCloseBound: () => void;
+
     public constructor(
         private socket: Duplex,
         events: TransportEvents,
     ) {
         super(events);
 
-        this.onData = this.onData.bind(this);
-        this.onError = this.onError.bind(this);
-        this.onClose = this.onClose.bind(this);
+        this.onDataBound = this.onData.bind(this);
+        this.onErrorBound = this.onError.bind(this);
+        this.onCloseBound = this.onClose.bind(this);
     }
 
     private onData(data: Uint8Array): void {
@@ -26,21 +30,15 @@ export class DuplexTransport extends Transport {
     }
 
     private detachEvents(): void {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.socket.off('error', this.onError);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.socket.off('data', this.onData);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.socket.off('close', this.onClose);
+        this.socket.off('error', this.onErrorBound);
+        this.socket.off('data', this.onDataBound);
+        this.socket.off('close', this.onCloseBound);
     }
 
     private attachEvents(): void {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.socket.on('data', this.onData);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.socket.on('error', this.onError);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.socket.on('close', this.onClose);
+        this.socket.on('data', this.onDataBound);
+        this.socket.on('error', this.onErrorBound);
+        this.socket.on('close', this.onCloseBound);
     }
 
     private onClose(): void {

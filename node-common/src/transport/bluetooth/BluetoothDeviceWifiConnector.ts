@@ -23,6 +23,7 @@ export class BluetoothDeviceWifiConnector {
     protected logger: LoggerWrapper;
 
     private messageCallbacks = new Map<number, BluetoothMessageCallback>();
+    private onDataBound: (buffer: Uint8Array) => void;
 
     public constructor(
         private config: ElectronBluetoothDeviceHandlerConfig,
@@ -30,7 +31,7 @@ export class BluetoothDeviceWifiConnector {
     ) {
         this.logger = getLogger(`${this.constructor.name}@${this.name}`);
 
-        this.onData = this.onData.bind(this);
+        this.onDataBound = this.onData.bind(this);
     }
 
     public async sendMessage(message: BluetoothMessage): Promise<void> {
@@ -178,12 +179,10 @@ export class BluetoothDeviceWifiConnector {
                 abortController.abort();
             }, timeoutMs);
 
-            // eslint-disable-next-line @typescript-eslint/unbound-method
-            socket.on('data', this.onData);
+            socket.on('data', this.onDataBound);
 
             const clearAndAbort = () => {
-                // eslint-disable-next-line @typescript-eslint/unbound-method
-                socket.off('data', this.onData);
+                socket.off('data', this.onDataBound);
                 clearTimeout(timeout);
                 abortController.abort();
             };

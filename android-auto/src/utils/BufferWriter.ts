@@ -43,30 +43,28 @@ export class BufferWriter {
         this.resize(neededSize);
     }
 
-    private handleAppend(
-        data: number,
-        size: number,
-        fn: (value: number, offset?: number) => void,
-    ): this {
+    public appendUint8(data: number): this {
+        const size = 1;
         this.appendResizeToFit(size);
-        fn.call(this.data, data, this.cursor);
+        this.data.writeUint8(data, this.cursor);
         this.cursor += size;
         return this;
     }
 
-    public appendUint8(data: number): this {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        return this.handleAppend(data, 1, this.data.writeUint8);
-    }
-
     public appendUint16BE(data: number): this {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        return this.handleAppend(data, 2, this.data.writeUint16BE);
+        const size = 2;
+        this.appendResizeToFit(size);
+        this.data.writeUint16BE(data, this.cursor);
+        this.cursor += size;
+        return this;
     }
 
     public appendUint32BE(data: number): this {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        return this.handleAppend(data, 4, this.data.writeUint32BE);
+        const size = 2;
+        this.appendResizeToFit(size);
+        this.data.writeUint32BE(data, this.cursor);
+        this.cursor += size;
+        return this;
     }
 
     public appendUint64BE(data: bigint): this {
@@ -88,7 +86,6 @@ export class BufferWriter {
         this.appendResizeToFit(size);
         buffer.copy(this.data, this.cursor);
         this.cursor += size;
-
         return this;
     }
 }

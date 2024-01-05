@@ -19,6 +19,8 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
     private bluetooth?: Bluez;
     private adapter?: Adapter;
     private tcpServer?: net.Server;
+    private onDeviceAddedBound: (address: string) => void;
+    private onDeviceRemovedBound: (address: string) => void;
 
     public constructor(
         private config: ElectronBluetoothDeviceHandlerConfig,
@@ -26,8 +28,8 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
     ) {
         super(events);
 
-        this.onDeviceAdded = this.onDeviceAdded.bind(this);
-        this.onDeviceRemoved = this.onDeviceRemoved.bind(this);
+        this.onDeviceAddedBound = this.onDeviceAdded.bind(this);
+        this.onDeviceRemovedBound = this.onDeviceRemoved.bind(this);
 
         this.androidAutoProfile = new AndroidAutoProfile();
     }
@@ -152,19 +154,15 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
         }
         this.logger.info('Finished processing paired devices');
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.adapter.on('DeviceAdded', this.onDeviceAdded);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.adapter.on('DeviceRemoved', this.onDeviceRemoved);
+        this.adapter.on('DeviceAdded', this.onDeviceAddedBound);
+        this.adapter.on('DeviceRemoved', this.onDeviceRemovedBound);
     }
 
     public override async stopWaitingForDevices(): Promise<void> {
         if (this.adapter !== undefined) {
             this.logger.info('Stopping new device discovery');
-            // eslint-disable-next-line @typescript-eslint/unbound-method
-            this.adapter.off('DeviceAdded', this.onDeviceAdded);
-            // eslint-disable-next-line @typescript-eslint/unbound-method
-            this.adapter.off('DeviceRemoved', this.onDeviceRemoved);
+            this.adapter.off('DeviceAdded', this.onDeviceAddedBound);
+            this.adapter.off('DeviceRemoved', this.onDeviceRemovedBound);
 
             await this.adapter.StopDiscovery();
 

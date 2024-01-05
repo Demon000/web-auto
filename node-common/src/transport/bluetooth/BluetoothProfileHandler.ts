@@ -14,6 +14,8 @@ export class BluetoothProfileHandler {
     private connectionCallback: ((socket: Duplex) => void) | undefined;
     private disconnectionCallback: (() => void) | undefined;
     protected logger: LoggerWrapper;
+    private onErrorBound: (err: Error) => void;
+    private onDisconnectBound: () => void;
 
     public constructor(
         private events: BluetoothProfileEvents,
@@ -21,15 +23,14 @@ export class BluetoothProfileHandler {
     ) {
         this.logger = getLogger(`${this.constructor.name}@${this.name}`);
 
-        this.onDisconnect = this.onDisconnect.bind(this);
-        this.onError = this.onError.bind(this);
+        this.onDisconnectBound = this.onDisconnect.bind(this);
+        this.onErrorBound = this.onError.bind(this);
     }
 
     private onDisconnect(): void {
         assert(this.socket !== undefined);
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.socket.off('error', this.onError);
+        this.socket.off('error', this.onErrorBound);
 
         this.socket = undefined;
 
@@ -49,10 +50,8 @@ export class BluetoothProfileHandler {
 
         this.socket = new BluetoothSocket(fd);
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.socket.once('error', this.onError);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.socket.once('close', this.onDisconnect);
+        this.socket.once('error', this.onErrorBound);
+        this.socket.once('close', this.onDisconnectBound);
 
         if (this.connectionCallback === undefined) {
             this.logger.info('Connection unexpected');

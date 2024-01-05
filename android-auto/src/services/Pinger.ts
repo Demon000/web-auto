@@ -15,19 +15,19 @@ export class Pinger {
     private pingSentTime: bigint | undefined;
     private started = false;
     private pingTimeoutUs: bigint;
+    private onPingTimeoutBound: () => void;
 
     public constructor(
         pingTimeoutMs: number,
         private events: PingerEvents,
     ) {
         this.pingTimeoutUs = milliToMicro(pingTimeoutMs);
-        this.onPingTimeout = this.onPingTimeout.bind(this);
+        this.onPingTimeoutBound = this.onPingTimeout.bind(this);
     }
 
     public schedulePingTimeout(): void {
         assert(this.pingInterval === undefined);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.pingInterval = setInterval(this.onPingTimeout, 5000);
+        this.pingInterval = setInterval(this.onPingTimeoutBound, 5000);
     }
 
     public cancelPing(): void {

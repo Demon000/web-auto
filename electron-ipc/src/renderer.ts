@@ -12,11 +12,12 @@ declare const window: {
 
 class ElectronClientIpcSocket extends BaseIpcSocket {
     private exposed: IpcPreloadExposed;
+    private onDataInternalBound: (_event: IpcRendererEvent, data: any) => void;
 
     public constructor(private channelName: string) {
         super();
 
-        this.onDataInternal = this.onDataInternal.bind(this);
+        this.onDataInternalBound = this.onDataInternal.bind(this);
 
         const exposed = window[ELECTRON_IPC_COMMUNICATION_CHANNEL];
 
@@ -29,14 +30,12 @@ class ElectronClientIpcSocket extends BaseIpcSocket {
 
     // eslint-disable-next-line @typescript-eslint/require-await
     public async open(): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.exposed.on(this.channelName, this.onDataInternal);
+        this.exposed.on(this.channelName, this.onDataInternalBound);
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
     public async close(): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.exposed.off(this.channelName, this.onDataInternal);
+        this.exposed.off(this.channelName, this.onDataInternalBound);
     }
 
     public onDataInternal(_event: IpcRendererEvent, data: any): void {

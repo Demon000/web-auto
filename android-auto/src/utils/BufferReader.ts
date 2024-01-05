@@ -2,11 +2,18 @@ import { bufferWrapUint8Array } from './buffer.js';
 
 export class BufferReader {
     private cursor = 0;
+    private readUint8Bound: (offset?: number | undefined) => number;
+    private readUint16BEBound: (offset?: number | undefined) => number;
+    private readUint32BEBound: (offset?: number | undefined) => number;
 
     public data;
 
     private constructor(buffer: Buffer) {
         this.data = buffer;
+
+        this.readUint8Bound = this.data.readUint8.bind(this.data);
+        this.readUint16BEBound = this.data.readUint16BE.bind(this.data);
+        this.readUint32BEBound = this.data.readUint32BE.bind(this.data);
     }
 
     public static fromBuffer(arr: Uint8Array): BufferReader {
@@ -15,24 +22,21 @@ export class BufferReader {
     }
 
     private handleRead(size: number, fn: (offset?: number) => number): number {
-        const data = fn.call(this.data, this.cursor);
+        const data = fn(this.cursor);
         this.cursor += size;
         return data;
     }
 
     public readUint8(): number {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        return this.handleRead(1, this.data.readUint8);
+        return this.handleRead(1, this.readUint8Bound);
     }
 
     public readUint16BE(): number {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        return this.handleRead(2, this.data.readUint16BE);
+        return this.handleRead(2, this.readUint16BEBound);
     }
 
     public readUint32BE(): number {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        return this.handleRead(4, this.data.readUint32BE);
+        return this.handleRead(4, this.readUint32BEBound);
     }
 
     public readUint64BE(): bigint {

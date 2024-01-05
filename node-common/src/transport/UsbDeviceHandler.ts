@@ -22,6 +22,8 @@ export class UsbDeviceHandler extends DeviceHandler {
     protected usbDeviceMap = new Map<USBDevice, Device>();
     private usb;
     private aoapConnector: UsbAoapConnector;
+    private handleConnectedDeviceBound: (event: USBConnectionEvent) => void;
+    private handleDisconnectedDeviceBound: (event: USBConnectionEvent) => void;
 
     public constructor(
         private config: ElectronUsbDeviceHandlerConfig,
@@ -29,8 +31,8 @@ export class UsbDeviceHandler extends DeviceHandler {
     ) {
         super(events);
 
-        this.handleConnectedDevice = this.handleConnectedDevice.bind(this);
-        this.handleDisconnectedDevice =
+        this.handleConnectedDeviceBound = this.handleConnectedDevice.bind(this);
+        this.handleDisconnectedDeviceBound =
             this.handleDisconnectedDevice.bind(this);
         this.usb = new WebUSB({
             allowAllDevices: true,
@@ -126,10 +128,11 @@ export class UsbDeviceHandler extends DeviceHandler {
     public async waitForDevices(): Promise<void> {
         this.logger.info('Starting new device connection handler');
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.usb.addEventListener('connect', this.handleConnectedDevice);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.usb.addEventListener('disconnect', this.handleDisconnectedDevice);
+        this.usb.addEventListener('connect', this.handleConnectedDeviceBound);
+        this.usb.addEventListener(
+            'disconnect',
+            this.handleDisconnectedDeviceBound,
+        );
 
         this.logger.info('Processing already connected devices');
 
@@ -160,12 +163,13 @@ export class UsbDeviceHandler extends DeviceHandler {
 
     // eslint-disable-next-line @typescript-eslint/require-await
     public override async stopWaitingForDevices(): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.usb.removeEventListener('connect', this.handleConnectedDevice);
+        this.usb.removeEventListener(
+            'connect',
+            this.handleConnectedDeviceBound,
+        );
         this.usb.removeEventListener(
             'disconnect',
-            // eslint-disable-next-line @typescript-eslint/unbound-method
-            this.handleDisconnectedDevice,
+            this.handleDisconnectedDeviceBound,
         );
 
         this.logger.info('Stopped new device connection handler');

@@ -5,12 +5,14 @@ import { BaseIpcSocket } from '@web-auto/common-ipc';
 
 class SocketClientIpcSocket extends BaseIpcSocket {
     private socket?: WebSocket;
+    private onDataInternalBound: (message: MessageEvent) => void;
+    private onCloseInternalBound: () => void;
 
     public constructor(private url: string) {
         super();
 
-        this.onDataInternal = this.onDataInternal.bind(this);
-        this.onCloseInternal = this.onCloseInternal.bind(this);
+        this.onDataInternalBound = this.onDataInternal.bind(this);
+        this.onCloseInternalBound = this.onCloseInternal.bind(this);
     }
 
     public async open(): Promise<void> {
@@ -26,10 +28,8 @@ class SocketClientIpcSocket extends BaseIpcSocket {
 
             const onOpen = () => {
                 this.socket = socket;
-                // eslint-disable-next-line @typescript-eslint/unbound-method
-                socket.addEventListener('close', this.onCloseInternal);
-                // eslint-disable-next-line @typescript-eslint/unbound-method
-                socket.addEventListener('message', this.onDataInternal);
+                socket.addEventListener('close', this.onCloseInternalBound);
+                socket.addEventListener('message', this.onDataInternalBound);
                 cleanup();
                 resolve();
             };
@@ -59,10 +59,8 @@ class SocketClientIpcSocket extends BaseIpcSocket {
 
         const socket = this.socket;
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        socket.removeEventListener('close', this.onCloseInternal);
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        socket.removeEventListener('message', this.onDataInternal);
+        socket.removeEventListener('close', this.onCloseInternalBound);
+        socket.removeEventListener('message', this.onDataInternalBound);
 
         return new Promise((resolve) => {
             const onClose = () => {
