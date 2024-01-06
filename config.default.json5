@@ -31,7 +31,6 @@
             // CENTER = 2;
             // UNKNOWN = 3;
             driverPosition: 0,
-            canPlayNativeMediaDuringVr: false,
             // UI_CONFIG_HIDE_CLOCK = 1;
             // UI_CONFIG_HIDE_PHONE_SIGNAL = 2;
             // UI_CONFIG_HIDE_BATTERY_LEVEL = 4;
