@@ -1,12 +1,12 @@
 import { MediaCodecType } from '@web-auto/android-auto-proto';
 import { h264HasKeyFrame, parseH264CodecConfig } from './h264.js';
 import { h265HasKeyFrame, parseH265CodecConfig } from './h265.js';
-import type { VideoCodecConfig } from '@web-auto/android-auto-ipc';
+import type { CodecParsedConfig } from './codec.js';
 
 export const parseCodecConfig = (
     videoCodecType: MediaCodecType,
     buffer: Uint8Array,
-): VideoCodecConfig => {
+): CodecParsedConfig => {
     switch (videoCodecType) {
         case MediaCodecType.MEDIA_CODEC_VIDEO_H264_BP:
             return parseH264CodecConfig(buffer);

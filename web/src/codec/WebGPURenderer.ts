@@ -1,6 +1,7 @@
 /// <reference types="@webgpu/types" />
 
 import { Renderer } from './Renderer.js';
+import { VideoCodecConfig } from '@web-auto/android-auto-ipc';
 
 export class WebGPURenderer implements Renderer {
     private started: Promise<void>;
@@ -12,50 +13,55 @@ export class WebGPURenderer implements Renderer {
     private sampler?: GPUSampler;
 
     private static vertexShaderSource = `
-      struct VertexOutput {
+    struct VertexOutput {
         @builtin(position) Position: vec4<f32>,
         @location(0) uv: vec2<f32>,
-      }
-  
-      @vertex
-      fn vert_main(@builtin(vertex_index) VertexIndex: u32) -> VertexOutput {
+    }
+
+    @vertex
+    fn vert_main(@builtin(vertex_index) VertexIndex: u32) -> VertexOutput {
         var pos = array<vec2<f32>, 6>(
-          vec2<f32>( 1.0,  1.0),
-          vec2<f32>( 1.0, -1.0),
-          vec2<f32>(-1.0, -1.0),
-          vec2<f32>( 1.0,  1.0),
-          vec2<f32>(-1.0, -1.0),
-          vec2<f32>(-1.0,  1.0)
+            vec2<f32>( 1.0,  1.0),
+            vec2<f32>( 1.0, -1.0),
+            vec2<f32>(-1.0, -1.0),
+            vec2<f32>( 1.0,  1.0),
+            vec2<f32>(-1.0, -1.0),
+            vec2<f32>(-1.0,  1.0)
         );
-  
+
         var uv = array<vec2<f32>, 6>(
-          vec2<f32>(1.0, 0.0),
-          vec2<f32>(1.0, 1.0),
-          vec2<f32>(0.0, 1.0),
-          vec2<f32>(1.0, 0.0),
-          vec2<f32>(0.0, 1.0),
-          vec2<f32>(0.0, 0.0)
+            vec2<f32>(1.0, 0.0),
+            vec2<f32>(1.0, 1.0),
+            vec2<f32>(0.0, 1.0),
+            vec2<f32>(1.0, 0.0),
+            vec2<f32>(0.0, 1.0),
+            vec2<f32>(0.0, 0.0)
         );
-  
+
         var output : VertexOutput;
         output.Position = vec4<f32>(pos[VertexIndex], 0.0, 1.0);
         output.uv = uv[VertexIndex];
         return output;
-      }
+    }
     `;
 
     private static fragmentShaderSource = `
-      @group(0) @binding(1) var mySampler: sampler;
-      @group(0) @binding(2) var myTexture: texture_external;
-      
-      @fragment
-      fn frag_main(@location(0) uv : vec2<f32>) -> @location(0) vec4<f32> {
-        return textureSampleBaseClampToEdge(myTexture, mySampler, uv);
-      }
+        @group(0) @binding(1) var mySampler: sampler;
+        @group(0) @binding(2) var myTexture: texture_external;
+
+        @fragment
+        fn frag_main(@location(0) uv : vec2<f32>) -> @location(0) vec4<f32> {
+            return textureSampleBaseClampToEdge(myTexture, mySampler, uv);
+        }
     `;
 
-    public constructor(private canvas: OffscreenCanvas) {
+    public constructor(
+        private canvas: OffscreenCanvas,
+        private config: VideoCodecConfig,
+    ) {
         this.started = this.start();
+
+        this.setConfig(config);
     }
 
     private async start(): Promise<void> {
@@ -104,6 +110,12 @@ export class WebGPURenderer implements Renderer {
         this.sampler = this.device.createSampler({});
     }
 
+    public setConfig(config: VideoCodecConfig): void {
+        this.config = config;
+        this.canvas.width = this.config.croppedWidth;
+        this.canvas.height = this.config.croppedHeight;
+    }
+
     public async draw(frame: VideoFrame) {
         await this.started;
 
@@ -115,9 +127,6 @@ export class WebGPURenderer implements Renderer {
         ) {
             throw new Error('Failed to start');
         }
-
-        this.canvas.width = frame.displayWidth;
-        this.canvas.height = frame.displayHeight;
 
         const uniformBindGroup = this.device.createBindGroup({
             layout: this.pipeline.getBindGroupLayout(0),

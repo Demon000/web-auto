@@ -27,3 +27,9 @@ export type IMediaPlaybackStatus = PartialMessage<MediaPlaybackStatus>;
 export type IServiceDiscoveryResponse =
     PartialMessage<ServiceDiscoveryResponse>;
 export type IHeadUnitInfo = PartialMessage<HeadUnitInfo>;
+export type IInsets = {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+};

@@ -1,3 +1,4 @@
+import { VideoCodecConfig } from '@web-auto/android-auto-ipc';
 import { Canvas2DRenderer } from './Canvas2DRenderer.js';
 import {
     DecoderWorkerMessageType,
@@ -11,6 +12,19 @@ import { WebGPURenderer } from './WebGPURenderer.js';
 let renderer: Renderer | null = null;
 let pendingFrame: VideoFrame | null = null;
 let lastFrame: VideoFrame | null = null;
+let config: VideoCodecConfig = {
+    codec: '',
+    croppedHeight: 0,
+    croppedWidth: 0,
+    width: 0,
+    height: 0,
+    margins: {
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
+    },
+};
 
 const renderPendingFrame = (): void => {
     if (renderer === null || pendingFrame === null) {
@@ -65,14 +79,14 @@ const createRenderer = (
 ): void => {
     switch (rendererName) {
         case DecoderWorkerRenderer._2D:
-            renderer = new Canvas2DRenderer(canvas);
+            renderer = new Canvas2DRenderer(canvas, config);
             break;
         case DecoderWorkerRenderer.WEBGL:
         case DecoderWorkerRenderer.WEBGL2:
-            renderer = new WebGLRenderer(rendererName, canvas);
+            renderer = new WebGLRenderer(rendererName, canvas, config);
             break;
         case DecoderWorkerRenderer.WEBGPU:
-            renderer = new WebGPURenderer(canvas);
+            renderer = new WebGPURenderer(canvas, config);
             break;
         default:
             throw new Error(`Invalid renderer ${rendererName}`);
@@ -90,8 +104,10 @@ const onMessage = (event: MessageEvent) => {
             break;
         case DecoderWorkerMessageType.CONFIGURE_DECODER:
             decoder.configure({
-                codec: message.codec,
+                codec: message.config.codec,
             });
+            config = message.config;
+            renderer?.setConfig(config);
             break;
         case DecoderWorkerMessageType.DECODE_KEYFRAME:
             decoder.decode(

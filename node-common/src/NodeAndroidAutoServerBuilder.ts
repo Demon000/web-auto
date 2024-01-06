@@ -41,7 +41,10 @@ import type {
     NodeAndroidAutoResolutionConfig,
 } from './config.js';
 import type { IpcServiceRegistry } from '@web-auto/common-ipc/main.js';
-import type { IVideoConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
+import type {
+    IInsets,
+    IVideoConfiguration,
+} from '@web-auto/android-auto-proto/interfaces.js';
 
 export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
     public constructor(
@@ -83,18 +86,16 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
         return new ControlService(cryptor, this.config.controlConfig, events);
     }
 
-    private getResolutions(): VideoCodecResolutionType[] {
-        return [
-            VideoCodecResolutionType.VIDEO_720x1280,
-            VideoCodecResolutionType.VIDEO_1080x1920,
-            VideoCodecResolutionType.VIDEO_1440x2560,
-            VideoCodecResolutionType.VIDEO_2160x3840,
-            VideoCodecResolutionType.VIDEO_800x480,
-            VideoCodecResolutionType.VIDEO_1280x720,
-            VideoCodecResolutionType.VIDEO_1920x1080,
-            VideoCodecResolutionType.VIDEO_2560x1440,
-            VideoCodecResolutionType.VIDEO_3840x2160,
-        ];
+    private getSupportedResolutions(
+        resolutionConfigs: NodeAndroidAutoResolutionConfig[],
+    ): VideoCodecResolutionType[] {
+        const resolutions = new Set<VideoCodecResolutionType>();
+
+        for (const resolutionConfig of resolutionConfigs) {
+            resolutions.add(resolutionConfig.resolution);
+        }
+
+        return Array.from(resolutions);
     }
 
     private resolutionToSize(
@@ -126,57 +127,90 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
         }
     }
 
-    private getMargins(
+    private getResolutionMargins(
+        resolution: VideoCodecResolutionType,
         displayConfig: NodeAndroidAutoDisplayConfig,
-        width: number,
-        height: number,
         scale: number,
-    ): [number, number] {
-        return [
-            Math.round(Math.abs(width * scale - displayConfig.width) / scale),
-            Math.round(Math.abs(height * scale - displayConfig.height) / scale),
-        ];
+    ): IInsets {
+        const [width, height] = this.resolutionToSize(resolution);
+        const scaledWidth = width * scale;
+        const scaledHeight = height * scale;
+        const remainingWidth = scaledWidth - displayConfig.width;
+        const remainingHeight = scaledHeight - displayConfig.height;
+        const remainingUnscaledWidth = Math.round(remainingWidth / scale);
+        const remainingUnscaledHeight = Math.round(remainingHeight / scale);
+
+        return {
+            left: 0,
+            right: remainingUnscaledWidth,
+            top: 0,
+            bottom: remainingUnscaledHeight,
+        };
     }
 
-    private matchingResolutionConfig(
+    private getResolutionRatio(
         resolution: VideoCodecResolutionType,
-        resolutionConfigs: NodeAndroidAutoResolutionConfig[],
-    ): VideoCodecResolutionType | undefined {
-        for (const resolutionConfig of resolutionConfigs) {
-            if (resolutionConfig.resolution === resolution) {
-                return resolution;
-            }
-        }
+        displayConfig: NodeAndroidAutoDisplayConfig,
+        cover: boolean,
+    ): number {
+        const [width, height] = this.resolutionToSize(resolution);
 
-        return undefined;
+        const widthRatio = displayConfig.width / width;
+        const heightRatio = displayConfig.height / height;
+
+        return cover ? 1 : Math.max(widthRatio, heightRatio);
+    }
+
+    private canSizeFitResolution(
+        width: number,
+        height: number,
+        resolution: VideoCodecResolutionType,
+    ): boolean {
+        const [resolutionWidth, resolutionHeight] =
+            this.resolutionToSize(resolution);
+
+        return resolutionWidth >= width && resolutionHeight >= height;
+    }
+
+    private isResolutionSmaller(
+        resolution: VideoCodecResolutionType,
+        thanResolution: VideoCodecResolutionType,
+    ): boolean {
+        const [thanWidth, thanHeight] = this.resolutionToSize(thanResolution);
+        const [width, height] = this.resolutionToSize(resolution);
+
+        return (
+            (width < thanWidth && height < thanHeight) ||
+            (width === thanWidth && height < thanHeight) ||
+            (width < thanWidth && height === thanHeight)
+        );
     }
 
     private findBestResolution(
         displayConfig: NodeAndroidAutoDisplayConfig,
+        supportedResolutions: VideoCodecResolutionType[],
     ): VideoCodecResolutionType | undefined {
-        const resolutions = this.getResolutions();
         let bestResolution;
 
-        for (const resolution of resolutions) {
-            const [width, height] = this.resolutionToSize(resolution);
-
-            if (width < displayConfig.width || height < displayConfig.height) {
+        for (const resolution of supportedResolutions) {
+            if (
+                !this.canSizeFitResolution(
+                    displayConfig.width,
+                    displayConfig.height,
+                    resolution,
+                )
+            ) {
                 continue;
             }
 
-            if (bestResolution !== undefined) {
-                const [bestWidth, bestHeight] =
-                    this.resolutionToSize(bestResolution);
-
-                if (width >= bestWidth && height >= bestHeight) {
-                    continue;
-                }
+            if (
+                bestResolution !== undefined &&
+                !this.isResolutionSmaller(resolution, bestResolution)
+            ) {
+                continue;
             }
 
-            bestResolution = this.matchingResolutionConfig(
-                resolution,
-                displayConfig.resolutionConfigs,
-            );
+            bestResolution = resolution;
         }
 
         return bestResolution;
@@ -184,41 +218,19 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
 
     private findSmallerResolutions(
         bigResolution: VideoCodecResolutionType | undefined,
-        resolutionConfigs: NodeAndroidAutoResolutionConfig[],
+        supportedResolutions: VideoCodecResolutionType[],
     ): VideoCodecResolutionType[] {
-        const resolutions = this.getResolutions();
         const foundResolutions = [];
 
-        let bigWidth, bigHeight;
-        if (bigResolution !== undefined) {
-            [bigWidth, bigHeight] = this.resolutionToSize(bigResolution);
-        }
-
-        for (const resolution of resolutions) {
-            if (resolution === bigResolution) {
-                continue;
-            }
-
-            const [width, height] = this.resolutionToSize(resolution);
-
+        for (const resolution of supportedResolutions) {
             if (
-                bigWidth !== undefined &&
-                bigHeight !== undefined &&
-                (width >= bigWidth || height >= bigHeight)
+                bigResolution !== undefined &&
+                !this.isResolutionSmaller(resolution, bigResolution)
             ) {
                 continue;
             }
 
-            const foundResolution = this.matchingResolutionConfig(
-                resolution,
-                resolutionConfigs,
-            );
-
-            if (foundResolution === undefined) {
-                continue;
-            }
-
-            foundResolutions.push(foundResolution);
+            foundResolutions.push(resolution);
         }
 
         return foundResolutions;
@@ -231,18 +243,15 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
     ): IVideoConfiguration[] {
         const configs: IVideoConfiguration[] = [];
 
-        const [width, height] = this.resolutionToSize(resolution);
-
-        const widthRatio = displayConfig.width / width;
-        const heightRatio = displayConfig.height / height;
-
-        const ratio = cover
-            ? Math.max(widthRatio, heightRatio)
-            : Math.min(widthRatio, heightRatio);
+        const ratio = this.getResolutionRatio(resolution, displayConfig, cover);
 
         const dpi = Math.round(displayConfig.density / ratio);
 
-        const margins = this.getMargins(displayConfig, width, height, ratio);
+        const margins = this.getResolutionMargins(
+            resolution,
+            displayConfig,
+            ratio,
+        );
 
         for (const resolutionConfig of displayConfig.resolutionConfigs) {
             if (resolution !== resolutionConfig.resolution) {
@@ -252,10 +261,11 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
             configs.push({
                 codecResolution: resolution,
                 density: dpi,
-                widthMargin: margins[0],
-                heightMargin: margins[1],
                 frameRate: resolutionConfig.framerate,
                 videoCodecType: resolutionConfig.codec,
+                uiConfig: {
+                    margins,
+                },
             });
         }
 
@@ -265,13 +275,19 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
     private getVideoConfigs(
         displayConfig: NodeAndroidAutoDisplayConfig,
     ): IVideoConfiguration[] {
+        const supportedResolutions = this.getSupportedResolutions(
+            displayConfig.resolutionConfigs,
+        );
         const configs: IVideoConfiguration[] = [];
 
         /*
          * Find the smallest resolution that is at least equal to
          * the display resolution.
          */
-        const bestResolution = this.findBestResolution(displayConfig);
+        const bestResolution = this.findBestResolution(
+            displayConfig,
+            supportedResolutions,
+        );
 
         if (bestResolution !== undefined) {
             const resolutionVideoConfigs = this.getVideoResolutionConfigs(
@@ -288,7 +304,7 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
          */
         const smallerResolutions = this.findSmallerResolutions(
             bestResolution,
-            displayConfig.resolutionConfigs,
+            supportedResolutions,
         );
         for (const smallResolution of smallerResolutions) {
             const resolutionVideoConfigs = this.getVideoResolutionConfigs(

@@ -1,27 +1,40 @@
 import { Renderer } from './Renderer.js';
+import { VideoCodecConfig } from '@web-auto/android-auto-ipc';
 
 export class Canvas2DRenderer implements Renderer {
     private context: OffscreenCanvasRenderingContext2D;
 
-    public constructor(private canvas: OffscreenCanvas) {
+    public constructor(
+        private canvas: OffscreenCanvas,
+        private config: VideoCodecConfig,
+    ) {
         const context = canvas.getContext('2d');
         if (context === null) {
             throw new Error('Failed to create canvas context');
         }
 
         this.context = context;
+
+        this.setConfig(config);
+    }
+
+    public setConfig(config: VideoCodecConfig): void {
+        this.config = config;
+        this.canvas.width = config.croppedWidth;
+        this.canvas.height = config.croppedHeight;
     }
 
     public async draw(frame: VideoFrame): Promise<void> {
-        this.canvas.width = frame.displayWidth;
-        this.canvas.height = frame.displayHeight;
-
         this.context.drawImage(
             frame,
+            this.config.margins.left,
+            this.config.margins.top,
+            this.config.width,
+            this.config.height,
             0,
             0,
-            frame.displayWidth,
-            frame.displayHeight,
+            this.config.width,
+            this.config.height,
         );
     }
 

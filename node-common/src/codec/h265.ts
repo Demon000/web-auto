@@ -1,9 +1,9 @@
-import type { VideoCodecConfig } from '@web-auto/android-auto-ipc';
 import {
     annexBSplitNalu,
     h265ParseConfiguration,
     h265ParseNaluHeader,
 } from '@yume-chan/scrcpy';
+import type { CodecParsedConfig } from './codec.js';
 
 export const toUint32Le = (data: Uint8Array, offset: number) => {
     return (
@@ -26,7 +26,7 @@ export const h265HasKeyFrame = (buffer: Uint8Array) => {
     return false;
 };
 
-export const parseH265CodecConfig = (buffer: Uint8Array): VideoCodecConfig => {
+export const parseH265CodecConfig = (buffer: Uint8Array): CodecParsedConfig => {
     const {
         generalProfileSpace,
         generalProfileIndex,
@@ -58,7 +58,7 @@ export const parseH265CodecConfig = (buffer: Uint8Array): VideoCodecConfig => {
         cropRight,
         cropTop,
         cropBottom,
-        width: croppedWidth,
-        height: croppedHeight,
+        croppedWidth,
+        croppedHeight,
     };
 };

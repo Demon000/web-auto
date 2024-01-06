@@ -1,4 +1,5 @@
 import type {
+    IInsets,
     IKeyEvent,
     IMediaPlaybackMetadata,
     IMediaPlaybackStatus,
@@ -15,12 +16,11 @@ export type AndroidAutoInputService = {
 export type AndroidAutoInputClient = Record<string, never>;
 
 export type VideoCodecConfig = {
+    croppedWidth: number;
+    croppedHeight: number;
     width: number;
     height: number;
-    cropLeft: number;
-    cropRight: number;
-    cropTop: number;
-    cropBottom: number;
+    margins: IInsets;
     codec: string;
 };
 

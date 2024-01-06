@@ -2,6 +2,7 @@ import { type ServiceEvents, VideoService } from '@web-auto/android-auto';
 import type {
     AndroidAutoVideoClient,
     AndroidAutoVideoService,
+    VideoCodecConfig,
 } from '@web-auto/android-auto-ipc';
 import {
     type Start,
@@ -69,9 +70,9 @@ export class NodeVideoService extends VideoService {
     protected override channelStart(data: Start): void {
         super.channelStart(data);
 
-        const config = this.channelConfig();
+        const channelConfig = this.channelConfig();
         this.codecState = CodecState.WAITING_FOR_CONFIG;
-        this.logger.info('Selected configuration', config);
+        this.logger.info('Selected configuration', channelConfig);
         this.ipcHandler.channelStart();
     }
 
@@ -96,9 +97,84 @@ export class NodeVideoService extends VideoService {
         this.ipcHandler.channelStop();
     }
 
+    protected parseCodecConfig(
+        channelConfig: IVideoConfiguration,
+        buffer: Uint8Array,
+    ): VideoCodecConfig {
+        const videoCodecType = channelConfig.videoCodecType;
+        assert(videoCodecType !== undefined);
+
+        const codecConfig = parseCodecConfig(videoCodecType, buffer);
+
+        let margins = {
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+        };
+
+        const width = codecConfig.croppedWidth;
+        const height = codecConfig.croppedHeight;
+        let croppedWidth = codecConfig.croppedWidth;
+        let croppedHeight = codecConfig.croppedHeight;
+
+        const uiConfigMargins = channelConfig.uiConfig?.margins;
+        const widthMargin = channelConfig.widthMargin;
+        const heightMargin = channelConfig.heightMargin;
+
+        let top;
+        let bottom;
+        let left;
+        let right;
+
+        if (uiConfigMargins !== undefined) {
+            ({ top, bottom, left, right } = uiConfigMargins);
+        } else if (widthMargin !== undefined && heightMargin !== undefined) {
+            top = Math.round(heightMargin / 2);
+            bottom = heightMargin - top;
+            left = Math.round(widthMargin / 2);
+            right = widthMargin - left;
+        }
+
+        if (top === undefined) {
+            top = 0;
+        }
+
+        if (bottom === undefined) {
+            bottom = 0;
+        }
+
+        if (left === undefined) {
+            left = 0;
+        }
+
+        if (right === undefined) {
+            right = 0;
+        }
+
+        margins = {
+            top,
+            bottom,
+            left,
+            right,
+        };
+
+        croppedHeight = height - top - bottom;
+        croppedWidth = width - left - right;
+
+        return {
+            codec: codecConfig.codec,
+            margins,
+            croppedHeight,
+            croppedWidth,
+            width,
+            height,
+        };
+    }
+
     protected handleData(buffer: Uint8Array, _timestamp?: bigint): void {
-        const config = this.channelConfig();
-        const videoCodecType = config.videoCodecType;
+        const channelConfig = this.channelConfig();
+        const videoCodecType = channelConfig.videoCodecType;
         assert(videoCodecType !== undefined);
 
         if (this.codecState === CodecState.STARTED) {
@@ -108,7 +184,7 @@ export class NodeVideoService extends VideoService {
 
             let config;
             try {
-                config = parseCodecConfig(videoCodecType, buffer);
+                config = this.parseCodecConfig(channelConfig, buffer);
                 this.logger.info('Parsed config', config);
             } catch (err) {
                 this.logger.error('Failed to parse config', err);

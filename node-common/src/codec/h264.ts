@@ -1,5 +1,5 @@
-import type { VideoCodecConfig } from '@web-auto/android-auto-ipc';
 import { annexBSplitNalu, h264ParseConfiguration } from '@yume-chan/scrcpy';
+import type { CodecParsedConfig } from './codec.js';
 
 const toHex = (value: number) =>
     value.toString(16).padStart(2, '0').toUpperCase();
@@ -16,7 +16,7 @@ export const h264HasKeyFrame = (buffer: Uint8Array) => {
     return false;
 };
 
-export const parseH264CodecConfig = (buffer: Uint8Array): VideoCodecConfig => {
+export const parseH264CodecConfig = (buffer: Uint8Array): CodecParsedConfig => {
     const {
         profileIndex,
         constraintSet,
@@ -39,7 +39,7 @@ export const parseH264CodecConfig = (buffer: Uint8Array): VideoCodecConfig => {
         cropRight,
         cropTop,
         cropBottom,
-        width: croppedWidth,
-        height: croppedHeight,
+        croppedWidth,
+        croppedHeight,
     };
 };

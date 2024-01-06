@@ -63,10 +63,10 @@ export class DecoderWorker {
         });
     }
 
-    private onCodecConfig(data: VideoCodecConfig): void {
+    private onCodecConfig(config: VideoCodecConfig): void {
         this.worker.postMessage({
             type: DecoderWorkerMessageType.CONFIGURE_DECODER,
-            codec: data.codec,
+            config,
         });
     }
 

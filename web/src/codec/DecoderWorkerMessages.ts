@@ -1,3 +1,5 @@
+import { VideoCodecConfig } from '@web-auto/android-auto-ipc';
+
 export enum DecoderWorkerRenderer {
     _2D = '2d',
     WEBGL = 'webgl',
@@ -21,7 +23,7 @@ export type DecoderWorkerMessage =
       }
     | {
           type: DecoderWorkerMessageType.CONFIGURE_DECODER;
-          codec: string;
+          config: VideoCodecConfig;
       }
     | {
           type: DecoderWorkerMessageType.DECODE_KEYFRAME;
