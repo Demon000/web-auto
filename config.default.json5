@@ -37,7 +37,6 @@
             // CAN_PLAY_NATIVE_MEDIA_DURING_VR = 8;
             sessionConfiguration: 0,
             displayName: 'WebAuto',
-            probeForSupport: false,
             connectionConfiguration: {
                 pingConfiguration: {
                     timeoutMs: 3000,
