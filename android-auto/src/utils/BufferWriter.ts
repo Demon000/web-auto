@@ -43,49 +43,43 @@ export class BufferWriter {
         this.resize(neededSize);
     }
 
-    public appendUint8(data: number): this {
+    public appendUint8(data: number): void {
         const size = 1;
         this.appendResizeToFit(size);
         this.data.writeUint8(data, this.cursor);
         this.cursor += size;
-        return this;
     }
 
-    public appendUint16BE(data: number): this {
+    public appendUint16BE(data: number): void {
         const size = 2;
         this.appendResizeToFit(size);
         this.data.writeUint16BE(data, this.cursor);
         this.cursor += size;
-        return this;
     }
 
-    public appendUint32BE(data: number): this {
+    public appendUint32BE(data: number): void {
         const size = 2;
         this.appendResizeToFit(size);
         this.data.writeUint32BE(data, this.cursor);
         this.cursor += size;
-        return this;
     }
 
-    public appendUint64BE(data: bigint): this {
+    public appendUint64BE(data: bigint): void {
         const size = 8;
         this.appendResizeToFit(size);
         this.data.writeBigInt64BE(data, this.cursor);
         this.cursor += size;
-        return this;
     }
 
-    public appendSeek(offset: number): this {
+    public appendSeek(offset: number): void {
         this.cursor = offset;
-        return this;
     }
 
-    public appendBuffer(arr: Uint8Array): this {
+    public appendBuffer(arr: Uint8Array): void {
         const buffer = bufferWrapUint8Array(arr);
         const size = buffer.length;
         this.appendResizeToFit(size);
         buffer.copy(this.data, this.cursor);
         this.cursor += size;
-        return this;
     }
 }

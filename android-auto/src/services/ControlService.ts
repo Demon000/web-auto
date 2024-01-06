@@ -147,9 +147,10 @@ export class ControlService extends Service {
     }
 
     private async sendVersionRequest(): Promise<void> {
-        const writer = BufferWriter.fromSize(4)
-            .appendUint16BE(GalConstants.PROTOCOL_MAJOR_VERSION)
-            .appendUint16BE(GalConstants.PROTOCOL_MINOR_VERSION);
+        const writer = BufferWriter.fromSize(4);
+
+        writer.appendUint16BE(GalConstants.PROTOCOL_MAJOR_VERSION);
+        writer.appendUint16BE(GalConstants.PROTOCOL_MINOR_VERSION);
 
         await this.sendPayloadWithId(
             ControlMessageType.MESSAGE_VERSION_REQUEST,
