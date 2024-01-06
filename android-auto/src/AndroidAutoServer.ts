@@ -209,7 +209,6 @@ export abstract class AndroidAutoServer {
     private getServiceDiscoveryResponse(): ServiceDiscoveryResponse {
         const data = new ServiceDiscoveryResponse({
             ...this.config.serviceDiscoveryResponse,
-            ...this.config.headunitInfo,
             headunitInfo: this.config.headunitInfo,
             services: [],
         });
