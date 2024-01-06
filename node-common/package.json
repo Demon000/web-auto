@@ -19,16 +19,12 @@
     "arpping": "^4.0.0",
     "async-mutex": "^0.4.0",
     "audify": "^1.8.2",
-    "bluetooth-socket": "github:Demon000/node-bluetooth-socket#master",
-    "bluez": "github:Demon000/node-bluez#master",
+    "bluetooth-socket": "npm:@tanislav000/bluetooth-socket@^0.5.0",
+    "bluez": "npm:@tanislav000/bluez@^1.5.0",
     "json5": "^2.2.3",
     "lilconfig": "^3.0.0",
     "native-duplexpair": "^1.0.0",
     "tinyh264": "^0.0.7",
-    "usb": "^2.11.0",
-    "usocket": "github:Demon000/usocket#master"
-  },
-  "overrides": {
-    "usocket": "github:Demon000/usocket#master"
+    "usb": "^2.11.0"
   }
 }
