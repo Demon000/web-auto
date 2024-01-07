@@ -46,6 +46,7 @@ export interface AndroidAutoServerBuilder {
 
     buildControlService(
         cryptor: Cryptor,
+        serviceDiscoveryResponse: ServiceDiscoveryResponse,
         events: ControlServiceEvents,
     ): ControlService;
 
@@ -89,16 +90,20 @@ export abstract class AndroidAutoServer {
         this.frameCodec = new FrameCodec();
         this.messageAggregator = new MessageAggregator();
 
-        this.controlService = builder.buildControlService(this.cryptor, {
-            getServiceDiscoveryResponse:
-                this.getServiceDiscoveryResponse.bind(this),
-            onMessageSent: this.onSendMessage.bind(this),
-            onPingTimeout: this.onPingTimeout.bind(this),
-        });
-
         this.services = builder.buildServices({
             onMessageSent: this.onSendMessage.bind(this),
         });
+
+        const serviceDiscoveryResponse = this.buildServiceDiscoveryResponse();
+
+        this.controlService = builder.buildControlService(
+            this.cryptor,
+            serviceDiscoveryResponse,
+            {
+                onMessageSent: this.onSendMessage.bind(this),
+                onPingTimeout: this.onPingTimeout.bind(this),
+            },
+        );
 
         this.serviceIdServiceMap.set(
             this.controlService.serviceId,
@@ -206,7 +211,7 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    private getServiceDiscoveryResponse(): ServiceDiscoveryResponse {
+    private buildServiceDiscoveryResponse(): ServiceDiscoveryResponse {
         const data = new ServiceDiscoveryResponse({
             ...this.config.serviceDiscoveryResponse,
             headunitInfo: this.config.headunitInfo,

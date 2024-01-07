@@ -28,7 +28,6 @@ import type { Cryptor } from '../crypto/Cryptor.js';
 import { BufferWriter, BufferReader } from '../utils/buffer.js';
 
 export interface ControlServiceEvents extends ServiceEvents {
-    getServiceDiscoveryResponse: () => ServiceDiscoveryResponse;
     onPingTimeout: () => void;
 }
 
@@ -43,6 +42,7 @@ export class ControlService extends Service {
     public constructor(
         private cryptor: Cryptor,
         private config: ControlServiceConfig,
+        private serviceDiscoveryResponse: ServiceDiscoveryResponse,
         protected override events: ControlServiceEvents,
     ) {
         super(events);
@@ -292,8 +292,7 @@ export class ControlService extends Service {
             `Discovery request, device name ${request.deviceName}`,
         );
 
-        const response = this.events.getServiceDiscoveryResponse();
-        await this.sendServiceDiscoveryResponse(response);
+        await this.sendServiceDiscoveryResponse(this.serviceDiscoveryResponse);
     }
 
     public override start(): void {

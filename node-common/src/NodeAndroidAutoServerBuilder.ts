@@ -21,6 +21,7 @@ import {
 import {
     AudioStreamType,
     DisplayType,
+    ServiceDiscoveryResponse,
     TouchScreenType,
     VideoCodecResolutionType,
 } from '@web-auto/android-auto-proto';
@@ -79,11 +80,18 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
             privateKeyBuffer,
         );
     }
+
     public buildControlService(
         cryptor: Cryptor,
+        serviceDiscoveryResponse: ServiceDiscoveryResponse,
         events: ControlServiceEvents,
     ): ControlService {
-        return new ControlService(cryptor, this.config.controlConfig, events);
+        return new ControlService(
+            cryptor,
+            this.config.controlConfig,
+            serviceDiscoveryResponse,
+            events,
+        );
     }
 
     private getSupportedResolutions(
