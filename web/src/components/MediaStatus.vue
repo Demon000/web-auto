@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { watch } from 'vue';
 
 import {
     KeyCode,
@@ -19,16 +19,30 @@ const props = defineProps<{
     status?: IMediaPlaybackStatus;
 }>();
 
-const albumArtUrl = computed(() => {
-    const albumArt = props.metadata?.albumArt;
-    if (albumArt === undefined) {
-        return undefined;
-    }
-    const blob = new Blob([albumArt], {
-        type: 'image/png',
-    });
-    return URL.createObjectURL(blob);
-});
+let albumArtUrl: string | undefined;
+
+watch(
+    () => props.metadata,
+    (metadata) => {
+        const albumArt = metadata?.albumArt;
+
+        let newAlbumArtUrl = undefined;
+        if (albumArt !== undefined) {
+            const blob = new Blob([albumArt]);
+
+            newAlbumArtUrl = URL.createObjectURL(blob);
+        }
+
+        if (albumArtUrl !== undefined) {
+            URL.revokeObjectURL(albumArtUrl);
+        }
+
+        albumArtUrl = newAlbumArtUrl;
+    },
+    {
+        immediate: true,
+    },
+);
 
 const emit = defineEmits<{
     (e: 'press-key', keycode: KeyCode): void;
