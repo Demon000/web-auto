@@ -70,6 +70,7 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
 
         return deviceHandlers;
     }
+
     public buildCryptor(
         certificateBuffer: Buffer,
         privateKeyBuffer: Buffer,
