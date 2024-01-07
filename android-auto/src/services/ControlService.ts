@@ -45,9 +45,7 @@ export class ControlService extends Service {
         private serviceDiscoveryResponse: ServiceDiscoveryResponse,
         protected override events: ControlServiceEvents,
     ) {
-        super(events);
-
-        assert(this.serviceId === 0);
+        super(events, 0);
 
         this.pinger = new Pinger(config.pingTimeoutMs, {
             onPingTimeout: this.events.onPingTimeout,

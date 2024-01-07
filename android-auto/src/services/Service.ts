@@ -23,11 +23,12 @@ export interface ServiceEvents {
 type ServiceMessageCallback = (message: Message) => void;
 
 export abstract class Service {
-    public static nextServiceId = 0;
+    public static nextServiceId = 1;
 
     protected logger = getLogger(this.constructor.name);
 
-    public serviceId = Service.nextServiceId++;
+    public serviceId;
+
     protected started = false;
 
     private specificMessageCallbacks = new Map<
@@ -35,7 +36,16 @@ export abstract class Service {
         ServiceMessageCallback
     >();
 
-    public constructor(protected events: ServiceEvents) {}
+    public constructor(
+        protected events: ServiceEvents,
+        serviceId?: number,
+    ) {
+        if (serviceId === undefined) {
+            serviceId = Service.nextServiceId++;
+        }
+
+        this.serviceId = serviceId;
+    }
 
     public name(): string {
         return this.constructor.name;
