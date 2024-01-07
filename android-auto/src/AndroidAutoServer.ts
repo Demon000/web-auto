@@ -195,14 +195,6 @@ export abstract class AndroidAutoServer {
     }
 
     private onPingTimeout(): void {
-        this.onPingTimeoutAsync()
-            .then(() => {})
-            .catch((err) => {
-                this.logger.error('Failed to handle ping timeout', err);
-            });
-    }
-
-    private async onPingTimeoutAsync(): Promise<void> {
         if (this.connectedDevice === undefined) {
             this.logger.error(
                 'Cannot send ping timeout without a connected device',
@@ -214,7 +206,11 @@ export abstract class AndroidAutoServer {
             `Pinger timed out, disconnecting ${this.connectedDevice.name}`,
         );
 
-        await this.disconnectDeviceAsync(this.connectedDevice);
+        this.disconnectDeviceAsync(this.connectedDevice)
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error('Failed to handle ping timeout', err);
+            });
     }
 
     private async onReceiveMessage(

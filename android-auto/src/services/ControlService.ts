@@ -181,22 +181,14 @@ export class ControlService extends Service {
     }
 
     private sendPingRequest(data: PingRequest): void {
-        this.sendPingRequestAsync(data)
+        this.sendPlainSpecificMessage(
+            ControlMessageType.MESSAGE_PING_REQUEST,
+            data,
+        )
             .then(() => {})
             .catch((err) => {
                 this.logger.error('Failed to send ping request', err);
             });
-    }
-
-    private async sendPingRequestAsync(data: PingRequest): Promise<void> {
-        try {
-            await this.sendPlainSpecificMessage(
-                ControlMessageType.MESSAGE_PING_REQUEST,
-                data,
-            );
-        } catch (err) {
-            this.logger.error('Failed to send ping request', err);
-        }
     }
 
     private async sendAudioFocusResponse(
