@@ -9,11 +9,15 @@ import {
     MediaPlaybackStatusService,
     Service,
 } from '@web-auto/android-auto-proto';
+import type {
+    IMediaPlaybackMetadata,
+    IMediaPlaybackStatus,
+} from '@web-auto/android-auto-proto/interfaces.js';
 import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 
 export class NodeMediaStatusService extends MediaStatusService {
-    private metadata: MediaPlaybackMetadata | undefined;
-    private status: MediaPlaybackStatus | undefined;
+    private metadata: IMediaPlaybackMetadata | undefined;
+    private status: IMediaPlaybackStatus | undefined;
 
     public constructor(
         private ipcHandler: IpcServiceHandler<
@@ -37,29 +41,29 @@ export class NodeMediaStatusService extends MediaStatusService {
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    protected async getMetadata(): Promise<MediaPlaybackMetadata | undefined> {
+    protected async getMetadata(): Promise<IMediaPlaybackMetadata | undefined> {
         return this.metadata;
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    protected async getStatus(): Promise<MediaPlaybackStatus | undefined> {
+    protected async getStatus(): Promise<IMediaPlaybackStatus | undefined> {
         return this.status;
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
     protected async handleMetadata(data: MediaPlaybackMetadata): Promise<void> {
-        this.metadata = data;
-        this.ipcHandler.metadata({
+        this.metadata = {
             ...data,
-        });
+        };
+        this.ipcHandler.metadata(this.metadata);
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
     protected async handlePlayback(data: MediaPlaybackStatus): Promise<void> {
-        this.status = data;
-        this.ipcHandler.status({
+        this.status = {
             ...data,
-        });
+        };
+        this.ipcHandler.status(this.status);
     }
 
     protected fillChannelDescriptor(channelDescriptor: Service): void {
