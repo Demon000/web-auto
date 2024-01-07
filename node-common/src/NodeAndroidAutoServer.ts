@@ -1,4 +1,8 @@
-import { AndroidAutoServer, Device } from '@web-auto/android-auto';
+import {
+    AndroidAutoServer,
+    Device,
+    type AndroidAutoServerBuilder,
+} from '@web-auto/android-auto';
 import {
     AndroidAutoIpcNames,
     type AndroidAutoServerClient,
@@ -9,8 +13,6 @@ import type {
     IpcServiceRegistry,
     IpcServiceHandler,
 } from '@web-auto/common-ipc/main.js';
-import type { NodeAndroidAutoServerConfig } from './config.js';
-import { NodeAndroidAutoServerBuilder } from './NodeAndroidAutoServerBuilder.js';
 
 export class NodeAndroidAutoServer extends AndroidAutoServer {
     private ipcHandler: IpcServiceHandler<
@@ -19,12 +21,10 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
     >;
 
     public constructor(
+        builder: AndroidAutoServerBuilder,
         protected ipcRegistry: IpcServiceRegistry,
-        protected override config: NodeAndroidAutoServerConfig,
     ) {
-        const builder = new NodeAndroidAutoServerBuilder(ipcRegistry, config);
-
-        super(config, builder);
+        super(builder);
 
         this.ipcHandler = this.ipcRegistry.registerIpcService<
             AndroidAutoServerService,

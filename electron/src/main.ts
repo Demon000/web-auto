@@ -10,6 +10,7 @@ import {
 import { assert } from 'typia';
 import {
     NodeAndroidAutoServer,
+    NodeAndroidAutoServerBuilder,
     type NodeCommonAndroidAutoConfig,
 } from '@web-auto/node-common';
 import { ElectronIpcServiceRegistry } from '@web-auto/electron-ipc/main.js';
@@ -47,9 +48,14 @@ if (config.androidAuto !== undefined) {
 
     androidAutoIpcServiceRegistry.register();
 
-    androidAutoServer = new NodeAndroidAutoServer(
+    const builder = new NodeAndroidAutoServerBuilder(
         androidAutoIpcServiceRegistry,
         config.androidAuto,
+    );
+
+    androidAutoServer = new NodeAndroidAutoServer(
+        builder,
+        androidAutoIpcServiceRegistry,
     );
 
     androidAutoServer.start().catch((err) => {

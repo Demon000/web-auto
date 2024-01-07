@@ -1,5 +1,4 @@
 import { type LoggingConfig } from '@web-auto/logging';
-import type { AndroidAutoServerConfig } from '@web-auto/android-auto';
 import type { NodeCryptorConfig } from './crypto/NodeCryptor.js';
 import type { NodeSensorConfig } from './services/NodeSensorBuilder.js';
 import type { TcpDeviceHandlerConfig } from './transport/TcpDeviceHandler.js';
@@ -11,6 +10,11 @@ import type {
     VideoCodecResolutionType,
     VideoFrameRateType,
 } from '@web-auto/android-auto-proto';
+import type { ControlServiceConfig } from '@web-auto/android-auto';
+import type {
+    IHeadUnitInfo,
+    IServiceDiscoveryResponse,
+} from '@web-auto/android-auto-proto/interfaces.js';
 
 export interface NodeAndroidAutoResolutionConfig {
     codec: MediaCodecType;
@@ -28,7 +32,10 @@ export interface NodeAndroidAutoDisplayConfig {
     resolutionConfigs: NodeAndroidAutoResolutionConfig[];
 }
 
-export interface NodeAndroidAutoServerConfig extends AndroidAutoServerConfig {
+export interface NodeAndroidAutoServerConfig {
+    controlConfig: ControlServiceConfig;
+    headunitInfo: IHeadUnitInfo;
+    serviceDiscoveryResponse: IServiceDiscoveryResponse;
     displayConfigs: NodeAndroidAutoDisplayConfig[];
     sensorConfigs: NodeSensorConfig[];
     cryptorConfig: NodeCryptorConfig;

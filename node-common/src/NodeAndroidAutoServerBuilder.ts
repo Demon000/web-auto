@@ -95,6 +95,22 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
         );
     }
 
+    public buildServiceDiscoveryResponse(
+        services: Service[],
+    ): ServiceDiscoveryResponse {
+        const data = new ServiceDiscoveryResponse({
+            ...this.config.serviceDiscoveryResponse,
+            headunitInfo: this.config.headunitInfo,
+            services: [],
+        });
+
+        for (const service of services) {
+            service.fillFeatures(data);
+        }
+
+        return data;
+    }
+
     private getSupportedResolutions(
         resolutionConfigs: NodeAndroidAutoResolutionConfig[],
     ): VideoCodecResolutionType[] {

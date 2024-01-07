@@ -19,7 +19,6 @@ import { Cryptor } from './crypto/Cryptor.js';
 import { Service, type ServiceEvents } from './services/Service.js';
 import {
     ControlService,
-    type ControlServiceConfig,
     type ControlServiceEvents,
 } from './services/ControlService.js';
 import assert from 'node:assert';
@@ -27,16 +26,6 @@ import { type FrameData } from './messenger/FrameData.js';
 import { Message } from './messenger/Message.js';
 import { FrameHeaderFlags } from './messenger/FrameHeader.js';
 import { Mutex } from 'async-mutex';
-import type {
-    IHeadUnitInfo,
-    IServiceDiscoveryResponse,
-} from '@web-auto/android-auto-proto/interfaces.js';
-
-export interface AndroidAutoServerConfig {
-    controlConfig: ControlServiceConfig;
-    headunitInfo: IHeadUnitInfo;
-    serviceDiscoveryResponse: IServiceDiscoveryResponse;
-}
 
 export interface AndroidAutoServerBuilder {
     buildDeviceHandlers(events: DeviceHandlerEvents): DeviceHandler[];
@@ -50,6 +39,10 @@ export interface AndroidAutoServerBuilder {
     ): ControlService;
 
     buildServices(events: ServiceEvents): Service[];
+
+    buildServiceDiscoveryResponse(
+        services: Service[],
+    ): ServiceDiscoveryResponse;
 }
 
 export abstract class AndroidAutoServer {
@@ -67,10 +60,7 @@ export abstract class AndroidAutoServer {
     private deviceHandlers: DeviceHandler[];
     private connectionLock = new Mutex();
 
-    public constructor(
-        protected config: AndroidAutoServerConfig,
-        builder: AndroidAutoServerBuilder,
-    ) {
+    public constructor(builder: AndroidAutoServerBuilder) {
         this.deviceHandlers = builder.buildDeviceHandlers({
             onDeviceAvailable: this.onDeviceAvailable.bind(this),
             onDeviceSelfConnection: this.connectDevice.bind(this),
@@ -93,7 +83,9 @@ export abstract class AndroidAutoServer {
             onMessageSent: this.onSendMessage.bind(this),
         });
 
-        const serviceDiscoveryResponse = this.buildServiceDiscoveryResponse();
+        const serviceDiscoveryResponse = builder.buildServiceDiscoveryResponse(
+            this.services,
+        );
 
         this.controlService = builder.buildControlService(
             this.cryptor,
@@ -200,20 +192,6 @@ export abstract class AndroidAutoServer {
         for (const frameData of frameDatas) {
             await this.onSendFrameData(frameData);
         }
-    }
-
-    private buildServiceDiscoveryResponse(): ServiceDiscoveryResponse {
-        const data = new ServiceDiscoveryResponse({
-            ...this.config.serviceDiscoveryResponse,
-            headunitInfo: this.config.headunitInfo,
-            services: [],
-        });
-
-        for (const service of this.services) {
-            service.fillFeatures(data);
-        }
-
-        return data;
     }
 
     private onPingTimeout(): void {

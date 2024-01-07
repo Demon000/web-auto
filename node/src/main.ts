@@ -5,6 +5,7 @@ import JSON5 from 'json5';
 import { assert } from 'typia';
 import {
     NodeAndroidAutoServer,
+    NodeAndroidAutoServerBuilder,
     type NodeCommonAndroidAutoConfig,
 } from '@web-auto/node-common';
 import { ANDROID_AUTO_IPC_REGISTRY_NAME } from '@web-auto/android-auto-ipc';
@@ -51,9 +52,14 @@ if (config.androidAuto !== undefined) {
 
     androidAutoIpcServiceRegistry.register();
 
-    androidAutoServer = new NodeAndroidAutoServer(
+    const builder = new NodeAndroidAutoServerBuilder(
         androidAutoIpcServiceRegistry,
         config.androidAuto,
+    );
+
+    androidAutoServer = new NodeAndroidAutoServer(
+        builder,
+        androidAutoIpcServiceRegistry,
     );
 
     androidAutoServer.start().catch((err) => {
