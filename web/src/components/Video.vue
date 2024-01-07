@@ -87,9 +87,21 @@ const translateCanvasPosition = (
     return [Math.round(translatedPoint.x), Math.round(translatedPoint.y)];
 };
 
-const pointerMap = new Map<number, true>();
+const pointerTranslationMap = new Map<number, number>();
 
-const sendPointerEvent = (event: PointerEvent) => {
+const newTranslatedPointerId = (): number => {
+    const translatedPointerIds = new Set(pointerTranslationMap.values());
+    let translatedPointerId = 0;
+    while (true) {
+        if (!translatedPointerIds.has(translatedPointerId)) break;
+
+        translatedPointerId++;
+    }
+
+    return translatedPointerId;
+};
+
+const sendPointerEvent = (pointerId: number, event: PointerEvent) => {
     let action;
 
     switch (event.type) {
@@ -129,14 +141,14 @@ const sendPointerEvent = (event: PointerEvent) => {
             {
                 x,
                 y,
-                pointerId: event.pointerId,
+                pointerId,
             },
         ],
     });
 };
 
 const onPointerDown = (event: PointerEvent) => {
-    if (pointerMap.has(event.pointerId)) {
+    if (pointerTranslationMap.has(event.pointerId)) {
         return;
     }
 
@@ -144,19 +156,25 @@ const onPointerDown = (event: PointerEvent) => {
         return;
     }
 
-    pointerMap.set(event.pointerId, true);
+    const translatedPointerId = newTranslatedPointerId();
 
-    sendPointerEvent(event);
+    pointerTranslationMap.set(event.pointerId, translatedPointerId);
+
+    sendPointerEvent(translatedPointerId, event);
 };
 const onPointerMove = (event: PointerEvent) => {
-    if (!pointerMap.has(event.pointerId)) {
+    const translatedPointerId = pointerTranslationMap.get(event.pointerId);
+
+    if (translatedPointerId === undefined) {
         return;
     }
 
-    sendPointerEvent(event);
+    sendPointerEvent(translatedPointerId, event);
 };
 const onPointerUp = (event: PointerEvent) => {
-    if (!pointerMap.has(event.pointerId)) {
+    const translatedPointerId = pointerTranslationMap.get(event.pointerId);
+
+    if (translatedPointerId === undefined) {
         return;
     }
 
@@ -164,9 +182,9 @@ const onPointerUp = (event: PointerEvent) => {
         return;
     }
 
-    sendPointerEvent(event);
+    sendPointerEvent(translatedPointerId, event);
 
-    pointerMap.delete(event.pointerId);
+    pointerTranslationMap.delete(event.pointerId);
 };
 </script>
 
