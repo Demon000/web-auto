@@ -10,7 +10,8 @@ import {
 } from '@web-auto/node-common';
 import { ANDROID_AUTO_IPC_REGISTRY_NAME } from '@web-auto/android-auto-ipc';
 import { SocketIpcServiceRegistry } from '@web-auto/socket-ipc/main.js';
-import { createServer } from 'node:http';
+import { createServer } from 'node:https';
+import { readFileSync } from 'node:fs';
 
 type NodeAndroidAutoConfig = {
     nodeAndroidAuto: {
@@ -42,7 +43,10 @@ logger.info('Electron config', config);
 let androidAutoServer: NodeAndroidAutoServer | undefined;
 let androidAutoIpcServiceRegistry: SocketIpcServiceRegistry | undefined;
 
-const server = createServer();
+const server = createServer({
+    cert: readFileSync('../cert.crt'),
+    key: readFileSync('../cert.key'),
+});
 
 if (config.androidAuto !== undefined) {
     androidAutoIpcServiceRegistry = new SocketIpcServiceRegistry(

@@ -18,6 +18,8 @@ If using `androidAuto.tcpDeviceHandlerConfig.scanOptions` config:
 4. Open the `config.json5` file and configure it
 5. `npm install`
 6. `npm run build`
+7. Generate a self signed certificate.
+   `sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout cert.key -out cert.crt`
 
 ### Electron
 

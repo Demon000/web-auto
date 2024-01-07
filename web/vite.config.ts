@@ -1,9 +1,17 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    server: {
+        host: '192.168.0.106',
+        https: {
+            cert: readFileSync('../cert.crt'),
+            key: readFileSync('../cert.key'),
+        },
+    },
     build: {
         target: 'esnext',
         rollupOptions: {
