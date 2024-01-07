@@ -44,10 +44,13 @@ If using `androidAuto.tcpDeviceHandlerConfig.scanOptions` config:
 -   Connection via TCP (Head unit server enabled on phone)
 -   Connection via USB
 -   Connection via Bluetooth
--   Video (H264 & H265)
+-   Android Auto video
+-   Instrument cluster video
+-   Video decode (H264 & H265)
 -   Audio input
 -   Audio output
--   Media status (WIP)
+-   Media status
 -   Navigation status (WIP)
 -   Picture-in-picture video
+-   Assistant key
 -   Mouse support for interacting with the video
