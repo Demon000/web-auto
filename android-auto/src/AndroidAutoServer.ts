@@ -36,7 +36,6 @@ export interface AndroidAutoServerConfig {
     controlConfig: ControlServiceConfig;
     headunitInfo: IHeadUnitInfo;
     serviceDiscoveryResponse: IServiceDiscoveryResponse;
-    deviceNameWhitelist?: string[];
 }
 
 export interface AndroidAutoServerBuilder {
@@ -113,14 +112,6 @@ export abstract class AndroidAutoServer {
         for (const service of this.services) {
             this.serviceIdServiceMap.set(service.serviceId, service);
         }
-    }
-
-    private isDeviceWhitelisted(device: Device): boolean {
-        if (this.config.deviceNameWhitelist === undefined) {
-            return true;
-        }
-
-        return this.config.deviceNameWhitelist.includes(device.name);
     }
 
     private isDeviceConnected(device: Device): boolean {
@@ -534,18 +525,6 @@ export abstract class AndroidAutoServer {
             );
 
             await this.deviceSelfConnectionReject(device);
-            return;
-        }
-
-        if (!this.isDeviceWhitelisted(device)) {
-            this.logger.error(
-                `Cannot accept self connection from ${device.name}, ` +
-                    'device is not whitelisted',
-            );
-
-            if (device.state === DeviceState.SELF_CONNECTING) {
-                await this.deviceSelfConnectionReject(device);
-            }
             return;
         }
 
