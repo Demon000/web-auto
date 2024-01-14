@@ -2,3 +2,7 @@ node_modules
 dist
 config.json5
 web-auto.log
+
+# Certificate
+cert.key
+cert.crt
