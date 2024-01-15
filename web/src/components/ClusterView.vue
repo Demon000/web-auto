@@ -1,29 +1,9 @@
 <script setup lang="ts">
-import { VideoFocusMode } from '@web-auto/android-auto-proto';
-import { watch } from 'vue';
-import { decoder } from '../cluster-decoder.ts';
 import Video from '../components/Video.vue';
-import { useVideoFocusModeStore } from '../stores/video-store.ts';
+import { decoder } from '../cluster-decoder.ts';
+import { useVideoFocus } from './video-focus.ts';
 
-const videoFocusModeStore = useVideoFocusModeStore();
-
-watch(
-    () => videoFocusModeStore.requestedFocusMode,
-    async (mode?: VideoFocusMode) => {
-        if (mode === VideoFocusMode.VIDEO_FOCUS_PROJECTED) {
-            await videoFocusModeStore.showProjected();
-        }
-    },
-);
-
-const onVideoVisible = async (offscreenCanvas: OffscreenCanvas) => {
-    decoder.createRenderer(offscreenCanvas);
-    await videoFocusModeStore.toggleFocusModeIfChannelStarted();
-};
-
-const onVideoHidden = async () => {
-    await videoFocusModeStore.showNative();
-};
+const { onVideoVisible, onVideoHidden } = useVideoFocus(decoder);
 </script>
 
 <template>

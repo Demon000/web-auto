@@ -13,6 +13,7 @@ export const useVideoFocusModeStore = defineStore('video-focus-mode', () => {
         | undefined = undefined;
 
     const requestedFocusMode: Ref<VideoFocusMode | undefined> = ref(undefined);
+    const usageCount: Ref<number> = ref(0);
 
     async function initialize(
         localService: IpcClientHandler<
@@ -54,12 +55,7 @@ export const useVideoFocusModeStore = defineStore('video-focus-mode', () => {
         await setFocusMode(VideoFocusMode.VIDEO_FOCUS_NATIVE);
     };
 
-    const toggleFocusMode = async () => {
-        await showNative();
-        await showProjected();
-    };
-
-    const toggleFocusModeIfChannelStarted = async () => {
+    const start = async () => {
         if (service === undefined) {
             throw new Error('Cannot call before calling initialize');
         }
@@ -67,20 +63,37 @@ export const useVideoFocusModeStore = defineStore('video-focus-mode', () => {
         try {
             const channelStarted = await service.getChannelStarted();
             if (channelStarted) {
-                await toggleFocusMode();
+                await showNative();
             }
+
+            await showProjected();
         } catch (err) {
             console.error(err);
+        }
+    };
+
+    const increaseUsageCount = async () => {
+        usageCount.value++;
+
+        if (usageCount.value === 1) {
+            await start();
+        }
+    };
+
+    const decreaseUsageCount = async () => {
+        usageCount.value--;
+
+        if (usageCount.value === 0) {
+            await showNative();
         }
     };
 
     return {
         requestedFocusMode,
         setFocusMode,
-        showProjected,
-        showNative,
-        toggleFocusMode,
-        toggleFocusModeIfChannelStarted,
+        start,
+        increaseUsageCount,
+        decreaseUsageCount,
         initialize,
     };
 });

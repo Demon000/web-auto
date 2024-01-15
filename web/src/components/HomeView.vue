@@ -4,18 +4,16 @@ import MiniVideo from './MiniVideo.vue';
 import MediaStatus from './MediaStatus.vue';
 import Assistant from './Assistant.vue';
 import AppBar from './AppBar.vue';
-import { watch } from 'vue';
 import { androidAutoInputService, androidAutoServerService } from '../ipc.ts';
 import { KeyCode, VideoFocusMode } from '@web-auto/android-auto-proto';
 import { useMediaStatusStore } from '../stores/media-status-store.ts';
-import { useVideoFocusModeStore } from '../stores/video-store.ts';
 import router from '../router/index.ts';
 import { useDeviceStore } from '../stores/device-store.ts';
 import { decoder } from '../decoder.ts';
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
+import { useVideoFocus } from './video-focus.ts';
 
 const mediaStatusStore = useMediaStatusStore();
-const videoFocusModeStore = useVideoFocusModeStore();
 const deviceStore = useDeviceStore();
 
 const sendKey = (keycode: KeyCode) => {
@@ -58,25 +56,7 @@ const switchToVideoView = async () => {
     });
 };
 
-watch(
-    () => videoFocusModeStore.requestedFocusMode,
-    async (mode?: VideoFocusMode) => {
-        if (mode === VideoFocusMode.VIDEO_FOCUS_NATIVE) {
-            await videoFocusModeStore.toggleFocusModeIfChannelStarted();
-        } else if (mode === VideoFocusMode.VIDEO_FOCUS_PROJECTED) {
-            await videoFocusModeStore.showProjected();
-        }
-    },
-);
-
-const onVideoVisible = async (offscreenCanvas: OffscreenCanvas) => {
-    decoder.createRenderer(offscreenCanvas);
-    await videoFocusModeStore.toggleFocusModeIfChannelStarted();
-};
-
-const onVideoHidden = async () => {
-    await videoFocusModeStore.showNative();
-};
+const { onVideoVisible, onVideoHidden } = useVideoFocus(decoder, true);
 
 const connectDevice = async (name: string) => {
     try {
