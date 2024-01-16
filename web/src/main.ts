@@ -33,9 +33,6 @@ const initialize = async () => {
     decoder.start();
 
     app.mount('#app');
-    await router.replace({
-        name: 'home',
-    });
 };
 
 initialize()
