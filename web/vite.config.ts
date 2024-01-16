@@ -1,12 +1,11 @@
-import { defineConfig } from 'vite';
+import { UserConfig, defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+const config: UserConfig = {
     server: {
-        host: '192.168.0.106',
         https: {
             cert: readFileSync('../cert.crt'),
             key: readFileSync('../cert.key'),
@@ -43,4 +42,12 @@ export default defineConfig({
             },
         }),
     ],
+};
+
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, process.cwd(), '');
+
+    config.server.host = env['VITE_SERVER_HOST'];
+
+    return config;
 });
