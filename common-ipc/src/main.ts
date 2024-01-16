@@ -300,12 +300,17 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
         assert('handle' in ipcEvent);
         assert('id' in ipcEvent);
 
-        for (const [name, ipcHandler] of this.ipcHandlers) {
-            if (ipcEvent.handle !== name) {
-                continue;
-            }
+        const ipcHandler = this.ipcHandlers.get(ipcEvent.handle);
 
-            let replyIpcEvent: IpcEvent;
+        let replyIpcEvent: IpcEvent;
+
+        if (ipcHandler === undefined) {
+            replyIpcEvent = {
+                replyToId: ipcEvent.id,
+                handle: ipcEvent.handle,
+                err: `Unhandled IPC event for handler ${ipcEvent.handle}`,
+            };
+        } else {
             try {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 const result = await ipcHandler.handleMessage(ipcEvent);
@@ -323,16 +328,12 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
                     err: err.message,
                 };
             }
-
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const data = this.serializer.serialize(replyIpcEvent);
-
-            socket.send(data);
-
-            return;
         }
 
-        throw new Error(`Unhandled IPC event for handler ${ipcEvent.handle}`);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const replyData = this.serializer.serialize(replyIpcEvent);
+
+        socket.send(replyData);
     }
 
     public registerIpcService<L extends IpcService, R extends IpcClient>(
