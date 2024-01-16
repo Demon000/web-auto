@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import DeviceSelector from './DeviceSelector.vue';
 import MiniVideo from './MiniVideo.vue';
 import MediaStatus from './MediaStatus.vue';
 import Assistant from './Assistant.vue';
 import AppBar from './AppBar.vue';
-import { androidAutoInputService, androidAutoServerService } from '../ipc.ts';
-import { KeyCode, VideoFocusMode } from '@web-auto/android-auto-proto';
+import { androidAutoInputService } from '../ipc.ts';
+import { KeyCode } from '@web-auto/android-auto-proto';
 import { useMediaStatusStore } from '../stores/media-status-store.ts';
 import router from '../router/index.ts';
 import { useDeviceStore } from '../stores/device-store.ts';
 import { decoder } from '../decoder.ts';
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
+import DeviceNotConnected from './DeviceNotConnected.vue';
 import { useVideoFocus } from './video-focus.ts';
 
 const mediaStatusStore = useMediaStatusStore();
@@ -57,39 +57,11 @@ const switchToVideoView = async () => {
 };
 
 const { onVideoVisible, onVideoHidden } = useVideoFocus(decoder, true);
-
-const connectDevice = async (name: string) => {
-    try {
-        await androidAutoServerService.connectDeviceName(name);
-    } catch (err) {
-        console.error(err);
-    }
-};
-
-const disconnectDevice = async (name: string) => {
-    try {
-        await androidAutoServerService.disconnectDeviceName(name);
-    } catch (err) {
-        console.error(err);
-    }
-};
 </script>
 
 <template>
     <div class="home">
-        <AppBar></AppBar>
-        <div
-            class="main"
-            :class="{
-                unconnected: deviceStore.connectedDevice === undefined,
-            }"
-        >
-            <DeviceSelector
-                :connected-device="deviceStore.notAvailableDevice"
-                :devices="deviceStore.devices"
-                @connect="connectDevice"
-                @disconnect="disconnectDevice"
-            ></DeviceSelector>
+        <div class="main">
             <template v-if="deviceStore.connectedDevice !== undefined">
                 <MiniVideo
                     @video-visible="onVideoVisible"
@@ -104,7 +76,11 @@ const disconnectDevice = async (name: string) => {
                 ></MediaStatus>
                 <Assistant @press-assistant-key="sendAssistantKey"></Assistant>
             </template>
+            <template v-else>
+                <DeviceNotConnected></DeviceNotConnected>
+            </template>
         </div>
+        <AppBar></AppBar>
     </div>
 </template>
 
@@ -123,59 +99,12 @@ const disconnectDevice = async (name: string) => {
     display: grid;
     flex-grow: 1;
 
-    grid-template-rows: 1fr 1fr;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-auto-flow: dense;
 
     gap: 32px;
     width: 100%;
-    height: 100%;
 
     min-width: 0;
     min-height: 0;
-}
-
-.main .device-selector {
-    grid-row-start: 1;
-    grid-row-end: 3;
-
-    grid-column-start: 1;
-    grid-column-end: 2;
-}
-
-.main .mini-video {
-    grid-row-start: 1;
-    grid-row-end: 2;
-
-    grid-column-start: 2;
-    grid-column-end: 4;
-}
-
-.main .media-status {
-    grid-row-start: 2;
-    grid-column-start: 2;
-
-    grid-row-end: 3;
-    grid-column-end: 2;
-}
-
-.main .assistant {
-    grid-row-start: 2;
-    grid-column-start: 3;
-
-    grid-row-end: 3;
-    grid-column-end: 3;
-}
-
-.main.unconnected {
-    grid-template-rows: 1fr;
-    grid-template-columns: 1fr;
-}
-
-.main.unconnected .device-selector {
-    grid-row-start: 1;
-    grid-row-end: 1;
-
-    grid-column-start: 1;
-    grid-column-end: 1;
 }
 </style>

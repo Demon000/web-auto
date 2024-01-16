@@ -53,8 +53,6 @@ const emitDisconnect = (name: string) => {
     border-radius: 28px;
 
     padding: 32px;
-
-    overflow-y: auto;
 }
 
 .title {

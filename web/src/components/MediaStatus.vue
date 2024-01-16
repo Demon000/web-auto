@@ -8,6 +8,7 @@ import {
 
 import '@material/web/progress/linear-progress.js';
 import '@material/web/iconbutton/icon-button.js';
+import '@material/web/icon/icon.js';
 import '@material/web/fab/fab.js';
 import {
     IMediaPlaybackMetadata,
