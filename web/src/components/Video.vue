@@ -178,10 +178,6 @@ const onPointerUp = (event: PointerEvent) => {
         return;
     }
 
-    if (event.button !== 0) {
-        return;
-    }
-
     sendPointerEvent(translatedPointerId, event);
 
     pointerTranslationMap.delete(event.pointerId);
