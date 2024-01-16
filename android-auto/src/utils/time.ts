@@ -1,5 +1,5 @@
 export const microsecondsTime = () => {
-    return BigInt(new Date().getTime()) * 1000n;
+    return BigInt(Date.now()) * 1000n;
 };
 
 export const milliToMicro = (milli: number) => {
