@@ -43,7 +43,11 @@ export class FrameCodec {
         return buffer.data;
     }
 
-    private decodeFrameHeader(buffer: BufferReader): FrameHeader {
+    private decodeFrameHeader(buffer: BufferReader): FrameHeader | undefined {
+        if (buffer.readBufferSize() < 4) {
+            return undefined;
+        }
+
         const firstByte = buffer.readUint8();
         const secondByte = buffer.readUint8();
 
@@ -59,19 +63,33 @@ export class FrameCodec {
         };
     }
 
-    private decodeTotalSize(buffer: BufferReader): number {
+    private decodeTotalSize(buffer: BufferReader): number | undefined {
+        if (buffer.readBufferSize() < 4) {
+            return undefined;
+        }
+
         return buffer.readUint32BE();
     }
 
-    private decodeOne(buffer: BufferReader): FrameData {
+    private decodeOne(buffer: BufferReader): FrameData | undefined {
         const frameHeader = this.decodeFrameHeader(buffer);
+        if (frameHeader === undefined) {
+            return undefined;
+        }
 
-        let totalSize = 0;
+        let totalSize: number | undefined = 0;
         if (
             frameHeader.flags & FrameHeaderFlags.FIRST &&
             !(frameHeader.flags & FrameHeaderFlags.LAST)
         ) {
             totalSize = this.decodeTotalSize(buffer);
+            if (totalSize === undefined) {
+                return undefined;
+            }
+        }
+
+        if (buffer.readBufferSize() < frameHeader.payloadSize) {
+            return undefined;
         }
 
         const payload = buffer.readBuffer(frameHeader.payloadSize);
@@ -81,21 +99,6 @@ export class FrameCodec {
             payload,
             totalSize,
         };
-    }
-
-    private tryDecodeOne(buffer: BufferReader): FrameData | undefined {
-        const initialReadOffset = buffer.getReadOffset();
-        this.logger.debug(`Buffer read offset: ${initialReadOffset}`);
-
-        try {
-            return this.decodeOne(buffer);
-        } catch (err) {
-            buffer.readSeek(initialReadOffset);
-            this.logger.debug(
-                'Buffer not big enough to decode one frame data, roll back read offset',
-            );
-            return undefined;
-        }
     }
 
     public decodeBuffer(arr: Uint8Array): FrameData[] {
@@ -112,8 +115,14 @@ export class FrameCodec {
         const buffer = BufferReader.fromBuffer(arr);
         const frameDatas: FrameData[] = [];
         while (buffer.readBufferSize() !== 0) {
-            const frameData = this.tryDecodeOne(buffer);
+            const initialReadOffset = buffer.getReadOffset();
+
+            const frameData = this.decodeOne(buffer);
             if (frameData === undefined) {
+                this.logger.debug(
+                    'Buffer not big enough to decode one frame data, roll back read offset',
+                );
+                buffer.readSeek(initialReadOffset);
                 break;
             }
             this.logger.debug('Decoded frame data', {
