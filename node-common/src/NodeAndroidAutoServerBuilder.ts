@@ -35,7 +35,7 @@ import { NodeSensorsBuilder } from './services/NodeSensorBuilder.js';
 import { NodeVideoService } from './services/NodeVideoService.js';
 import { TcpDeviceHandler } from './transport/TcpDeviceHandler.js';
 import { UsbDeviceHandler } from './transport/usb/UsbDeviceHandler.js';
-import { ElectronBluetoothDeviceHandler } from './transport/bluetooth/BluetoothDeviceHandler.js';
+import { BluetoothDeviceHandler } from './transport/bluetooth/BluetoothDeviceHandler.js';
 import type {
     NodeAndroidAutoDisplayConfig,
     NodeAndroidAutoServerConfig,
@@ -61,7 +61,7 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
 
         if (this.config.bluetoothDeviceHandlerConfig !== undefined) {
             deviceHandlers.push(
-                new ElectronBluetoothDeviceHandler(
+                new BluetoothDeviceHandler(
                     this.config.bluetoothDeviceHandlerConfig,
                     events,
                 ),

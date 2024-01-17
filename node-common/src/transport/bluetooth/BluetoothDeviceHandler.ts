@@ -7,12 +7,23 @@ import {
 } from '@web-auto/android-auto';
 import { BluetoothDevice } from './BluetoothDevice.js';
 import { AndroidAutoProfile } from './AndroidAutoProfile.js';
-import { type ElectronBluetoothDeviceHandlerConfig } from './BluetoothDeviceHandlerConfig.js';
 import net from 'node:net';
+import type {
+    INetworkInfo,
+    ISocketInfoRequest,
+} from '@web-auto/android-auto-proto/bluetooth_interfaces.js';
 
 const AA_OBJECT_PATH = '/com/aa/aa';
 
-export class ElectronBluetoothDeviceHandler extends DeviceHandler {
+export interface BluetoothDeviceHandlerConfig {
+    profileConnectionTimeoutMs: number;
+    wifiConnectionTimeoutMs: number;
+    tcpConnectionTimeoutMs: number;
+    networkInfo: INetworkInfo;
+    socketInfo: ISocketInfoRequest;
+}
+
+export class BluetoothDeviceHandler extends DeviceHandler {
     protected addressDeviceMap = new Map<string, BluetoothDevice>();
     private androidAutoProfile: AndroidAutoProfile;
     private bus?: dbus.MessageBus;
@@ -23,7 +34,7 @@ export class ElectronBluetoothDeviceHandler extends DeviceHandler {
     private onDeviceRemovedBound: (address: string) => void;
 
     public constructor(
-        private config: ElectronBluetoothDeviceHandlerConfig,
+        private config: BluetoothDeviceHandlerConfig,
         events: DeviceHandlerEvents,
     ) {
         super(events);

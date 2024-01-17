@@ -6,7 +6,6 @@ import {
 } from '@web-auto/android-auto';
 import assert from 'node:assert';
 import { Duplex } from 'node:stream';
-import { type ElectronBluetoothDeviceHandlerConfig } from './BluetoothDeviceHandlerConfig.js';
 
 import {
     SocketInfoRequest,
@@ -14,6 +13,7 @@ import {
     ConnectStatus,
     SocketInfoResponseStatus,
 } from '@web-auto/android-auto-proto/bluetooth.js';
+import type { BluetoothDeviceHandlerConfig } from './BluetoothDeviceHandler.js';
 
 type BluetoothMessageCallback = (message: BluetoothMessage) => void;
 
@@ -26,7 +26,7 @@ export class BluetoothDeviceWifiConnector {
     private onDataBound: (buffer: Uint8Array) => void;
 
     public constructor(
-        private config: ElectronBluetoothDeviceHandlerConfig,
+        private config: BluetoothDeviceHandlerConfig,
         private name: string,
     ) {
         this.logger = getLogger(`${this.constructor.name}@${this.name}`);

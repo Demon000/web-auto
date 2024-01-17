@@ -7,13 +7,13 @@ import {
     DeviceDisconnectReason,
 } from '@web-auto/android-auto';
 import { Device as BluezDevice } from 'bluez';
-import { type ElectronBluetoothDeviceHandlerConfig } from './BluetoothDeviceHandlerConfig.js';
 import { BluetoothDeviceWifiConnector } from './BluetoothDeviceWifiConnector.js';
 import { Server } from 'node:net';
 import { BluetoothDeviceTcpConnector } from './BluetoothDeviceTcpConnector.js';
 import { DuplexTransport } from '../DuplexTransport.js';
 import { Duplex } from 'node:stream';
 import { BluetoothProfileHandler } from './BluetoothProfileHandler.js';
+import type { BluetoothDeviceHandlerConfig } from './BluetoothDeviceHandler.js';
 
 enum BluetoothDeviceDisconnectReason {
     BLUETOOTH_PROFILE = 'bluetooth-profile-disconnected',
@@ -27,7 +27,7 @@ export class BluetoothDevice extends Device {
     private tcpConnector: BluetoothDeviceTcpConnector;
 
     public constructor(
-        private config: ElectronBluetoothDeviceHandlerConfig,
+        private config: BluetoothDeviceHandlerConfig,
         private device: BluezDevice,
         tcpServer: Server,
         name: string,
