@@ -3,9 +3,9 @@ import {
     DeviceHandler,
     type DeviceHandlerEvents,
 } from '@web-auto/android-auto';
-import { WebUSB } from 'usb';
-import { UsbDevice, usbDeviceName as name } from './UsbDevice.js';
+import { UsbDevice } from './UsbDevice.js';
 import { UsbAoapConnector } from './UsbAoapConnector.js';
+import { UsbDeviceWrapper, UsbCallbackWrapper } from './UsbDeviceWrapper.js';
 
 const GOOGLE_VENDOR_ID = 0x18d1;
 const GOOGLE_AOAP_WITHOUT_ADB_ID = 0x2d00;
@@ -19,11 +19,9 @@ export interface UsbDeviceHandlerConfig {
 }
 
 export class UsbDeviceHandler extends DeviceHandler {
-    protected usbDeviceMap = new Map<USBDevice, Device>();
+    protected usbDeviceMap = new Map<UsbDeviceWrapper, Device>();
     private usb;
     private aoapConnector: UsbAoapConnector;
-    private handleConnectedDeviceBound: (event: USBConnectionEvent) => void;
-    private handleDisconnectedDeviceBound: (event: USBConnectionEvent) => void;
 
     public constructor(
         private config: UsbDeviceHandlerConfig,
@@ -31,16 +29,14 @@ export class UsbDeviceHandler extends DeviceHandler {
     ) {
         super(events);
 
-        this.handleConnectedDeviceBound = this.handleConnectedDevice.bind(this);
-        this.handleDisconnectedDeviceBound =
-            this.handleDisconnectedDevice.bind(this);
-        this.usb = new WebUSB({
-            allowAllDevices: true,
-        });
+        this.usb = new UsbCallbackWrapper(
+            this.handleConnectedDevice.bind(this),
+            this.handleDisconnectedDevice.bind(this),
+        );
         this.aoapConnector = new UsbAoapConnector();
     }
 
-    private isDeviceAoap(device: USBDevice): boolean {
+    private isDeviceAoap(device: UsbDeviceWrapper): boolean {
         return (
             device.vendorId === GOOGLE_VENDOR_ID &&
             (device.productId === GOOGLE_AOAP_WITH_ADB_ID ||
@@ -48,8 +44,8 @@ export class UsbDeviceHandler extends DeviceHandler {
         );
     }
 
-    private handleConnectedAoapDevice(usbDevice: USBDevice): void {
-        this.logger.info(`Found device ${name(usbDevice)} with AA`);
+    private handleConnectedAoapDevice(usbDevice: UsbDeviceWrapper): void {
+        this.logger.info(`Found device ${usbDevice.name} with AA`);
 
         const device = new UsbDevice(usbDevice, this.getDeviceEvents());
         this.usbDeviceMap.set(usbDevice, device);
@@ -61,7 +57,9 @@ export class UsbDeviceHandler extends DeviceHandler {
         }
     }
 
-    private async connectUnknownDevice(device: USBDevice): Promise<void> {
+    private async connectUnknownDevice(
+        device: UsbDeviceWrapper,
+    ): Promise<void> {
         if (
             this.config !== undefined &&
             this.config.ignoredDevices !== undefined
@@ -71,7 +69,7 @@ export class UsbDeviceHandler extends DeviceHandler {
                     ignoredDevice[0] === device.vendorId &&
                     ignoredDevice[1] === device.productId
                 ) {
-                    this.logger.info(`Ignoring device ${name(device)}`);
+                    this.logger.info(`Ignoring device ${device.name}`);
                     return;
                 }
             }
@@ -80,8 +78,7 @@ export class UsbDeviceHandler extends DeviceHandler {
         await this.aoapConnector.connect(device);
     }
 
-    private handleConnectedDevice(event: USBConnectionEvent): void {
-        const device = event.device;
+    private handleConnectedDevice(device: UsbDeviceWrapper): void {
         if (this.isDeviceAoap(device)) {
             this.handleConnectedAoapDevice(device);
         } else {
@@ -94,7 +91,7 @@ export class UsbDeviceHandler extends DeviceHandler {
     }
 
     private async handleAlreadyConnectedAoapDevice(
-        device: USBDevice,
+        device: UsbDeviceWrapper,
     ): Promise<void> {
         try {
             await device.open();
@@ -102,15 +99,14 @@ export class UsbDeviceHandler extends DeviceHandler {
             await device.close();
         } catch (err) {
             this.logger.error(
-                `Failed to reset already connected device ${name(device)}`,
+                `Failed to reset already connected device ${device.name}`,
                 err,
             );
             return;
         }
     }
 
-    private handleDisconnectedDevice(event: USBConnectionEvent): void {
-        const usbDevice = event.device;
+    private handleDisconnectedDevice(usbDevice: UsbDeviceWrapper): void {
         const device = this.usbDeviceMap.get(usbDevice);
         if (device === undefined) {
             return;
@@ -128,18 +124,14 @@ export class UsbDeviceHandler extends DeviceHandler {
     public async waitForDevices(): Promise<void> {
         this.logger.info('Starting new device connection handler');
 
-        this.usb.addEventListener('connect', this.handleConnectedDeviceBound);
-        this.usb.addEventListener(
-            'disconnect',
-            this.handleDisconnectedDeviceBound,
-        );
+        this.usb.register();
 
         this.logger.info('Processing already connected devices');
 
         const aoapDevices = await this.usb.getDevices();
         for (const device of aoapDevices) {
             this.logger.info(
-                `Processing already connected device ${name(device)}`,
+                `Processing already connected device ${device.name}`,
             );
 
             if (this.isDeviceAoap(device)) {
@@ -150,7 +142,7 @@ export class UsbDeviceHandler extends DeviceHandler {
                     await this.handleAlreadyConnectedAoapDevice(device);
                 } else {
                     this.logger.info(
-                        `Ignoring ${name(device)} already in AOAP mode`,
+                        `Ignoring ${device.name} already in AOAP mode`,
                     );
                 }
             } else {
@@ -163,14 +155,7 @@ export class UsbDeviceHandler extends DeviceHandler {
 
     // eslint-disable-next-line @typescript-eslint/require-await
     public override async stopWaitingForDevices(): Promise<void> {
-        this.usb.removeEventListener(
-            'connect',
-            this.handleConnectedDeviceBound,
-        );
-        this.usb.removeEventListener(
-            'disconnect',
-            this.handleDisconnectedDeviceBound,
-        );
+        this.usb.unregister();
 
         this.logger.info('Stopped new device connection handler');
     }

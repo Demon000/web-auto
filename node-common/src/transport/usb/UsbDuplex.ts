@@ -1,43 +1,26 @@
-import assert from 'node:assert';
 import { Duplex } from 'node:stream';
+import type {
+    UsbDeviceWrapper,
+    UsbDeviceWrapperEndpointStartStopPollFunction,
+    UsbDeviceWrapperEndpointTransferOutFunction,
+} from './UsbDeviceWrapper.js';
 
 export class UsbDuplex extends Duplex {
-    private inEndpoint: USBEndpoint;
-    private outEndpoint: USBEndpoint;
+    private transferOut: UsbDeviceWrapperEndpointTransferOutFunction;
+    private startPoll: UsbDeviceWrapperEndpointStartStopPollFunction;
+    private stopPoll: UsbDeviceWrapperEndpointStartStopPollFunction;
+    private onPollDataBound: (buffer: Uint8Array) => void;
+    private onPollErrorBound: (error: Error) => void;
     private interfaceClaimed = false;
 
-    public constructor(private device: USBDevice) {
+    public constructor(private device: UsbDeviceWrapper) {
         super();
 
-        assert(device.configuration !== undefined);
+        [this.transferOut, this.startPoll, this.stopPoll] =
+            this.device.getInterfaceTransferFunctions(0);
 
-        const intf = device.configuration.interfaces[0];
-        assert(intf !== undefined);
-
-        let inEndpoint: USBEndpoint | undefined;
-        let outEndpoint: USBEndpoint | undefined;
-
-        const endpoints = intf.alternate.endpoints;
-        for (const endpoint of endpoints) {
-            if (endpoint.direction == 'in') {
-                inEndpoint = endpoint;
-            }
-
-            if (endpoint.direction == 'out') {
-                outEndpoint = endpoint;
-            }
-
-            if (inEndpoint && outEndpoint) {
-                break;
-            }
-        }
-
-        if (!inEndpoint || !outEndpoint) {
-            throw new Error('Failed to find endpoints');
-        }
-
-        this.inEndpoint = inEndpoint;
-        this.outEndpoint = outEndpoint;
+        this.onPollDataBound = this.onPollData.bind(this);
+        this.onPollErrorBound = this.onPollError.bind(this);
     }
 
     public async claimInterface(): Promise<void> {
@@ -48,8 +31,12 @@ export class UsbDuplex extends Duplex {
         this.interfaceClaimed = true;
     }
 
-    public async destroyAsync(): Promise<void> {
+    public async destroyAsync(stopPoll: boolean): Promise<void> {
         if (!this.device.opened) return;
+
+        if (stopPoll) {
+            this.stopPoll(this.onPollDataBound, this.onPollErrorBound);
+        }
 
         if (this.interfaceClaimed) {
             await this.device.releaseInterface(0);
@@ -57,10 +44,10 @@ export class UsbDuplex extends Duplex {
     }
 
     public override _destroy(
-        _err: Error | null,
+        err: Error | null,
         callback: (err: Error | null) => void,
     ): void {
-        this.destroyAsync()
+        this.destroyAsync(err === null)
             .then(() => {
                 callback(null);
             })
@@ -68,17 +55,6 @@ export class UsbDuplex extends Duplex {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 callback(err);
             });
-    }
-
-    private async writeAsync(buffer: Uint8Array): Promise<void> {
-        const result = await this.device.transferOut(
-            this.outEndpoint.endpointNumber,
-            buffer,
-        );
-
-        if (result.status !== 'ok') {
-            throw new Error('Invalid status');
-        }
     }
 
     public override _write(
@@ -86,69 +62,30 @@ export class UsbDuplex extends Duplex {
         _encoding: string,
         callback: (err: Error | null) => void,
     ): void {
-        if (!(chunk instanceof Buffer)) {
+        if (!(chunk instanceof Uint8Array)) {
             callback(new Error('Chunk is not a buffer'));
             return;
         }
 
-        let callbackCalled = false;
-        const timeout = setTimeout(() => {
-            callbackCalled = true;
-            callback(new Error('Transfer timed out'));
-        }, 5000);
-
-        this.writeAsync(chunk)
+        this.transferOut(chunk)
             .then(() => {
-                clearTimeout(timeout);
-                if (callbackCalled) return;
                 callback(null);
             })
             .catch((err) => {
-                clearTimeout(timeout);
-                if (callbackCalled) return;
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 callback(err);
             });
     }
 
-    private async readAsync(): Promise<void> {
-        let result;
-        try {
-            result = await this.device.transferIn(
-                this.inEndpoint.endpointNumber,
-                this.inEndpoint.packetSize,
-            );
-        } catch (e: any) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            this.destroy(e);
-            return;
-        }
+    private onPollError(err: Error): void {
+        this.destroy(err);
+    }
 
-        if (result.status !== 'ok') {
-            this.destroy(new Error('Invalid status'));
-            return;
-        }
-
-        if (result.data === undefined) {
-            this.destroy(new Error('Data is undefined'));
-            return;
-        }
-
-        if (result.data.byteLength === 0) {
-            void this.readAsync();
-            return;
-        }
-
-        this.push(
-            Buffer.from(
-                result.data.buffer,
-                result.data.byteOffset,
-                result.data.byteLength,
-            ),
-        );
+    private onPollData(buffer: Uint8Array): void {
+        this.push(buffer);
     }
 
     public override _read() {
-        void this.readAsync();
+        this.startPoll(this.onPollDataBound, this.onPollErrorBound);
     }
 }

@@ -7,31 +7,14 @@ import {
 } from '@web-auto/android-auto';
 import { UsbDuplex } from './UsbDuplex.js';
 import { DuplexTransport } from '../DuplexTransport.js';
-
-export const usbDeviceName = (device: USBDevice) => {
-    let name;
-
-    if (device.productName !== undefined && device.productName.length !== 0) {
-        name = device.productName;
-    } else if (
-        device.manufacturerName !== undefined &&
-        device.manufacturerName.length !== 0
-    ) {
-        name = device.manufacturerName;
-    } else {
-        const toHex = (n: number) => n.toString(16).padStart(4, '0');
-        name = `${toHex(device.vendorId)}:${toHex(device.productId)}`;
-    }
-
-    return name;
-};
+import type { UsbDeviceWrapper } from './UsbDeviceWrapper.js';
 
 export class UsbDevice extends Device {
     public constructor(
-        private device: USBDevice,
+        private device: UsbDeviceWrapper,
         events: DeviceEvents,
     ) {
-        super('USB', usbDeviceName(device), events);
+        super('USB', device.name, events);
     }
 
     public async connectImpl(events: TransportEvents): Promise<Transport> {
