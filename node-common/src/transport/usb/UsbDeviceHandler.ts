@@ -13,7 +13,7 @@ const GOOGLE_AOAP_WITH_ADB_ID = 0x2d01;
 
 type IgnoredDevice = [number, number];
 
-export interface ElectronUsbDeviceHandlerConfig {
+export interface UsbDeviceHandlerConfig {
     ignoredDevices?: IgnoredDevice[];
     handleAlreadyConnectedDevices?: boolean;
 }
@@ -26,7 +26,7 @@ export class UsbDeviceHandler extends DeviceHandler {
     private handleDisconnectedDeviceBound: (event: USBConnectionEvent) => void;
 
     public constructor(
-        private config: ElectronUsbDeviceHandlerConfig,
+        private config: UsbDeviceHandlerConfig,
         events: DeviceHandlerEvents,
     ) {
         super(events);

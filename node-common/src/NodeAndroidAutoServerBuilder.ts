@@ -34,7 +34,7 @@ import { NodeNavigationStatusService } from './services/NodeNavigationService.js
 import { NodeSensorsBuilder } from './services/NodeSensorBuilder.js';
 import { NodeVideoService } from './services/NodeVideoService.js';
 import { TcpDeviceHandler } from './transport/TcpDeviceHandler.js';
-import { UsbDeviceHandler } from './transport/UsbDeviceHandler.js';
+import { UsbDeviceHandler } from './transport/usb/UsbDeviceHandler.js';
 import { ElectronBluetoothDeviceHandler } from './transport/bluetooth/BluetoothDeviceHandler.js';
 import type {
     NodeAndroidAutoDisplayConfig,

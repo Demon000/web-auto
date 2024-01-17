@@ -2,7 +2,7 @@ import { type LoggingConfig } from '@web-auto/logging';
 import type { NodeCryptorConfig } from './crypto/NodeCryptor.js';
 import type { NodeSensorConfig } from './services/NodeSensorBuilder.js';
 import type { TcpDeviceHandlerConfig } from './transport/TcpDeviceHandler.js';
-import type { ElectronUsbDeviceHandlerConfig } from './transport/UsbDeviceHandler.js';
+import type { UsbDeviceHandlerConfig } from './transport/usb/UsbDeviceHandler.js';
 import type { ElectronBluetoothDeviceHandlerConfig } from './transport/bluetooth/BluetoothDeviceHandlerConfig.js';
 import type {
     DisplayType,
@@ -40,7 +40,7 @@ export interface NodeAndroidAutoServerConfig {
     sensorConfigs: NodeSensorConfig[];
     cryptorConfig: NodeCryptorConfig;
     tcpDeviceHandlerConfig: TcpDeviceHandlerConfig;
-    usbDeviceHandlerConfig: ElectronUsbDeviceHandlerConfig;
+    usbDeviceHandlerConfig: UsbDeviceHandlerConfig;
     bluetoothDeviceHandlerConfig?: ElectronBluetoothDeviceHandlerConfig;
 }
 

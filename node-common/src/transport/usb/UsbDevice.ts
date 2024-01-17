@@ -6,7 +6,7 @@ import {
     type TransportEvents,
 } from '@web-auto/android-auto';
 import { UsbDuplex } from './UsbDuplex.js';
-import { DuplexTransport } from './DuplexTransport.js';
+import { DuplexTransport } from '../DuplexTransport.js';
 
 export const usbDeviceName = (device: USBDevice) => {
     let name;
