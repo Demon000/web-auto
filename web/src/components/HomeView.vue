@@ -99,7 +99,7 @@ const { onVideoVisible, onVideoHidden } = useVideoFocus(decoder, true);
     display: grid;
     flex-grow: 1;
 
-    grid-auto-flow: dense;
+    grid-auto-flow: column;
 
     gap: 32px;
     width: 100%;
