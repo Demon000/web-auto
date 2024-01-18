@@ -68,6 +68,7 @@ const electronWindowBuilder = new ElectronWindowBuilder(
 );
 
 app.commandLine.appendSwitch('--enable-features', 'OverlayScrollbar');
+app.commandLine.appendSwitch('ignore-certificate-errors');
 
 app.whenReady()
     .then(async () => {
