@@ -134,7 +134,7 @@ export class UsbDeviceWrapper {
                 return;
             }
 
-            inEndpoint.startPoll();
+            inEndpoint.startPoll(3, 16384);
             inEndpoint.on('data', callback);
             inEndpoint.on('error', errorCallback);
         };
