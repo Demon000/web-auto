@@ -23,9 +23,10 @@ import {
 } from './services/ControlService.js';
 import assert from 'node:assert';
 import { type FrameData } from './messenger/FrameData.js';
-import { Message } from './messenger/Message.js';
 import { FrameHeaderFlags } from './messenger/FrameHeader.js';
 import { Mutex } from 'async-mutex';
+import { MessageCodec } from './messenger/MessageCodec.js';
+import { Message as ProtoMessage } from '@bufbuild/protobuf';
 
 export interface AndroidAutoServerBuilder {
     buildDeviceHandlers(events: DeviceHandlerEvents): DeviceHandler[];
@@ -53,6 +54,7 @@ export abstract class AndroidAutoServer {
 
     private cryptor: Cryptor;
     private frameCodec: FrameCodec;
+    private messageCodec: MessageCodec;
     private messageAggregator: MessageAggregator;
     private services: Service[];
     private controlService: ControlService;
@@ -76,11 +78,13 @@ export abstract class AndroidAutoServer {
             ANDROID_AUTO_PRIVATE_KEY,
         );
 
+        this.messageCodec = new MessageCodec();
         this.frameCodec = new FrameCodec();
         this.messageAggregator = new MessageAggregator();
 
         this.services = builder.buildServices({
-            onMessageSent: this.onSendMessage.bind(this),
+            onProtoMessageSent: this.onSendProtoMessage.bind(this),
+            onPayloadMessageSent: this.onSendPayloadMessage.bind(this),
         });
 
         const serviceDiscoveryResponse = builder.buildServiceDiscoveryResponse(
@@ -91,7 +95,8 @@ export abstract class AndroidAutoServer {
             this.cryptor,
             serviceDiscoveryResponse,
             {
-                onMessageSent: this.onSendMessage.bind(this),
+                onProtoMessageSent: this.onSendProtoMessage.bind(this),
+                onPayloadMessageSent: this.onSendPayloadMessage.bind(this),
                 onPingTimeout: this.onPingTimeout.bind(this),
             },
         );
@@ -168,14 +173,14 @@ export abstract class AndroidAutoServer {
 
     private async onSendMessage(
         serviceId: number,
-        message: Message,
+        payload: Uint8Array,
         isEncrypted: boolean,
         isControl: boolean,
     ): Promise<void> {
         if (this.connectedDevice === undefined) {
             this.logger.error('Device not connected, skip sending message', {
                 serviceId,
-                message,
+                payload,
                 isEncrypted,
                 isControl,
             });
@@ -184,7 +189,7 @@ export abstract class AndroidAutoServer {
 
         const frameDatas = this.messageAggregator.split(
             serviceId,
-            message,
+            payload,
             isEncrypted,
             isControl,
         );
@@ -192,6 +197,45 @@ export abstract class AndroidAutoServer {
         for (const frameData of frameDatas) {
             await this.onSendFrameData(frameData);
         }
+    }
+
+    private onSendPayloadMessage(
+        serviceId: number,
+        messageId: number,
+        payload: Uint8Array,
+        isEncrypted: boolean,
+        isControl: boolean,
+    ): Promise<void> {
+        const totalPayload = this.messageCodec.encodePayload(
+            messageId,
+            payload,
+        );
+
+        return this.onSendMessage(
+            serviceId,
+            totalPayload,
+            isEncrypted,
+            isControl,
+        );
+    }
+    private onSendProtoMessage(
+        serviceId: number,
+        messageId: number,
+        protoMessage: ProtoMessage,
+        isEncrypted: boolean,
+        isControl: boolean,
+    ): Promise<void> {
+        const totalPayload = this.messageCodec.encodeMessage(
+            messageId,
+            protoMessage,
+        );
+
+        return this.onSendMessage(
+            serviceId,
+            totalPayload,
+            isEncrypted,
+            isControl,
+        );
     }
 
     private onPingTimeout(): void {
@@ -215,33 +259,34 @@ export abstract class AndroidAutoServer {
 
     private async onReceiveMessage(
         serviceId: number,
-        message: Message,
+        messageId: number,
+        payload: Uint8Array,
         isControl: boolean,
     ): Promise<void> {
         const service = this.serviceIdServiceMap.get(serviceId);
         if (service === undefined) {
             this.logger.error(
-                `Unhandled message with id ${message.messageId} ` +
+                `Unhandled message with id ${messageId} ` +
                     `on service with id ${serviceId}`,
-                message,
+                payload,
             );
             return;
         }
 
         let handled;
         if (isControl) {
-            handled = await service.handleControlMessage(message);
+            handled = await service.handleControlMessage(messageId, payload);
         } else {
-            handled = await service.handleSpecificMessage(message);
+            handled = await service.handleSpecificMessage(messageId, payload);
         }
 
         if (!handled) {
             const tag = isControl ? 'control' : 'specific';
 
             this.logger.error(
-                `Unhandled ${tag} message with id ${message.messageId} ` +
+                `Unhandled ${tag} message with id ${messageId} ` +
                     `on service ${service.name()}`,
-                message.getPayload(),
+                payload,
             );
         }
     }
@@ -294,8 +339,8 @@ export abstract class AndroidAutoServer {
         }
 
         for (const frameData of frameDatas) {
-            const message = this.messageAggregator.aggregate(frameData);
-            if (message === undefined) {
+            const totalPayload = this.messageAggregator.aggregate(frameData);
+            if (totalPayload === undefined) {
                 continue;
             }
 
@@ -304,7 +349,9 @@ export abstract class AndroidAutoServer {
                 frameData.frameHeader.flags & FrameHeaderFlags.CONTROL
             );
 
-            this.onReceiveMessage(serviceId, message, isControl)
+            const [messageId, payload] =
+                this.messageCodec.decodeMessage(totalPayload);
+            this.onReceiveMessage(serviceId, messageId, payload, isControl)
                 .then(() => {})
                 .catch((err) => {
                     this.logger.error('Failed to handle received message', err);

@@ -1,4 +1,3 @@
-import { Message } from '../messenger/Message.js';
 import { AVService } from './AVService.js';
 import { microsecondsTime } from '../utils/time.js';
 import { type ServiceEvents } from './Service.js';
@@ -49,24 +48,24 @@ export abstract class AudioInputService extends AVService {
     protected async onAckIndication(_data: Ack): Promise<void> {}
 
     public override async onSpecificMessage(
-        message: Message,
+        messageId: number,
+        payload: Uint8Array,
     ): Promise<boolean> {
-        const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId as MediaMessageId) {
+        switch (messageId as MediaMessageId) {
             case MediaMessageId.MEDIA_MESSAGE_MICROPHONE_REQUEST:
-                data = MicrophoneRequest.fromBinary(bufferPayload);
+                data = MicrophoneRequest.fromBinary(payload);
                 this.printReceive(data);
                 await this.onInputOpenRequest(data);
                 break;
             case MediaMessageId.MEDIA_MESSAGE_ACK:
-                data = Ack.fromBinary(bufferPayload);
+                data = Ack.fromBinary(payload);
                 this.printReceive(data);
                 await this.onAckIndication(data);
                 break;
             default:
-                return super.onSpecificMessage(message);
+                return super.onSpecificMessage(messageId, payload);
         }
 
         return true;

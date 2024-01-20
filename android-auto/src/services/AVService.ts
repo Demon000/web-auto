@@ -4,7 +4,6 @@ import {
     MediaMessageId,
     Setup,
 } from '@web-auto/android-auto-proto';
-import { Message } from '../messenger/Message.js';
 import { Service, type ServiceEvents } from './Service.js';
 
 export abstract class AVService extends Service {
@@ -35,19 +34,19 @@ export abstract class AVService extends Service {
     }
 
     public override async onSpecificMessage(
-        message: Message,
+        messageId: number,
+        payload: Uint8Array,
     ): Promise<boolean> {
-        const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId as MediaMessageId) {
+        switch (messageId as MediaMessageId) {
             case MediaMessageId.MEDIA_MESSAGE_SETUP:
-                data = Setup.fromBinary(bufferPayload);
+                data = Setup.fromBinary(payload);
                 this.printReceive(data);
                 await this.onSetupRequest(data);
                 break;
             default:
-                return super.onSpecificMessage(message);
+                return super.onSpecificMessage(messageId, payload);
         }
 
         return true;

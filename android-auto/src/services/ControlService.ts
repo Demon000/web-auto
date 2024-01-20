@@ -19,8 +19,6 @@ import {
     BatteryStatusNotification,
 } from '@web-auto/android-auto-proto';
 
-import { Message } from '../messenger/Message.js';
-
 import { Service, type ServiceEvents } from './Service.js';
 import { Pinger } from './Pinger.js';
 import assert from 'node:assert';
@@ -88,45 +86,44 @@ export class ControlService extends Service {
     ): Promise<void> {}
 
     protected override async onSpecificMessage(
-        message: Message,
+        messageId: number,
+        payload: Uint8Array,
     ): Promise<boolean> {
-        const bufferPayload = message.getBufferPayload();
-        const messageId = message.messageId as ControlMessageType;
         let data;
 
-        switch (messageId) {
+        switch (messageId as ControlMessageType) {
             case ControlMessageType.MESSAGE_PING_REQUEST:
-                data = PingRequest.fromBinary(bufferPayload);
+                data = PingRequest.fromBinary(payload);
                 this.printReceive(data);
                 await this.onPingRequest(data);
                 break;
             case ControlMessageType.MESSAGE_PING_RESPONSE:
-                data = PingResponse.fromBinary(bufferPayload);
+                data = PingResponse.fromBinary(payload);
                 this.printReceive(data);
                 this.pinger.onPingResponse(data);
                 break;
             case ControlMessageType.MESSAGE_AUDIO_FOCUS_REQUEST:
-                data = AudioFocusRequestNotification.fromBinary(bufferPayload);
+                data = AudioFocusRequestNotification.fromBinary(payload);
                 this.printReceive(data);
                 await this.onAudioFocusRequest(data);
                 break;
             case ControlMessageType.MESSAGE_NAV_FOCUS_REQUEST:
-                data = NavFocusRequestNotification.fromBinary(bufferPayload);
+                data = NavFocusRequestNotification.fromBinary(payload);
                 this.printReceive(data);
                 await this.onNavigationFocusRequest(data);
                 break;
             case ControlMessageType.MESSAGE_VOICE_SESSION_NOTIFICATION:
-                data = VoiceSessionNotification.fromBinary(bufferPayload);
+                data = VoiceSessionNotification.fromBinary(payload);
                 this.printReceive(data);
                 await this.onVoiceSessionNotification(data);
                 break;
             case ControlMessageType.MESSAGE_BATTERY_STATUS_NOTIFICATION:
-                data = BatteryStatusNotification.fromBinary(bufferPayload);
+                data = BatteryStatusNotification.fromBinary(payload);
                 this.printReceive(data);
                 await this.onBatteryStatusNotification(data);
                 break;
             default:
-                return super.onSpecificMessage(message);
+                return super.onSpecificMessage(messageId, payload);
         }
 
         return true;
@@ -230,11 +227,11 @@ export class ControlService extends Service {
 
     private async doVersionQuery(signal: AbortSignal): Promise<void> {
         await this.sendVersionRequest();
-        const message = await this.waitForSpecificMessage(
+        const payload = await this.waitForSpecificMessage(
             ControlMessageType.MESSAGE_VERSION_RESPONSE,
             signal,
         );
-        const payload = message.getPayload();
+
         const reader = BufferReader.fromBuffer(payload);
         const majorCode = reader.readUint16BE();
         const mainorCode = reader.readUint16BE();
@@ -255,11 +252,10 @@ export class ControlService extends Service {
             const sentPayload = await this.cryptor.readHandshakeBuffer();
             await this.sendHandshake(sentPayload);
 
-            const message = await this.waitForSpecificMessage(
+            const receivedPayload = await this.waitForSpecificMessage(
                 ControlMessageType.MESSAGE_ENCAPSULATED_SSL,
                 signal,
             );
-            const receivedPayload = message.getPayload();
             await this.cryptor.writeHandshakeBuffer(receivedPayload);
         }
 
@@ -269,13 +265,12 @@ export class ControlService extends Service {
     }
 
     private async doServiceDiscovery(signal: AbortSignal): Promise<void> {
-        const message = await this.waitForSpecificMessage(
+        const payload = await this.waitForSpecificMessage(
             ControlMessageType.MESSAGE_SERVICE_DISCOVERY_REQUEST,
             signal,
         );
-        const bufferPayload = message.getBufferPayload();
 
-        const request = ServiceDiscoveryRequest.fromBinary(bufferPayload);
+        const request = ServiceDiscoveryRequest.fromBinary(payload);
         this.printReceive(request);
 
         this.logger.info(

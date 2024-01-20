@@ -6,21 +6,28 @@ import {
     Service as ProtoService,
     ServiceDiscoveryResponse,
 } from '@web-auto/android-auto-proto';
-import { Message } from '../messenger/Message.js';
 import { getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
 import { Message as ProtoMessage } from '@bufbuild/protobuf';
 
 export interface ServiceEvents {
-    onMessageSent: (
+    onProtoMessageSent: (
         serviceId: number,
-        message: Message,
+        messageId: number,
+        protoMessage: ProtoMessage,
+        isEncrypted: boolean,
+        isControl: boolean,
+    ) => Promise<void>;
+    onPayloadMessageSent: (
+        serviceId: number,
+        messageId: number,
+        payload: Uint8Array,
         isEncrypted: boolean,
         isControl: boolean,
     ) => Promise<void>;
 }
 
-type ServiceMessageCallback = (message: Message) => void;
+type ServiceMessageCallback = (messageId: number, payload: Uint8Array) => void;
 
 export abstract class Service {
     public static nextServiceId = 1;
@@ -118,13 +125,15 @@ export abstract class Service {
         this.logger.debug(`Send ${extra}`, message);
     }
 
-    protected async onControlMessage(message: Message): Promise<boolean> {
-        const bufferPayload = message.getBufferPayload();
+    protected async onControlMessage(
+        messageId: number,
+        payload: Uint8Array,
+    ): Promise<boolean> {
         let data;
 
-        switch (message.messageId as ControlMessageType) {
+        switch (messageId as ControlMessageType) {
             case ControlMessageType.MESSAGE_CHANNEL_OPEN_REQUEST:
-                data = ChannelOpenRequest.fromBinary(bufferPayload);
+                data = ChannelOpenRequest.fromBinary(payload);
                 this.printReceive(data);
                 await this.onChannelOpenRequest(data);
                 break;
@@ -135,21 +144,30 @@ export abstract class Service {
         return true;
     }
 
-    public async handleControlMessage(message: Message): Promise<boolean> {
-        return this.onControlMessage(message);
+    public async handleControlMessage(
+        messageId: number,
+        payload: Uint8Array,
+    ): Promise<boolean> {
+        return this.onControlMessage(messageId, payload);
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    protected async onSpecificMessage(_message: Message): Promise<boolean> {
+    protected async onSpecificMessage(
+        _messageId: number,
+        _payload: Uint8Array,
+    ): Promise<boolean> {
         return false;
     }
 
-    public async handleSpecificMessage(message: Message): Promise<boolean> {
-        const callback = this.specificMessageCallbacks.get(message.messageId);
+    public async handleSpecificMessage(
+        messageId: number,
+        payload: Uint8Array,
+    ): Promise<boolean> {
+        const callback = this.specificMessageCallbacks.get(messageId);
         if (callback === undefined) {
-            return this.onSpecificMessage(message);
+            return this.onSpecificMessage(messageId, payload);
         } else {
-            callback(message);
+            callback(messageId, payload);
             return true;
         }
     }
@@ -157,7 +175,7 @@ export abstract class Service {
     protected waitForSpecificMessage(
         messageId: number,
         signal: AbortSignal,
-    ): Promise<Message> {
+    ): Promise<Uint8Array> {
         return new Promise((resolve, reject) => {
             assert(!this.specificMessageCallbacks.has(messageId));
 
@@ -169,13 +187,13 @@ export abstract class Service {
                 reject(new Error('Aborted'));
             };
 
-            const onMessage = (message: Message) => {
+            const onMessage = (messageId: number, payload: Uint8Array) => {
                 this.logger.info(
                     `Received waited message with id ${messageId}`,
                 );
                 this.specificMessageCallbacks.delete(messageId);
                 signal.removeEventListener('abort', onAbort);
-                resolve(message);
+                resolve(payload);
             };
 
             signal.addEventListener('abort', onAbort);
@@ -208,15 +226,11 @@ export abstract class Service {
     ): Promise<void> {
         this.printSend(printMessage);
 
-        const message = new Message({
-            messageId,
-            dataPayload,
-        });
-
         try {
-            await this.events.onMessageSent(
+            await this.events.onPayloadMessageSent(
                 this.serviceId,
-                message,
+                messageId,
+                dataPayload,
                 isEncrypted,
                 isControl,
             );
@@ -232,15 +246,20 @@ export abstract class Service {
         isEncrypted: boolean,
         isControl: boolean,
     ): Promise<void> {
-        const dataPayload = protoMessage.toBinary();
+        this.printSend(protoMessage);
 
-        return this.sendPayloadWithId(
-            messageId,
-            dataPayload,
-            protoMessage,
-            isEncrypted,
-            isControl,
-        );
+        try {
+            await this.events.onProtoMessageSent(
+                this.serviceId,
+                messageId,
+                protoMessage,
+                isEncrypted,
+                isControl,
+            );
+        } catch (err) {
+            this.logger.error('Failed to emit message sent event', err);
+            throw err;
+        }
     }
 
     protected async sendPlainSpecificMessage(

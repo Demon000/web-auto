@@ -8,8 +8,6 @@ import {
     VideoFocusRequestNotification,
 } from '@web-auto/android-auto-proto';
 
-import { Message } from '../messenger/Message.js';
-
 import { AVOutputService } from './AVOutputService.js';
 import type { IVideoConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
 import type { ServiceEvents } from './Service.js';
@@ -34,19 +32,19 @@ export abstract class VideoService extends AVOutputService {
     }
 
     public override async onSpecificMessage(
-        message: Message,
+        messageId: number,
+        payload: Uint8Array,
     ): Promise<boolean> {
-        const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId as MediaMessageId) {
+        switch (messageId as MediaMessageId) {
             case MediaMessageId.MEDIA_MESSAGE_VIDEO_FOCUS_REQUEST:
-                data = VideoFocusRequestNotification.fromBinary(bufferPayload);
+                data = VideoFocusRequestNotification.fromBinary(payload);
                 this.printReceive(data);
                 await this.onVideoFocusRequest(data);
                 break;
             default:
-                return await super.onSpecificMessage(message);
+                return await super.onSpecificMessage(messageId, payload);
         }
 
         return true;

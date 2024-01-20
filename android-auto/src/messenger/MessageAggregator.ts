@@ -1,17 +1,12 @@
 import { type FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
 import { getLogger } from '@web-auto/logging';
-import { Message } from './Message.js';
 import assert from 'node:assert';
 import { type FrameData } from './FrameData.js';
-import { BufferWriter } from '../utils/buffer.js';
+import { BufferReader, BufferWriter } from '../utils/buffer.js';
 
 interface AggregatorData {
     frameHeader: FrameHeader;
-    writer: BufferWriter;
-}
-
-interface SplitMessageContext {
-    remainingSize: number;
+    payloads: Uint8Array[];
 }
 
 const MAX_FRAME_PAYLOAD_SIZE = 0x4000;
@@ -20,8 +15,9 @@ export class MessageAggregator {
     private logger = getLogger(this.constructor.name);
     private serviceIdAggregatorMap = new Map<number, AggregatorData>();
 
-    public aggregate(frameData: FrameData): Message | undefined {
+    public aggregate(frameData: FrameData): Uint8Array | undefined {
         this.logger.debug('Aggregate frame data', frameData);
+
         const frameHeader = frameData.frameHeader;
         const payload = frameData.payload;
         const totalSize = frameData.totalSize;
@@ -30,20 +26,14 @@ export class MessageAggregator {
             frameHeader.flags & FrameHeaderFlags.FIRST &&
             frameHeader.flags & FrameHeaderFlags.LAST
         ) {
-            const message = new Message({
-                rawPayload: payload,
-            });
-            this.logger.debug('Atomic message', message);
-            return message;
+            this.logger.debug('Atomic message', payload);
+            return payload;
         } else if (frameHeader.flags & FrameHeaderFlags.FIRST) {
             assert(!this.serviceIdAggregatorMap.has(frameHeader.serviceId));
 
-            const writer = BufferWriter.fromSize(payload.byteLength);
-            writer.appendBuffer(payload);
-
             const data = {
                 frameHeader,
-                writer,
+                payloads: [payload],
             };
 
             this.logger.debug('Creating new aggregated data', data);
@@ -53,28 +43,28 @@ export class MessageAggregator {
             const data = this.serviceIdAggregatorMap.get(frameHeader.serviceId);
             assert(data !== undefined);
 
-            data.writer.appendBuffer(payload);
+            data.payloads.push(payload);
             this.logger.debug('Adding frame data to aggregated data', {
                 frameData,
                 aggregatedData: data,
             });
 
             if (frameHeader.flags & FrameHeaderFlags.LAST) {
-                if (totalSize !== 0 && totalSize !== payload.byteLength) {
+                const totalPayload = BufferWriter.concatMultiple(data.payloads);
+
+                if (totalSize !== 0 && totalSize !== totalPayload.byteLength) {
                     this.logger.error(
                         `Received compound message for service ${frameHeader.serviceId} ` +
-                            `but size ${data.writer.data.byteLength} does not ` +
+                            `but size ${totalPayload.byteLength} does not ` +
                             `match total size ${totalSize}`,
                     );
                 }
 
                 this.serviceIdAggregatorMap.delete(frameHeader.serviceId);
 
-                const message = new Message({
-                    rawPayload: data.writer.data,
-                });
-                this.logger.debug('Aggregated message', message);
-                return message;
+                this.logger.debug('Aggregated message', totalPayload);
+
+                return totalPayload;
             }
         }
 
@@ -83,17 +73,16 @@ export class MessageAggregator {
 
     private splitOne(
         serviceId: number,
-        message: Message,
+        reader: BufferReader,
         isEncrypted: boolean,
         isControl: boolean,
-        context: SplitMessageContext,
     ): FrameData {
-        const offset = message.payload.byteLength - context.remainingSize;
-        let size = context.remainingSize;
+        const offset = reader.getReadOffset();
+        let size = reader.readBufferSize();
         if (size > MAX_FRAME_PAYLOAD_SIZE) {
             size = MAX_FRAME_PAYLOAD_SIZE;
         }
-        context.remainingSize -= size;
+        const payload = reader.readBuffer(size);
 
         let flags = FrameHeaderFlags.NONE;
         if (isEncrypted) {
@@ -105,11 +94,9 @@ export class MessageAggregator {
         if (offset === 0) {
             flags |= FrameHeaderFlags.FIRST;
         }
-        if (context.remainingSize === 0) {
+        if (reader.readBufferSize() === 0) {
             flags |= FrameHeaderFlags.LAST;
         }
-
-        const payload = message.getRawPayload().subarray(offset, offset + size);
 
         const frameHeader = {
             serviceId,
@@ -122,7 +109,7 @@ export class MessageAggregator {
             flags & FrameHeaderFlags.FIRST &&
             !(flags & FrameHeaderFlags.LAST)
         ) {
-            totalSize = message.getRawPayload().byteLength;
+            totalSize = reader.totalBufferSize();
         }
 
         return {
@@ -134,25 +121,23 @@ export class MessageAggregator {
 
     public split(
         serviceId: number,
-        message: Message,
+        totalPayload: Uint8Array,
         isEncrypted: boolean,
         isControl: boolean,
     ): FrameData[] {
         this.logger.debug('Split message', {
-            message,
+            totalPayload,
         });
-        const context = {
-            remainingSize: message.payload.byteLength,
-        };
+
+        const reader = BufferReader.fromBuffer(totalPayload);
         const frameDatas: FrameData[] = [];
 
-        while (context.remainingSize !== 0) {
+        while (reader.readBufferSize() !== 0) {
             const frameData = this.splitOne(
                 serviceId,
-                message,
+                reader,
                 isEncrypted,
                 isControl,
-                context,
             );
             this.logger.debug('Split frame', frameData);
             frameDatas.push(frameData);

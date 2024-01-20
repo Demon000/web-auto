@@ -20,6 +20,18 @@ export class BufferWriter {
         return writer.data;
     }
 
+    public static concatMultiple(arrs: Uint8Array[]): Uint8Array {
+        let size = 0;
+        for (const arr of arrs) {
+            size += arr.byteLength;
+        }
+        const writer = this.fromSize(size);
+        for (const arr of arrs) {
+            writer.appendBuffer(arr);
+        }
+        return writer.data;
+    }
+
     public static fromSize(size: number): BufferWriter {
         return new BufferWriter(size);
     }

@@ -6,7 +6,6 @@ import {
     NavigationStatus,
     NavigationStatusMessageId,
 } from '@web-auto/android-auto-proto';
-import { Message } from '../messenger/Message.js';
 
 import { Service, type ServiceEvents } from './Service.js';
 
@@ -54,40 +53,39 @@ export abstract class NavigationStatusService extends Service {
     }
 
     public override async onSpecificMessage(
-        message: Message,
+        messageId: number,
+        payload: Uint8Array,
     ): Promise<boolean> {
-        const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId as NavigationStatusMessageId) {
+        switch (messageId as NavigationStatusMessageId) {
             case NavigationStatusMessageId.INSTRUMENT_CLUSTER_NAVIGATION_STATUS:
-                data = NavigationStatus.fromBinary(bufferPayload);
+                data = NavigationStatus.fromBinary(payload);
                 this.printReceive(data);
                 await this.onStatus(data);
                 break;
             case NavigationStatusMessageId.INSTRUMENT_CLUSTER_NAVIGATION_DISTANCE_EVENT:
-                data =
-                    NavigationNextTurnDistanceEvent.fromBinary(bufferPayload);
+                data = NavigationNextTurnDistanceEvent.fromBinary(payload);
                 this.printReceive(data);
                 await this.onDistance(data);
                 break;
             case NavigationStatusMessageId.INSTRUMENT_CLUSTER_NAVIGATION_TURN_EVENT:
-                data = NavigationNextTurnEvent.fromBinary(bufferPayload);
+                data = NavigationNextTurnEvent.fromBinary(payload);
                 this.printReceive(data);
                 await this.onTurn(data);
                 break;
             case NavigationStatusMessageId.INSTRUMENT_CLUSTER_NAVIGATION_STATE:
-                data = NavigationState.fromBinary(bufferPayload);
+                data = NavigationState.fromBinary(payload);
                 this.printReceive(data);
                 await this.onState(data);
                 break;
             case NavigationStatusMessageId.INSTRUMENT_CLUSTER_NAVIGATION_CURRENT_POSITION:
-                data = NavigationCurrentPosition.fromBinary(bufferPayload);
+                data = NavigationCurrentPosition.fromBinary(payload);
                 this.printReceive(data);
                 await this.onCurrentPosition(data);
                 break;
             default:
-                return super.onSpecificMessage(message);
+                return super.onSpecificMessage(messageId, payload);
         }
 
         return true;

@@ -1,5 +1,3 @@
-import { Message } from '../messenger/Message.js';
-
 import { Service, type ServiceEvents } from './Service.js';
 import { microsecondsTime } from '../utils/time.js';
 import {
@@ -36,19 +34,19 @@ export abstract class InputService extends Service {
     }
 
     public override async onSpecificMessage(
-        message: Message,
+        messageId: number,
+        payload: Uint8Array,
     ): Promise<boolean> {
-        const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId as InputMessageId) {
+        switch (messageId as InputMessageId) {
             case InputMessageId.INPUT_MESSAGE_KEY_BINDING_REQUEST:
-                data = KeyBindingRequest.fromBinary(bufferPayload);
+                data = KeyBindingRequest.fromBinary(payload);
                 this.printReceive(data);
                 await this.onBindingRequest(data);
                 break;
             default:
-                return super.onSpecificMessage(message);
+                return super.onSpecificMessage(messageId, payload);
         }
 
         return true;

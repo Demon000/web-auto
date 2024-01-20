@@ -1,5 +1,4 @@
 import { BufferReader } from '../utils/buffer.js';
-import { Message } from '../messenger/Message.js';
 import { AVService } from './AVService.js';
 import { type ServiceEvents } from './Service.js';
 import { Ack, MediaMessageId, Start, Stop } from '@web-auto/android-auto-proto';
@@ -79,13 +78,12 @@ export abstract class AVOutputService extends AVService {
     }
 
     public override async onSpecificMessage(
-        message: Message,
+        messageId: number,
+        payload: Uint8Array,
     ): Promise<boolean> {
-        const bufferPayload = message.getBufferPayload();
-        const payload = message.getPayload();
         let data;
 
-        switch (message.messageId as MediaMessageId) {
+        switch (messageId as MediaMessageId) {
             case MediaMessageId.MEDIA_MESSAGE_DATA:
                 this.printReceive('data');
                 await this.onAvMediaWithTimestampIndication(payload);
@@ -95,17 +93,17 @@ export abstract class AVOutputService extends AVService {
                 await this.onAvMediaIndication(payload);
                 break;
             case MediaMessageId.MEDIA_MESSAGE_START:
-                data = Start.fromBinary(bufferPayload);
+                data = Start.fromBinary(payload);
                 this.printReceive(data);
                 this.onStartIndication(data);
                 break;
             case MediaMessageId.MEDIA_MESSAGE_STOP:
-                data = Stop.fromBinary(bufferPayload);
+                data = Stop.fromBinary(payload);
                 this.printReceive(data);
                 this.onStopIndication(data);
                 break;
             default:
-                return super.onSpecificMessage(message);
+                return super.onSpecificMessage(messageId, payload);
         }
 
         return true;

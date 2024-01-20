@@ -50,6 +50,10 @@ export class BufferReader {
         return this.data.byteLength - this.cursor;
     }
 
+    public totalBufferSize(): number {
+        return this.data.byteLength;
+    }
+
     public readBuffer(size?: number): Uint8Array {
         if (size === undefined) {
             size = this.readBufferSize();

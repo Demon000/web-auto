@@ -10,7 +10,6 @@ import {
     SensorSourceService,
 } from '@web-auto/android-auto-proto';
 
-import { Message } from '../messenger/Message.js';
 import { Sensor, type SensorEvents } from '../sensors/Sensor.js';
 import { Service, type ServiceEvents } from './Service.js';
 import assert from 'node:assert';
@@ -68,19 +67,19 @@ export class SensorService extends Service {
     }
 
     public override async onSpecificMessage(
-        message: Message,
+        messageId: number,
+        payload: Uint8Array,
     ): Promise<boolean> {
-        const bufferPayload = message.getBufferPayload();
         let data;
 
-        switch (message.messageId as SensorMessageId) {
+        switch (messageId as SensorMessageId) {
             case SensorMessageId.SENSOR_MESSAGE_REQUEST:
-                data = SensorRequest.fromBinary(bufferPayload);
+                data = SensorRequest.fromBinary(payload);
                 this.printReceive(data);
                 await this.onSensorStartRequest(data);
                 break;
             default:
-                return super.onSpecificMessage(message);
+                return super.onSpecificMessage(messageId, payload);
         }
 
         return true;
