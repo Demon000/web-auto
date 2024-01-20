@@ -59,13 +59,19 @@ export class BufferReader {
             size = this.readBufferSize();
         }
 
+        if (this.cursor === 0 && size === this.totalBufferSize()) {
+            this.cursor = this.totalBufferSize();
+            return this.data;
+        }
+
         const end = this.cursor + size;
-        if (end > this.data.byteLength) {
+        if (end > this.totalBufferSize()) {
             throw new Error(
                 `Buffer read out of bounds, start: ${this.cursor}, ` +
-                    `end: ${end}, length: ${this.data.byteLength}`,
+                    `end: ${end}, length: ${this.totalBufferSize()}`,
             );
         }
+
         const buffer = this.data.subarray(this.cursor, end);
         this.cursor += buffer.byteLength;
         return buffer;
