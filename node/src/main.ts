@@ -10,8 +10,7 @@ import {
 } from '@web-auto/node-common';
 import { ANDROID_AUTO_IPC_REGISTRY_NAME } from '@web-auto/android-auto-ipc';
 import { SocketIpcServiceRegistry } from '@web-auto/socket-ipc/main.js';
-import { createServer } from 'node:https';
-import { readFileSync } from 'node:fs';
+import { SSLApp } from 'uWebSockets.js';
 
 type NodeAndroidAutoConfig = {
     nodeAndroidAuto: {
@@ -43,9 +42,9 @@ logger.info('Electron config', config);
 let androidAutoServer: NodeAndroidAutoServer | undefined;
 let androidAutoIpcServiceRegistry: SocketIpcServiceRegistry | undefined;
 
-const server = createServer({
-    cert: readFileSync('../cert.crt'),
-    key: readFileSync('../cert.key'),
+const server = SSLApp({
+    cert_file_name: '../cert.crt',
+    key_file_name: '../cert.key',
 });
 
 if (config.androidAuto !== undefined) {
@@ -74,4 +73,8 @@ if (config.androidAuto !== undefined) {
 const port = config.nodeAndroidAuto.webSocketServer.port;
 const host = config.nodeAndroidAuto.webSocketServer.host;
 
-server.listen(port, host);
+server.listen(host, port, (listenSocket) => {
+    if (listenSocket === false) {
+        throw new Error('Failed to listen to socket');
+    }
+});

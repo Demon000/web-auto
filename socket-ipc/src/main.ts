@@ -4,55 +4,23 @@ import {
     GenericIpcServiceRegistry,
     type SocketMessageCallback,
 } from '@web-auto/common-ipc/main.js';
-import { IncomingMessage, Server } from 'node:http';
-import type { Duplex } from 'node:stream';
-import {
-    WebSocket,
-    WebSocketServer,
-    type MessageEvent,
-    type CloseEvent,
-} from 'ws';
 import { MessagePackIpcSerializer } from './common.js';
+import { type TemplatedApp, type WebSocket } from 'uWebSockets.js';
+import assert from 'node:assert';
+
+type UserData = Record<string, never>;
 
 class SocketServiceIpcSocket extends BaseIpcSocket {
-    private onDataInternalBound: (event: MessageEvent) => void;
-    private onCloseInternalBound: (_event: CloseEvent) => void;
-
-    public constructor(private socket: WebSocket) {
+    public constructor(private socket: WebSocket<UserData>) {
         super();
-
-        this.onDataInternalBound = this.onDataInternal.bind(this);
-        this.onCloseInternalBound = this.onCloseInternal.bind(this);
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    public async open(): Promise<void> {
-        this.socket.addEventListener('message', this.onDataInternalBound);
-        this.socket.addEventListener('close', this.onCloseInternalBound);
-    }
+    public async open(): Promise<void> {}
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async close(): Promise<void> {
-        this.socket.removeEventListener('message', this.onDataInternalBound);
-        this.socket.removeEventListener('close', this.onCloseInternalBound);
-
-        return new Promise((resolve) => {
-            const onClose = () => {
-                this.socket.removeEventListener('close', onClose);
-                resolve();
-            };
-
-            this.socket.addEventListener('close', onClose);
-
-            this.socket.close();
-        });
-    }
-
-    public onDataInternal(event: MessageEvent): void {
-        this.callOnData(event.data);
-    }
-
-    public onCloseInternal(_event: CloseEvent): void {
-        this.callOnClose();
+        this.socket.close();
     }
 
     public send(data: any): void {
@@ -61,65 +29,65 @@ class SocketServiceIpcSocket extends BaseIpcSocket {
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        this.socket.send(data);
+        this.socket.send(data, true);
     }
 }
 
 export class SocketIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistrySocketHandler {
-    private wss: WebSocketServer;
-    private onServerUpgradeBound: (
-        req: InstanceType<typeof IncomingMessage>,
-        socket: Duplex,
-        head: Buffer,
+    private socketMap = new Map<WebSocket<UserData>, SocketServiceIpcSocket>();
+    private onConnectionOpenBound: (webSocket: WebSocket<UserData>) => void;
+    private onConnectionCloseBound: (webSocket: WebSocket<UserData>) => void;
+    private onMessageBound: (
+        webSocket: WebSocket<UserData>,
+        message: ArrayBuffer,
     ) => void;
-    private onConnectionBound: (webSocket: WebSocket) => void;
 
-    public constructor(
-        name: string,
-        private server: Server,
-    ) {
+    public constructor(name: string, server: TemplatedApp) {
         super(name);
 
-        this.onServerUpgradeBound = this.onServerUpgrade.bind(this);
-        this.onConnectionBound = this.onConnection.bind(this);
+        this.onConnectionOpenBound = this.onConnectionOpen.bind(this);
+        this.onConnectionCloseBound = this.onConnectionClose.bind(this);
+        this.onMessageBound = this.onMessage.bind(this);
 
-        this.wss = new WebSocketServer({ noServer: true });
+        server.ws(`/${name}`, {
+            open: this.onConnectionOpenBound,
+            message: this.onMessageBound,
+            close: this.onConnectionCloseBound,
+        });
     }
 
     public override register(callback: SocketMessageCallback) {
         super.register(callback);
-
-        this.wss.on('connection', this.onConnectionBound);
-        this.server.prependListener('upgrade', this.onServerUpgradeBound);
     }
 
     public override unregister() {
         super.unregister();
-
-        this.server.removeListener('upgrade', this.onServerUpgradeBound);
-        this.wss.off('connection', this.onConnectionBound);
     }
 
-    private onServerUpgrade(
-        req: InstanceType<typeof IncomingMessage>,
-        socket: Duplex,
-        head: Buffer,
-    ) {
-        if (req.url === `/${this.name}`) {
-            this.wss.handleUpgrade(req, socket, head, (ws) => {
-                this.wss.emit('connection', ws, req);
-            });
-        }
-    }
-
-    private onConnection(webSocket: WebSocket): void {
+    private onConnectionOpen(webSocket: WebSocket<UserData>): void {
         const socket = new SocketServiceIpcSocket(webSocket);
+        this.socketMap.set(webSocket, socket);
         this.addSocket(socket);
+    }
+
+    private onMessage(
+        webSocket: WebSocket<UserData>,
+        buffer: ArrayBuffer,
+    ): void {
+        const socket = this.socketMap.get(webSocket);
+        assert(socket !== undefined);
+        socket.callOnData(new Uint8Array(buffer));
+    }
+
+    private onConnectionClose(webSocket: WebSocket<UserData>): void {
+        const socket = this.socketMap.get(webSocket);
+        assert(socket !== undefined);
+        socket.callOnClose();
     }
 }
 
 export class SocketIpcServiceRegistry extends GenericIpcServiceRegistry {
-    public constructor(name: string, server: Server) {
+    public constructor(name: string, server: TemplatedApp) {
         const socketHandler = new SocketIpcServiceRegistrySocketHandler(
             name,
             server,
