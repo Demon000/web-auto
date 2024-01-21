@@ -33,7 +33,7 @@ import { NodeMediaStatusService } from './services/NodeMediaStatusService.js';
 import { NodeNavigationStatusService } from './services/NodeNavigationService.js';
 import { NodeSensorsBuilder } from './services/NodeSensorBuilder.js';
 import { NodeVideoService } from './services/NodeVideoService.js';
-import { TcpDeviceHandler } from './transport/TcpDeviceHandler.js';
+import { TcpDeviceHandler } from './transport/tcp/TcpDeviceHandler.js';
 import { UsbDeviceHandler } from './transport/usb/UsbDeviceHandler.js';
 import { BluetoothDeviceHandler } from './transport/bluetooth/BluetoothDeviceHandler.js';
 import type {

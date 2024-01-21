@@ -1,7 +1,7 @@
 import { type LoggingConfig } from '@web-auto/logging';
 import type { NodeCryptorConfig } from './crypto/NodeCryptor.js';
 import type { NodeSensorConfig } from './services/NodeSensorBuilder.js';
-import type { TcpDeviceHandlerConfig } from './transport/TcpDeviceHandler.js';
+import type { TcpDeviceHandlerConfig } from './transport/tcp/TcpDeviceHandler.js';
 import type { UsbDeviceHandlerConfig } from './transport/usb/UsbDeviceHandler.js';
 import type {
     DisplayType,

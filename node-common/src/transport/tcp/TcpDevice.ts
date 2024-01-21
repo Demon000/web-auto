@@ -4,7 +4,7 @@ import {
     Transport,
     type TransportEvents,
 } from '@web-auto/android-auto';
-import { DuplexTransport } from './DuplexTransport.js';
+import { DuplexTransport } from '../DuplexTransport.js';
 import { Socket } from 'node:net';
 import { TCP_SERVER_PORT } from './tcp.js';
 
