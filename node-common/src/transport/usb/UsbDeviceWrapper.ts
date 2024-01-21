@@ -63,6 +63,8 @@ export class UsbDeviceWrapper {
 
     public reset(): Promise<void> {
         return new Promise((resolve, reject) => {
+            this.opened = false;
+
             this.device.reset((error) => {
                 if (error !== undefined) {
                     return reject(error);
