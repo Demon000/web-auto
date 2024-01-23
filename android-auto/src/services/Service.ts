@@ -217,7 +217,7 @@ export abstract class Service {
         );
     }
 
-    protected async sendPayloadWithId(
+    protected sendPayloadWithId(
         messageId: number,
         dataPayload: Uint8Array,
         printMessage: any,
@@ -226,21 +226,16 @@ export abstract class Service {
     ): Promise<void> {
         this.printSend(printMessage);
 
-        try {
-            await this.events.onPayloadMessageSent(
-                this.serviceId,
-                messageId,
-                dataPayload,
-                isEncrypted,
-                isControl,
-            );
-        } catch (err) {
-            this.logger.error('Failed to emit message sent event', err);
-            throw err;
-        }
+        return this.events.onPayloadMessageSent(
+            this.serviceId,
+            messageId,
+            dataPayload,
+            isEncrypted,
+            isControl,
+        );
     }
 
-    protected async sendMessageWithId(
+    protected sendMessageWithId(
         messageId: number,
         protoMessage: ProtoMessage,
         isEncrypted: boolean,
@@ -248,35 +243,30 @@ export abstract class Service {
     ): Promise<void> {
         this.printSend(protoMessage);
 
-        try {
-            await this.events.onProtoMessageSent(
-                this.serviceId,
-                messageId,
-                protoMessage,
-                isEncrypted,
-                isControl,
-            );
-        } catch (err) {
-            this.logger.error('Failed to emit message sent event', err);
-            throw err;
-        }
+        return this.events.onProtoMessageSent(
+            this.serviceId,
+            messageId,
+            protoMessage,
+            isEncrypted,
+            isControl,
+        );
     }
 
-    protected async sendPlainSpecificMessage(
+    protected sendPlainSpecificMessage(
         messageId: number,
         message: ProtoMessage,
     ): Promise<void> {
         return this.sendMessageWithId(messageId, message, false, false);
     }
 
-    protected async sendEncryptedSpecificMessage(
+    protected sendEncryptedSpecificMessage(
         messageId: number,
         message: ProtoMessage,
     ): Promise<void> {
         return this.sendMessageWithId(messageId, message, true, false);
     }
 
-    protected async sendEncryptedControlMessage(
+    protected sendEncryptedControlMessage(
         messageId: number,
         message: ProtoMessage,
     ): Promise<void> {
