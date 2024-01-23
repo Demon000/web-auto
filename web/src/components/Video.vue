@@ -4,7 +4,6 @@ import { transformFittedPoint } from 'object-fit-math';
 import type { FitMode } from 'object-fit-math/dist/types.d.ts';
 import { PointerAction } from '@web-auto/android-auto-proto';
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
-import { useDebounceFn } from '@vueuse/core';
 
 const emit = defineEmits<{
     (e: 'video-visible', offscreenCanvas: OffscreenCanvas): void;
@@ -163,7 +162,7 @@ const onPointerDown = (event: PointerEvent) => {
 
     sendPointerEvent(translatedPointerId, event);
 };
-const onPointerMove = useDebounceFn((event: PointerEvent) => {
+const onPointerMove = (event: PointerEvent) => {
     const translatedPointerId = pointerTranslationMap.get(event.pointerId);
 
     if (translatedPointerId === undefined) {
@@ -171,7 +170,7 @@ const onPointerMove = useDebounceFn((event: PointerEvent) => {
     }
 
     sendPointerEvent(translatedPointerId, event);
-}, 16);
+};
 const onPointerUp = (event: PointerEvent) => {
     const translatedPointerId = pointerTranslationMap.get(event.pointerId);
 
