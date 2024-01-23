@@ -1,49 +1,38 @@
-import { bufferWrapUint8Array } from './buffer.js';
-
 export class BufferReader {
     private cursor = 0;
-    private readUint8Bound: (offset?: number | undefined) => number;
-    private readUint16BEBound: (offset?: number | undefined) => number;
-    private readUint32BEBound: (offset?: number | undefined) => number;
 
-    public data;
+    private view;
 
-    private constructor(buffer: Buffer) {
-        this.data = buffer;
-
-        this.readUint8Bound = this.data.readUint8.bind(this.data);
-        this.readUint16BEBound = this.data.readUint16BE.bind(this.data);
-        this.readUint32BEBound = this.data.readUint32BE.bind(this.data);
+    private constructor(private data: Uint8Array) {
+        this.view = new DataView(data.buffer, data.byteOffset, data.byteLength);
     }
 
     public static fromBuffer(arr: Uint8Array): BufferReader {
-        const buffer = bufferWrapUint8Array(arr);
-        return new BufferReader(buffer);
-    }
-
-    private handleRead(size: number, fn: (offset?: number) => number): number {
-        const data = fn(this.cursor);
-        this.cursor += size;
-        return data;
+        return new BufferReader(arr);
     }
 
     public readUint8(): number {
-        return this.handleRead(1, this.readUint8Bound);
+        const value = this.view.getUint8(this.cursor);
+        this.cursor += 1;
+        return value;
     }
 
     public readUint16BE(): number {
-        return this.handleRead(2, this.readUint16BEBound);
+        const value = this.view.getUint16(this.cursor);
+        this.cursor += 2;
+        return value;
     }
 
     public readUint32BE(): number {
-        return this.handleRead(4, this.readUint32BEBound);
+        const value = this.view.getUint16(this.cursor);
+        this.cursor += 4;
+        return value;
     }
 
     public readUint64BE(): bigint {
-        const size = 8;
-        const data = this.data.readBigInt64BE(this.cursor);
-        this.cursor += size;
-        return data;
+        const value = this.view.getBigUint64(this.cursor);
+        this.cursor += 8;
+        return value;
     }
 
     public readBufferSize(): number {

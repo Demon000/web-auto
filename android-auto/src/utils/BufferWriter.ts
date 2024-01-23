@@ -1,5 +1,3 @@
-import { bufferWrapUint8Array } from './buffer-utils.js';
-
 export class BufferWriter {
     private cursor = 0;
 
@@ -88,10 +86,9 @@ export class BufferWriter {
     }
 
     public appendBuffer(arr: Uint8Array): void {
-        const buffer = bufferWrapUint8Array(arr);
-        const size = buffer.length;
+        const size = arr.byteLength;
         this.appendResizeToFit(size);
-        buffer.copy(this.data, this.cursor);
+        this.data.set(arr, this.cursor);
         this.cursor += size;
     }
 }
