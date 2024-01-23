@@ -7,6 +7,8 @@ import {
     Device as UsbDeviceImpl,
 } from 'usb';
 import { bufferWrapUint8Array } from '@web-auto/android-auto';
+import { getLogger } from '@web-auto/logging';
+import { Mutex } from 'async-mutex';
 
 const toHex = (n: number) => n.toString(16).padStart(4, '0');
 
@@ -265,17 +267,32 @@ export class UsbDeviceWrapper {
 export type UsbWrapperEventCallback = (device: UsbDeviceWrapper) => void;
 
 export class UsbCallbackWrapper {
+    private logger = getLogger(this.constructor.name);
+
     private onAttachInternalBound: (device: UsbDeviceImpl) => void;
     private onDetachInternalBound: (device: UsbDeviceImpl) => void;
     private deviceMap = new Map<UsbDeviceImpl, UsbDeviceWrapper>();
+    private deviceMapLock = new Mutex();
     private registered = false;
 
     public constructor(
         private onConnect: UsbWrapperEventCallback,
         private onDisconnect: UsbWrapperEventCallback,
     ) {
-        this.onAttachInternalBound = this.onAttachInternal.bind(this);
-        this.onDetachInternalBound = this.onDetachInternal.bind(this);
+        this.onAttachInternalBound = (device) => {
+            this.onAttachInternal(device, true)
+                .then(() => {})
+                .catch((err) => {
+                    this.logger.error('Failed to handle device attach', err);
+                });
+        };
+        this.onDetachInternalBound = (device) => {
+            this.onDetachInternal(device)
+                .then(() => {})
+                .catch((err) => {
+                    this.logger.error('Failed to handle device detach', err);
+                });
+        };
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
@@ -283,29 +300,47 @@ export class UsbCallbackWrapper {
         return Array.from(this.deviceMap.values());
     }
 
-    private onAttachInternal(device: UsbDeviceImpl): void {
-        UsbDeviceWrapper.create(device)
-            .then((deviceWrapper) => {
-                this.deviceMap.set(device, deviceWrapper);
-                this.onConnect(deviceWrapper);
-            })
-            .catch((err) => {
-                console.error(err);
+    private async onAttachInternal(
+        device: UsbDeviceImpl,
+        callEvent: boolean,
+    ): Promise<void> {
+        const release = await this.deviceMapLock.acquire();
+        let deviceWrapper;
+        try {
+            deviceWrapper = await UsbDeviceWrapper.create(device);
+        } catch (err) {
+            this.logger.error('Failed to create device wrapper', {
+                device,
+                err,
             });
+            release();
+            return;
+        }
+        this.deviceMap.set(device, deviceWrapper);
+        if (callEvent) {
+            this.onConnect(deviceWrapper);
+        }
+        release();
     }
 
-    private onDetachInternal(device: UsbDeviceImpl): void {
+    private async onDetachInternal(device: UsbDeviceImpl): Promise<void> {
+        const release = await this.deviceMapLock.acquire();
         const deviceWrapper = this.deviceMap.get(device);
-        assert(deviceWrapper !== undefined);
+        if (deviceWrapper === undefined) {
+            this.logger.error('Failed to find device wrapper', device);
+            release();
+            return;
+        }
         this.deviceMap.delete(device);
         this.onDisconnect(deviceWrapper);
+        release();
     }
 
-    public register(): void {
+    public async register(): Promise<void> {
         assert(!this.registered);
         const devices = usb.getDeviceList();
         for (const device of devices) {
-            this.onAttachInternal(device);
+            await this.onAttachInternal(device, false);
         }
         usb.on('attach', this.onAttachInternalBound);
         usb.on('detach', this.onDetachInternalBound);

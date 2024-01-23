@@ -124,7 +124,7 @@ export class UsbDeviceHandler extends DeviceHandler {
     public async waitForDevices(): Promise<void> {
         this.logger.info('Starting new device connection handler');
 
-        this.usb.register();
+        await this.usb.register();
 
         this.logger.info('Processing already connected devices');
 
