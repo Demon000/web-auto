@@ -7,7 +7,6 @@ import {
 } from './DecoderWorkerMessages.js';
 import { Renderer } from './Renderer.js';
 import { WebGLRenderer } from './WebGLRenderer.js';
-import { WebGPURenderer } from './WebGPURenderer.js';
 
 let renderer: Renderer | null = null;
 let pendingFrame: VideoFrame | null = null;
@@ -84,9 +83,6 @@ const createRenderer = (
         case DecoderWorkerRenderer.WEBGL:
         case DecoderWorkerRenderer.WEBGL2:
             renderer = new WebGLRenderer(rendererName, canvas, config);
-            break;
-        case DecoderWorkerRenderer.WEBGPU:
-            renderer = new WebGPURenderer(canvas, config);
             break;
         default:
             throw new Error(`Invalid renderer ${rendererName}`);

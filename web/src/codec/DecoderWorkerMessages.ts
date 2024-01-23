@@ -4,7 +4,6 @@ export enum DecoderWorkerRenderer {
     _2D = '2d',
     WEBGL = 'webgl',
     WEBGL2 = 'webgl2',
-    WEBGPU = 'webgpu',
 }
 
 export enum DecoderWorkerMessageType {
