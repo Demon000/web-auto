@@ -10,47 +10,28 @@ export abstract class AVOutputService extends AVService {
         super(priorities, events);
     }
 
-    protected async onAvMediaIndication(buffer: Uint8Array): Promise<void> {
-        try {
-            this.handleData(buffer);
-        } catch (err) {
-            this.logger.error('Failed to handle data', {
-                buffer,
-                err,
-            });
-            return;
-        }
+    protected onAvMediaIndication(buffer: Uint8Array): void {
+        this.handleData(buffer);
 
-        try {
-            await this.sendAvMediaAckIndication();
-        } catch (err) {
-            this.logger.error('Failed to send ack', err);
-        }
+        this.sendAvMediaAckIndication()
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error('Failed to send ack', err);
+            });
     }
 
-    protected async onAvMediaWithTimestampIndication(
-        payload: Uint8Array,
-    ): Promise<void> {
+    protected onAvMediaWithTimestampIndication(payload: Uint8Array): void {
         const reader = BufferReader.fromBuffer(payload);
         const timestamp = reader.readUint64BE();
         const buffer = reader.readBuffer();
 
-        try {
-            this.handleData(buffer, timestamp);
-        } catch (err) {
-            this.logger.error('Failed to handle data', {
-                buffer,
-                timestamp,
-                err,
-            });
-            return;
-        }
+        this.handleData(buffer, timestamp);
 
-        try {
-            await this.sendAvMediaAckIndication();
-        } catch (err) {
-            this.logger.error('Failed to send ack', err);
-        }
+        this.sendAvMediaAckIndication()
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error('Failed to send ack', err);
+            });
     }
 
     protected onStopIndication(data: Stop): void {
@@ -86,11 +67,11 @@ export abstract class AVOutputService extends AVService {
         switch (messageId as MediaMessageId) {
             case MediaMessageId.MEDIA_MESSAGE_DATA:
                 this.printReceive('data');
-                await this.onAvMediaWithTimestampIndication(payload);
+                this.onAvMediaWithTimestampIndication(payload);
                 break;
             case MediaMessageId.MEDIA_MESSAGE_CODEC_CONFIG:
                 this.printReceive('data');
-                await this.onAvMediaIndication(payload);
+                this.onAvMediaIndication(payload);
                 break;
             case MediaMessageId.MEDIA_MESSAGE_START:
                 data = Start.fromBinary(payload);
@@ -123,7 +104,7 @@ export abstract class AVOutputService extends AVService {
 
     protected abstract handleData(buffer: Uint8Array, timestamp?: bigint): void;
 
-    protected async sendAvMediaAckIndication(): Promise<void> {
+    protected sendAvMediaAckIndication(): Promise<void> {
         if (this.session === undefined) {
             throw new Error('Received media indication without valid session');
         }
@@ -133,7 +114,7 @@ export abstract class AVOutputService extends AVService {
             ack: 1,
         });
 
-        await this.sendEncryptedSpecificMessage(
+        return this.sendEncryptedSpecificMessage(
             MediaMessageId.MEDIA_MESSAGE_ACK,
             data,
         );
