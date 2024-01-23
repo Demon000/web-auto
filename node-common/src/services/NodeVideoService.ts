@@ -178,7 +178,7 @@ export class NodeVideoService extends VideoService {
         assert(videoCodecType !== undefined);
 
         if (this.codecState === CodecState.STARTED) {
-            this.ipcHandler.data(buffer);
+            this.ipcHandler.sendRaw('data', buffer);
         } else if (this.codecState === CodecState.WAITING_FOR_CONFIG) {
             assert(this.codecBuffer === undefined);
 
@@ -207,7 +207,7 @@ export class NodeVideoService extends VideoService {
                 this.codecBuffer,
                 buffer,
             );
-            this.ipcHandler.firstFrame(firstFrameBuffer);
+            this.ipcHandler.sendRaw('firstFrame', firstFrameBuffer);
 
             this.codecBuffer = undefined;
             this.codecState = CodecState.STARTED;

@@ -41,6 +41,12 @@ export type IpcEvent =
           name: string;
           args: any[];
       }
+    /* Server to client message followed by raw payload */
+    | {
+          handle: string;
+          name: string;
+          raw: true;
+      }
     /* Subscribe / unsubscribe. */
     | IpcSubscribeEvent;
 

@@ -84,7 +84,7 @@ export class IpcClientHandlerHelper<L extends IpcClient>
         });
     }
 
-    public handleOn(ipcEvent: IpcEvent): void {
+    public handleOn(ipcEvent: IpcEvent, raw?: any): void {
         if ('replyToId' in ipcEvent) {
             const callback = this.callbacksMap.get(ipcEvent.replyToId);
             if (callback === undefined) {
@@ -93,7 +93,12 @@ export class IpcClientHandlerHelper<L extends IpcClient>
 
             callback(ipcEvent);
         } else {
-            if (!('args' in ipcEvent)) {
+            let args;
+            if (raw === undefined && 'args' in ipcEvent) {
+                args = ipcEvent.args;
+            } else if (raw !== undefined) {
+                args = [raw];
+            } else {
                 console.error('Expected args in IPC event', ipcEvent);
                 return;
             }
@@ -105,7 +110,7 @@ export class IpcClientHandlerHelper<L extends IpcClient>
 
             for (const listener of listeners) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                listener(...ipcEvent.args);
+                listener(...args);
             }
         }
     }
@@ -203,6 +208,7 @@ export interface IpcClientRegistry {
 
 export class GenericIpcClientRegistry implements IpcClientRegistry {
     private ipcHandlers = new Map<string, IpcClientHandlerHelper<any>>();
+    private rawIpcEvent: IpcEvent | undefined;
 
     public constructor(
         private serializer: IpcSerializer,
@@ -227,21 +233,40 @@ export class GenericIpcClientRegistry implements IpcClientRegistry {
     }
 
     protected handleMessage(ipcEvent: IpcEvent): void {
+        if ('raw' in ipcEvent) {
+            this.rawIpcEvent = ipcEvent;
+            return;
+        }
+
         if (!('handle' in ipcEvent)) {
             console.error('Expected handle in IPC event', ipcEvent);
             return;
         }
 
-        for (const [handle, ipcHandler] of this.ipcHandlers) {
-            if (handle === ipcEvent.handle) {
-                return ipcHandler.handleOn(ipcEvent);
-            }
+        const ipcHandler = this.ipcHandlers.get(ipcEvent.handle);
+        if (ipcHandler !== undefined) {
+            return ipcHandler.handleOn(ipcEvent);
+        }
+
+        console.error(`Unhandled IPC event for handler ${ipcEvent.handle}`);
+    }
+
+    protected handleRaw(ipcEvent: IpcEvent, raw: any): void {
+        const ipcHandler = this.ipcHandlers.get(ipcEvent.handle);
+        if (ipcHandler !== undefined) {
+            return ipcHandler.handleOn(ipcEvent, raw);
         }
 
         console.error(`Unhandled IPC event for handler ${ipcEvent.handle}`);
     }
 
     private onData(_socket: IpcSocket, data: any): void {
+        if (this.rawIpcEvent !== undefined) {
+            this.handleRaw(this.rawIpcEvent, data);
+            this.rawIpcEvent = undefined;
+            return;
+        }
+
         const ipcEvent = this.serializer.deserialize(data);
         this.handleMessage(ipcEvent);
     }

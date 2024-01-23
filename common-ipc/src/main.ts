@@ -7,6 +7,7 @@ import type {
     IpcSocket,
     IpcSubscribeEvent,
 } from './common.js';
+import type { IpcClientHandlerKey } from './renderer.js';
 
 export type IpcServiceHandlerKey<L extends IpcService> = keyof L & string;
 export type IpcServiceHandlerCallback<
@@ -22,8 +23,20 @@ export type IpcServiceHandlerEmitter<L extends IpcService> = {
     off<K extends IpcServiceHandlerKey<L>>(name: K): void;
 };
 
+export type IpcServiceHandlerSender<R extends IpcClient> = {
+    sendRaw<
+        K extends IpcClientHandlerKey<R>,
+        F extends R[K],
+        P extends Parameters<F> & [Uint8Array],
+    >(
+        name: K,
+        ...args: P
+    ): void;
+};
+
 export type IpcServiceHandler<L extends IpcService, R extends IpcClient> = R &
-    IpcServiceHandlerEmitter<L>;
+    IpcServiceHandlerEmitter<L> &
+    IpcServiceHandlerSender<R>;
 
 export interface IpcServiceRegistry {
     registerIpcService<L extends IpcService, R extends IpcClient>(
@@ -178,6 +191,31 @@ export class IpcServiceHandlerHelper<L extends IpcService>
         private handle: string,
     ) {}
 
+    public sendRaw(name: string, raw: any): void {
+        const ipcEvent: IpcEvent = {
+            handle: this.handle,
+            name,
+            raw: true,
+        };
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const data = this.serializer.serialize(ipcEvent);
+
+        const sockets = this.socketHandler.socketsForHandleName(
+            this.handle,
+            name,
+        );
+
+        if (sockets === undefined) {
+            return;
+        }
+
+        for (const socket of sockets) {
+            socket.send(data);
+            socket.send(raw);
+        }
+    }
+
     public send(name: string, ...args: any[]): void {
         const ipcEvent: IpcEvent = {
             handle: this.handle,
@@ -245,6 +283,7 @@ export const createIpcClientProxy = <L extends IpcService, R extends IpcClient>(
                         switch (property) {
                             case 'on':
                             case 'off':
+                            case 'sendRaw':
                                 Reflect.apply(
                                     ipcHandler[property],
                                     ipcHandler,
