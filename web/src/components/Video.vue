@@ -88,6 +88,7 @@ const translateCanvasPosition = (
 };
 
 const pointerTranslationMap = new Map<number, number>();
+const pointerPositionMap = new Map<number, [number, number]>();
 
 const newTranslatedPointerId = (): number => {
     const translatedPointerIds = new Set(pointerTranslationMap.values());
@@ -129,9 +130,30 @@ const sendPointerEvent = (pointerId: number, event: PointerEvent) => {
         return;
     }
 
-    const [x, y] = translateCanvasPosition(canvas, event.x, event.y);
+    let x = Math.round(event.x);
+    let y = Math.round(event.y);
+
+    [x, y] = translateCanvasPosition(canvas, event.x, event.y);
     if (isNaN(x) || isNaN(y) || x < 0 || y < 0) {
         return;
+    }
+
+    if (action === PointerAction.ACTION_POINTER_UP) {
+        pointerPositionMap.delete(pointerId);
+    } else {
+        const oldCoords = pointerPositionMap.get(pointerId);
+        if (oldCoords !== undefined) {
+            const [oldX, oldY] = oldCoords;
+            const distance = 10;
+            if (
+                Math.abs(x - oldX) < distance &&
+                Math.abs(y - oldY) < distance
+            ) {
+                return;
+            }
+        }
+
+        pointerPositionMap.set(pointerId, [x, y]);
     }
 
     emit('touch-event', {
