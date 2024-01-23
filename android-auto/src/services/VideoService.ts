@@ -68,10 +68,8 @@ export abstract class VideoService extends AVOutputService {
         }
     }
 
-    protected async sendVideoFocusIndication(
-        data: VideoFocusNotification,
-    ): Promise<void> {
-        await this.sendEncryptedSpecificMessage(
+    protected sendVideoFocusIndication(data: VideoFocusNotification): void {
+        this.sendEncryptedSpecificMessage(
             MediaMessageId.MEDIA_MESSAGE_VIDEO_FOCUS_NOTIFICATION,
             data,
         );

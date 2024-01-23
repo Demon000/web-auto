@@ -30,7 +30,7 @@ export abstract class AVService extends Service {
             return;
         }
 
-        return this.sendSetupResponse(status);
+        this.sendSetupResponse(status);
     }
 
     public override async onSpecificMessage(
@@ -53,16 +53,16 @@ export abstract class AVService extends Service {
     }
 
     protected async setup(_data: Setup): Promise<void> {}
-    protected async afterSetup(): Promise<void> {}
+    protected afterSetup(): void {}
 
-    protected async sendSetupResponse(status: boolean): Promise<void> {
+    protected sendSetupResponse(status: boolean): void {
         const data = new Config({
             maxUnacked: 1,
             status: status ? Config_Status.READY : Config_Status.WAIT,
             configurationIndices: this.priorities,
         });
 
-        await this.sendEncryptedSpecificMessage(
+        this.sendEncryptedSpecificMessage(
             MediaMessageId.MEDIA_MESSAGE_CONFIG,
             data,
         );
@@ -71,6 +71,6 @@ export abstract class AVService extends Service {
             return;
         }
 
-        await this.afterSetup();
+        this.afterSetup();
     }
 }

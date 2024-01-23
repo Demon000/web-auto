@@ -17,14 +17,14 @@ export interface ServiceEvents {
         protoMessage: ProtoMessage,
         isEncrypted: boolean,
         isControl: boolean,
-    ) => Promise<void>;
+    ) => void;
     onPayloadMessageSent: (
         serviceId: number,
         messageId: number,
         payload: Uint8Array,
         isEncrypted: boolean,
         isControl: boolean,
-    ) => Promise<void>;
+    ) => void;
 }
 
 type ServiceMessageCallback = (messageId: number, payload: Uint8Array) => void;
@@ -70,9 +70,7 @@ export abstract class Service {
         this.specificMessageCallbacks.clear();
     }
 
-    protected async onChannelOpenRequest(
-        data: ChannelOpenRequest,
-    ): Promise<void> {
+    protected onChannelOpenRequest(data: ChannelOpenRequest): void {
         let status = false;
 
         try {
@@ -86,7 +84,7 @@ export abstract class Service {
             return;
         }
 
-        return this.sendChannelOpenResponse(status);
+        this.sendChannelOpenResponse(status);
     }
 
     protected printReceive(message: any): void {
@@ -125,6 +123,7 @@ export abstract class Service {
         this.logger.debug(`Send ${extra}`, message);
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     protected async onControlMessage(
         messageId: number,
         payload: Uint8Array,
@@ -135,7 +134,7 @@ export abstract class Service {
             case ControlMessageType.MESSAGE_CHANNEL_OPEN_REQUEST:
                 data = ChannelOpenRequest.fromBinary(payload);
                 this.printReceive(data);
-                await this.onChannelOpenRequest(data);
+                this.onChannelOpenRequest(data);
                 break;
             default:
                 return false;
@@ -204,14 +203,14 @@ export abstract class Service {
 
     protected open(_data: ChannelOpenRequest): void {}
 
-    protected async sendChannelOpenResponse(status: boolean): Promise<void> {
+    protected sendChannelOpenResponse(status: boolean): void {
         const data = new ChannelOpenResponse({
             status: status
                 ? MessageStatus.STATUS_SUCCESS
                 : MessageStatus.STATUS_INVALID_CHANNEL,
         });
 
-        await this.sendEncryptedControlMessage(
+        this.sendEncryptedControlMessage(
             ControlMessageType.MESSAGE_CHANNEL_OPEN_RESPONSE,
             data,
         );
@@ -223,10 +222,10 @@ export abstract class Service {
         printMessage: any,
         isEncrypted: boolean,
         isControl: boolean,
-    ): Promise<void> {
+    ): void {
         this.printSend(printMessage);
 
-        return this.events.onPayloadMessageSent(
+        this.events.onPayloadMessageSent(
             this.serviceId,
             messageId,
             dataPayload,
@@ -240,10 +239,10 @@ export abstract class Service {
         protoMessage: ProtoMessage,
         isEncrypted: boolean,
         isControl: boolean,
-    ): Promise<void> {
+    ): void {
         this.printSend(protoMessage);
 
-        return this.events.onProtoMessageSent(
+        this.events.onProtoMessageSent(
             this.serviceId,
             messageId,
             protoMessage,
@@ -255,22 +254,22 @@ export abstract class Service {
     protected sendPlainSpecificMessage(
         messageId: number,
         message: ProtoMessage,
-    ): Promise<void> {
-        return this.sendMessageWithId(messageId, message, false, false);
+    ): void {
+        this.sendMessageWithId(messageId, message, false, false);
     }
 
     protected sendEncryptedSpecificMessage(
         messageId: number,
         message: ProtoMessage,
-    ): Promise<void> {
-        return this.sendMessageWithId(messageId, message, true, false);
+    ): void {
+        this.sendMessageWithId(messageId, message, true, false);
     }
 
     protected sendEncryptedControlMessage(
         messageId: number,
         message: ProtoMessage,
-    ): Promise<void> {
-        return this.sendMessageWithId(messageId, message, true, true);
+    ): void {
+        this.sendMessageWithId(messageId, message, true, true);
     }
 
     protected abstract fillChannelDescriptor(

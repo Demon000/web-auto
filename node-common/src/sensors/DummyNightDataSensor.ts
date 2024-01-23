@@ -13,8 +13,8 @@ export class DummyNightDataSensor extends Sensor {
         super(SensorType.SENSOR_NIGHT_MODE, events);
     }
 
-    public async emit(): Promise<void> {
-        await this.events.onData(
+    public emit(): void {
+        this.events.onData(
             new SensorBatch({
                 nightModeData: [
                     {

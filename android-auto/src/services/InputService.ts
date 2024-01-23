@@ -52,20 +52,20 @@ export abstract class InputService extends Service {
         return true;
     }
 
-    protected async sendBindingResponse(status: boolean): Promise<void> {
+    protected sendBindingResponse(status: boolean): void {
         const data = new KeyBindingResponse({
             status: status ? 0 : -1,
         });
 
-        await this.sendEncryptedSpecificMessage(
+        this.sendEncryptedSpecificMessage(
             InputMessageId.INPUT_MESSAGE_KEY_BINDING_RESPONSE,
             data,
         );
     }
 
-    protected sendTouchEvent(touchEvent: TouchEvent): Promise<void> {
+    protected sendTouchEvent(touchEvent: TouchEvent): void {
         if (!this.started) {
-            return Promise.resolve();
+            return;
         }
 
         const data = new InputReport({
@@ -73,13 +73,13 @@ export abstract class InputService extends Service {
             touchEvent,
         });
 
-        return this.sendEncryptedSpecificMessage(
+        this.sendEncryptedSpecificMessage(
             InputMessageId.INPUT_MESSAGE_INPUT_REPORT,
             data,
         );
     }
 
-    protected async sendKeyEvent(keyEvent: KeyEvent): Promise<void> {
+    protected sendKeyEvent(keyEvent: KeyEvent): void {
         if (!this.started) {
             return;
         }
@@ -89,7 +89,7 @@ export abstract class InputService extends Service {
             keyEvent,
         });
 
-        await this.sendEncryptedSpecificMessage(
+        this.sendEncryptedSpecificMessage(
             InputMessageId.INPUT_MESSAGE_INPUT_REPORT,
             data,
         );

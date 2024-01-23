@@ -43,12 +43,14 @@ export class NodeAutoInputService extends InputService {
 
     protected async bind(_data: KeyBindingRequest): Promise<void> {}
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     private async sendTouchEventObject(data: ITouchEvent): Promise<void> {
-        return this.sendTouchEvent(new TouchEvent(data));
+        this.sendTouchEvent(new TouchEvent(data));
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     private async sendKeyEventObject(data: IKeyEvent): Promise<void> {
-        await this.sendKeyEvent(new KeyEvent(data));
+        this.sendKeyEvent(new KeyEvent(data));
     }
 
     protected fillKeycodes(inputSourceService: InputSourceService): void {

@@ -29,11 +29,7 @@ export class NodeAudioInputService extends AudioInputService {
             this.chunkSize(),
             this.constructor.name,
             (data) => {
-                this.sendAvMediaWithTimestampIndication(data)
-                    .then(() => {})
-                    .catch((err) => {
-                        this.logger.error('Failed to send data', err);
-                    });
+                this.sendAvMediaWithTimestampIndication(data);
             },
             null,
         );

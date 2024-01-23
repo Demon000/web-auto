@@ -50,7 +50,7 @@ export class SensorService extends Service {
         return sensor;
     }
 
-    protected async onSensorStartRequest(data: SensorRequest): Promise<void> {
+    protected onSensorStartRequest(data: SensorRequest): void {
         try {
             assert(data.type !== undefined);
             const sensor = this.getSensor(data.type);
@@ -63,7 +63,7 @@ export class SensorService extends Service {
             return;
         }
 
-        return this.sendSensorStartResponse(data.type, true);
+        this.sendSensorStartResponse(data.type, true);
     }
 
     public override async onSpecificMessage(
@@ -76,7 +76,7 @@ export class SensorService extends Service {
             case SensorMessageId.SENSOR_MESSAGE_REQUEST:
                 data = SensorRequest.fromBinary(payload);
                 this.printReceive(data);
-                await this.onSensorStartRequest(data);
+                this.onSensorStartRequest(data);
                 break;
             default:
                 return super.onSpecificMessage(messageId, payload);
@@ -85,27 +85,27 @@ export class SensorService extends Service {
         return true;
     }
 
-    protected async sendSensorStartResponse(
+    protected sendSensorStartResponse(
         sensorType: SensorType,
         status: boolean,
-    ): Promise<void> {
+    ): void {
         const data = new SensorResponse({
             status: status
                 ? MessageStatus.STATUS_SUCCESS
                 : MessageStatus.STATUS_INVALID_SENSOR,
         });
 
-        await this.sendEncryptedSpecificMessage(
+        this.sendEncryptedSpecificMessage(
             SensorMessageId.SENSOR_MESSAGE_RESPONSE,
             data,
         );
 
         const sensor = this.getSensor(sensorType);
-        await sensor.emit();
+        sensor.emit();
     }
 
-    protected async sendEventIndication(data: SensorBatch): Promise<void> {
-        return this.sendEncryptedSpecificMessage(
+    protected sendEventIndication(data: SensorBatch): void {
+        this.sendEncryptedSpecificMessage(
             SensorMessageId.SENSOR_MESSAGE_BATCH,
             data,
         );

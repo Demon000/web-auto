@@ -56,10 +56,11 @@ export class NodeVideoService extends VideoService {
         return this.channelStarted;
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async sendVideoFocusNotificationObject(
         data: IVideoFocusNotification,
     ): Promise<void> {
-        await this.sendVideoFocusIndication(new VideoFocusNotification(data));
+        this.sendVideoFocusIndication(new VideoFocusNotification(data));
     }
 
     public override stop(): void {
@@ -83,8 +84,7 @@ export class NodeVideoService extends VideoService {
         });
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    protected override async afterSetup(): Promise<void> {
+    protected override afterSetup(): void {
         this.ipcHandler.focusRequest({
             mode: VideoFocusMode.VIDEO_FOCUS_PROJECTED,
         });

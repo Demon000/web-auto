@@ -1,7 +1,7 @@
 import { SensorBatch, SensorType } from '@web-auto/android-auto-proto';
 
 export interface SensorEvents {
-    onData: (data: SensorBatch) => Promise<void>;
+    onData: (data: SensorBatch) => void;
 }
 
 export abstract class Sensor {
@@ -14,5 +14,5 @@ export abstract class Sensor {
 
     public stop(): void {}
 
-    public abstract emit(): Promise<void>;
+    public abstract emit(): void;
 }

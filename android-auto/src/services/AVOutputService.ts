@@ -13,11 +13,7 @@ export abstract class AVOutputService extends AVService {
     protected onAvMediaIndication(buffer: Uint8Array): void {
         this.handleData(buffer);
 
-        this.sendAvMediaAckIndication()
-            .then(() => {})
-            .catch((err) => {
-                this.logger.error('Failed to send ack', err);
-            });
+        this.sendAvMediaAckIndication();
     }
 
     protected onAvMediaWithTimestampIndication(payload: Uint8Array): void {
@@ -27,11 +23,7 @@ export abstract class AVOutputService extends AVService {
 
         this.handleData(buffer, timestamp);
 
-        this.sendAvMediaAckIndication()
-            .then(() => {})
-            .catch((err) => {
-                this.logger.error('Failed to send ack', err);
-            });
+        this.sendAvMediaAckIndication();
     }
 
     protected onStopIndication(data: Stop): void {
@@ -104,7 +96,7 @@ export abstract class AVOutputService extends AVService {
 
     protected abstract handleData(buffer: Uint8Array, timestamp?: bigint): void;
 
-    protected sendAvMediaAckIndication(): Promise<void> {
+    protected sendAvMediaAckIndication(): void {
         if (this.session === undefined) {
             throw new Error('Received media indication without valid session');
         }
@@ -114,7 +106,7 @@ export abstract class AVOutputService extends AVService {
             ack: 1,
         });
 
-        return this.sendEncryptedSpecificMessage(
+        this.sendEncryptedSpecificMessage(
             MediaMessageId.MEDIA_MESSAGE_ACK,
             data,
         );

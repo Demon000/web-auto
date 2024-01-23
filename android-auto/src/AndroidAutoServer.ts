@@ -142,19 +142,6 @@ export abstract class AndroidAutoServer {
 
         await this.encryptFrameData(frameData);
 
-        frameHeader.payloadSize = frameData.payload.byteLength;
-
-        let buffer;
-        try {
-            buffer = this.frameCodec.encodeFrameData(frameData);
-        } catch (err) {
-            this.logger.error('Failed to encode', {
-                err,
-                frameData,
-            });
-            return;
-        }
-
         if (
             this.connectedDevice === undefined ||
             this.connectedDevice.transport === undefined
@@ -163,20 +150,19 @@ export abstract class AndroidAutoServer {
             return;
         }
 
-        try {
-            await this.connectedDevice.transport.send(buffer);
-        } catch (err) {
-            this.logger.error('Failed to send', err);
-            throw err;
-        }
+        frameHeader.payloadSize = frameData.payload.byteLength;
+
+        const buffer = this.frameCodec.encodeFrameData(frameData);
+
+        return this.connectedDevice.transport.send(buffer);
     }
 
-    private async onSendMessage(
+    private onSendMessage(
         serviceId: number,
         payload: Uint8Array,
         isEncrypted: boolean,
         isControl: boolean,
-    ): Promise<void> {
+    ): void {
         if (this.connectedDevice === undefined) {
             this.logger.error('Device not connected, skip sending message', {
                 serviceId,
@@ -195,7 +181,11 @@ export abstract class AndroidAutoServer {
         );
 
         for (const frameData of frameDatas) {
-            await this.onSendFrameData(frameData);
+            this.onSendFrameData(frameData)
+                .then(() => {})
+                .catch((err) => {
+                    this.logger.error('Failed to send frame data', err);
+                });
         }
     }
 
@@ -205,18 +195,13 @@ export abstract class AndroidAutoServer {
         payload: Uint8Array,
         isEncrypted: boolean,
         isControl: boolean,
-    ): Promise<void> {
+    ): void {
         const totalPayload = this.messageCodec.encodePayload(
             messageId,
             payload,
         );
 
-        return this.onSendMessage(
-            serviceId,
-            totalPayload,
-            isEncrypted,
-            isControl,
-        );
+        this.onSendMessage(serviceId, totalPayload, isEncrypted, isControl);
     }
     private onSendProtoMessage(
         serviceId: number,
@@ -224,18 +209,13 @@ export abstract class AndroidAutoServer {
         protoMessage: ProtoMessage,
         isEncrypted: boolean,
         isControl: boolean,
-    ): Promise<void> {
+    ): void {
         const totalPayload = this.messageCodec.encodeMessage(
             messageId,
             protoMessage,
         );
 
-        return this.onSendMessage(
-            serviceId,
-            totalPayload,
-            isEncrypted,
-            isControl,
-        );
+        this.onSendMessage(serviceId, totalPayload, isEncrypted, isControl);
     }
 
     private onPingTimeout(): void {

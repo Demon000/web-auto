@@ -51,30 +51,26 @@ export class ControlService extends Service {
         });
     }
 
-    private async onPingRequest(data: PingRequest): Promise<void> {
+    private onPingRequest(data: PingRequest): void {
         assert(data.timestamp !== undefined);
-        await this.sendPingResponse(data.timestamp);
+        this.sendPingResponse(data.timestamp);
     }
 
-    private async onAudioFocusRequest(
-        data: AudioFocusRequestNotification,
-    ): Promise<void> {
+    private onAudioFocusRequest(data: AudioFocusRequestNotification): void {
         const audioFocusState =
             data.request === AudioFocusRequestType.AUDIO_FOCUS_RELEASE
                 ? AudioFocusStateType.AUDIO_FOCUS_STATE_LOSS
                 : AudioFocusStateType.AUDIO_FOCUS_STATE_GAIN;
 
-        return this.sendAudioFocusResponse(audioFocusState);
+        this.sendAudioFocusResponse(audioFocusState);
     }
 
-    private async onNavigationFocusRequest(
-        data: NavFocusRequestNotification,
-    ): Promise<void> {
+    private onNavigationFocusRequest(data: NavFocusRequestNotification): void {
         if (data.focusType === undefined) {
             return;
         }
 
-        return this.sendNavigationFocusResponse(data.focusType);
+        this.sendNavigationFocusResponse(data.focusType);
     }
 
     protected async onVoiceSessionNotification(
@@ -95,7 +91,7 @@ export class ControlService extends Service {
             case ControlMessageType.MESSAGE_PING_REQUEST:
                 data = PingRequest.fromBinary(payload);
                 this.printReceive(data);
-                await this.onPingRequest(data);
+                this.onPingRequest(data);
                 break;
             case ControlMessageType.MESSAGE_PING_RESPONSE:
                 data = PingResponse.fromBinary(payload);
@@ -105,12 +101,12 @@ export class ControlService extends Service {
             case ControlMessageType.MESSAGE_AUDIO_FOCUS_REQUEST:
                 data = AudioFocusRequestNotification.fromBinary(payload);
                 this.printReceive(data);
-                await this.onAudioFocusRequest(data);
+                this.onAudioFocusRequest(data);
                 break;
             case ControlMessageType.MESSAGE_NAV_FOCUS_REQUEST:
                 data = NavFocusRequestNotification.fromBinary(payload);
                 this.printReceive(data);
-                await this.onNavigationFocusRequest(data);
+                this.onNavigationFocusRequest(data);
                 break;
             case ControlMessageType.MESSAGE_VOICE_SESSION_NOTIFICATION:
                 data = VoiceSessionNotification.fromBinary(payload);
@@ -129,25 +125,25 @@ export class ControlService extends Service {
         return true;
     }
 
-    private async sendPingResponse(timestamp: bigint): Promise<void> {
+    private sendPingResponse(timestamp: bigint): void {
         const data = new PingResponse({
             timestamp,
             data: new Uint8Array(),
         });
 
-        return this.sendPlainSpecificMessage(
+        this.sendPlainSpecificMessage(
             ControlMessageType.MESSAGE_PING_RESPONSE,
             data,
         );
     }
 
-    private async sendVersionRequest(): Promise<void> {
+    private sendVersionRequest(): void {
         const writer = BufferWriter.fromSize(4);
 
         writer.appendUint16BE(GalConstants.PROTOCOL_MAJOR_VERSION);
         writer.appendUint16BE(GalConstants.PROTOCOL_MINOR_VERSION);
 
-        await this.sendPayloadWithId(
+        this.sendPayloadWithId(
             ControlMessageType.MESSAGE_VERSION_REQUEST,
             writer.data,
             'version request',
@@ -156,8 +152,8 @@ export class ControlService extends Service {
         );
     }
 
-    private async sendHandshake(payload: Uint8Array): Promise<void> {
-        await this.sendPayloadWithId(
+    private sendHandshake(payload: Uint8Array): void {
+        this.sendPayloadWithId(
             ControlMessageType.MESSAGE_ENCAPSULATED_SSL,
             payload,
             'handshake',
@@ -166,12 +162,12 @@ export class ControlService extends Service {
         );
     }
 
-    private async sendAuthComplete(): Promise<void> {
+    private sendAuthComplete(): void {
         const data = new AuthResponse({
             status: 0,
         });
 
-        await this.sendPlainSpecificMessage(
+        this.sendPlainSpecificMessage(
             ControlMessageType.MESSAGE_AUTH_COMPLETE,
             data,
         );
@@ -181,52 +177,42 @@ export class ControlService extends Service {
         this.sendPlainSpecificMessage(
             ControlMessageType.MESSAGE_PING_REQUEST,
             data,
-        )
-            .then(() => {})
-            .catch((err) => {
-                this.logger.error('Failed to send ping request', err);
-            });
+        );
     }
 
-    private async sendAudioFocusResponse(
-        focusState: AudioFocusStateType,
-    ): Promise<void> {
+    private sendAudioFocusResponse(focusState: AudioFocusStateType): void {
         const data = new AudioFocusNotification({
             focusState,
             unsolicited: false,
         });
 
-        await this.sendEncryptedSpecificMessage(
+        this.sendEncryptedSpecificMessage(
             ControlMessageType.MESSAGE_AUDIO_FOCUS_NOTIFICATION,
             data,
         );
     }
 
-    private async sendNavigationFocusResponse(
-        focusType: NavFocusType,
-    ): Promise<void> {
+    private sendNavigationFocusResponse(focusType: NavFocusType): void {
         const data = new NavFocusNotification({
             focusType,
         });
 
-        await this.sendEncryptedSpecificMessage(
+        this.sendEncryptedSpecificMessage(
             ControlMessageType.MESSAGE_NAV_FOCUS_NOTIFICATION,
             data,
         );
     }
 
-    private async sendServiceDiscoveryResponse(
-        data: ServiceDiscoveryResponse,
-    ): Promise<void> {
+    private sendServiceDiscoveryResponse(data: ServiceDiscoveryResponse): void {
         this.logger.info('Service discovery', data.toJson());
-        await this.sendEncryptedSpecificMessage(
+        this.sendEncryptedSpecificMessage(
             ControlMessageType.MESSAGE_SERVICE_DISCOVERY_RESPONSE,
             data,
         );
     }
 
     private async doVersionQuery(signal: AbortSignal): Promise<void> {
-        await this.sendVersionRequest();
+        this.sendVersionRequest();
         const payload = await this.waitForSpecificMessage(
             ControlMessageType.MESSAGE_VERSION_RESPONSE,
             signal,
@@ -250,7 +236,7 @@ export class ControlService extends Service {
 
         while (!this.cryptor.isHandshakeComplete()) {
             const sentPayload = await this.cryptor.readHandshakeBuffer();
-            await this.sendHandshake(sentPayload);
+            this.sendHandshake(sentPayload);
 
             const receivedPayload = await this.waitForSpecificMessage(
                 ControlMessageType.MESSAGE_ENCAPSULATED_SSL,
@@ -259,7 +245,7 @@ export class ControlService extends Service {
             await this.cryptor.writeHandshakeBuffer(receivedPayload);
         }
 
-        await this.sendAuthComplete();
+        this.sendAuthComplete();
 
         this.logger.info('Finished handshake');
     }
@@ -277,7 +263,7 @@ export class ControlService extends Service {
             `Discovery request, device name ${request.deviceName}`,
         );
 
-        await this.sendServiceDiscoveryResponse(this.serviceDiscoveryResponse);
+        this.sendServiceDiscoveryResponse(this.serviceDiscoveryResponse);
     }
 
     public override start(): void {

@@ -17,8 +17,8 @@ export class DummyDrivingStatusSensor extends Sensor {
         super(SensorType.SENSOR_DRIVING_STATUS_DATA, events);
     }
 
-    public async emit(): Promise<void> {
-        await this.events.onData(
+    public emit(): void {
+        this.events.onData(
             new SensorBatch({
                 drivingStatusData: [
                     {
