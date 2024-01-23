@@ -61,7 +61,10 @@ class SocketServiceIpcSocket extends BaseIpcSocket {
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        this.socket.send(data);
+        this.socket.send(data, {
+            binary: true,
+            compress: false,
+        });
     }
 }
 
