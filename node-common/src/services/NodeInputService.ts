@@ -44,7 +44,7 @@ export class NodeAutoInputService extends InputService {
     protected async bind(_data: KeyBindingRequest): Promise<void> {}
 
     private async sendTouchEventObject(data: ITouchEvent): Promise<void> {
-        await this.sendTouchEvent(new TouchEvent(data));
+        return this.sendTouchEvent(new TouchEvent(data));
     }
 
     private async sendKeyEventObject(data: IKeyEvent): Promise<void> {

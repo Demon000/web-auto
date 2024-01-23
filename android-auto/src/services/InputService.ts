@@ -63,9 +63,9 @@ export abstract class InputService extends Service {
         );
     }
 
-    protected async sendTouchEvent(touchEvent: TouchEvent): Promise<void> {
+    protected sendTouchEvent(touchEvent: TouchEvent): Promise<void> {
         if (!this.started) {
-            return;
+            return Promise.resolve();
         }
 
         const data = new InputReport({
@@ -73,7 +73,7 @@ export abstract class InputService extends Service {
             touchEvent,
         });
 
-        await this.sendEncryptedSpecificMessage(
+        return this.sendEncryptedSpecificMessage(
             InputMessageId.INPUT_MESSAGE_INPUT_REPORT,
             data,
         );
