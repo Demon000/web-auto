@@ -25,7 +25,6 @@ import {
     TouchScreenType,
     VideoCodecResolutionType,
 } from '@web-auto/android-auto-proto';
-import { NodeCryptor } from './crypto/NodeCryptor.js';
 import { NodeAudioInputService } from './services/NodeAudioInputService.js';
 import { NodeAudioOutputService } from './services/NodeAudioOutputService.js';
 import { NodeAutoInputService } from './services/NodeInputService.js';
@@ -46,6 +45,7 @@ import type {
     IInsets,
     IVideoConfiguration,
 } from '@web-auto/android-auto-proto/interfaces.js';
+import { OpenSSLCryptor } from './crypto/OpenSSLCryptor.js';
 
 export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
     public constructor(
@@ -75,11 +75,7 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
         certificateBuffer: Buffer,
         privateKeyBuffer: Buffer,
     ): Cryptor {
-        return new NodeCryptor(
-            this.config.cryptorConfig,
-            certificateBuffer,
-            privateKeyBuffer,
-        );
+        return new OpenSSLCryptor(certificateBuffer, privateKeyBuffer);
     }
 
     public buildControlService(
