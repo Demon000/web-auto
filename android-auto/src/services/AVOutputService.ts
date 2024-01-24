@@ -1,3 +1,4 @@
+import assert from 'node:assert';
 import { BufferReader } from '../utils/buffer.js';
 import { AVService } from './AVService.js';
 import { type ServiceEvents } from './Service.js';
@@ -5,6 +6,7 @@ import { Ack, MediaMessageId, Start, Stop } from '@web-auto/android-auto-proto';
 
 export abstract class AVOutputService extends AVService {
     protected configurationIndex: number | undefined;
+    protected sessionAckBuffer: Uint8Array | undefined;
 
     public constructor(priorities: number[], events: ServiceEvents) {
         super(priorities, events);
@@ -38,7 +40,12 @@ export abstract class AVOutputService extends AVService {
     }
 
     protected onStartIndication(data: Start): void {
+        assert(data.sessionId !== undefined);
         this.session = data.sessionId;
+        this.sessionAckBuffer = new Ack({
+            sessionId: this.session,
+            ack: 1,
+        }).toBinary();
 
         try {
             this.channelStart(data);
@@ -97,18 +104,13 @@ export abstract class AVOutputService extends AVService {
     protected abstract handleData(buffer: Uint8Array, timestamp?: bigint): void;
 
     protected sendAvMediaAckIndication(): void {
-        if (this.session === undefined) {
-            throw new Error('Received media indication without valid session');
-        }
-
-        const data = new Ack({
-            sessionId: this.session,
-            ack: 1,
-        });
-
-        this.sendEncryptedSpecificMessage(
+        assert(this.sessionAckBuffer !== undefined);
+        this.sendPayloadWithId(
             MediaMessageId.MEDIA_MESSAGE_ACK,
-            data,
+            this.sessionAckBuffer,
+            'Ack',
+            true,
+            false,
         );
     }
 }
