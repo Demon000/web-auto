@@ -21,7 +21,6 @@ import {
     ControlService,
     type ControlServiceEvents,
 } from './services/ControlService.js';
-import assert from 'node:assert';
 import { type FrameData } from './messenger/FrameData.js';
 import { FrameHeaderFlags } from './messenger/FrameHeader.js';
 import { Mutex } from 'async-mutex';
@@ -372,9 +371,7 @@ export abstract class AndroidAutoServer {
         this.callOnDevicesUpdated();
     }
 
-    private onDeviceStateUpdated(device: Device): void {
-        assert(this.nameDeviceMap.has(device.name));
-
+    private onDeviceStateUpdated(): void {
         this.callOnDevicesUpdated();
     }
 
@@ -386,7 +383,10 @@ export abstract class AndroidAutoServer {
         this.logger.info('Stopping services');
         for (; i >= 0; i--) {
             const service = this.services[i];
-            assert(service !== undefined);
+            if (service === undefined) {
+                break;
+            }
+
             try {
                 service.stop();
             } catch (err) {
@@ -406,7 +406,9 @@ export abstract class AndroidAutoServer {
         try {
             for (; i < this.services.length; i++) {
                 const service = this.services[i];
-                assert(service !== undefined);
+                if (service === undefined) {
+                    break;
+                }
                 service.start();
             }
         } catch (err) {
