@@ -1,6 +1,6 @@
 import { Transport, type TransportEvents } from './Transport.js';
 import { LoggerWrapper, getLogger } from '@web-auto/logging';
-import assert from 'node:assert';
+import { Mutex } from 'async-mutex';
 
 export enum DeviceState {
     AVAILABLE = 'available',
@@ -31,6 +31,7 @@ export abstract class Device {
     public state = DeviceState.AVAILABLE;
     public name: string;
     protected logger: LoggerWrapper;
+    protected mutex = new Mutex();
 
     public constructor(
         public prefix: string,
@@ -65,6 +66,8 @@ export abstract class Device {
     }
 
     public async connect(): Promise<void> {
+        const release = await this.mutex.acquire();
+
         if (
             this.state !== DeviceState.AVAILABLE &&
             this.state !== DeviceState.SELF_CONNECTING
@@ -72,6 +75,7 @@ export abstract class Device {
             this.logger.error(
                 `Tried to connect while device has state ${this.state}`,
             );
+            release();
             throw new Error('Device not availalbe');
         }
 
@@ -111,6 +115,7 @@ export abstract class Device {
     }
 
     public async disconnect(reason?: string): Promise<void> {
+        const release = await this.mutex.acquire();
         if (reason === undefined) {
             reason = DeviceDisconnectReason.USER;
         }
@@ -119,6 +124,7 @@ export abstract class Device {
             this.logger.info(
                 `Tried to disconnect while device has state ${this.state}`,
             );
+            release();
             return;
         }
 
@@ -126,7 +132,10 @@ export abstract class Device {
 
         this.setState(DeviceState.DISCONNECTING);
 
-        assert(this.transport !== undefined);
+        if (this.transport === undefined) {
+            release();
+            throw new Error('Cannot disconnect a device that is not connected');
+        }
 
         if (reason !== (DeviceDisconnectReason.TRANSPORT as string)) {
             this.logger.info('Disconnecting transport');
@@ -147,5 +156,7 @@ export abstract class Device {
         }
 
         this.setState(DeviceState.AVAILABLE);
+
+        release();
     }
 }
