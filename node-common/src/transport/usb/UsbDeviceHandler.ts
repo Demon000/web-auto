@@ -96,7 +96,7 @@ export class UsbDeviceHandler extends DeviceHandler {
         try {
             await device.open();
             await device.reset();
-            await device.close();
+            device.close();
         } catch (err) {
             this.logger.error(
                 `Failed to reset already connected device ${device.name}`,

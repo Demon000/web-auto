@@ -30,6 +30,7 @@ export class UsbTransport extends Transport {
     }
 
     private onError(err: Error): void {
+        this.device.close();
         this.events.onError(err);
         this.events.onDisconnected();
     }

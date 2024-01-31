@@ -87,7 +87,7 @@ export class UsbAoapConnector {
             this.logger.debug(`Found device ${device.name} without AOAP`, e);
 
             try {
-                await device.close();
+                device.close();
             } catch (e) {
                 this.logger.error(`Failed to close device ${device.name}`);
                 return;
@@ -103,7 +103,7 @@ export class UsbAoapConnector {
             this.logger.error(`Failed to start AA on device ${device.name}`);
 
             try {
-                await device.close();
+                device.close();
             } catch (e) {
                 this.logger.error(`Failed to close device ${device.name}`);
                 return;

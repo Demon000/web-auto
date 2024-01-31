@@ -77,10 +77,13 @@ export class UsbDeviceWrapper {
         });
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    public async close(): Promise<void> {
+    public close(): void {
         assert(this.opened);
-        this.device.close();
+        try {
+            this.device.close();
+        } catch (err) {
+            // do nothing
+        }
         this.opened = false;
     }
 
