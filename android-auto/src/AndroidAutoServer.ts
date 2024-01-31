@@ -494,17 +494,6 @@ export abstract class AndroidAutoServer {
         this.callOnDevicesUpdated();
     }
 
-    protected async deviceSelfConnectionReject(device: Device): Promise<void> {
-        try {
-            await device.rejectSelfConnection();
-        } catch (err) {
-            this.logger.error(
-                `Failed to reject device ${device.name} self connection`,
-                err,
-            );
-        }
-    }
-
     public connectDevice(device: Device): void {
         this.connectDeviceAsync(device).then(
             () => {},
@@ -524,7 +513,14 @@ export abstract class AndroidAutoServer {
                     `${this.connectedDevice.name} already connected`,
             );
 
-            await this.deviceSelfConnectionReject(device);
+            try {
+                await device.rejectSelfConnection();
+            } catch (err) {
+                this.logger.error(
+                    `Failed to reject device ${device.name} self connection`,
+                    err,
+                );
+            }
             return;
         }
 
