@@ -80,8 +80,6 @@ export abstract class Device {
             throw err;
         }
 
-        await this.transport.connect();
-
         this.setState(DeviceState.CONNECTED);
     }
 

@@ -1,8 +1,4 @@
-import {
-    Transport,
-    type TransportEvents,
-    TransportState,
-} from '@web-auto/android-auto';
+import { Transport, type TransportEvents } from '@web-auto/android-auto';
 import type {
     UsbDeviceWrapper,
     UsbDeviceWrapperEndpointStartStopPollFunction,
@@ -27,6 +23,10 @@ export class UsbTransport extends Transport {
 
         this.onDataBound = this.onData.bind(this);
         this.onErrorBound = this.onError.bind(this);
+
+        this.device.claimInterface(0);
+
+        this.startPoll(this.onData.bind(this), this.onError.bind(this));
     }
 
     private onError(err: Error): void {
@@ -40,36 +40,13 @@ export class UsbTransport extends Transport {
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    public async connect(): Promise<void> {
-        if (this.state !== TransportState.AVAILABLE) {
-            return;
-        }
-
-        this.device.claimInterface(0);
-
-        this.startPoll(this.onDataBound, this.onErrorBound);
-
-        this.state = TransportState.CONNECTED;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/require-await
     public async disconnect(): Promise<void> {
-        if (this.state !== TransportState.CONNECTED) {
-            return;
-        }
-
-        this.state = TransportState.DISCONNECTED;
-
         this.stopPoll(this.onDataBound, this.onErrorBound);
 
         await this.device.releaseInterface(0);
     }
 
     public async send(buffer: Uint8Array): Promise<void> {
-        if (this.state === TransportState.DISCONNECTED) {
-            throw new Error('Cannot send to disconnected tranport');
-        }
-
         return this.transferOut(buffer);
     }
 }
