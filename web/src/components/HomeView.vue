@@ -70,6 +70,10 @@ const { onVideoVisible, onVideoHidden } = useVideoFocus(decoder, true);
                     @touch-event="sendTouchEvent"
                 ></MiniVideo>
                 <MediaStatus
+                    v-if="
+                        mediaStatusStore.metadata !== undefined &&
+                        mediaStatusStore.status !== undefined
+                    "
                     @press-key="sendKey"
                     :metadata="mediaStatusStore.metadata"
                     :status="mediaStatusStore.status"
