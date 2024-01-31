@@ -15,8 +15,8 @@ export interface DeviceEvents {
     onStateUpdated: (device: Device) => void;
     onSelfConnection: (device: Device) => void;
     onSelfDisconnection: (device: Device, reason: string) => void;
-    onTransportData: (device: Device, buffer: Uint8Array) => void;
-    onTransportError: (device: Device, err: Error) => void;
+    onData: (device: Device, buffer: Uint8Array) => void;
+    onError: (device: Device, err: Error) => void;
 }
 
 export enum DeviceDisconnectReason {
@@ -46,6 +46,15 @@ export abstract class Device {
     public async rejectSelfConnection(): Promise<void> {}
     protected async handleDisconnect(_reason: string): Promise<void> {}
 
+    public async send(buffer: Uint8Array): Promise<void> {
+        if (this.transport === undefined) {
+            this.logger.error('Device has no transport');
+            return;
+        }
+
+        return this.transport.send(buffer);
+    }
+
     protected setState(state: DeviceState): void {
         this.state = state;
         try {
@@ -70,25 +79,27 @@ export abstract class Device {
 
         try {
             this.transport = await this.connectImpl({
-                onData: this.onTransportData.bind(this),
-                onError: this.onTransportError.bind(this),
+                onData: this.onData.bind(this),
+                onError: this.onError.bind(this),
                 onDisconnected: this.onTransportDisconnected.bind(this),
             });
         } catch (err) {
             this.logger.error('Failed to connect', err);
             this.setState(DeviceState.AVAILABLE);
+            release();
             throw err;
         }
 
         this.setState(DeviceState.CONNECTED);
+        release();
     }
 
-    protected onTransportData(data: Uint8Array): void {
-        this.events.onTransportData(this, data);
+    protected onData(data: Uint8Array): void {
+        this.events.onData(this, data);
     }
 
-    protected onTransportError(err: Error): void {
-        this.events.onTransportError(this, err);
+    protected onError(err: Error): void {
+        this.events.onError(this, err);
     }
 
     protected onTransportDisconnected(): void {

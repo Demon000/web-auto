@@ -24,8 +24,8 @@ export abstract class DeviceHandler {
             onSelfConnection: this.events.onDeviceSelfConnection,
             onSelfDisconnection: this.events.onDeviceSelfDisconnection,
             onStateUpdated: this.events.onDeviceStateUpdated,
-            onTransportData: this.events.onDeviceTransportData,
-            onTransportError: this.events.onDeviceTransportError,
+            onData: this.events.onDeviceTransportData,
+            onError: this.events.onDeviceTransportError,
         };
     }
 
