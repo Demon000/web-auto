@@ -213,8 +213,7 @@ export class UsbDeviceWrapper {
         });
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    public async claimInterface(index: number): Promise<void> {
+    public claimInterface(index: number): void {
         this.device.interface(index).claim();
     }
 

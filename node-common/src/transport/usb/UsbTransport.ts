@@ -39,12 +39,13 @@ export class UsbTransport extends Transport {
         this.events.onData(buffer);
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async connect(): Promise<void> {
         if (this.state !== TransportState.AVAILABLE) {
             return;
         }
 
-        await this.device.claimInterface(0);
+        this.device.claimInterface(0);
 
         this.startPoll(this.onDataBound, this.onErrorBound);
 
