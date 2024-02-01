@@ -149,6 +149,8 @@
                 },
             },
         ],
+        /* Names of devices to be ignored. */
+        ignoredDevices: ['USB: MYSTIC LIGHT'],
         tcpDeviceHandlerConfig: {
             // Static IPs that can be connected to
             // These will be Android devices with head unit servers
@@ -162,8 +164,6 @@
             },
         },
         usbDeviceHandlerConfig: {
-            // VID:PIDs to be ignored when looking up devices
-            ignoredDevices: [[0x1462, 0x7c94]],
             // Whether to try to USB devices that are already in AOAP mode
             // If this options is set to false, these devices will be ignored
             handleAlreadyConnectedDevices: true,

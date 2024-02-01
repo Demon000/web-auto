@@ -136,14 +136,16 @@ export class NodeCryptor extends Cryptor {
     }
 
     public async encrypt(buffer: Uint8Array): Promise<Uint8Array> {
-        if (this.cleartext === undefined || this.encrypted === undefined) {
-            throw new Error('Cannot encrypt after stop');
-        }
-
         this.logger.debug('Encrypting buffer', buffer);
         const release = await this.encryptMutex.acquire();
         try {
+            if (this.cleartext === undefined) {
+                throw new Error('Cannot encrypt after stop');
+            }
             await this.write(this.cleartext, buffer);
+            if (this.encrypted === undefined) {
+                throw new Error('Cannot encrypt after stop');
+            }
             const encrypyedBuffer = await this.read(this.encrypted);
             this.logger.debug('Encrypted buffer', encrypyedBuffer);
             return encrypyedBuffer;
@@ -153,14 +155,16 @@ export class NodeCryptor extends Cryptor {
     }
 
     public async decrypt(buffer: Uint8Array): Promise<Uint8Array> {
-        if (this.cleartext === undefined || this.encrypted === undefined) {
-            throw new Error('Cannot decrypt after stop');
-        }
-
         this.logger.debug('Decrypting buffer', buffer);
         const release = await this.decryptMutex.acquire();
         try {
+            if (this.encrypted === undefined) {
+                throw new Error('Cannot encrypt after stop');
+            }
             await this.write(this.encrypted, buffer);
+            if (this.cleartext === undefined) {
+                throw new Error('Cannot encrypt after stop');
+            }
             const decryptedBuffer = await this.read(this.cleartext);
             this.logger.debug('Decrypted buffer', decryptedBuffer);
             return decryptedBuffer;

@@ -1,17 +1,20 @@
-import { Transport, type TransportEvents } from '@web-auto/android-auto';
 import { Duplex } from 'node:stream';
 
-export class DuplexTransport extends Transport {
+export interface DuplexTransportEvents {
+    onData: (data: Uint8Array) => void;
+    onError: (err: Error) => void;
+    onDisconnected: () => void;
+}
+
+export class DuplexTransport {
     private onDataBound: (data: Uint8Array) => void;
     private onErrorBound: (err: Error) => void;
     private onCloseBound: () => void;
 
     public constructor(
         private socket: Duplex,
-        events: TransportEvents,
+        private events: DuplexTransportEvents,
     ) {
-        super(events);
-
         this.onDataBound = this.onData.bind(this);
         this.onErrorBound = this.onError.bind(this);
         this.onCloseBound = this.onClose.bind(this);
@@ -45,24 +48,13 @@ export class DuplexTransport extends Transport {
         this.events.onDisconnected();
     }
 
-    public async disconnect(): Promise<void> {
+    public disconnect(): void {
         this.detachEvents();
 
-        return new Promise((resolve, _reject) => {
-            this.socket.once('close', resolve);
-            this.socket.destroy();
-        });
+        this.socket.destroy();
     }
 
-    public async send(buffer: Uint8Array): Promise<void> {
-        return new Promise((resolve, reject) => {
-            this.socket.write(buffer, (err) => {
-                if (err !== undefined && err !== null) {
-                    return reject(err);
-                }
-
-                resolve();
-            });
-        });
+    public send(buffer: Uint8Array): void {
+        this.socket.write(buffer);
     }
 }

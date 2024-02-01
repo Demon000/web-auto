@@ -1,14 +1,11 @@
-import {
-    Device,
-    type DeviceEvents,
-    Transport,
-    type TransportEvents,
-} from '@web-auto/android-auto';
+import { Device, type DeviceEvents } from '@web-auto/android-auto';
 import { DuplexTransport } from '../DuplexTransport.js';
 import { Socket } from 'node:net';
 import { TCP_SERVER_PORT } from './tcp.js';
 
 export class TcpDevice extends Device {
+    private transport: DuplexTransport | undefined;
+
     public constructor(
         private ip: string,
         events: DeviceEvents,
@@ -16,7 +13,7 @@ export class TcpDevice extends Device {
         super('TCP', ip, events);
     }
 
-    public async connectImpl(events: TransportEvents): Promise<Transport> {
+    public async connectImpl(): Promise<void> {
         return new Promise((resolve, reject) => {
             const socket = new Socket();
 
@@ -33,12 +30,36 @@ export class TcpDevice extends Device {
                  */
                 socket.off('error', onSocketError);
 
-                const transport = new DuplexTransport(socket, events);
+                this.transport = new DuplexTransport(socket, {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    onData: this.onDataBound,
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    onDisconnected: this.onDisconnectedBound,
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    onError: this.onErrorBound,
+                });
 
-                resolve(transport);
+                resolve();
             });
 
             socket.connect(TCP_SERVER_PORT, this.ip);
         });
+    }
+
+    // eslint-disable-next-line @typescript-eslint/require-await
+    protected override async disconnectImpl(_reason: string): Promise<void> {
+        if (this.transport !== undefined) {
+            this.transport.disconnect();
+            this.transport = undefined;
+        }
+    }
+
+    public override send(buffer: Uint8Array): void {
+        if (this.transport === undefined) {
+            this.logger.error('Device has no transport');
+            return;
+        }
+
+        this.transport.send(buffer);
     }
 }

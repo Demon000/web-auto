@@ -1,4 +1,3 @@
-import { Transport, type TransportEvents } from './Transport.js';
 import { LoggerWrapper, getLogger } from '@web-auto/logging';
 import { Mutex } from 'async-mutex';
 
@@ -14,24 +13,25 @@ export enum DeviceState {
 export interface DeviceEvents {
     onStateUpdated: (device: Device) => void;
     onSelfConnection: (device: Device) => void;
-    onSelfDisconnection: (device: Device, reason: string) => void;
+    onSelfDisconnection: (device: Device, reason?: string) => void;
     onData: (device: Device, buffer: Uint8Array) => void;
     onError: (device: Device, err: Error) => void;
 }
 
 export enum DeviceDisconnectReason {
-    TRANSPORT = 'transport-disconnected',
     USER = 'user-requested',
     START_FAILED = 'start-failed',
     DO_START_FAILED = 'do-start-failed',
 }
 
 export abstract class Device {
-    public transport: Transport | undefined;
     public state = DeviceState.AVAILABLE;
     public name: string;
     protected logger: LoggerWrapper;
     protected mutex = new Mutex();
+    protected onDataBound: (data: Uint8Array) => void;
+    protected onErrorBound: (err: Error) => void;
+    protected onDisconnectedBound: () => void;
 
     public constructor(
         public prefix: string,
@@ -41,19 +41,19 @@ export abstract class Device {
         this.name = `${prefix}: ${realName}`;
 
         this.logger = getLogger(`${this.constructor.name}@${this.realName}`);
+
+        this.onDataBound = this.onData.bind(this);
+        this.onErrorBound = this.onError.bind(this);
+        this.onDisconnectedBound = this.onDisconnected.bind(this);
     }
 
-    protected abstract connectImpl(events: TransportEvents): Promise<Transport>;
+    protected abstract connectImpl(): Promise<void>;
+    protected abstract disconnectImpl(reason: string): Promise<void>;
     public async rejectSelfConnection(): Promise<void> {}
-    protected async handleDisconnect(_reason: string): Promise<void> {}
-
-    public async send(buffer: Uint8Array): Promise<void> {
-        if (this.transport === undefined) {
-            this.logger.error('Device has no transport');
-            return;
-        }
-
-        return this.transport.send(buffer);
+    public abstract send(buffer: Uint8Array): void;
+    // eslint-disable-next-line @typescript-eslint/require-await
+    public async probe(): Promise<boolean> {
+        return true;
     }
 
     protected setState(state: DeviceState): void {
@@ -82,11 +82,7 @@ export abstract class Device {
         this.setState(DeviceState.CONNECTING);
 
         try {
-            this.transport = await this.connectImpl({
-                onData: this.onData.bind(this),
-                onError: this.onError.bind(this),
-                onDisconnected: this.onTransportDisconnected.bind(this),
-            });
+            await this.connectImpl();
         } catch (err) {
             this.logger.error('Failed to connect', err);
             this.setState(DeviceState.AVAILABLE);
@@ -106,11 +102,11 @@ export abstract class Device {
         this.events.onError(this, err);
     }
 
-    protected onTransportDisconnected(): void {
-        this.selfDisconnect(DeviceDisconnectReason.TRANSPORT);
+    protected onDisconnected(): void {
+        this.selfDisconnect();
     }
 
-    public selfDisconnect(reason: string): void {
+    public selfDisconnect(reason?: string): void {
         this.events.onSelfDisconnection(this, reason);
     }
 
@@ -132,27 +128,13 @@ export abstract class Device {
 
         this.setState(DeviceState.DISCONNECTING);
 
-        if (this.transport === undefined) {
-            release();
-            throw new Error('Cannot disconnect a device that is not connected');
-        }
-
-        if (reason !== (DeviceDisconnectReason.TRANSPORT as string)) {
-            this.logger.info('Disconnecting transport');
-            try {
-                await this.transport.disconnect();
-
-                this.logger.info('Disconnected transport');
-            } catch (err) {
-                this.logger.error('Failed to disconnect transport', err);
-            }
-        }
-
-        this.transport = undefined;
+        this.logger.info('Disconnecting');
         try {
-            await this.handleDisconnect(reason);
+            await this.disconnectImpl(reason);
+
+            this.logger.info('Disconnected');
         } catch (err) {
-            this.logger.error('Failed to handle disconnect', err);
+            this.logger.error('Failed to disconnect', err);
         }
 
         this.setState(DeviceState.AVAILABLE);

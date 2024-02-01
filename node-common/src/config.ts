@@ -2,7 +2,6 @@ import { type LoggingConfig } from '@web-auto/logging';
 import type { NodeCryptorConfig } from './crypto/NodeCryptor.js';
 import type { NodeSensorConfig } from './services/NodeSensorBuilder.js';
 import type { TcpDeviceHandlerConfig } from './transport/tcp/TcpDeviceHandler.js';
-import type { UsbDeviceHandlerConfig } from './transport/usb/UsbDeviceHandler.js';
 import type {
     DisplayType,
     MediaCodecType,
@@ -33,6 +32,7 @@ export interface NodeAndroidAutoDisplayConfig {
 }
 
 export interface NodeAndroidAutoServerConfig {
+    ignoredDevices: string[];
     controlConfig: ControlServiceConfig;
     headunitInfo: IHeadUnitInfo;
     serviceDiscoveryResponse: IServiceDiscoveryResponse;
@@ -40,7 +40,6 @@ export interface NodeAndroidAutoServerConfig {
     sensorConfigs: NodeSensorConfig[];
     cryptorConfig: NodeCryptorConfig;
     tcpDeviceHandlerConfig: TcpDeviceHandlerConfig;
-    usbDeviceHandlerConfig: UsbDeviceHandlerConfig;
     bluetoothDeviceHandlerConfig?: BluetoothDeviceHandlerConfig;
 }
 

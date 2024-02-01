@@ -55,14 +55,19 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
 
     public buildDeviceHandlers(events: DeviceHandlerEvents): DeviceHandler[] {
         const deviceHandlers: DeviceHandler[] = [
-            new UsbDeviceHandler(this.config.usbDeviceHandlerConfig, events),
-            new TcpDeviceHandler(this.config.tcpDeviceHandlerConfig, events),
+            new UsbDeviceHandler(this.config.ignoredDevices, events),
+            new TcpDeviceHandler(
+                this.config.tcpDeviceHandlerConfig,
+                this.config.ignoredDevices,
+                events,
+            ),
         ];
 
         if (this.config.bluetoothDeviceHandlerConfig !== undefined) {
             deviceHandlers.push(
                 new BluetoothDeviceHandler(
                     this.config.bluetoothDeviceHandlerConfig,
+                    this.config.ignoredDevices,
                     events,
                 ),
             );

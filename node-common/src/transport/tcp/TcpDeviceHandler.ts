@@ -20,17 +20,17 @@ export interface TcpDeviceHandlerConfig {
     };
 }
 
-export class TcpDeviceHandler extends DeviceHandler {
+export class TcpDeviceHandler extends DeviceHandler<string> {
     private scanBound: () => void;
     private scanInternval: ReturnType<typeof setInterval> | undefined;
-    protected ipDeviceMap = new Map<string, Device>();
     private arp;
 
     public constructor(
         private config: TcpDeviceHandlerConfig,
+        ignoredDevices: string[],
         events: DeviceHandlerEvents,
     ) {
-        super(events);
+        super(ignoredDevices, events);
 
         this.scanBound = this.scan.bind(this);
 
@@ -45,31 +45,9 @@ export class TcpDeviceHandler extends DeviceHandler {
         }
     }
 
-    protected makeDeviceAvailable(ip: string): void {
-        assert(!this.ipDeviceMap.has(ip));
-
-        const device = new TcpDevice(ip, this.getDeviceEvents());
-
-        try {
-            this.events.onDeviceAvailable(device);
-        } catch (err) {
-            this.logger.error('Failed to emit device available event', err);
-        }
-
-        this.ipDeviceMap.set(ip, device);
-    }
-
-    protected makeDeviceUnavailable(ip: string): void {
-        const device = this.ipDeviceMap.get(ip);
-        assert(device !== undefined);
-
-        try {
-            this.events.onDeviceUnavailable(device);
-        } catch (err) {
-            this.logger.error('Failed to emit device unavailable event', err);
-        }
-
-        this.ipDeviceMap.delete(ip);
+    // eslint-disable-next-line @typescript-eslint/require-await
+    protected override async createDevice(data: string): Promise<Device> {
+        return new TcpDevice(data, this.getDeviceEvents());
     }
 
     private updateDevices(hosts: Host[]): void {
@@ -79,20 +57,20 @@ export class TcpDeviceHandler extends DeviceHandler {
             newAvailableIps.push(host.ip);
         }
 
-        const oldAvailableIps = Array.from(this.ipDeviceMap.keys());
+        const oldAvailableIps = Array.from(this.deviceMap.keys());
 
         for (const ip of oldAvailableIps) {
             if (
                 !newAvailableIps.includes(ip) &&
                 (this.config.ips === undefined || !this.config.ips.includes(ip))
             ) {
-                this.makeDeviceUnavailable(ip);
+                this.removeDevice(ip);
             }
         }
 
         for (const ip of newAvailableIps) {
             if (!oldAvailableIps.includes(ip)) {
-                this.makeDeviceAvailable(ip);
+                this.addDevice(ip);
             }
         }
     }
@@ -137,7 +115,7 @@ export class TcpDeviceHandler extends DeviceHandler {
     public async waitForDevices(): Promise<void> {
         if (this.config.ips !== undefined) {
             for (const ip of this.config.ips) {
-                this.makeDeviceAvailable(ip);
+                await this.addDeviceAsync(ip);
             }
         }
 

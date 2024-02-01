@@ -1,11 +1,4 @@
-import {
-    Device,
-    type DeviceEvents,
-    DeviceState,
-    Transport,
-    type TransportEvents,
-    DeviceDisconnectReason,
-} from '@web-auto/android-auto';
+import { Device, type DeviceEvents, DeviceState } from '@web-auto/android-auto';
 import { Device as BluezDevice } from 'bluez';
 import { BluetoothDeviceWifiConnector } from './BluetoothDeviceWifiConnector.js';
 import { Server } from 'node:net';
@@ -25,6 +18,7 @@ export class BluetoothDevice extends Device {
     public profileHandler: BluetoothProfileHandler;
     private wifiConnector: BluetoothDeviceWifiConnector;
     private tcpConnector: BluetoothDeviceTcpConnector;
+    private transport: DuplexTransport | undefined;
 
     public constructor(
         private config: BluetoothDeviceHandlerConfig,
@@ -52,6 +46,16 @@ export class BluetoothDevice extends Device {
         );
 
         this.tcpConnector = new BluetoothDeviceTcpConnector(tcpServer, name);
+    }
+
+    public static async create(
+        config: BluetoothDeviceHandlerConfig,
+        device: BluezDevice,
+        tcpServer: Server,
+        events: DeviceEvents,
+    ): Promise<BluetoothDevice> {
+        const name = await device.Name();
+        return new BluetoothDevice(config, device, tcpServer, name, events);
     }
 
     private onBluetoothProfileError(err: Error): void {
@@ -122,20 +126,6 @@ export class BluetoothDevice extends Device {
         this.logger.info('Disconnected from Bluetooth profile');
     }
 
-    protected override async handleDisconnect(reason: string): Promise<void> {
-        switch (
-            reason as BluetoothDeviceDisconnectReason | DeviceDisconnectReason
-        ) {
-            case BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE:
-                await this.disconnectBluetooth();
-                break;
-            default:
-                await this.disconnectBluetoothProfile();
-                await this.disconnectBluetooth();
-                break;
-        }
-    }
-
     public async connectWifi(bluetoothSocket: Duplex): Promise<void> {
         this.logger.info('Connecting to WiFi');
         try {
@@ -200,7 +190,7 @@ export class BluetoothDevice extends Device {
         });
     }
 
-    public async connectImpl(events: TransportEvents): Promise<Transport> {
+    public async connectImpl(): Promise<void> {
         const paired = await this.device.Paired();
         if (!paired) {
             await this.device.Pair();
@@ -236,6 +226,38 @@ export class BluetoothDevice extends Device {
             throw err;
         }
 
-        return new DuplexTransport(tcpSocket, events);
+        this.transport = new DuplexTransport(tcpSocket, {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            onData: this.onDataBound,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            onDisconnected: this.onDisconnectedBound,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            onError: this.onErrorBound,
+        });
+    }
+
+    protected override async disconnectImpl(reason: string): Promise<void> {
+        if (this.transport !== undefined) {
+            this.transport.disconnect();
+            this.transport = undefined;
+        }
+
+        if (
+            reason ===
+            (BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE as string)
+        ) {
+            await this.disconnectBluetoothProfile();
+        }
+
+        await this.disconnectBluetooth();
+    }
+
+    public send(buffer: Uint8Array): void {
+        if (this.transport === undefined) {
+            this.logger.error('Device has no transport');
+            return;
+        }
+
+        this.transport.send(buffer);
     }
 }

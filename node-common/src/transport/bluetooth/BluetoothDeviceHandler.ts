@@ -2,6 +2,7 @@ import { Bluez, Adapter } from 'bluez';
 import dbus from 'dbus-next';
 import assert from 'node:assert';
 import {
+    Device,
     DeviceHandler,
     type DeviceHandlerEvents,
 } from '@web-auto/android-auto';
@@ -23,82 +24,38 @@ export interface BluetoothDeviceHandlerConfig {
     socketInfo: ISocketInfoRequest;
 }
 
-export class BluetoothDeviceHandler extends DeviceHandler {
-    protected addressDeviceMap = new Map<string, BluetoothDevice>();
+export class BluetoothDeviceHandler extends DeviceHandler<string> {
     private androidAutoProfile: AndroidAutoProfile;
     private bus?: dbus.MessageBus;
     private bluetooth?: Bluez;
     private adapter?: Adapter;
     private tcpServer?: net.Server;
-    private onDeviceAddedBound: (address: string) => void;
-    private onDeviceRemovedBound: (address: string) => void;
 
     public constructor(
         private config: BluetoothDeviceHandlerConfig,
+        ignoredDevices: string[],
         events: DeviceHandlerEvents,
     ) {
-        super(events);
-
-        this.onDeviceAddedBound = this.onDeviceAdded.bind(this);
-        this.onDeviceRemovedBound = this.onDeviceRemoved.bind(this);
+        super(ignoredDevices, events);
 
         this.androidAutoProfile = new AndroidAutoProfile();
     }
 
-    private onDeviceAdded(address: string): void {
-        this.onDeviceAddedAsync(address)
-            .then(() => {})
-            .catch((err) => {
-                this.logger.error('Failed to handle device added', err);
-            });
-    }
-
-    private async onDeviceAddedAsync(address: string): Promise<void> {
-        this.logger.info(`Bluetooth device added ${address}`);
+    protected override async createDevice(data: string): Promise<Device> {
         assert(this.adapter !== undefined);
         assert(this.tcpServer !== undefined);
 
-        const bluezDevice = await this.adapter.getDevice(address);
-
-        let name;
-        try {
-            name = await bluezDevice.Name();
-        } catch (err) {
-            return;
-        }
-
-        const device = new BluetoothDevice(
+        const bluezDevice = await this.adapter.getDevice(data);
+        const device = await BluetoothDevice.create(
             this.config,
             bluezDevice,
             this.tcpServer,
-            name,
             this.getDeviceEvents(),
         );
-        this.androidAutoProfile.addHandler(address, device.profileHandler);
-        this.addressDeviceMap.set(address, device);
 
-        try {
-            this.events.onDeviceAvailable(device);
-        } catch (err) {
-            this.logger.error('Failed to emit device available event', err);
-        }
-    }
+        this.androidAutoProfile.addHandler(data, device.profileHandler);
 
-    private onDeviceRemoved(address: string): void {
-        this.logger.debug(`Bluetooth device removed ${address}`);
-        const device = this.addressDeviceMap.get(address);
-        if (device === undefined) {
-            return;
-        }
-
-        try {
-            this.events.onDeviceUnavailable(device);
-        } catch (err) {
-            this.logger.error('Failed to emit device unavailable event', err);
-        }
-
-        this.androidAutoProfile.removeHandler(address, device.profileHandler);
-        this.addressDeviceMap.delete(address);
+        return device;
     }
 
     public async waitForDevices(): Promise<void> {
@@ -161,19 +118,19 @@ export class BluetoothDeviceHandler extends DeviceHandler {
                 continue;
             }
 
-            await this.onDeviceAddedAsync(props.Address);
+            await this.addDeviceAsync(props.Address);
         }
         this.logger.info('Finished processing paired devices');
 
-        this.adapter.on('DeviceAdded', this.onDeviceAddedBound);
-        this.adapter.on('DeviceRemoved', this.onDeviceRemovedBound);
+        this.adapter.on('DeviceAdded', this.addDeviceBound);
+        this.adapter.on('DeviceRemoved', this.removeDeviceBound);
     }
 
     public override async stopWaitingForDevices(): Promise<void> {
         if (this.adapter !== undefined) {
             this.logger.info('Stopping new device discovery');
-            this.adapter.off('DeviceAdded', this.onDeviceAddedBound);
-            this.adapter.off('DeviceRemoved', this.onDeviceRemovedBound);
+            this.adapter.off('DeviceAdded', this.addDeviceBound);
+            this.adapter.off('DeviceRemoved', this.removeDeviceBound);
 
             await this.adapter.StopDiscovery();
 
