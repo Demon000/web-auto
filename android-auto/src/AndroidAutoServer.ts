@@ -486,12 +486,30 @@ export abstract class AndroidAutoServer {
         this.frameCodec.stop();
     }
 
-    private onDeviceUnavailable(device: Device): void {
+    private removeDevice(device: Device): void {
         this.logger.info(`Device ${device.name} no longer available`);
 
         this.nameDeviceMap.delete(device.name);
 
         this.callOnDevicesUpdated();
+    }
+
+    private onDeviceUnavailable(device: Device): void {
+        if (device.state !== DeviceState.CONNECTED) {
+            this.removeDevice(device);
+            return;
+        }
+
+        this.disconnectDeviceAsync(device)
+            .then(() => {
+                this.removeDevice(device);
+            })
+            .catch((err) => {
+                this.logger.error(
+                    'Failed to disconnect unavailable device',
+                    err,
+                );
+            });
     }
 
     public connectDevice(device: Device): void {
