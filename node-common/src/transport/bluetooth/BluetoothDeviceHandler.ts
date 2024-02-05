@@ -63,6 +63,11 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
         return device;
     }
 
+    protected override destroyDevice(data: string, device: Device): void {
+        assert(device instanceof BluetoothDevice);
+        this.androidAutoProfile.removeHandler(data, device.profileHandler);
+    }
+
     public async waitForDevices(): Promise<void> {
         this.logger.info('Creating TCP server');
         assert(

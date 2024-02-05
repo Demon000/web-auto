@@ -45,6 +45,7 @@ export abstract class DeviceHandler<T = any> {
     }
 
     protected abstract createDevice(data: T): Promise<Device | undefined>;
+    protected destroyDevice(_data: T, _device: Device): void {}
 
     protected async addDeviceAsyncLocked(data: T): Promise<void> {
         let device;
@@ -94,13 +95,15 @@ export abstract class DeviceHandler<T = any> {
     }
 
     protected removeDeviceLocked(data: T): void {
-        const usbDevice = this.deviceMap.get(data);
-        if (usbDevice === undefined) {
+        const device = this.deviceMap.get(data);
+        if (device === undefined) {
             return;
         }
+
+        this.destroyDevice(data, device);
         this.deviceMap.delete(data);
         try {
-            this.events.onDeviceUnavailable(usbDevice);
+            this.events.onDeviceUnavailable(device);
         } catch (err) {
             this.logger.error('Failed to emit device unavailable event', err);
         }
