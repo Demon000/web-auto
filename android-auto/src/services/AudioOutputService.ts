@@ -20,8 +20,13 @@ export abstract class AudioOutputService extends AVOutputService {
     }
 
     protected channelConfig(): IAudioConfiguration {
-        assert(this.configurationIndex !== undefined);
-        const config = this.configs[this.configurationIndex];
+        let index = this.configurationIndex;
+        if (index === undefined && this.configs.length === 1) {
+            index = 0;
+        }
+
+        assert(index !== undefined);
+        const config = this.configs[index];
         assert(config !== undefined);
         return config;
     }

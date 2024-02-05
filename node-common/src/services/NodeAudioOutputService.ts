@@ -1,9 +1,5 @@
 import { AudioOutputService, type ServiceEvents } from '@web-auto/android-auto';
-import {
-    AudioStreamType,
-    ChannelOpenRequest,
-    Start,
-} from '@web-auto/android-auto-proto';
+import { AudioStreamType } from '@web-auto/android-auto-proto';
 import type { IAudioConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
 import RtAudioPackage from 'audify';
 import assert from 'node:assert';
@@ -45,19 +41,7 @@ export class NodeAudioOutputService extends AudioOutputService {
         this.configurationIndex = 0;
 
         this.rtaudio = new RtAudio();
-    }
 
-    protected rtAudioFormat(): RtAudioFormat {
-        const numberOfBits = this.numberOfBits();
-        switch (numberOfBits) {
-            case 16:
-                return RtAudioFormat.RTAUDIO_SINT16;
-            default:
-                throw new Error(`Unhandled number of bits: ${numberOfBits}`);
-        }
-    }
-
-    protected override open(_data: ChannelOpenRequest): void {
         this.rtaudio.openStream(
             {
                 nChannels: this.channelCount(),
@@ -70,18 +54,22 @@ export class NodeAudioOutputService extends AudioOutputService {
             null,
             null,
         );
-    }
 
-    protected override channelStart(_data: Start): void {
         this.rtaudio.start();
     }
 
-    protected override channelStop(): void {
-        this.rtaudio.stop();
+    protected rtAudioFormat(): RtAudioFormat {
+        const numberOfBits = this.numberOfBits();
+        switch (numberOfBits) {
+            case 16:
+                return RtAudioFormat.RTAUDIO_SINT16;
+            default:
+                throw new Error(`Unhandled number of bits: ${numberOfBits}`);
+        }
     }
 
-    public override stop(): void {
-        super.stop();
+    public override destroy(): void {
+        this.rtaudio.stop();
         this.rtaudio.closeStream();
     }
 
