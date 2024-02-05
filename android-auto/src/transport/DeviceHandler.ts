@@ -78,22 +78,6 @@ export abstract class DeviceHandler<T = any> {
         release();
     }
 
-    protected addDevice(data: T): void {
-        this.addDeviceAsync(data)
-            .then(() => {})
-            .catch((err) => {
-                this.logger.error('Failed to handle device add', err);
-            });
-    }
-
-    protected removeDevice(data: T): void {
-        this.removeDeviceAsync(data)
-            .then(() => {})
-            .catch((err) => {
-                this.logger.error('Failed to handle device remove', err);
-            });
-    }
-
     protected removeDeviceLocked(data: T): void {
         const device = this.deviceMap.get(data);
         if (device === undefined) {
@@ -113,6 +97,22 @@ export abstract class DeviceHandler<T = any> {
         const release = await this.deviceMapLock.acquire();
         this.removeDeviceLocked(data);
         release();
+    }
+
+    protected addDevice(data: T): void {
+        this.addDeviceAsync(data)
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error('Failed to handle device add', err);
+            });
+    }
+
+    protected removeDevice(data: T): void {
+        this.removeDeviceAsync(data)
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error('Failed to handle device remove', err);
+            });
     }
 
     protected getDeviceEvents(): DeviceEvents {

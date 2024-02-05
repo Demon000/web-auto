@@ -72,6 +72,8 @@ export abstract class Service {
         this.specificMessageCallbacks.clear();
     }
 
+    protected open(_data: ChannelOpenRequest): void {}
+
     protected onChannelOpenRequest(data: ChannelOpenRequest): void {
         let status = false;
 
@@ -202,8 +204,6 @@ export abstract class Service {
             this.specificMessageCallbacks.set(messageId, onMessage);
         });
     }
-
-    protected open(_data: ChannelOpenRequest): void {}
 
     protected sendChannelOpenResponse(status: boolean): void {
         const data = new ChannelOpenResponse({
