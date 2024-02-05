@@ -103,7 +103,7 @@ export class BluetoothDeviceWifiConnector {
     private waitForMessage(
         type: number,
         signal: AbortSignal,
-    ): Promise<BluetoothMessage> {
+    ): Promise<Uint8Array> {
         return new Promise((resolve, reject) => {
             assert(!this.messageCallbacks.has(type));
 
@@ -117,7 +117,7 @@ export class BluetoothDeviceWifiConnector {
                 this.logger.info(`Received waited message with id ${type}`);
                 this.messageCallbacks.delete(type);
                 signal.removeEventListener('abort', onAbort);
-                resolve(message);
+                resolve(message.payload);
             };
 
             signal.addEventListener('abort', onAbort);
@@ -150,12 +150,12 @@ export class BluetoothDeviceWifiConnector {
     }
 
     public async waitForConnectStatus(abortSignal: AbortSignal): Promise<void> {
-        const message = await this.waitForMessage(
+        const payload = await this.waitForMessage(
             BluetoothMessageType.CONNECT_STATUS,
             abortSignal,
         );
 
-        const data = ConnectStatus.fromBinary(message.payload);
+        const data = ConnectStatus.fromBinary(payload);
 
         if (data.status !== SocketInfoResponseStatus.STATUS_SUCCESS) {
             assert(data.status !== undefined);
