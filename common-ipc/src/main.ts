@@ -258,7 +258,9 @@ export class IpcServiceHandlerHelper<L extends IpcService>
         assert('args' in ipcEvent);
 
         const handlerFn = this.handlersMap.get(ipcEvent.name);
-        assert(handlerFn !== undefined);
+        if (handlerFn === undefined) {
+            throw new Error(`Failed to find handler ${ipcEvent.name}`);
+        }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         return handlerFn(...ipcEvent.args);
