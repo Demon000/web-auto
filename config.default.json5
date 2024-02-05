@@ -150,7 +150,7 @@
             },
         ],
         /* Names of devices to be ignored. */
-        ignoredDevices: ['USB: MYSTIC LIGHT'],
+        ignoredDevices: ['USB: MYSTIC LIGHT '],
         tcpDeviceHandlerConfig: {
             // Static IPs that can be connected to
             // These will be Android devices with head unit servers
