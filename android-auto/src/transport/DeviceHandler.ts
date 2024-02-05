@@ -46,31 +46,34 @@ export abstract class DeviceHandler<T = any> {
 
     protected abstract createDevice(data: T): Promise<Device | undefined>;
 
-    protected async addDeviceAsync(data: T): Promise<void> {
-        const release = await this.deviceMapLock.acquire();
+    protected async addDeviceAsyncLocked(data: T): Promise<void> {
         let device;
-        let probed;
+
         try {
             device = await this.createDevice(data);
             if (device === undefined || this.isIgnoredDevice(device)) {
-                release();
                 return;
             }
-            probed = await device.probe();
+
+            const probed = await device.probe();
+            if (!probed) {
+                return;
+            }
         } catch (err) {
             this.logger.error('Failed to create device', {
                 device,
                 err,
             });
-        }
-
-        if (!device || !probed) {
-            release();
             return;
         }
 
         this.deviceMap.set(data, device);
         this.events.onDeviceAvailable(device);
+    }
+
+    protected async addDeviceAsync(data: T): Promise<void> {
+        const release = await this.deviceMapLock.acquire();
+        await this.addDeviceAsyncLocked(data);
         release();
     }
 
@@ -90,11 +93,9 @@ export abstract class DeviceHandler<T = any> {
             });
     }
 
-    protected async removeDeviceAsync(data: T): Promise<void> {
-        const release = await this.deviceMapLock.acquire();
+    protected removeDeviceLocked(data: T): void {
         const usbDevice = this.deviceMap.get(data);
         if (usbDevice === undefined) {
-            release();
             return;
         }
         this.deviceMap.delete(data);
@@ -103,6 +104,11 @@ export abstract class DeviceHandler<T = any> {
         } catch (err) {
             this.logger.error('Failed to emit device unavailable event', err);
         }
+    }
+
+    protected async removeDeviceAsync(data: T): Promise<void> {
+        const release = await this.deviceMapLock.acquire();
+        this.removeDeviceLocked(data);
         release();
     }
 
