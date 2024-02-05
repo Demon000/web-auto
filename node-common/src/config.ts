@@ -26,6 +26,7 @@ export interface NodeAndroidAutoDisplayConfig {
     width: number;
     height: number;
     touch?: boolean;
+    touchEventThrottlePixels?: number;
     type: DisplayType;
     density: number;
     resolutionConfigs: NodeAndroidAutoResolutionConfig[];

@@ -11,6 +11,7 @@ import type {
 export type AndroidAutoInputService = {
     sendTouchEvent: (touchEvent: ITouchEvent) => Promise<void>;
     sendKeyEvent: (keyEvent: IKeyEvent) => Promise<void>;
+    touchEventThrottlePixels: () => Promise<number>;
 };
 
 export type AndroidAutoInputClient = Record<string, never>;

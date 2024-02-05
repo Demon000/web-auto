@@ -5,6 +5,10 @@ import type { FitMode } from 'object-fit-math/dist/types.d.ts';
 import { PointerAction } from '@web-auto/android-auto-proto';
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
 
+const props = defineProps<{
+    throttlePixels?: number;
+}>();
+
 const emit = defineEmits<{
     (e: 'video-visible', offscreenCanvas: OffscreenCanvas): void;
     (e: 'video-hidden'): void;
@@ -144,10 +148,10 @@ const sendPointerEvent = (pointerId: number, event: PointerEvent) => {
         const oldCoords = pointerPositionMap.get(pointerId);
         if (oldCoords !== undefined) {
             const [oldX, oldY] = oldCoords;
-            const distance = 10;
             if (
-                Math.abs(x - oldX) < distance &&
-                Math.abs(y - oldY) < distance
+                props.throttlePixels !== undefined &&
+                Math.abs(x - oldX) < props.throttlePixels &&
+                Math.abs(y - oldY) < props.throttlePixels
             ) {
                 return;
             }

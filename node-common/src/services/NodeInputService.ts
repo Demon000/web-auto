@@ -25,6 +25,7 @@ export class NodeAutoInputService extends InputService {
             | IpcServiceHandler<AndroidAutoInputService, AndroidAutoInputClient>
             | undefined,
         private touchScreenConfig: IInputSourceService_TouchScreen | undefined,
+        private touchEventThrottlePixels: number | undefined,
         private displayId: number,
         events: ServiceEvents,
     ) {
@@ -39,6 +40,10 @@ export class NodeAutoInputService extends InputService {
             this.sendTouchEventObject.bind(this),
         );
         this.ipcHandler.on('sendKeyEvent', this.sendKeyEventObject.bind(this));
+        this.ipcHandler.on(
+            'touchEventThrottlePixels',
+            this.getTouchEventThrottlePixels.bind(this),
+        );
     }
 
     protected async bind(_data: KeyBindingRequest): Promise<void> {}
@@ -51,6 +56,16 @@ export class NodeAutoInputService extends InputService {
     // eslint-disable-next-line @typescript-eslint/require-await
     private async sendKeyEventObject(data: IKeyEvent): Promise<void> {
         this.sendKeyEvent(new KeyEvent(data));
+    }
+
+    // eslint-disable-next-line @typescript-eslint/require-await
+    private async getTouchEventThrottlePixels(): Promise<number> {
+        let pixels = this.touchEventThrottlePixels;
+        if (pixels === undefined) {
+            pixels = 1;
+        }
+
+        return pixels;
     }
 
     protected fillKeycodes(inputSourceService: InputSourceService): void {

@@ -391,6 +391,7 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
                       type: TouchScreenType.CAPACITIVE,
                   }
                 : undefined,
+            displayConfig.touchEventThrottlePixels,
             displayConfig.id,
             events,
         );

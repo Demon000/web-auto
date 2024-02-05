@@ -11,10 +11,12 @@ import { useMediaStatusStore } from './stores/media-status-store.js';
 import { useVideoFocusModeStore } from './stores/video-store.js';
 import { useDeviceStore } from './stores/device-store.js';
 import {
+    androidAutoInputService,
     androidAutoMediaStatusService,
     androidAutoServerService,
     androidAutoVideoService,
 } from './ipc.js';
+import { useInputStore } from './stores/input-store.js';
 
 const app = createApp(App);
 
@@ -24,11 +26,13 @@ app.use(router);
 const deviceStore = useDeviceStore();
 const mediaStatusStore = useMediaStatusStore();
 const videoFocusModeStore = useVideoFocusModeStore();
+const inputStore = useInputStore();
 
 const initialize = async () => {
     await deviceStore.initialize(androidAutoServerService);
     await mediaStatusStore.initialize(androidAutoMediaStatusService);
     await videoFocusModeStore.initialize(androidAutoVideoService);
+    await inputStore.initialize(androidAutoInputService);
 
     decoder.start();
 

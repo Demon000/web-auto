@@ -7,8 +7,10 @@ import { decoder } from '../decoder.ts';
 import { useVideoFocus } from './video-focus.ts';
 import { watch } from 'vue';
 import { useDeviceStore } from '../stores/device-store.ts';
+import { useInputStore } from '../stores/input-store.ts';
 
 const deviceStore = useDeviceStore();
+const inputStore = useInputStore();
 
 const sendTouchEvent = (touchEvent: ITouchEvent) => {
     androidAutoInputService
@@ -52,6 +54,7 @@ watch(
             @touch-event="sendTouchEvent"
             @video-visible="onVideoVisible"
             @video-hidden="onVideoHidden"
+            :throttle-pixels="inputStore.throttlePixels"
         ></Video>
     </div>
 </template>

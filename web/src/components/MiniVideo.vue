@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import Video from '../components/Video.vue';
 
+const inputStore = useInputStore();
+
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
 
 import '@material/web/fab/fab.js';
 import '@material/web/icon/icon.js';
+import { useInputStore } from '../stores/input-store.ts';
 
 const emit = defineEmits<{
     (e: 'video-visible', offscreenCanvas: OffscreenCanvas): void;
@@ -32,6 +35,7 @@ const emitTouchEvent = (touchEvent: ITouchEvent) => {
             @touch-event="emitTouchEvent"
             @video-visible="emitVideoVisible"
             @video-hidden="emitVideoHidden"
+            :throttle-pixels="inputStore.throttlePixels"
         ></Video>
         <md-fab class="open" variant="primary" @click="emit('expand-video')">
             <md-icon slot="icon">open_in_full</md-icon>
