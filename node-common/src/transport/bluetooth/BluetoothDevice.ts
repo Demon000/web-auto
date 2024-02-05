@@ -91,6 +91,7 @@ export class BluetoothDevice extends Device {
             this.logger.error(
                 `Unexpected bluetooth profile disconnection in state: ${this.state}`,
             );
+            return;
         }
 
         this.selfDisconnect(BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE);
