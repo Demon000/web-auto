@@ -5,6 +5,10 @@ import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
 import router from '../router/index.ts';
 import { decoder } from '../decoder.ts';
 import { useVideoFocus } from './video-focus.ts';
+import { watch } from 'vue';
+import { useDeviceStore } from '../stores/device-store.ts';
+
+const deviceStore = useDeviceStore();
 
 const sendTouchEvent = (touchEvent: ITouchEvent) => {
     androidAutoInputService
@@ -26,6 +30,18 @@ const { onVideoVisible, onVideoHidden } = useVideoFocus(
     true,
     async () => {
         await switchToHomeView();
+    },
+);
+
+watch(
+    () => deviceStore.connectedDevice,
+    async (connectedDevice) => {
+        if (connectedDevice === undefined) {
+            await switchToHomeView();
+        }
+    },
+    {
+        immediate: true,
     },
 );
 </script>
