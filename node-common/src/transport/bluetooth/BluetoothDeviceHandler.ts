@@ -41,7 +41,9 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
         this.androidAutoProfile = new AndroidAutoProfile();
     }
 
-    protected override async createDevice(data: string): Promise<Device> {
+    protected override async createDevice(
+        data: string,
+    ): Promise<Device | undefined> {
         assert(this.adapter !== undefined);
         assert(this.tcpServer !== undefined);
 
@@ -52,6 +54,9 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
             this.tcpServer,
             this.getDeviceEvents(),
         );
+        if (device === undefined) {
+            return;
+        }
 
         this.androidAutoProfile.addHandler(data, device.profileHandler);
 

@@ -11,7 +11,9 @@ export class UsbDeviceHandler extends DeviceHandler<UsbDeviceImpl> {
         super(ignoredDevices, events);
     }
 
-    protected override createDevice(data: UsbDeviceImpl): Promise<Device> {
+    protected override createDevice(
+        data: UsbDeviceImpl,
+    ): Promise<Device | undefined> {
         return UsbDevice.create(data, this.getDeviceEvents());
     }
 

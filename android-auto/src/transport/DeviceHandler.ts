@@ -44,7 +44,7 @@ export abstract class DeviceHandler<T = any> {
         return false;
     }
 
-    protected abstract createDevice(data: T): Promise<Device>;
+    protected abstract createDevice(data: T): Promise<Device | undefined>;
 
     protected async addDeviceAsync(data: T): Promise<void> {
         const release = await this.deviceMapLock.acquire();
@@ -52,7 +52,7 @@ export abstract class DeviceHandler<T = any> {
         let probed;
         try {
             device = await this.createDevice(data);
-            if (this.isIgnoredDevice(device)) {
+            if (device === undefined || this.isIgnoredDevice(device)) {
                 release();
                 return;
             }

@@ -46,7 +46,9 @@ export class TcpDeviceHandler extends DeviceHandler<string> {
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    protected override async createDevice(data: string): Promise<Device> {
+    protected override async createDevice(
+        data: string,
+    ): Promise<Device | undefined> {
         return new TcpDevice(data, this.getDeviceEvents());
     }
 

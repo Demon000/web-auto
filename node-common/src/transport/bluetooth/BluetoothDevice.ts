@@ -53,8 +53,13 @@ export class BluetoothDevice extends Device {
         device: BluezDevice,
         tcpServer: Server,
         events: DeviceEvents,
-    ): Promise<BluetoothDevice> {
-        const name = await device.Name();
+    ): Promise<BluetoothDevice | undefined> {
+        let name;
+        try {
+            name = await device.Name();
+        } catch (err) {
+            return;
+        }
         return new BluetoothDevice(config, device, tcpServer, name, events);
     }
 
