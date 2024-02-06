@@ -142,8 +142,10 @@ const emit = defineEmits<{
 
 .progress {
     --md-linear-progress-track-height: 6px;
-    --md-linear-progress-track-shape: 2px;
+    --md-linear-progress-track-shape: 4px;
     --md-linear-progress-active-indicator-height: 6px;
+    --md-linear-progress-active-indicator-color: #ffffff;
+    --md-linear-progress-track-color: rgba(0, 0, 0, 0.25);
 
     margin: 32px 0;
     width: 100%;
