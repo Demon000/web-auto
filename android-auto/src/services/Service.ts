@@ -9,6 +9,7 @@ import {
 import { getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
 import { Message as ProtoMessage } from '@bufbuild/protobuf';
+import { bufferWrapUint8Array } from 'src/index.js';
 
 export interface ServiceEvents {
     onProtoMessageSent: (
@@ -91,40 +92,33 @@ export abstract class Service {
         this.sendChannelOpenResponse(status);
     }
 
-    protected printReceive(message: any): void {
+    protected printMessage(type: string, message: any, extra?: string): void {
         if (!this.logger.debuggable) {
             return;
-        }
-
-        let extra = '';
-        if (typeof message === 'string') {
-            extra = message;
-            message = undefined;
-        } else if (message instanceof ProtoMessage) {
-            extra = message.getType().typeName;
-            message = message.toJson();
-        }
-
-        this.logger.debug(`Receive ${extra}`, message);
-    }
-
-    protected printSend(message: any): void {
-        if (!this.logger.debuggable) {
-            return;
-        }
-
-        let extra = '';
-        if (typeof message === 'string') {
-            extra = message;
-            message = undefined;
         }
 
         if (message instanceof ProtoMessage) {
-            extra = message.getType().typeName;
+            if (extra === undefined) {
+                extra = message.getType().typeName;
+            }
             message = message.toJson();
+        } else if (message instanceof Uint8Array) {
+            if (extra === undefined) {
+                extra = 'Uint8Array';
+            }
+            const buffer = bufferWrapUint8Array(message);
+            message = buffer.toString('hex');
         }
 
-        this.logger.debug(`Send ${extra}`, message);
+        this.logger.debug(`${type} ${extra}`, message);
+    }
+
+    protected printReceive(message: any, extra?: string): void {
+        this.printMessage('Receive', message, extra);
+    }
+
+    protected printSend(message: any, extra?: string): void {
+        this.printMessage('Send', message, extra);
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
@@ -221,11 +215,11 @@ export abstract class Service {
     protected sendPayloadWithId(
         messageId: number,
         dataPayload: Uint8Array,
-        printMessage: any,
+        printMessage: string,
         isEncrypted: boolean,
         isControl: boolean,
     ): void {
-        this.printSend(printMessage);
+        this.printSend(dataPayload, printMessage);
 
         this.events.onPayloadMessageSent(
             this.serviceId,

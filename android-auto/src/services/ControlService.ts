@@ -146,7 +146,7 @@ export class ControlService extends Service {
         this.sendPayloadWithId(
             ControlMessageType.MESSAGE_VERSION_REQUEST,
             writer.data,
-            'version request',
+            'Version Request',
             false,
             false,
         );
@@ -156,7 +156,7 @@ export class ControlService extends Service {
         this.sendPayloadWithId(
             ControlMessageType.MESSAGE_ENCAPSULATED_SSL,
             payload,
-            'handshake',
+            'Handshake',
             false,
             false,
         );

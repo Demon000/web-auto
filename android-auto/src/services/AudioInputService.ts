@@ -100,7 +100,7 @@ export abstract class AudioInputService extends AVService {
         this.sendPayloadWithId(
             MediaMessageId.MEDIA_MESSAGE_DATA,
             writer.data,
-            'data',
+            'Data',
             true,
             false,
         );
