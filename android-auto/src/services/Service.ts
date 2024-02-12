@@ -9,7 +9,7 @@ import {
 import { getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
 import { Message as ProtoMessage } from '@bufbuild/protobuf';
-import { bufferWrapUint8Array } from 'src/index.js';
+import { bufferWrapUint8Array } from '../utils/buffer.js';
 
 export interface ServiceEvents {
     onProtoMessageSent: (
