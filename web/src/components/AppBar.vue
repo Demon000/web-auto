@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import AppBarIcon from './AppBarIcon.vue';
+import { useDeviceStore } from '../stores/device-store.ts';
+
+const deviceStore = useDeviceStore();
 </script>
 
 <template>
@@ -10,7 +13,11 @@ import AppBarIcon from './AppBarIcon.vue';
         <router-link to="/connections" v-slot="{ isExactActive }">
             <AppBarIcon :selected="isExactActive">phonelink_ring</AppBarIcon>
         </router-link>
-        <router-link to="/android-auto-video" v-slot="{ isExactActive }">
+        <router-link
+            v-if="deviceStore.connectedDevice !== undefined"
+            to="/android-auto-video"
+            v-slot="{ isExactActive }"
+        >
             <AppBarIcon :selected="isExactActive"
                 ><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
                     <path
@@ -28,10 +35,6 @@ import AppBarIcon from './AppBarIcon.vue';
                 </svg>
             </AppBarIcon>
         </router-link>
-        <AppBarIcon>mode_fans</AppBarIcon>
-        <AppBarIcon>radio</AppBarIcon>
-        <AppBarIcon>lightbulb</AppBarIcon>
-        <AppBarIcon>settings</AppBarIcon>
     </div>
 </template>
 
