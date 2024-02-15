@@ -242,6 +242,7 @@ export class ControlService extends Service {
                 ControlMessageType.MESSAGE_ENCAPSULATED_SSL,
                 signal,
             );
+            this.printReceive(receivedPayload, 'Handshake');
             await this.cryptor.writeHandshakeBuffer(receivedPayload);
         }
 

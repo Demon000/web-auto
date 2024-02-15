@@ -57,6 +57,10 @@ export class NodeCryptor extends Cryptor {
 
             this.connected = true;
         });
+
+        this.cleartext.on('keylog', (line) => {
+            this.logger.info('Keylog', line.toString('hex'));
+        });
     }
     public stop(): void {
         assert(this.cleartext !== undefined);
