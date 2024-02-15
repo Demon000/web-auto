@@ -521,6 +521,46 @@ export abstract class AndroidAutoServer {
         );
     }
 
+    public async connectDeviceAsyncLocked(device: Device): Promise<void> {
+        this.logger.info(`Connecting device ${device.name}`);
+
+        try {
+            await device.connect();
+        } catch (err) {
+            this.logger.error(`Failed to connect to ${device.name}`, err);
+            return;
+        }
+
+        this.connectedDevice = device;
+        this.onDeviceConnectedCallback(device);
+
+        this.logger.info(`Connected device ${device.name}`);
+
+        try {
+            this.logger.info('Starting dependencies');
+            this.startDependencies();
+            this.logger.info('Started dependencies');
+        } catch (err) {
+            this.logger.error('Failed to start dependencies', err);
+            await this.disconnectDeviceInternal(
+                device,
+                DeviceDisconnectReason.START_FAILED,
+            );
+            return;
+        }
+
+        try {
+            await this.controlService.doStart();
+        } catch (err) {
+            this.logger.error('Failed to do control service start', err);
+            await this.disconnectDeviceInternal(
+                device,
+                DeviceDisconnectReason.DO_START_FAILED,
+            );
+            return;
+        }
+    }
+
     public async connectDeviceAsync(device: Device): Promise<void> {
         if (
             this.connectedDevice !== undefined &&
@@ -547,43 +587,7 @@ export abstract class AndroidAutoServer {
         }
 
         const release = await this.connectionLock.acquire();
-
-        this.logger.info(`Connecting device ${device.name}`);
-        try {
-            await device.connect();
-        } catch (err) {
-            this.logger.error(`Failed to connect to ${device.name}`, err);
-            release();
-            return;
-        }
-
-        this.connectedDevice = device;
-        this.onDeviceConnectedCallback(device);
-
-        this.logger.info(`Connected device ${device.name}`);
-
-        try {
-            this.logger.info('Starting dependencies');
-            this.startDependencies();
-            this.logger.info('Started dependencies');
-        } catch (err) {
-            this.logger.error('Failed to start dependencies', err);
-            await this.disconnectDeviceInternal(
-                device,
-                DeviceDisconnectReason.START_FAILED,
-            );
-        }
-
-        try {
-            await this.controlService.doStart();
-        } catch (err) {
-            this.logger.error('Failed to do control service start', err);
-            await this.disconnectDeviceInternal(
-                device,
-                DeviceDisconnectReason.DO_START_FAILED,
-            );
-        }
-
+        await this.connectDeviceAsyncLocked(device);
         release();
     }
 
