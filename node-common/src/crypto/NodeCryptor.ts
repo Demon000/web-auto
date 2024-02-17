@@ -32,17 +32,17 @@ export class NodeCryptor extends Cryptor {
         assert(this.cleartext === undefined);
         assert(this.encrypted === undefined);
 
-        const pair = new DuplexPair();
+        const { socket1, socket2 } = new DuplexPair();
 
         this.cleartext = connect({
-            socket: pair.socket1,
+            socket: socket1,
             key: this.privateKeyBuffer,
             cert: this.certificateBuffer,
             rejectUnauthorized: false,
             ciphers: this.config.ciphers,
         });
 
-        this.encrypted = pair.socket2;
+        this.encrypted = socket2;
 
         this.cleartext.once('secureConnect', () => {
             if (this.cleartext === undefined) {
