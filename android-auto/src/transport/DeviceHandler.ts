@@ -23,7 +23,7 @@ export abstract class DeviceHandler<T = any> {
     protected removeDeviceBound: (data: T) => void;
 
     public constructor(
-        protected ignoredDevices: string[],
+        protected ignoredDevices: string[] | undefined,
         protected events: DeviceHandlerEvents,
     ) {
         this.addDeviceBound = this.addDevice.bind(this);

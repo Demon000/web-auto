@@ -33,7 +33,7 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
 
     public constructor(
         private config: BluetoothDeviceHandlerConfig,
-        ignoredDevices: string[],
+        ignoredDevices: string[] | undefined,
         events: DeviceHandlerEvents,
     ) {
         super(ignoredDevices, events);

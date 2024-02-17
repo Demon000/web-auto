@@ -7,7 +7,10 @@ import { UsbDevice } from './UsbDevice.js';
 import { Device as UsbDeviceImpl, usb } from 'usb';
 
 export class UsbDeviceHandler extends DeviceHandler<UsbDeviceImpl> {
-    public constructor(ignoredDevices: string[], events: DeviceHandlerEvents) {
+    public constructor(
+        ignoredDevices: string[] | undefined,
+        events: DeviceHandlerEvents,
+    ) {
         super(ignoredDevices, events);
     }
 

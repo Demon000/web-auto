@@ -33,7 +33,7 @@ export interface NodeAndroidAutoDisplayConfig {
 }
 
 export interface NodeAndroidAutoServerConfig {
-    ignoredDevices: string[];
+    ignoredDevices?: string[];
     controlConfig: ControlServiceConfig;
     headunitInfo: IHeadUnitInfo;
     serviceDiscoveryResponse: IServiceDiscoveryResponse;

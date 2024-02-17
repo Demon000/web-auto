@@ -27,7 +27,7 @@ export class TcpDeviceHandler extends DeviceHandler<string> {
 
     public constructor(
         private config: TcpDeviceHandlerConfig,
-        ignoredDevices: string[],
+        ignoredDevices: string[] | undefined,
         events: DeviceHandlerEvents,
     ) {
         super(ignoredDevices, events);
