@@ -40,7 +40,7 @@ export interface NodeAndroidAutoServerConfig {
     displayConfigs: NodeAndroidAutoDisplayConfig[];
     sensorConfigs: NodeSensorConfig[];
     cryptorConfig: NodeCryptorConfig;
-    tcpDeviceHandlerConfig: TcpDeviceHandlerConfig;
+    tcpDeviceHandlerConfig?: TcpDeviceHandlerConfig;
     bluetoothDeviceHandlerConfig?: BluetoothDeviceHandlerConfig;
 }
 
