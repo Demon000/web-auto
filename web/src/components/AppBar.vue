@@ -1,8 +1,36 @@
 <script setup lang="ts">
 import AppBarIcon from './AppBarIcon.vue';
 import { useDeviceStore } from '../stores/device-store.ts';
+import { KeyCode } from '@web-auto/android-auto-proto';
+import { androidAutoInputService } from '../ipc.ts';
 
 const deviceStore = useDeviceStore();
+
+const sendKey = (keycode: KeyCode) => {
+    androidAutoInputService
+        .sendKeyEvent({
+            keys: [
+                {
+                    down: true,
+                    keycode,
+                    metastate: 0,
+                },
+                {
+                    down: false,
+                    keycode,
+                    metastate: 0,
+                },
+            ],
+        })
+        .then(() => {})
+        .catch((err) => {
+            console.error('Failed to send key event', err);
+        });
+};
+
+const sendAssistantKey = () => {
+    sendKey(KeyCode.KEYCODE_SEARCH);
+};
 </script>
 
 <template>
@@ -35,6 +63,13 @@ const deviceStore = useDeviceStore();
                 </svg>
             </AppBarIcon>
         </router-link>
+
+        <AppBarIcon
+            v-if="deviceStore.connectedDevice !== undefined"
+            @click="sendAssistantKey"
+        >
+            mic
+        </AppBarIcon>
     </div>
 </template>
 

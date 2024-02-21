@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import MiniVideo from './MiniVideo.vue';
 import MediaStatus from './MediaStatus.vue';
-import Assistant from './Assistant.vue';
 import AppBar from './AppBar.vue';
 import { androidAutoInputService } from '../ipc.ts';
 import { KeyCode } from '@web-auto/android-auto-proto';
@@ -46,9 +45,6 @@ const sendTouchEvent = (touchEvent: ITouchEvent) => {
             console.error('Failed to send touch event', err);
         });
 };
-const sendAssistantKey = () => {
-    sendKey(KeyCode.KEYCODE_SEARCH);
-};
 
 const switchToVideoView = async () => {
     await router.push({
@@ -78,7 +74,6 @@ const { onVideoVisible, onVideoHidden } = useVideoFocus(decoder, true);
                     :metadata="mediaStatusStore.metadata"
                     :status="mediaStatusStore.status"
                 ></MediaStatus>
-                <Assistant @press-assistant-key="sendAssistantKey"></Assistant>
             </template>
             <template v-else>
                 <DeviceNotConnected></DeviceNotConnected>
