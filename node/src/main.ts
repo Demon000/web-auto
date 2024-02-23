@@ -48,7 +48,11 @@ const server = createServer({
     key: readFileSync('../cert.key'),
 });
 
-if (config.androidAuto !== undefined) {
+const startAndroidAuto = async (): Promise<void> => {
+    if (config.androidAuto === undefined) {
+        return;
+    }
+
     androidAutoIpcServiceRegistry = new SocketIpcServiceRegistry(
         ANDROID_AUTO_IPC_REGISTRY_NAME,
         server,
@@ -66,12 +70,22 @@ if (config.androidAuto !== undefined) {
         androidAutoIpcServiceRegistry,
     );
 
-    androidAutoServer.start().catch((err) => {
+    try {
+        await androidAutoServer.start();
+    } catch (err) {
         logger.error('Failed to start android auto server', err);
+    }
+};
+
+(async () => {
+    await startAndroidAuto();
+
+    const port = config.nodeAndroidAuto.webSocketServer.port;
+    const host = config.nodeAndroidAuto.webSocketServer.host;
+
+    server.listen(port, host);
+})()
+    .then(() => {})
+    .catch((err) => {
+        logger.error('Failed to start', err);
     });
-}
-
-const port = config.nodeAndroidAuto.webSocketServer.port;
-const host = config.nodeAndroidAuto.webSocketServer.host;
-
-server.listen(port, host);
