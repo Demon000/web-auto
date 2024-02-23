@@ -9,5 +9,9 @@
     "clean": "tsc --build --clean",
     "lint": "eslint --fix .",
     "start": "node ./dist/esm/main.js"
+  },
+  "exports": {
+    "import": "./dist/esm/index.js",
+    "types": "./dist/esm/index.d.ts"
   }
 }

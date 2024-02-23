@@ -17,6 +17,8 @@
     "@fontsource/roboto": "^5.0.8",
     "@material/material-color-utilities": "^0.2.7",
     "@material/web": "^1.2.0",
+    "json5": "^2.2.3",
+    "lilconfig": "^3.1.1",
     "material-symbols": "^0.14.1",
     "object-fit-math": "^1.0.0",
     "pinia": "^2.1.7",

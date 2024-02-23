@@ -207,6 +207,9 @@
             host: 'localhost',
         },
     },
+    web: {
+        videoDecoderRenderer: 'webgl',
+    },
     electronWindowBuilder: {
         // Windows to be built
         windows: [

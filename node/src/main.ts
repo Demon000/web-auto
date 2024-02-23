@@ -13,7 +13,7 @@ import { SocketIpcServiceRegistry } from '@web-auto/socket-ipc/main.js';
 import { Server, createServer } from 'node:https';
 import { readFileSync } from 'node:fs';
 
-type NodeAndroidAutoConfig = {
+export type NodeAndroidAutoConfig = {
     nodeAndroidAuto: {
         webSocketServer: {
             port: number;

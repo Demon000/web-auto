@@ -12,10 +12,10 @@
       "electron-ipc",
       "socket-ipc",
       "android-auto",
-      "web",
       "node-common",
       "node",
-      "electron"
+      "electron",
+      "web"
     ]
   },
   "scripts": {
