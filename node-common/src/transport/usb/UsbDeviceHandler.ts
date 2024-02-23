@@ -6,8 +6,12 @@ import {
 import { UsbDevice } from './UsbDevice.js';
 import { Device as UsbDeviceImpl, usb } from 'usb';
 
+export interface UsbDeviceHandlerConfig {}
+
 export class UsbDeviceHandler extends DeviceHandler<UsbDeviceImpl> {
     public constructor(
+        // @ts-expect-error unused
+        private config: UsbDeviceHandlerConfig,
         ignoredDevices: string[] | undefined,
         events: DeviceHandlerEvents,
     ) {

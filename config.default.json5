@@ -115,6 +115,7 @@
                     },
                 ],
             },
+            /*
             {
                 id: 1,
                 width: 800,
@@ -129,6 +130,7 @@
                     },
                 ],
             },
+            */
         ],
         sensorConfigs: [
             {
@@ -150,8 +152,12 @@
                 },
             },
         ],
-        /* Names of devices to be ignored. */
+        // Names of devices to be ignored
+        /*
         ignoredDevices: ['USB: MYSTIC LIGHT '],
+        */
+        usbDeviceHandlerConfig: {},
+        /*
         tcpDeviceHandlerConfig: {
             // Static IPs that can be connected to
             // These will be Android devices with head unit servers
@@ -164,11 +170,8 @@
                 intervalMs: 5000,
             },
         },
-        usbDeviceHandlerConfig: {
-            // Whether to try to USB devices that are already in AOAP mode
-            // If this options is set to false, these devices will be ignored
-            handleAlreadyConnectedDevices: true,
-        },
+        */
+        /*
         bluetoothDeviceHandlerConfig: {
             // Timeout in milliseconds for the device to connect to bluetooth
             profileConnectionTimeoutMs: 10000,
@@ -200,6 +203,7 @@
                 psk: 'wifipass',
             },
         },
+        */
     },
     nodeAndroidAuto: {
         webSocketServer: {
@@ -226,7 +230,9 @@
                     preload: './electron-ipc/preload-run.mjs',
                     // URL if running it separately (useful for development)
                     // When using url, do not specify path, or index
-                    // url: 'http://localhost:5173/',
+                    /*
+                    url: 'http://localhost:5173/',
+                    */
                 },
             },
             {
@@ -242,7 +248,9 @@
                     preload: './electron-ipc/preload-run.mjs',
                     // URL if running it separately (useful for development)
                     // When using url, do not specify path, or index
-                    // url: 'http://localhost:5173/cluster/',
+                    /*
+                    url: 'http://localhost:5173/cluster/',
+                    */
                 },
             },
         ],

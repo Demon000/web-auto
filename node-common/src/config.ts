@@ -14,6 +14,7 @@ import type {
     IServiceDiscoveryResponse,
 } from '@web-auto/android-auto-proto/interfaces.js';
 import type { BluetoothDeviceHandlerConfig } from './transport/bluetooth/BluetoothDeviceHandler.js';
+import type { UsbDeviceHandlerConfig } from './transport/usb/UsbDeviceHandler.js';
 
 export interface NodeAndroidAutoResolutionConfig {
     codec: MediaCodecType;
@@ -40,6 +41,7 @@ export interface NodeAndroidAutoServerConfig {
     displayConfigs: NodeAndroidAutoDisplayConfig[];
     sensorConfigs: NodeSensorConfig[];
     cryptorConfig: NodeCryptorConfig;
+    usbDeviceHandlerConfig?: UsbDeviceHandlerConfig;
     tcpDeviceHandlerConfig?: TcpDeviceHandlerConfig;
     bluetoothDeviceHandlerConfig?: BluetoothDeviceHandlerConfig;
 }
