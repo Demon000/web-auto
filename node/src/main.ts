@@ -10,7 +10,7 @@ import {
 } from '@web-auto/node-common';
 import { ANDROID_AUTO_IPC_REGISTRY_NAME } from '@web-auto/android-auto-ipc';
 import { SocketIpcServiceRegistry } from '@web-auto/socket-ipc/main.js';
-import { createServer } from 'node:https';
+import { Server, createServer } from 'node:https';
 import { readFileSync } from 'node:fs';
 
 type NodeAndroidAutoConfig = {
@@ -40,20 +40,12 @@ const logger = getLogger('electron');
 
 logger.info('Electron config', config);
 
-let androidAutoServer: NodeAndroidAutoServer | undefined;
-let androidAutoIpcServiceRegistry: SocketIpcServiceRegistry | undefined;
-
-const server = createServer({
-    cert: readFileSync('../cert.crt'),
-    key: readFileSync('../cert.key'),
-});
-
-const startAndroidAuto = async (): Promise<void> => {
+const startAndroidAuto = async (server: Server): Promise<void> => {
     if (config.androidAuto === undefined) {
         return;
     }
 
-    androidAutoIpcServiceRegistry = new SocketIpcServiceRegistry(
+    const androidAutoIpcServiceRegistry = new SocketIpcServiceRegistry(
         ANDROID_AUTO_IPC_REGISTRY_NAME,
         server,
     );
@@ -65,7 +57,7 @@ const startAndroidAuto = async (): Promise<void> => {
         config.androidAuto,
     );
 
-    androidAutoServer = new NodeAndroidAutoServer(
+    const androidAutoServer = new NodeAndroidAutoServer(
         builder,
         androidAutoIpcServiceRegistry,
     );
@@ -78,7 +70,12 @@ const startAndroidAuto = async (): Promise<void> => {
 };
 
 (async () => {
-    await startAndroidAuto();
+    const server = createServer({
+        cert: readFileSync('../cert.crt'),
+        key: readFileSync('../cert.key'),
+    });
+
+    await startAndroidAuto(server);
 
     const port = config.nodeAndroidAuto.webSocketServer.port;
     const host = config.nodeAndroidAuto.webSocketServer.host;
