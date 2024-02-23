@@ -2,6 +2,7 @@ import {
     Device,
     type DeviceEvents,
     bufferWrapUint8Array,
+    DeviceProbeResult,
 } from '@web-auto/android-auto';
 import {
     InEndpoint,
@@ -278,18 +279,22 @@ export class UsbDevice extends Device {
         );
     }
 
-    public override async probe(): Promise<boolean> {
+    public override async probe(existing?: true): Promise<DeviceProbeResult> {
         this.logger.debug(`Probing device ${this.name}`);
 
         if (this.isDeviceAoap()) {
-            return true;
+            if (existing) {
+                return DeviceProbeResult.NEEDS_RESET;
+            } else {
+                return DeviceProbeResult.SUPPORTED;
+            }
         }
 
         try {
             this.open();
         } catch (e) {
             this.logger.error(`Failed to open device ${this.name}`);
-            return false;
+            return DeviceProbeResult.UNSUPPORTED;
         }
 
         try {
@@ -302,7 +307,7 @@ export class UsbDevice extends Device {
             } catch (e) {
                 this.logger.error(`Failed to close device ${this.name}`);
             }
-            return false;
+            return DeviceProbeResult.UNSUPPORTED;
         }
 
         this.logger.debug(`Found device ${this.name} with AOAP`);
@@ -319,7 +324,7 @@ export class UsbDevice extends Device {
             }
         }
 
-        return false;
+        return DeviceProbeResult.UNSUPPORTED;
     }
 
     public open(): void {
@@ -328,10 +333,8 @@ export class UsbDevice extends Device {
         this.opened = true;
     }
 
-    public reset(): Promise<void> {
+    private resetImpl(): Promise<void> {
         return new Promise((resolve, reject) => {
-            this.opened = false;
-
             this.device.reset((error) => {
                 if (error !== undefined) {
                     return reject(error);
@@ -340,6 +343,25 @@ export class UsbDevice extends Device {
                 resolve();
             });
         });
+    }
+
+    public override async reset(): Promise<void> {
+        if (!this.opened) {
+            this.open();
+        }
+
+        for (let i = 0; i < 2; i++) {
+            try {
+                this.logger.info(`Reset attempt ${i}`);
+                await this.resetImpl();
+            } catch (err) {
+                const usbError = err as LibUSBException;
+                if (usbError.errno === usb.LIBUSB_ERROR_NOT_FOUND) {
+                    this.logger.info('Reset succeeded');
+                    break;
+                }
+            }
+        }
     }
 
     public close(): void {

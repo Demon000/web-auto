@@ -1,5 +1,5 @@
 import { getLogger } from '@web-auto/logging';
-import { Device, type DeviceEvents } from './Device.js';
+import { Device, DeviceProbeResult, type DeviceEvents } from './Device.js';
 import { Mutex } from 'async-mutex';
 
 export interface DeviceHandlerEvents {
@@ -47,7 +47,10 @@ export abstract class DeviceHandler<T = any> {
     protected abstract createDevice(data: T): Promise<Device | undefined>;
     protected destroyDevice(_data: T, _device: Device): void {}
 
-    protected async addDeviceAsyncLocked(data: T): Promise<void> {
+    protected async addDeviceAsyncLocked(
+        data: T,
+        existing?: true,
+    ): Promise<void> {
         let device;
 
         try {
@@ -56,8 +59,16 @@ export abstract class DeviceHandler<T = any> {
                 return;
             }
 
-            const probed = await device.probe();
-            if (!probed) {
+            const probed = await device.probe(existing);
+            if (probed === DeviceProbeResult.NEEDS_RESET) {
+                try {
+                    await device.reset();
+                } catch (err) {
+                    this.logger.error('Failed to reset device', err);
+                }
+            }
+
+            if (probed !== DeviceProbeResult.SUPPORTED) {
                 return;
             }
         } catch (err) {
@@ -72,9 +83,9 @@ export abstract class DeviceHandler<T = any> {
         this.events.onDeviceAvailable(device);
     }
 
-    protected async addDeviceAsync(data: T): Promise<void> {
+    protected async addDeviceAsync(data: T, existing?: true): Promise<void> {
         const release = await this.deviceMapLock.acquire();
-        await this.addDeviceAsyncLocked(data);
+        await this.addDeviceAsyncLocked(data, existing);
         release();
     }
 

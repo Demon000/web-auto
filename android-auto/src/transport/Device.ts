@@ -24,6 +24,12 @@ export enum DeviceDisconnectReason {
     DO_START_FAILED = 'do-start-failed',
 }
 
+export enum DeviceProbeResult {
+    SUPPORTED,
+    NEEDS_RESET,
+    UNSUPPORTED,
+}
+
 export abstract class Device {
     public state = DeviceState.AVAILABLE;
     public name: string;
@@ -47,13 +53,14 @@ export abstract class Device {
         this.onDisconnectedBound = this.onDisconnected.bind(this);
     }
 
+    public async reset(): Promise<void> {}
     protected abstract connectImpl(): Promise<void>;
     protected abstract disconnectImpl(reason: string): Promise<void>;
     public async rejectSelfConnection(): Promise<void> {}
     public abstract send(buffer: Uint8Array): void;
     // eslint-disable-next-line @typescript-eslint/require-await
-    public async probe(): Promise<boolean> {
-        return true;
+    public async probe(_existing?: true): Promise<DeviceProbeResult> {
+        return DeviceProbeResult.SUPPORTED;
     }
 
     protected setState(state: DeviceState): void {

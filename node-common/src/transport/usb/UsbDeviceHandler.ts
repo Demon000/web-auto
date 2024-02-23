@@ -31,7 +31,7 @@ export class UsbDeviceHandler extends DeviceHandler<UsbDeviceImpl> {
 
         const aoapDevices = usb.getDeviceList();
         for (const device of aoapDevices) {
-            await this.addDeviceAsync(device);
+            await this.addDeviceAsync(device, true);
         }
 
         this.logger.info('Finshed processing already connected devices');
