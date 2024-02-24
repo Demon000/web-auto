@@ -3,14 +3,8 @@ import vue from '@vitejs/plugin-vue';
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { lilconfigSync } from 'lilconfig';
-import { NodeAndroidAutoConfig } from '@web-auto/node';
 import JSON5 from 'json5';
-
-export type WebAndroidAutoConfig = {
-    web: {
-        videoDecoderRenderer: string;
-    };
-} & NodeAndroidAutoConfig;
+import { WebAndroidAutoConfig } from './config.js';
 
 const config = lilconfigSync('web-auto', {
     loaders: {
@@ -66,8 +60,8 @@ export default defineConfig({
         }),
     ],
     define: {
+        'import.meta.env.CONFIG': JSON.stringify(config.web),
         'import.meta.env.VITE_SOCKET_IPC_CLIENT_HOST': `"wss://${nodeHost}"`,
         'import.meta.env.VITE_SOCKET_IPC_CLIENT_PORT': `${nodePort}`,
-        'import.meta.env.VITE_VIDEO_DECODER_RENDERER': `"${config.web.videoDecoderRenderer}"`,
     },
 });

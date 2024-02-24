@@ -38,7 +38,7 @@ export class DecoderWorker {
         this.worker.postMessage(
             {
                 type: DecoderWorkerMessageType.CREATE_RENDERER,
-                rendererName: import.meta.env.VITE_VIDEO_DECODER_RENDERER,
+                rendererName: import.meta.env.CONFIG.videoDecoderRenderer,
                 canvas: offscreenCanvas,
             },
             [offscreenCanvas],
