@@ -62,6 +62,7 @@ export class NodeCryptor extends Cryptor {
             this.logger.info('Keylog', line.toString('hex'));
         });
     }
+
     public stop(): void {
         assert(this.cleartext !== undefined);
         assert(this.encrypted !== undefined);
