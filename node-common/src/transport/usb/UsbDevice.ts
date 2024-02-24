@@ -81,10 +81,14 @@ export class UsbDevice extends Device {
     public static async create(
         device: UsbDeviceImpl,
         events: DeviceEvents,
-    ): Promise<UsbDevice> {
-        device.open();
-
+    ): Promise<UsbDevice | undefined> {
         const descriptor = device.deviceDescriptor;
+
+        if (descriptor.bDeviceClass !== 0) {
+            return;
+        }
+
+        device.open();
 
         let manufacturerName;
         try {
