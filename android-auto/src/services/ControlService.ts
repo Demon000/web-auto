@@ -17,6 +17,7 @@ import {
     GalConstants,
     VoiceSessionNotification,
     BatteryStatusNotification,
+    ByeByeRequest,
 } from '@web-auto/android-auto-proto';
 
 import { Service, type ServiceEvents } from './Service.js';
@@ -25,8 +26,13 @@ import assert from 'node:assert';
 import type { Cryptor } from '../crypto/Cryptor.js';
 import { BufferWriter, BufferReader } from '../utils/buffer.js';
 
+export enum ControlServiceSelfDisconnectReason {
+    PING_TIMEOUT,
+    BYE_BYE,
+}
+
 export interface ControlServiceEvents extends ServiceEvents {
-    onPingTimeout: () => void;
+    onSelfDisconnect: (reason: ControlServiceSelfDisconnectReason) => void;
 }
 
 export interface ControlServiceConfig {
@@ -46,9 +52,21 @@ export class ControlService extends Service {
         super(events, 0);
 
         this.pinger = new Pinger(config.pingTimeoutMs, {
-            onPingTimeout: this.events.onPingTimeout,
+            onPingTimeout: this.onPingTimeout.bind(this),
             onPingRequest: this.sendPingRequest.bind(this),
         });
+    }
+
+    private onPingTimeout(): void {
+        this.events.onSelfDisconnect(
+            ControlServiceSelfDisconnectReason.PING_TIMEOUT,
+        );
+    }
+
+    private onByeByeRequest(_data: ByeByeRequest): void {
+        this.events.onSelfDisconnect(
+            ControlServiceSelfDisconnectReason.PING_TIMEOUT,
+        );
     }
 
     private onPingRequest(data: PingRequest): void {
@@ -117,6 +135,11 @@ export class ControlService extends Service {
                 data = BatteryStatusNotification.fromBinary(payload);
                 this.printReceive(data);
                 await this.onBatteryStatusNotification(data);
+                break;
+            case ControlMessageType.MESSAGE_BYEBYE_REQUEST:
+                data = ByeByeRequest.fromBinary(payload);
+                this.printReceive(data);
+                this.onByeByeRequest(data);
                 break;
             default:
                 return super.onSpecificMessage(messageId, payload);

@@ -19,6 +19,7 @@ import { Cryptor } from './crypto/Cryptor.js';
 import { Service, type ServiceEvents } from './services/Service.js';
 import {
     ControlService,
+    ControlServiceSelfDisconnectReason,
     type ControlServiceEvents,
 } from './services/ControlService.js';
 import { type FrameData } from './messenger/FrameData.js';
@@ -96,7 +97,7 @@ export abstract class AndroidAutoServer {
             {
                 onProtoMessageSent: this.onSendProtoMessage.bind(this),
                 onPayloadMessageSent: this.onSendPayloadMessage.bind(this),
-                onPingTimeout: this.onPingTimeout.bind(this),
+                onSelfDisconnect: this.onSelfDisconnect.bind(this),
             },
         );
 
@@ -214,22 +215,28 @@ export abstract class AndroidAutoServer {
         this.onSendMessage(serviceId, totalPayload, isEncrypted, isControl);
     }
 
-    private onPingTimeout(): void {
+    private onSelfDisconnect(reason: ControlServiceSelfDisconnectReason): void {
         if (this.connectedDevice === undefined) {
             this.logger.error(
-                'Cannot send ping timeout without a connected device',
+                'Cannot self disconnect without a connected device',
             );
             return;
         }
 
-        this.logger.error(
-            `Pinger timed out, disconnecting ${this.connectedDevice.name}`,
-        );
+        if (reason === ControlServiceSelfDisconnectReason.PING_TIMEOUT) {
+            this.logger.error(
+                `Pinger timed out, disconnecting ${this.connectedDevice.name}`,
+            );
+        } else if (reason === ControlServiceSelfDisconnectReason.BYE_BYE) {
+            this.logger.error(
+                `Self disconnect requested, disconnecting ${this.connectDevice.name}`,
+            );
+        }
 
         this.disconnectDeviceAsync(this.connectedDevice)
             .then(() => {})
             .catch((err) => {
-                this.logger.error('Failed to handle ping timeout', err);
+                this.logger.error('Failed to handle self disconnect', err);
             });
     }
 
