@@ -36,7 +36,7 @@ assert<NodeAndroidAutoConfig>(config);
 
 setConfig(config.logging);
 
-const logger = getLogger('electron');
+const logger = getLogger('node');
 
 logger.info('Electron config', config);
 
