@@ -89,6 +89,33 @@ const createRenderer = (
     }
 };
 
+const checkAcceleration = (codec: string): void => {
+    if ('isConfigSupported' in VideoDecoder) {
+        const hardwareAccelerations: HardwareAcceleration[] = [
+            'prefer-hardware',
+            'prefer-software',
+        ];
+
+        for (const hardwareAcceleration of hardwareAccelerations) {
+            VideoDecoder.isConfigSupported({
+                codec,
+                hardwareAcceleration,
+            })
+                .then((support: VideoDecoderSupport) => {
+                    const supported = support.supported
+                        ? 'supported'
+                        : 'unsupported';
+                    console.log(
+                        `VideoDecoder ${codec} ${hardwareAcceleration} ${supported}`,
+                    );
+                })
+                .catch((err) => {
+                    console.error(err);
+                });
+        }
+    }
+};
+
 const onMessage = (event: MessageEvent) => {
     const message = event.data as DecoderWorkerMessage;
 
@@ -99,6 +126,7 @@ const onMessage = (event: MessageEvent) => {
             renderLastFrame();
             break;
         case DecoderWorkerMessageType.CONFIGURE_DECODER:
+            checkAcceleration(message.config.codec);
             decoder.configure({
                 codec: message.config.codec,
             });
