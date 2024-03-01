@@ -65,7 +65,7 @@ export class ControlService extends Service {
 
     private onByeByeRequest(_data: ByeByeRequest): void {
         this.events.onSelfDisconnect(
-            ControlServiceSelfDisconnectReason.PING_TIMEOUT,
+            ControlServiceSelfDisconnectReason.BYE_BYE,
         );
     }
 
