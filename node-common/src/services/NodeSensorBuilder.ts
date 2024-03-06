@@ -29,13 +29,13 @@ export class NodeSensorsBuilder implements SensorsBuilder {
         events: SensorEvents,
     ): Sensor {
         switch (sensorConfig.name) {
-            case 'DummyNightDataSensor': {
+            case DummyNightDataSensor.constructor.name: {
                 const config =
                     sensorConfig.config as DummyNightDataSensorConfig;
                 assert<DummyNightDataSensorConfig>(config);
                 return new DummyNightDataSensor(config, events);
             }
-            case 'DummyDrivingStatusSensor': {
+            case DummyDrivingStatusSensor.constructor.name: {
                 const config =
                     sensorConfig.config as DummyDrivingStatusSensorConfig;
                 assert<DummyDrivingStatusSensorConfig>(config);
