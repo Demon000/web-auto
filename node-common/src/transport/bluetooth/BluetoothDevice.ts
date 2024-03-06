@@ -96,12 +96,9 @@ export class BluetoothDevice extends Device {
     }
 
     public onBluetoothProfileSelfDisconnected(): void {
-        if (this.state !== DeviceState.AVAILABLE) {
-            this.logger.error(
-                `Unexpected bluetooth profile disconnection in state: ${this.state}`,
-            );
-            return;
-        }
+        this.logger.info(
+            `Received bluetooth profile disconnection in state: ${this.state}`,
+        );
 
         this.selfDisconnect(BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE);
     }
