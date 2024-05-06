@@ -26,7 +26,9 @@ export type IpcClientHandlerEmitter<L extends IpcClient> = {
 };
 
 export type IpcClientHandler<L extends IpcClient, R extends IpcService> = R &
-    IpcClientHandlerEmitter<L>;
+    IpcClientHandlerEmitter<L> & {
+        handle: string;
+    };
 
 export class IpcClientHandlerHelper<L extends IpcClient>
     implements IpcClientHandlerEmitter<L>
@@ -41,7 +43,7 @@ export class IpcClientHandlerHelper<L extends IpcClient>
     public constructor(
         private serializer: IpcSerializer,
         private socket: IpcSocket,
-        private handle: string,
+        public handle: string,
     ) {}
 
     private getId(): number {
@@ -177,6 +179,10 @@ export const createIpcServiceProxy = <
                     );
                 }
 
+                if (property == 'handle') {
+                    return Reflect.get(ipcHandler, property);
+                }
+
                 return new Proxy(() => {}, {
                     apply(_target, _thisArg, args) {
                         switch (property) {
@@ -200,6 +206,7 @@ export const createIpcServiceProxy = <
 };
 
 export interface IpcClientRegistry {
+    register(): Promise<void>;
     registerIpcClient<L extends IpcClient, R extends IpcService>(
         handle: string,
     ): IpcClientHandler<L, R>;
@@ -274,17 +281,15 @@ export class GenericIpcClientRegistry implements IpcClientRegistry {
     public registerIpcClient<L extends IpcClient, R extends IpcService>(
         handle: string,
     ): IpcClientHandler<L, R> {
-        const ipcHandler = new IpcClientHandlerHelper<L>(
-            this.serializer,
-            this.socket,
-            handle,
-        );
-
-        if (this.ipcHandlers.has(handle)) {
-            throw new Error(`IPC handler ${handle} already registered`);
+        let ipcHandler = this.ipcHandlers.get(handle);
+        if (ipcHandler === undefined) {
+            ipcHandler = new IpcClientHandlerHelper<L>(
+                this.serializer,
+                this.socket,
+                handle,
+            );
+            this.ipcHandlers.set(handle, ipcHandler);
         }
-
-        this.ipcHandlers.set(handle, ipcHandler);
 
         return createIpcServiceProxy(ipcHandler);
     }

@@ -4,7 +4,6 @@ import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { lilconfigSync } from 'lilconfig';
 import JSON5 from 'json5';
-import { WebAndroidAutoConfig } from './config.js';
 
 const config = lilconfigSync('web-auto', {
     loaders: {
@@ -14,7 +13,7 @@ const config = lilconfigSync('web-auto', {
         },
     },
     searchPlaces: ['config.json5'],
-}).search()?.config as WebAndroidAutoConfig;
+}).search()?.config;
 
 const { port: nodePort, host: nodeHost } =
     config.nodeAndroidAuto.webSocketServer;
@@ -33,7 +32,6 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 main: resolve(__dirname, 'index.html'),
-                nested: resolve(__dirname, 'cluster/index.html'),
             },
         },
     },
@@ -60,7 +58,7 @@ export default defineConfig({
         }),
     ],
     define: {
-        'import.meta.env.CONFIG': JSON.stringify(config.web),
+        'import.meta.env.CONFIG': JSON.stringify(config),
         'import.meta.env.VITE_SOCKET_IPC_CLIENT_HOST': `"wss://${nodeHost}"`,
         'import.meta.env.VITE_SOCKET_IPC_CLIENT_PORT': `${nodePort}`,
     },

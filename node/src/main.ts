@@ -4,11 +4,9 @@ import JSON5 from 'json5';
 
 import { assert } from 'typia';
 import {
-    NodeAndroidAutoServer,
     NodeAndroidAutoServerBuilder,
     type NodeCommonAndroidAutoConfig,
 } from '@web-auto/node-common';
-import { ANDROID_AUTO_IPC_REGISTRY_NAME } from '@web-auto/android-auto-ipc';
 import { SocketIpcServiceRegistry } from '@web-auto/socket-ipc/main.js';
 import { Server, createServer } from 'node:https';
 import { readFileSync } from 'node:fs';
@@ -46,7 +44,7 @@ const startAndroidAuto = async (server: Server): Promise<void> => {
     }
 
     const androidAutoIpcServiceRegistry = new SocketIpcServiceRegistry(
-        ANDROID_AUTO_IPC_REGISTRY_NAME,
+        config.registryName,
         server,
     );
 
@@ -57,10 +55,7 @@ const startAndroidAuto = async (server: Server): Promise<void> => {
         config.androidAuto,
     );
 
-    const androidAutoServer = new NodeAndroidAutoServer(
-        builder,
-        androidAutoIpcServiceRegistry,
-    );
+    const androidAutoServer = builder.buildAndroidAutoServer();
 
     try {
         await androidAutoServer.start();

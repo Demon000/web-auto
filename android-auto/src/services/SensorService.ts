@@ -10,23 +10,15 @@ import {
     SensorSourceService,
 } from '@web-auto/android-auto-proto';
 
-import { Sensor, type SensorEvents } from '../sensors/Sensor.js';
+import { Sensor } from '../sensors/Sensor.js';
 import { Service, type ServiceEvents } from './Service.js';
 import assert from 'node:assert';
 
-export interface SensorsBuilder {
-    buildSensors(events: SensorEvents): Sensor[];
-}
+export abstract class SensorService extends Service {
+    protected abstract sensors: Sensor[];
 
-export class SensorService extends Service {
-    protected sensors: Sensor[];
-
-    public constructor(builder: SensorsBuilder, events: ServiceEvents) {
+    public constructor(events: ServiceEvents) {
         super(events);
-
-        this.sensors = builder.buildSensors({
-            onData: this.sendEventIndication.bind(this),
-        });
     }
 
     protected findSensor(sensorType: SensorType): Sensor | undefined {

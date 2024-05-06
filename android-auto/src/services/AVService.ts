@@ -9,10 +9,7 @@ import { Service, type ServiceEvents } from './Service.js';
 export abstract class AVService extends Service {
     protected session: number | undefined;
 
-    public constructor(
-        protected priorities: number[],
-        events: ServiceEvents,
-    ) {
+    public constructor(events: ServiceEvents) {
         super(events);
     }
 
@@ -55,12 +52,15 @@ export abstract class AVService extends Service {
     protected async setup(_data: Setup): Promise<void> {}
     protected afterSetup(): void {}
 
-    protected sendSetupResponse(status: boolean): void {
-        const data = new Config({
+    protected getConfig(status: boolean): Config {
+        return new Config({
             maxUnacked: 1,
             status: status ? Config_Status.READY : Config_Status.WAIT,
-            configurationIndices: this.priorities,
         });
+    }
+
+    protected sendSetupResponse(status: boolean): void {
+        const data = this.getConfig(status);
 
         this.sendEncryptedSpecificMessage(
             MediaMessageId.MEDIA_MESSAGE_CONFIG,

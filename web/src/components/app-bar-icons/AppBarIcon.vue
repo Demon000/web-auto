@@ -2,9 +2,12 @@
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
 
-defineProps<{
+export interface AppBarIconProps {
     selected?: boolean;
-}>();
+    content?: string;
+}
+
+defineProps<AppBarIconProps>();
 </script>
 
 <template>
@@ -15,7 +18,11 @@ defineProps<{
                 selected: selected,
             }"
         >
-            <md-icon><slot></slot></md-icon>
+            <md-icon>
+                <slot>
+                    <span v-if="content !== undefined" v-html="content"></span>
+                </slot>
+            </md-icon>
         </md-icon-button>
     </div>
 </template>
@@ -38,7 +45,7 @@ defineProps<{
     background: rgba(255, 255, 255, 0.15);
 }
 
-:slotted(svg) {
+:slotted(:deep(svg)) {
     stroke: var(--_icon-color);
 }
 </style>

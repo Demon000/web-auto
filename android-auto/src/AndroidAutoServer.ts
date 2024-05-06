@@ -1,4 +1,3 @@
-import { ServiceDiscoveryResponse } from '@web-auto/android-auto-proto';
 import {
     DeviceHandler,
     type DeviceHandlerEvents,
@@ -35,15 +34,10 @@ export interface AndroidAutoServerBuilder {
 
     buildControlService(
         cryptor: Cryptor,
-        serviceDiscoveryResponse: ServiceDiscoveryResponse,
         events: ControlServiceEvents,
     ): ControlService;
 
     buildServices(events: ServiceEvents): Service[];
-
-    buildServiceDiscoveryResponse(
-        services: Service[],
-    ): ServiceDiscoveryResponse;
 }
 
 export abstract class AndroidAutoServer {
@@ -87,19 +81,11 @@ export abstract class AndroidAutoServer {
             onPayloadMessageSent: this.onSendPayloadMessage.bind(this),
         });
 
-        const serviceDiscoveryResponse = builder.buildServiceDiscoveryResponse(
-            this.services,
-        );
-
-        this.controlService = builder.buildControlService(
-            this.cryptor,
-            serviceDiscoveryResponse,
-            {
-                onProtoMessageSent: this.onSendProtoMessage.bind(this),
-                onPayloadMessageSent: this.onSendPayloadMessage.bind(this),
-                onSelfDisconnect: this.onSelfDisconnect.bind(this),
-            },
-        );
+        this.controlService = builder.buildControlService(this.cryptor, {
+            onProtoMessageSent: this.onSendProtoMessage.bind(this),
+            onPayloadMessageSent: this.onSendPayloadMessage.bind(this),
+            onSelfDisconnect: this.onSelfDisconnect.bind(this),
+        });
 
         this.serviceIdServiceMap.set(
             this.controlService.serviceId,
@@ -557,7 +543,7 @@ export abstract class AndroidAutoServer {
         }
 
         try {
-            await this.controlService.doStart();
+            await this.controlService.doStart(this.services);
         } catch (err) {
             this.logger.error('Failed to do control service start', err);
             await this.disconnectDeviceInternal(

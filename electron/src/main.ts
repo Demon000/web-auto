@@ -14,7 +14,6 @@ import {
     type NodeCommonAndroidAutoConfig,
 } from '@web-auto/node-common';
 import { ElectronIpcServiceRegistry } from '@web-auto/electron-ipc/main.js';
-import { ANDROID_AUTO_IPC_REGISTRY_NAME } from '@web-auto/android-auto-ipc';
 
 type ElectronAndroidAutoConfig = {
     electronWindowBuilder: ElectronWindowBuilderConfig;
@@ -43,7 +42,7 @@ let androidAutoIpcServiceRegistry: ElectronIpcServiceRegistry | undefined;
 
 if (config.androidAuto !== undefined) {
     androidAutoIpcServiceRegistry = new ElectronIpcServiceRegistry(
-        ANDROID_AUTO_IPC_REGISTRY_NAME,
+        config.registryName,
     );
 
     androidAutoIpcServiceRegistry.register();
@@ -53,10 +52,7 @@ if (config.androidAuto !== undefined) {
         config.androidAuto,
     );
 
-    androidAutoServer = new NodeAndroidAutoServer(
-        builder,
-        androidAutoIpcServiceRegistry,
-    );
+    androidAutoServer = builder.buildAndroidAutoServer();
 
     androidAutoServer.start().catch((err) => {
         logger.error('Failed to start android auto server', err);

@@ -1,4 +1,8 @@
 import { InputService, type ServiceEvents } from '@web-auto/android-auto';
+import type {
+    AndroidAutoInputClient,
+    AndroidAutoInputService,
+} from '@web-auto/android-auto-ipc';
 import {
     InputSourceService,
     InputSourceService_TouchScreen,
@@ -7,43 +11,41 @@ import {
     KeyEvent,
     Service,
     TouchEvent,
+    TouchScreenType,
 } from '@web-auto/android-auto-proto';
-import type {
-    AndroidAutoInputService,
-    AndroidAutoInputClient,
-} from '@web-auto/android-auto-ipc';
-import type {
-    IInputSourceService_TouchScreen,
-    IKeyEvent,
-    ITouchEvent,
+import {
+    stringToKeycode,
+    stringToTouchscreenType,
+    type ITouchEvent,
 } from '@web-auto/android-auto-proto/interfaces.js';
 import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 
-export class NodeAutoInputService extends InputService {
+export type NodeInputServiceConfig = {
+    displayId: number;
+    touchscreen?: {
+        width: number;
+        height: number;
+        type: TouchScreenType | string;
+    };
+};
+
+export class NodeInputService extends InputService {
     public constructor(
-        private ipcHandler:
-            | IpcServiceHandler<AndroidAutoInputService, AndroidAutoInputClient>
-            | undefined,
-        private touchScreenConfig: IInputSourceService_TouchScreen | undefined,
-        private touchEventThrottlePixels: number | undefined,
-        private displayId: number,
+        private ipcHandler: IpcServiceHandler<
+            AndroidAutoInputService,
+            AndroidAutoInputClient
+        >,
+        private config: NodeInputServiceConfig,
         events: ServiceEvents,
     ) {
         super(events);
-
-        if (this.ipcHandler === undefined) {
-            return;
-        }
 
         this.ipcHandler.on(
             'sendTouchEvent',
             this.sendTouchEventObject.bind(this),
         );
-        this.ipcHandler.on('sendKeyEvent', this.sendKeyEventObject.bind(this));
-        this.ipcHandler.on(
-            'touchEventThrottlePixels',
-            this.getTouchEventThrottlePixels.bind(this),
-        );
+
+        this.ipcHandler.on('sendKey', this.sendKey.bind(this));
     }
 
     protected async bind(_data: KeyBindingRequest): Promise<void> {}
@@ -54,18 +56,25 @@ export class NodeAutoInputService extends InputService {
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    private async sendKeyEventObject(data: IKeyEvent): Promise<void> {
-        this.sendKeyEvent(new KeyEvent(data));
-    }
+    private async sendKey(keycode: string | KeyCode): Promise<void> {
+        keycode = stringToKeycode(keycode);
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    private async getTouchEventThrottlePixels(): Promise<number> {
-        let pixels = this.touchEventThrottlePixels;
-        if (pixels === undefined) {
-            pixels = 1;
-        }
-
-        return pixels;
+        this.sendKeyEvent(
+            new KeyEvent({
+                keys: [
+                    {
+                        down: true,
+                        keycode,
+                        metastate: 0,
+                    },
+                    {
+                        down: false,
+                        keycode,
+                        metastate: 0,
+                    },
+                ],
+            }),
+        );
     }
 
     protected fillKeycodes(inputSourceService: InputSourceService): void {
@@ -78,16 +87,17 @@ export class NodeAutoInputService extends InputService {
 
     protected fillChannelDescriptor(channelDescriptor: Service): void {
         channelDescriptor.inputSourceService = new InputSourceService({
-            keycodesSupported: [],
-            touchscreen: [],
-            touchpad: [],
-            feedbackEventsSupported: [],
-            displayId: this.displayId,
+            displayId: this.config.displayId,
         });
 
-        if (this.touchScreenConfig !== undefined) {
+        if (this.config.touchscreen !== undefined) {
             channelDescriptor.inputSourceService.touchscreen.push(
-                new InputSourceService_TouchScreen(this.touchScreenConfig),
+                new InputSourceService_TouchScreen({
+                    width: this.config.touchscreen.width,
+                    height: this.config.touchscreen.height,
+                    type: stringToTouchscreenType(this.config.touchscreen.type),
+                    isSecondary: false,
+                }),
             );
         }
 

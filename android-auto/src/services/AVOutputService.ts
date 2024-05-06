@@ -2,14 +2,36 @@ import assert from 'node:assert';
 import { BufferReader } from '../utils/buffer.js';
 import { AVService } from './AVService.js';
 import { type ServiceEvents } from './Service.js';
-import { Ack, MediaMessageId, Start, Stop } from '@web-auto/android-auto-proto';
+import {
+    Ack,
+    Config,
+    Config_Status,
+    MediaMessageId,
+    Start,
+    Stop,
+} from '@web-auto/android-auto-proto';
+
+export interface AVOutputServiceConfig {
+    priorities: number[];
+}
 
 export abstract class AVOutputService extends AVService {
     protected configurationIndex: number | undefined;
     protected sessionAckBuffer: Uint8Array | undefined;
 
-    public constructor(priorities: number[], events: ServiceEvents) {
-        super(priorities, events);
+    public constructor(
+        private _config: AVOutputServiceConfig,
+        events: ServiceEvents,
+    ) {
+        super(events);
+    }
+
+    protected override getConfig(status: boolean): Config {
+        return new Config({
+            maxUnacked: 1,
+            status: status ? Config_Status.READY : Config_Status.WAIT,
+            configurationIndices: this._config.priorities,
+        });
     }
 
     protected onAvMediaIndication(buffer: Uint8Array): void {

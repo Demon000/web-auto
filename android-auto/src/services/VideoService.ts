@@ -9,19 +9,42 @@ import {
 } from '@web-auto/android-auto-proto';
 
 import { AVOutputService } from './AVOutputService.js';
-import type { IVideoConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
+import { type IVideoConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
 import type { ServiceEvents } from './Service.js';
 import assert from 'node:assert';
+import {
+    VideoResolutionUtils,
+    type DisplayConfig,
+    type ResolutionConfig,
+} from './VideoResolutionUtils.js';
+
+export interface VideoServiceConfig {
+    id: number;
+    type: DisplayType;
+    display: DisplayConfig;
+    resolutions: ResolutionConfig[];
+}
 
 export abstract class VideoService extends AVOutputService {
+    protected configs: IVideoConfiguration[];
+
     public constructor(
-        protected configs: IVideoConfiguration[],
-        protected displayId: number,
-        protected displayType: DisplayType,
-        priorities: number[],
+        protected config: VideoServiceConfig,
         events: ServiceEvents,
     ) {
-        super(priorities, events);
+        const configs = VideoResolutionUtils.getVideoConfigs(
+            config.display,
+            config.resolutions,
+        );
+
+        super(
+            {
+                priorities: Array.from(configs.keys()),
+            },
+            events,
+        );
+
+        this.configs = configs;
     }
 
     protected channelConfig(): IVideoConfiguration {
@@ -78,11 +101,11 @@ export abstract class VideoService extends AVOutputService {
     protected fillChannelDescriptor(channelDescriptor: Service): void {
         channelDescriptor.mediaSinkService = new MediaSinkService({
             videoConfigs: this.configs,
-            displayId: this.displayId,
-            displayType: this.displayType,
+            displayId: this.config.id,
+            displayType: this.config.type,
         });
 
-        if (this.displayType === DisplayType.AUXILIARY) {
+        if (this.config.type === DisplayType.AUXILIARY) {
             channelDescriptor.mediaSinkService.initialContentKeycode =
                 KeyCode.KEYCODE_NAVIGATION;
         }

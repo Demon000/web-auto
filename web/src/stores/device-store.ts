@@ -7,41 +7,49 @@ import {
 } from '@web-auto/android-auto-ipc';
 import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
 
-export const useDeviceStore = defineStore('device', () => {
-    const devices: Ref<IDevice[]> = ref([]);
+export const useDeviceStore = (
+    service: IpcClientHandler<
+        AndroidAutoServerClient,
+        AndroidAutoServerService
+    >,
+) =>
+    defineStore(service.handle, () => {
+        const devices: Ref<IDevice[]> = ref([]);
+        let initialized = false;
 
-    async function initialize(
-        service: IpcClientHandler<
-            AndroidAutoServerClient,
-            AndroidAutoServerService
-        >,
-    ) {
-        devices.value = await service.getDevices();
+        async function initialize() {
+            if (initialized) {
+                return;
+            }
 
-        service.on('devices', (newDevices) => {
-            devices.value = newDevices;
+            devices.value = await service.getDevices();
+
+            service.on('devices', (newDevices) => {
+                devices.value = newDevices;
+            });
+
+            initialized = true;
+        }
+
+        const connectedDevice = computed(() => {
+            for (const device of devices.value) {
+                if (device.state === 'connected') {
+                    return device;
+                }
+            }
+
+            return undefined;
         });
-    }
 
-    const connectedDevice = computed(() => {
-        for (const device of devices.value) {
-            if (device.state === 'connected') {
-                return device;
+        const notAvailableDevice = computed(() => {
+            for (const device of devices.value) {
+                if (device.state !== 'available') {
+                    return device;
+                }
             }
-        }
 
-        return undefined;
-    });
+            return undefined;
+        });
 
-    const notAvailableDevice = computed(() => {
-        for (const device of devices.value) {
-            if (device.state !== 'available') {
-                return device;
-            }
-        }
-
-        return undefined;
-    });
-
-    return { devices, connectedDevice, notAvailableDevice, initialize };
-});
+        return { devices, connectedDevice, notAvailableDevice, initialize };
+    })();

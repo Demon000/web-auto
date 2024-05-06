@@ -1,4 +1,5 @@
 {
+    registryName: 'android-auto',
     logging: {
         debug: false,
         // To enable debugging:
@@ -11,199 +12,246 @@
         // ],
     },
     androidAuto: {
-        cryptorConfig: {
+        serverIpcName: 'server',
+        cryptor: {
+            name: 'NodeCryptor',
             ciphers: 'ECDHE-RSA-AES128-GCM-SHA256',
         },
-        headunitInfo: {
-            make: 'WebAuto',
-            model: 'Universal',
-            year: '2023',
-            vehicleId: '20231206',
-            headUnitName: 'WebAuto',
-            headUnitMake: 'WebAuto',
-            headUnitModel: 'WebAuto Headunit',
-            headUnitSoftwareBuild: '1',
-            headUnitSoftwareVersion: '1.0',
-        },
-        serviceDiscoveryResponse: {
-            // LEFT = 0;
-            // RIGHT = 1;
-            // CENTER = 2;
-            // UNKNOWN = 3;
-            driverPosition: 0,
-            // UI_CONFIG_HIDE_CLOCK = 1;
-            // UI_CONFIG_HIDE_PHONE_SIGNAL = 2;
-            // UI_CONFIG_HIDE_BATTERY_LEVEL = 4;
-            // CAN_PLAY_NATIVE_MEDIA_DURING_VR = 8;
-            sessionConfiguration: 0,
-            displayName: 'WebAuto',
-            connectionConfiguration: {
-                pingConfiguration: {
-                    timeoutMs: 3000,
-                    intervalMs: 1000,
-                    highLatencyThresholdMs: 200,
-                    trackedPingCount: 5,
+        controlService: {
+            name: 'ControlService',
+            pingTimeoutMs: 5000,
+            startTimeoutMs: 5000,
+            headunitInfo: {
+                make: 'WebAuto',
+                model: 'Universal',
+                year: '2023',
+                vehicleId: '20231206',
+                headUnitName: 'WebAuto',
+                headUnitMake: 'WebAuto',
+                headUnitModel: 'WebAuto Headunit',
+                headUnitSoftwareBuild: '1',
+                headUnitSoftwareVersion: '1.0',
+            },
+            serviceDiscoveryResponse: {
+                driverPosition: 0,
+                canPlayNativeMediaDuringVr: false,
+                sessionConfiguration: 0,
+                displayName: 'WebAuto',
+                probeForSupport: false,
+                connectionConfiguration: {
+                    pingConfiguration: {
+                        timeoutMs: 3000,
+                        intervalMs: 1000,
+                        highLatencyThresholdMs: 200,
+                        trackedPingCount: 5,
+                    },
                 },
             },
         },
-        controlConfig: {
-            pingTimeoutMs: 5000,
-            startTimeoutMs: 5000,
-        },
-        displayConfigs: [
+        services: [
             {
+                name: 'NodeSensorService',
+                sensors: [
+                    {
+                        name: 'DummyDrivingStatusSensor',
+                        status: 0,
+                    },
+                    {
+                        name: 'DummyNightDataSensor',
+                        nightMode: false,
+                    },
+                ],
+            },
+            {
+                name: 'NodeRtAudioInputService',
+                numberOfBits: 16,
+                channelCount: 1,
+                sampleRate: 16000,
+                chunkSize: 2048,
+            },
+            {
+                name: 'NodeRtAudioOutputService',
+                audioType: 'MEDIA',
+                configs: [
+                    {
+                        samplingRate: 48000,
+                        numberOfChannels: 2,
+                        numberOfBits: 16,
+                        chunkSize: 2048,
+                    },
+                ],
+            },
+            {
+                name: 'NodeRtAudioOutputService',
+                audioType: 'GUIDANCE',
+                configs: [
+                    {
+                        samplingRate: 48000,
+                        numberOfChannels: 1,
+                        numberOfBits: 16,
+                        chunkSize: 2048,
+                    },
+                ],
+            },
+            {
+                name: 'NodeRtAudioOutputService',
+                audioType: 'SYSTEM_AUDIO',
+                configs: [
+                    {
+                        samplingRate: 16000,
+                        numberOfChannels: 1,
+                        numberOfBits: 16,
+                        chunkSize: 2048,
+                    },
+                ],
+            },
+            {
+                name: 'NodeVideoService',
+                ipcName: 'main-display-video-service',
+
                 id: 0,
-                width: 1920,
-                height: 1080,
-                touch: true,
-                touchEventThrottlePixels: 10,
-                // DISPLAY_TYPE_MAIN = 0
-                // DISPLAY_TYPE_CLUSTER = 1
-                // DISPLAY_TYPE_AUXILIARY = 2
-                type: 0,
-                density: 240,
+                // MAIN
+                // CLUSTER
+                // AUXILIARY
+                type: 'MAIN',
+
+                display: {
+                    width: 1920,
+                    height: 1080,
+                    density: 240,
+                },
 
                 /*
                  * List of supported resolutions and framerates in order of priority.
                  * These designate hardware support for the running platform.
                  */
-                resolutionConfigs: [
+                resolutions: [
                     {
-                        // VIDEO_800x480 = 1
-                        // VIDEO_1280x720 = 2
-                        // VIDEO_1920x1080 = 3
-                        // VIDEO_2560x1440 = 4
-                        // VIDEO_3840x2160 = 5
-                        // VIDEO_720x1280 = 6
-                        // VIDEO_1080x1920 = 7
-                        // VIDEO_1440x2560 = 8
-                        // VIDEO_2160x3840 = 9
-                        resolution: 3,
-                        // VIDEO_FPS_60 = 1
-                        // VIDEO_FPS_30 = 2
-                        framerate: 1,
-                        //  MEDIA_CODEC_VIDEO_H264_BP = 3
-                        //  MEDIA_CODEC_VIDEO_VP9 = 5
-                        //  MEDIA_CODEC_VIDEO_AV1 = 6
-                        //  MEDIA_CODEC_VIDEO_H265 = 7
-                        codec: 3,
+                        // 800x480
+                        // 1280x720
+                        // 1920x1080
+                        // 2560x1440
+                        // 3840x2160
+                        // 720x1280
+                        // 1080x1920
+                        // 1440x2560
+                        // 2160x3840
+                        resolution: '1920x1080',
+                        // 60
+                        // 30
+                        framerate: 60,
+                        //  H264_BP
+                        //  VP9
+                        //  AV1
+                        //  H265
+                        codec: 'H264_BP',
                     },
                     {
-                        resolution: 3,
-                        framerate: 2,
-                        codec: 3,
+                        resolution: '1920x1080',
+                        framerate: 30,
+                        codec: 'H264_BP',
                     },
                     {
-                        resolution: 2,
-                        framerate: 1,
-                        codec: 3,
+                        resolution: '1280x720',
+                        framerate: 60,
+                        codec: 'H264_BP',
                     },
                     {
-                        resolution: 2,
-                        framerate: 2,
-                        codec: 3,
+                        resolution: '1280x720',
+                        framerate: 30,
+                        codec: 'H264_BP',
                     },
                     {
-                        resolution: 1,
-                        framerate: 1,
-                        codec: 3,
+                        resolution: '800x480',
+                        framerate: 60,
+                        codec: 'H264_BP',
                     },
                     {
-                        resolution: 1,
-                        framerate: 2,
-                        codec: 3,
-                    },
-                ],
-            },
-            /*
-            {
-                id: 1,
-                width: 800,
-                height: 480,
-                type: 1,
-                density: 240,
-                resolutionConfigs: [
-                    {
-                        resolution: 1,
-                        framerate: 1,
-                        codec: 3,
+                        resolution: '800x480',
+                        framerate: 30,
+                        codec: 'H264_BP',
                     },
                 ],
             },
-            */
-        ],
-        sensorConfigs: [
             {
-                name: 'DummyDrivingStatusSensor',
-                config: {
-                    // DRIVE_STATUS_UNRESTRICTED = 0
-                    // DRIVE_STATUS_NO_VIDEO = 1
-                    // DRIVE_STATUS_NO_KEYBOARD_INPUT = 2
-                    // DRIVE_STATUS_NO_VOICE_INPUT = 4
-                    // DRIVE_STATUS_NO_CONFIG = 8
-                    // DRIVE_STATUS_LIMIT_MESSAGE_LEN = 16
-                    status: 0,
+                name: 'NodeInputService',
+                ipcName: 'main-display-input-service',
+                displayId: 0,
+                touchscreen: {
+                    width: 1920,
+                    height: 1080,
+                    // CAPACITIVE,
+                    // RESISTIVE,
+                    // INFRARED,
+                    type: 'CAPACITIVE',
                 },
             },
             {
-                name: 'DummyNightDataSensor',
-                config: {
-                    nightMode: true,
-                },
+                name: 'NodeMediaStatusService',
+                ipcName: 'media-status-service',
+            },
+            {
+                name: 'NodeNavigationStatusService',
             },
         ],
         // Names of devices to be ignored
         /*
         ignoredDevices: ['USB: MYSTIC LIGHT '],
         */
-        usbDeviceHandlerConfig: {},
-        /*
-        tcpDeviceHandlerConfig: {
-            // Static IPs that can be connected to
-            // These will be Android devices with head unit servers
-            // started manually
-            ips: ['192.168.0.103'],
-            // Automatic scan for IPs with Android Auto head unit server available
-            scanOptions: {
-                interfaces: ['wlp4s0'],
-                mask: '192.168.1.1/24',
-                intervalMs: 5000,
+        deviceHandlers: [
+            {
+                name: 'UsbDeviceHandler',
             },
-        },
-        */
-        /*
-        bluetoothDeviceHandlerConfig: {
-            // Timeout in milliseconds for the device to connect to bluetooth
-            profileConnectionTimeoutMs: 10000,
-            // Timeout in milliseconds for the device to connect to the network
-            wifiConnectionTimeoutMs: 20000,
-            // Timeout in milliseconds for the device to connect to the TCP socket
-            tcpConnectionTimeoutMs: 5000,
-            socketInfo: {
-                // IP address and port on which to expose the TCP server
-                ipAddress: '192.168.0.106',
-                port: 5000,
+            /*
+            {
+                name: 'TcpDeviceHandler',
+                // Static IPs that can be connected to
+                // These will be Android devices with head unit servers
+                // started manually
+                ips: ['192.168.0.103'],
+                // Automatic scan for IPs with Android Auto head unit server available
+                scanOptions: {
+                    interfaces: ['wlp4s0'],
+                    mask: '192.168.1.1/24',
+                    intervalMs: 5000,
+                },
             },
-            networkInfo: {
-                ssid: 'Wi-Fi Name',
-                // OPEN = 1
-                // WEP_64 = 2
-                // WEP_128 = 3
-                // WPA_PERSONAL = 4
-                // WPA2_PERSONAL = 8
-                // WPA_WPA2_PERSONAL = 12
-                // WPA_ENTERPRISE = 20
-                // WPA2_ENTERPRISE = 24
-                // WPA_WPA2_ENTERPRISE = 28
-                securityMode: 8,
-                // STATIC = 0
-                // DYNAMIC = 1
-                apType: 0,
-                macAddr: '3A:AE:4A:AE:EA:A6',
-                psk: 'wifipass',
+            */
+            /*
+            {
+                name: 'BluetoothDeviceHandler',
+                // Timeout in milliseconds for the device to connect to bluetooth
+                profileConnectionTimeoutMs: 10000,
+                // Timeout in milliseconds for the device to connect to the network
+                wifiConnectionTimeoutMs: 20000,
+                // Timeout in milliseconds for the device to connect to the TCP socket
+                tcpConnectionTimeoutMs: 5000,
+                socketInfo: {
+                    // IP address and port on which to expose the TCP server
+                    ipAddress: '192.168.0.106',
+                    port: 5000,
+                },
+                networkInfo: {
+                    ssid: 'Wi-Fi Name',
+                    // OPEN = 1
+                    // WEP_64 = 2
+                    // WEP_128 = 3
+                    // WPA_PERSONAL = 4
+                    // WPA2_PERSONAL = 8
+                    // WPA_WPA2_PERSONAL = 12
+                    // WPA_ENTERPRISE = 20
+                    // WPA2_ENTERPRISE = 24
+                    // WPA_WPA2_ENTERPRISE = 28
+                    securityMode: 8,
+                    // STATIC = 0
+                    // DYNAMIC = 1
+                    apType: 0,
+                    macAddr: '3A:AE:4A:AE:EA:A6',
+                    psk: 'wifipass',
+                },
             },
-        },
-        */
+            */
+        ],
     },
     nodeAndroidAuto: {
         webSocketServer: {
@@ -212,7 +260,93 @@
         },
     },
     web: {
-        videoDecoderRenderer: 'webgl',
+        themeColor: '#60a8f0',
+        decoders: [
+            {
+                videoServiceIpcName: 'main-display-video-service',
+                renderer: 'webgl',
+            },
+        ],
+        appBar: {
+            serverIpcName: 'server',
+            inputServiceIpcName: 'main-display-input-service',
+            components: [
+                {
+                    path: '/',
+                    name: 'AppBarRouteIcon',
+                    content: 'dashboard',
+                },
+                {
+                    path: '/connections',
+                    name: 'AppBarRouteIcon',
+                    content: 'phonelink_ring',
+                },
+                {
+                    path: '/video',
+                    name: 'AppBarRouteIcon',
+                    onlyShowIfDeviceConnected: true,
+                    content: '\
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">\
+    <path\
+        stroke-linejoin="round"\
+        stroke-width="14"\
+        fill-opacity="0"\
+        d="M56 146H26.074c-3.111 0-5.031-3.396-3.427-6.062l69.925-116.24c1.555-2.584 5.301-2.584 6.856 0l69.925 116.24c1.604 2.666-.316 6.062-3.427 6.062H136"\
+    />\
+    <path\
+        stroke-linejoin="round"\
+        stroke-width="14"\
+        fill-opacity="0"\
+        d="m42 170 54-92 54 92-54-24-54 24Z"\
+    />\
+</svg>\
+                    ',
+                },
+                {
+                    name: 'AppBarKeyIcon',
+                    inputServiceIpcName: 'main-display-input-service',
+                    onlyShowIfDeviceConnected: true,
+                    keycode: 'SEARCH',
+                    content: 'mic',
+                },
+            ],
+        },
+        views: [
+            {
+                path: '/',
+                component: 'HomeView',
+                serverIpcName: 'server',
+                components: [
+                    {
+                        name: 'MiniVideo',
+                        serverIpcName: 'server',
+                        videoServiceIpcName: 'main-display-video-service',
+                        inputServiceIpcName: 'main-display-input-service',
+                        touchEventThrottlePixels: 10,
+                        fullVideoPath: '/video',
+                    },
+                    {
+                        name: 'MediaStatus',
+                        inputServiceIpcName: 'main-display-input-service',
+                        mediaStatusServiceIpcName: 'media-status-service',
+                    },
+                ],
+            },
+            {
+                path: '/connections',
+                component: 'ConnectionsView',
+                serverIpcName: 'server',
+            },
+            {
+                path: '/video',
+                component: 'VideoView',
+                exitVideoPath: '/',
+                serverIpcName: 'server',
+                videoServiceIpcName: 'main-display-video-service',
+                inputServiceIpcName: 'main-display-input-service',
+                touchEventThrottlePixels: 10,
+            },
+        ],
     },
     electronWindowBuilder: {
         // Windows to be built
@@ -232,24 +366,6 @@
                     // When using url, do not specify path, or index
                     /*
                     url: 'http://localhost:5173/',
-                    */
-                },
-            },
-            {
-                name: 'Cluster window',
-                width: 800,
-                height: 480,
-                app: {
-                    // Path to app root
-                    path: './web/dist',
-                    // Index path relative to app root
-                    index: 'cluster/index.html',
-                    // Name of preload script
-                    preload: './electron-ipc/preload-run.mjs',
-                    // URL if running it separately (useful for development)
-                    // When using url, do not specify path, or index
-                    /*
-                    url: 'http://localhost:5173/cluster/',
                     */
                 },
             },

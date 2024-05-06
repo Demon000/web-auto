@@ -7,93 +7,94 @@ import {
 } from '@web-auto/android-auto-ipc';
 import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
 
-export const useVideoFocusModeStore = defineStore('video-focus-mode', () => {
-    let service:
-        | IpcClientHandler<AndroidAutoVideoClient, AndroidAutoVideoService>
-        | undefined = undefined;
+export const useVideoFocusModeStore = (
+    service: IpcClientHandler<AndroidAutoVideoClient, AndroidAutoVideoService>,
+) =>
+    defineStore(service.handle, () => {
+        let initialized = false;
 
-    const requestedFocusMode: Ref<VideoFocusMode | undefined> = ref(undefined);
-    const usageCount: Ref<number> = ref(0);
+        const requestedFocusMode: Ref<VideoFocusMode | undefined> =
+            ref(undefined);
+        const usageCount: Ref<number> = ref(0);
 
-    async function initialize(
-        localService: IpcClientHandler<
-            AndroidAutoVideoClient,
-            AndroidAutoVideoService
-        >,
-    ) {
-        requestedFocusMode.value = undefined;
-
-        service = localService;
-
-        localService.on('focusRequest', async (data) => {
-            requestedFocusMode.value = data.mode;
-            await nextTick();
-            requestedFocusMode.value = undefined;
-        });
-    }
-
-    const setFocusMode = async (focus: VideoFocusMode) => {
-        if (service === undefined) {
-            throw new Error('Cannot call before calling initialize');
-        }
-
-        try {
-            await service.sendVideoFocusNotification({
-                focus,
-                unsolicited: true,
-            });
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    const showProjected = async () => {
-        await setFocusMode(VideoFocusMode.VIDEO_FOCUS_PROJECTED);
-    };
-
-    const showNative = async () => {
-        await setFocusMode(VideoFocusMode.VIDEO_FOCUS_NATIVE);
-    };
-
-    const start = async () => {
-        if (service === undefined) {
-            throw new Error('Cannot call before calling initialize');
-        }
-
-        try {
-            const channelStarted = await service.getChannelStarted();
-            if (channelStarted) {
-                await showNative();
+        async function initialize() {
+            if (initialized) {
+                return;
             }
 
-            await showProjected();
-        } catch (err) {
-            console.error(err);
+            requestedFocusMode.value = undefined;
+
+            service.on('focusRequest', async (data) => {
+                requestedFocusMode.value = data.mode;
+                await nextTick();
+                requestedFocusMode.value = undefined;
+            });
+
+            initialized = true;
         }
-    };
 
-    const increaseUsageCount = async () => {
-        usageCount.value++;
+        const setFocusMode = async (focus: VideoFocusMode) => {
+            if (service === undefined) {
+                throw new Error('Cannot call before calling initialize');
+            }
 
-        if (usageCount.value === 1) {
-            await start();
-        }
-    };
+            try {
+                await service.sendVideoFocusNotification({
+                    focus,
+                    unsolicited: true,
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        };
 
-    const decreaseUsageCount = async () => {
-        usageCount.value--;
+        const showProjected = async () => {
+            await setFocusMode(VideoFocusMode.VIDEO_FOCUS_PROJECTED);
+        };
 
-        if (usageCount.value === 0) {
-            await showNative();
-        }
-    };
+        const showNative = async () => {
+            await setFocusMode(VideoFocusMode.VIDEO_FOCUS_NATIVE);
+        };
 
-    return {
-        requestedFocusMode,
-        setFocusMode,
-        start,
-        increaseUsageCount,
-        decreaseUsageCount,
-        initialize,
-    };
-});
+        const start = async () => {
+            if (service === undefined) {
+                throw new Error('Cannot call before calling initialize');
+            }
+
+            try {
+                const channelStarted = await service.getChannelStarted();
+                if (channelStarted) {
+                    await showNative();
+                }
+
+                await showProjected();
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        const increaseUsageCount = async () => {
+            usageCount.value++;
+
+            if (usageCount.value === 1) {
+                await start();
+            }
+        };
+
+        const decreaseUsageCount = async () => {
+            usageCount.value--;
+
+            if (usageCount.value === 0) {
+                await showNative();
+            }
+        };
+
+        return {
+            requestedFocusMode,
+            setFocusMode,
+            start,
+            increaseUsageCount,
+            decreaseUsageCount,
+            initialize,
+        };
+    })();

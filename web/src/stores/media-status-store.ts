@@ -10,27 +10,37 @@ import {
     AndroidAutoMediaStatusService,
 } from '@web-auto/android-auto-ipc';
 
-export const useMediaStatusStore = defineStore('media-status', () => {
-    const status: Ref<IMediaPlaybackStatus | undefined> = ref(undefined);
-    const metadata: Ref<IMediaPlaybackMetadata | undefined> = ref(undefined);
+export const useMediaStatusStore = (
+    service: IpcClientHandler<
+        AndroidAutoMediaStatusClient,
+        AndroidAutoMediaStatusService
+    >,
+) =>
+    defineStore(service.handle, () => {
+        let initialized = false;
 
-    async function initialize(
-        service: IpcClientHandler<
-            AndroidAutoMediaStatusClient,
-            AndroidAutoMediaStatusService
-        >,
-    ) {
-        metadata.value = await service.getMetadata();
-        status.value = await service.getStatus();
+        const status: Ref<IMediaPlaybackStatus | undefined> = ref(undefined);
+        const metadata: Ref<IMediaPlaybackMetadata | undefined> =
+            ref(undefined);
 
-        service.on('metadata', (newMetadata) => {
-            metadata.value = newMetadata;
-        });
+        async function initialize() {
+            if (initialized) {
+                return;
+            }
 
-        service.on('status', (newStatus) => {
-            status.value = newStatus;
-        });
-    }
+            metadata.value = await service.getMetadata();
+            status.value = await service.getStatus();
 
-    return { status, metadata, initialize };
-});
+            service.on('metadata', (newMetadata) => {
+                metadata.value = newMetadata;
+            });
+
+            service.on('status', (newStatus) => {
+                status.value = newStatus;
+            });
+
+            initialized = true;
+        }
+
+        return { status, metadata, initialize };
+    })();

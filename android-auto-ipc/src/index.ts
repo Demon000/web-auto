@@ -1,6 +1,6 @@
+import type { KeyCode } from '@web-auto/android-auto-proto';
 import type {
     IInsets,
-    IKeyEvent,
     IMediaPlaybackMetadata,
     IMediaPlaybackStatus,
     ITouchEvent,
@@ -10,8 +10,7 @@ import type {
 
 export type AndroidAutoInputService = {
     sendTouchEvent: (touchEvent: ITouchEvent) => Promise<void>;
-    sendKeyEvent: (keyEvent: IKeyEvent) => Promise<void>;
-    touchEventThrottlePixels: () => Promise<number>;
+    sendKey: (keycode: string | KeyCode) => Promise<void>;
 };
 
 export type AndroidAutoInputClient = Record<string, never>;
@@ -68,13 +67,3 @@ export type AndroidAutoMediaStatusClient = {
     status(status: IMediaPlaybackStatus | undefined): void;
     metadata(metadata: IMediaPlaybackMetadata | undefined): void;
 };
-
-export enum AndroidAutoIpcNames {
-    SERVER = 'server',
-    VIDEO = 'video',
-    CLUSTER_VIDEO = 'cluster-video',
-    INPUT = 'input',
-    MEDIA_STATUS = 'media-status',
-}
-
-export const ANDROID_AUTO_IPC_REGISTRY_NAME = 'android-auto';

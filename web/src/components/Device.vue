@@ -4,9 +4,11 @@ import type { IDevice } from '@web-auto/android-auto-ipc';
 import '@material/web/iconbutton/filled-icon-button.js';
 import '@material/web/icon/icon.js';
 
-defineProps<{
+export interface DeviceProps {
     device: IDevice;
-}>();
+}
+
+defineProps<DeviceProps>();
 
 const emit = defineEmits<{
     (e: 'connect', name: string): void;

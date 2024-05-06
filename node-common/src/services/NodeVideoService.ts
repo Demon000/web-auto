@@ -7,18 +7,29 @@ import type {
 import {
     type Start,
     type VideoFocusRequestNotification,
-    DisplayType,
     VideoFocusNotification,
     VideoFocusMode,
+    DisplayType,
+    MediaCodecType,
+    VideoCodecResolutionType,
+    VideoFrameRateType,
 } from '@web-auto/android-auto-proto';
 import assert from 'node:assert';
-import type {
-    IVideoConfiguration,
-    IVideoFocusNotification,
+import {
+    stringToCodec,
+    stringToDisplayType,
+    stringToFramerate,
+    stringToResolution,
+    type IVideoConfiguration,
+    type IVideoFocusNotification,
 } from '@web-auto/android-auto-proto/interfaces.js';
 import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 import { BufferWriter } from '@web-auto/android-auto';
 import { hasKeyFrame, parseCodecConfig } from '../codec/index.js';
+import type {
+    DisplayConfig,
+    ResolutionConfig,
+} from '../../../android-auto/src/services/VideoResolutionUtils.js';
 
 enum CodecState {
     STOPPED,
@@ -26,6 +37,33 @@ enum CodecState {
     WAITING_FOR_FIRST_FRAME,
     STARTED,
 }
+
+export type VideoServiceResolutionConfig = {
+    resolution: string | VideoCodecResolutionType;
+    codec: string | MediaCodecType;
+    framerate: string | number | VideoFrameRateType;
+};
+
+export interface NodeVideoServiceConfig {
+    id: number;
+    type: DisplayType | string;
+    display: DisplayConfig;
+    resolutions: VideoServiceResolutionConfig[];
+}
+
+const resolutionConfigToResolution = (
+    value: VideoServiceResolutionConfig,
+): ResolutionConfig => {
+    const resolution = stringToResolution(value.resolution);
+    const codec = stringToCodec(value.codec);
+    const framerate = stringToFramerate(value.framerate);
+
+    return {
+        resolution,
+        codec,
+        framerate,
+    };
+};
 
 export class NodeVideoService extends VideoService {
     private codecState = CodecState.STOPPED;
@@ -36,13 +74,19 @@ export class NodeVideoService extends VideoService {
             AndroidAutoVideoService,
             AndroidAutoVideoClient
         >,
-        videoConfigs: IVideoConfiguration[],
-        displayId: number,
-        displayType: DisplayType,
-        priorities: number[],
+        config: NodeVideoServiceConfig,
         events: ServiceEvents,
     ) {
-        super(videoConfigs, displayId, displayType, priorities, events);
+        super(
+            {
+                ...config,
+                resolutions: config.resolutions.map(
+                    resolutionConfigToResolution,
+                ),
+                type: stringToDisplayType(config.type),
+            },
+            events,
+        );
 
         ipcHandler.on(
             'sendVideoFocusNotification',

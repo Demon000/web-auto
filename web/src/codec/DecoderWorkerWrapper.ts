@@ -3,25 +3,35 @@ import {
     AndroidAutoVideoService,
     VideoCodecConfig,
 } from '@web-auto/android-auto-ipc';
-import { DecoderWorkerMessageType } from './DecoderWorkerMessages.ts';
+import { DecoderWorkerMessageType } from './DecoderWorkerMessages.js';
 import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
+import { ipcClientRegistry } from '../ipc.js';
+
+export interface DecoderWorkerConfig {
+    videoServiceIpcName: string;
+    renderer: string;
+}
 
 export class DecoderWorker {
     private acceptData = false;
     private worker: Worker;
+    private service: IpcClientHandler<
+        AndroidAutoVideoClient,
+        AndroidAutoVideoService
+    >;
 
-    public constructor(
-        private service: IpcClientHandler<
-            AndroidAutoVideoClient,
-            AndroidAutoVideoService
-        >,
-    ) {
+    public constructor(private config: DecoderWorkerConfig) {
         this.worker = new Worker(
             new URL('./DecoderWorker.ts', import.meta.url),
             {
                 type: 'module',
             },
         );
+
+        this.service = ipcClientRegistry.registerIpcClient<
+            AndroidAutoVideoClient,
+            AndroidAutoVideoService
+        >(this.config.videoServiceIpcName);
 
         this.onChannelStart = this.onChannelStart.bind(this);
         this.onCodecConfig = this.onCodecConfig.bind(this);
@@ -38,7 +48,7 @@ export class DecoderWorker {
         this.worker.postMessage(
             {
                 type: DecoderWorkerMessageType.CREATE_RENDERER,
-                rendererName: import.meta.env.CONFIG.videoDecoderRenderer,
+                rendererName: this.config.renderer,
                 canvas: offscreenCanvas,
             },
             [offscreenCanvas],

@@ -1,10 +1,28 @@
 <script setup lang="ts">
-import DeviceSelector from './DeviceSelector.vue';
-import AppBar from './AppBar.vue';
-import { androidAutoServerService } from '../ipc.ts';
-import { useDeviceStore } from '../stores/device-store.ts';
+import DeviceSelector from '../DeviceSelector.vue';
+import AppBar from '../AppBar.vue';
+import { useDeviceStore } from '../../stores/device-store.js';
+import { ipcClientRegistry } from '../../ipc.js';
+import {
+    AndroidAutoServerClient,
+    AndroidAutoServerService,
+} from '@web-auto/android-auto-ipc';
+import { WEB_CONFIG } from '../../config.js';
 
-const deviceStore = useDeviceStore();
+export interface ConnectionsViewProps {
+    serverIpcName: string;
+}
+
+const props = defineProps<ConnectionsViewProps>();
+
+const androidAutoServerService = ipcClientRegistry.registerIpcClient<
+    AndroidAutoServerClient,
+    AndroidAutoServerService
+>(props.serverIpcName);
+
+const deviceStore = useDeviceStore(androidAutoServerService);
+
+await deviceStore.initialize();
 
 const connectDevice = async (name: string) => {
     try {
@@ -33,7 +51,7 @@ const disconnectDevice = async (name: string) => {
                 @disconnect="disconnectDevice"
             ></DeviceSelector>
         </div>
-        <AppBar></AppBar>
+        <AppBar v-bind="WEB_CONFIG.appBar"></AppBar>
     </div>
 </template>
 

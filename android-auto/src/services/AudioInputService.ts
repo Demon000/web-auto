@@ -12,21 +12,18 @@ import {
 } from '@web-auto/android-auto-proto';
 import { BufferWriter } from '../utils/buffer.js';
 
+export interface AudioInputServiceConfig {
+    channelCount: number;
+    sampleRate: number;
+    numberOfBits: number;
+}
+
 export abstract class AudioInputService extends AVService {
-    public constructor(events: ServiceEvents) {
-        super([0], events);
-    }
-
-    protected channelCount(): number {
-        return 1;
-    }
-
-    protected sampleRate(): number {
-        return 16000;
-    }
-
-    protected chunkSize(): number {
-        return 2048;
+    public constructor(
+        protected config: AudioInputServiceConfig,
+        events: ServiceEvents,
+    ) {
+        super(events);
     }
 
     protected abstract inputOpen(data: MicrophoneRequest): void;
@@ -110,9 +107,9 @@ export abstract class AudioInputService extends AVService {
         channelDescriptor.mediaSourceService = new MediaSourceService({
             availableType: MediaCodecType.MEDIA_CODEC_AUDIO_PCM,
             audioConfig: {
-                samplingRate: this.sampleRate(),
-                numberOfChannels: this.channelCount(),
-                numberOfBits: 16,
+                samplingRate: this.config.sampleRate,
+                numberOfChannels: this.config.channelCount,
+                numberOfBits: this.config.numberOfBits,
             },
         });
     }

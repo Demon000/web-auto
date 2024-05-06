@@ -7,26 +7,34 @@ import {
 import { AVOutputService } from './AVOutputService.js';
 import { type ServiceEvents } from './Service.js';
 import assert from 'node:assert';
-import type { IAudioConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
+import { type IAudioConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
+
+export interface AudioOutputServiceConfig {
+    audioType: AudioStreamType;
+    configs: IAudioConfiguration[];
+}
 
 export abstract class AudioOutputService extends AVOutputService {
     public constructor(
-        private audioType: AudioStreamType,
-        private configs: IAudioConfiguration[],
-        priorities: number[],
+        protected config: AudioOutputServiceConfig,
         events: ServiceEvents,
     ) {
-        super(priorities, events);
+        super(
+            {
+                priorities: Array.from(config.configs.keys()),
+            },
+            events,
+        );
     }
 
     protected channelConfig(): IAudioConfiguration {
         let index = this.configurationIndex;
-        if (index === undefined && this.configs.length === 1) {
+        if (index === undefined && this.config.configs.length === 1) {
             index = 0;
         }
 
         assert(index !== undefined);
-        const config = this.configs[index];
+        const config = this.config.configs[index];
         assert(config !== undefined);
         return config;
     }
@@ -52,8 +60,8 @@ export abstract class AudioOutputService extends AVOutputService {
     protected fillChannelDescriptor(channelDescriptor: Service): void {
         channelDescriptor.mediaSinkService = new MediaSinkService({
             availableType: MediaCodecType.MEDIA_CODEC_AUDIO_PCM,
-            audioType: this.audioType,
-            audioConfigs: this.configs,
+            audioType: this.config.audioType,
+            audioConfigs: this.config.configs,
         });
     }
 }

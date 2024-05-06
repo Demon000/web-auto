@@ -10,24 +10,53 @@ import '@material/web/progress/linear-progress.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
 import '@material/web/fab/fab.js';
+import { ipcClientRegistry } from '../../ipc.js';
 import {
-    IMediaPlaybackMetadata,
-    IMediaPlaybackStatus,
-} from '@web-auto/android-auto-proto/interfaces.js';
+    AndroidAutoInputClient,
+    AndroidAutoInputService,
+    AndroidAutoMediaStatusClient,
+    AndroidAutoMediaStatusService,
+} from '@web-auto/android-auto-ipc';
+import { useMediaStatusStore } from '../../stores/media-status-store.js';
 
-const props = defineProps<{
-    metadata?: IMediaPlaybackMetadata;
-    status?: IMediaPlaybackStatus;
-}>();
+export interface MediaStatusProps {
+    inputServiceIpcName: string;
+    mediaStatusServiceIpcName: string;
+}
+
+const props = defineProps<MediaStatusProps>();
+
+const mediaStatusService = ipcClientRegistry.registerIpcClient<
+    AndroidAutoMediaStatusClient,
+    AndroidAutoMediaStatusService
+>(props.mediaStatusServiceIpcName);
+
+const inputService = ipcClientRegistry.registerIpcClient<
+    AndroidAutoInputClient,
+    AndroidAutoInputService
+>(props.inputServiceIpcName);
+
+const mediaStatuStore = useMediaStatusStore(mediaStatusService);
+
+await mediaStatuStore.initialize();
+
+const sendKey = (keycode: KeyCode) => {
+    inputService
+        .sendKey(keycode)
+        .then(() => {})
+        .catch((err) => {
+            console.error('Failed to send key event', err);
+        });
+};
 
 let albumArtUrl: string | undefined;
 
 watch(
-    () => props.metadata,
+    () => mediaStatuStore.metadata,
     (metadata) => {
         const albumArt = metadata?.albumArt;
 
-        let newAlbumArtUrl = undefined;
+        let newAlbumArtUrl: string | undefined;
         if (albumArt !== undefined) {
             const blob = new Blob([albumArt]);
 
@@ -44,10 +73,6 @@ watch(
         immediate: true,
     },
 );
-
-const emit = defineEmits<{
-    (e: 'press-key', keycode: KeyCode): void;
-}>();
 </script>
 
 <template>
@@ -58,42 +83,44 @@ const emit = defineEmits<{
             :src="albumArtUrl"
         />
         <div class="details">
-            <div class="song">{{ metadata?.song }}</div>
-            <div class="artist">{{ metadata?.artist }}</div>
+            <div class="song">{{ mediaStatuStore.metadata?.song }}</div>
+            <div class="artist">{{ mediaStatuStore.metadata?.artist }}</div>
 
             <md-linear-progress
                 class="progress"
                 v-if="
-                    status?.playbackSeconds !== undefined &&
-                    metadata?.durationSeconds !== undefined
+                    mediaStatuStore.status?.playbackSeconds !== undefined &&
+                    mediaStatuStore.metadata?.durationSeconds !== undefined
                 "
-                :value="status?.playbackSeconds / metadata?.durationSeconds"
+                :value="
+                    mediaStatuStore.status?.playbackSeconds /
+                    mediaStatuStore.metadata?.durationSeconds
+                "
                 buffer="1"
             ></md-linear-progress>
             <div class="controls">
                 <md-icon-button
-                    @click="emit('press-key', KeyCode.KEYCODE_MEDIA_PREVIOUS)"
+                    @click="sendKey(KeyCode.KEYCODE_MEDIA_PREVIOUS)"
                 >
                     <md-icon>skip_previous</md-icon>
                 </md-icon-button>
                 <md-fab
                     variant="primary"
-                    @click="emit('press-key', KeyCode.KEYCODE_MEDIA_PLAY_PAUSE)"
+                    @click="sendKey(KeyCode.KEYCODE_MEDIA_PLAY_PAUSE)"
                 >
                     <md-icon
                         slot="icon"
                         v-if="
-                            status?.state ===
+                            mediaStatuStore.status?.state ===
                                 MediaPlaybackStatus_State.PAUSED ||
-                            status?.state === MediaPlaybackStatus_State.STOPPED
+                            mediaStatuStore.status?.state ===
+                                MediaPlaybackStatus_State.STOPPED
                         "
                         >play_arrow</md-icon
                     >
                     <md-icon slot="icon" v-else> pause </md-icon>
                 </md-fab>
-                <md-icon-button
-                    @click="emit('press-key', KeyCode.KEYCODE_MEDIA_NEXT)"
-                >
+                <md-icon-button @click="sendKey(KeyCode.KEYCODE_MEDIA_NEXT)">
                     <md-icon>skip_next</md-icon>
                 </md-icon-button>
             </div>

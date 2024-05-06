@@ -2,10 +2,12 @@
 import { IDevice } from '@web-auto/android-auto-ipc';
 import Device from './Device.vue';
 
-defineProps<{
+export interface DeviceSelectorProps {
     devices: IDevice[];
     connectedDevice?: IDevice;
-}>();
+}
+
+defineProps<DeviceSelectorProps>();
 
 const emit = defineEmits<{
     (e: 'connect', name: string): void;

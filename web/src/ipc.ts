@@ -1,60 +1,16 @@
-import {
-    AndroidAutoIpcNames,
-    type AndroidAutoInputClient,
-    type AndroidAutoInputService,
-    type AndroidAutoVideoClient,
-    type AndroidAutoVideoService,
-    type AndroidAutoServerService,
-    type AndroidAutoServerClient,
-    ANDROID_AUTO_IPC_REGISTRY_NAME,
-    AndroidAutoMediaStatusClient,
-    AndroidAutoMediaStatusService,
-} from '@web-auto/android-auto-ipc';
+import { IpcClientRegistry } from '@web-auto/common-ipc/renderer.js';
 import { ElectronIpcClientRegistry } from '@web-auto/electron-ipc/renderer.js';
 import { SocketIpcClientRegistry } from '@web-auto/socket-ipc/renderer.js';
+import { CONFIG } from './config.js';
 
-let androidAutoIpcClientRegistry;
+export let ipcClientRegistry: IpcClientRegistry;
 
 try {
-    androidAutoIpcClientRegistry = new ElectronIpcClientRegistry(
-        ANDROID_AUTO_IPC_REGISTRY_NAME,
-    );
+    ipcClientRegistry = new ElectronIpcClientRegistry(CONFIG.registryName);
 } catch (err) {
-    androidAutoIpcClientRegistry = new SocketIpcClientRegistry(
+    ipcClientRegistry = new SocketIpcClientRegistry(
         import.meta.env.VITE_SOCKET_IPC_CLIENT_HOST,
         parseInt(import.meta.env.VITE_SOCKET_IPC_CLIENT_PORT),
-        ANDROID_AUTO_IPC_REGISTRY_NAME,
+        CONFIG.registryName,
     );
 }
-
-await androidAutoIpcClientRegistry.register();
-
-export const androidAutoServerService =
-    androidAutoIpcClientRegistry.registerIpcClient<
-        AndroidAutoServerClient,
-        AndroidAutoServerService
-    >(AndroidAutoIpcNames.SERVER);
-
-export const androidAutoInputService =
-    androidAutoIpcClientRegistry.registerIpcClient<
-        AndroidAutoInputClient,
-        AndroidAutoInputService
-    >(AndroidAutoIpcNames.INPUT);
-
-export const androidAutoVideoService =
-    androidAutoIpcClientRegistry.registerIpcClient<
-        AndroidAutoVideoClient,
-        AndroidAutoVideoService
-    >(AndroidAutoIpcNames.VIDEO);
-
-export const androidAutoClusterVideoService =
-    androidAutoIpcClientRegistry.registerIpcClient<
-        AndroidAutoVideoClient,
-        AndroidAutoVideoService
-    >(AndroidAutoIpcNames.CLUSTER_VIDEO);
-
-export const androidAutoMediaStatusService =
-    androidAutoIpcClientRegistry.registerIpcClient<
-        AndroidAutoMediaStatusClient,
-        AndroidAutoMediaStatusService
-    >(AndroidAutoIpcNames.MEDIA_STATUS);

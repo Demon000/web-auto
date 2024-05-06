@@ -25,6 +25,10 @@ import { Pinger } from './Pinger.js';
 import assert from 'node:assert';
 import type { Cryptor } from '../crypto/Cryptor.js';
 import { BufferWriter, BufferReader } from '../utils/buffer.js';
+import type {
+    IHeadUnitInfo,
+    IServiceDiscoveryResponse,
+} from '@web-auto/android-auto-proto/interfaces.js';
 
 export enum ControlServiceSelfDisconnectReason {
     PING_TIMEOUT,
@@ -38,6 +42,8 @@ export interface ControlServiceEvents extends ServiceEvents {
 export interface ControlServiceConfig {
     pingTimeoutMs: number;
     startTimeoutMs: number;
+    headunitInfo: IHeadUnitInfo;
+    serviceDiscoveryResponse: IServiceDiscoveryResponse;
 }
 
 export class ControlService extends Service {
@@ -46,7 +52,6 @@ export class ControlService extends Service {
     public constructor(
         private cryptor: Cryptor,
         private config: ControlServiceConfig,
-        private serviceDiscoveryResponse: ServiceDiscoveryResponse,
         protected override events: ControlServiceEvents,
     ) {
         super(events, 0);
@@ -274,7 +279,26 @@ export class ControlService extends Service {
         this.logger.info('Finished handshake');
     }
 
-    private async doServiceDiscovery(signal: AbortSignal): Promise<void> {
+    public buildServiceDiscoveryResponse(
+        services: Service[],
+    ): ServiceDiscoveryResponse {
+        const data = new ServiceDiscoveryResponse({
+            ...this.config.serviceDiscoveryResponse,
+            headunitInfo: this.config.headunitInfo,
+            services: [],
+        });
+
+        for (const service of services) {
+            service.fillFeatures(data);
+        }
+
+        return data;
+    }
+
+    private async doServiceDiscovery(
+        signal: AbortSignal,
+        serviceDiscoveryResponse: ServiceDiscoveryResponse,
+    ): Promise<void> {
         const payload = await this.waitForSpecificMessage(
             ControlMessageType.MESSAGE_SERVICE_DISCOVERY_REQUEST,
             signal,
@@ -287,7 +311,7 @@ export class ControlService extends Service {
             `Discovery request, device name ${request.deviceName}`,
         );
 
-        this.sendServiceDiscoveryResponse(this.serviceDiscoveryResponse);
+        this.sendServiceDiscoveryResponse(serviceDiscoveryResponse);
     }
 
     public override start(): void {
@@ -295,14 +319,17 @@ export class ControlService extends Service {
         this.pinger.start();
     }
 
-    public async doStart(): Promise<void> {
+    public async doStart(services: Service[]): Promise<void> {
         const abortSignal = AbortSignal.timeout(this.config.startTimeoutMs);
 
         await this.doVersionQuery(abortSignal);
 
         await this.doHandshake(abortSignal);
 
-        await this.doServiceDiscovery(abortSignal);
+        const serviceDiscoveryResponse =
+            this.buildServiceDiscoveryResponse(services);
+
+        await this.doServiceDiscovery(abortSignal, serviceDiscoveryResponse);
     }
 
     public override stop(): void {

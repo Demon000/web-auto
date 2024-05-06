@@ -5,9 +5,11 @@ import type { FitMode } from 'object-fit-math/dist/types.d.ts';
 import { PointerAction } from '@web-auto/android-auto-proto';
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
 
-const props = defineProps<{
+export interface VideoProps {
     throttlePixels?: number;
-}>();
+}
+
+const props = defineProps<VideoProps>();
 
 const emit = defineEmits<{
     (e: 'video-visible', offscreenCanvas: OffscreenCanvas): void;

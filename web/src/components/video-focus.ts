@@ -1,15 +1,14 @@
 import { nextTick, watch } from 'vue';
-import { useVideoFocusModeStore } from '../stores/video-store.ts';
+import { useVideoFocusModeStore } from '../stores/video-store.js';
 import { VideoFocusMode } from '@web-auto/android-auto-proto';
-import { DecoderWorker } from '../codec/DecoderWorkerWrapper.ts';
+import { DecoderWorker } from '../codec/DecoderWorkerWrapper.js';
 
-export function useVideoFocus(
+export const useVideoFocus = (
     decoder: DecoderWorker,
+    videoFocusModeStore: ReturnType<typeof useVideoFocusModeStore>,
     restartOnNative?: true,
     onNative?: () => {},
-) {
-    const videoFocusModeStore = useVideoFocusModeStore();
-
+) => {
     watch(
         () => videoFocusModeStore.requestedFocusMode,
         async (mode?: VideoFocusMode) => {
@@ -44,4 +43,4 @@ export function useVideoFocus(
         onVideoVisible,
         onVideoHidden,
     };
-}
+};
