@@ -77,9 +77,7 @@ export class BluetoothDevice extends Device {
 
         this.logger.info('Received bluetooth profile self-connection');
 
-        this.setState(DeviceState.SELF_CONNECTING);
-
-        this.events.onSelfConnection(this);
+        this.selfConnect();
     }
 
     public override async rejectSelfConnection(): Promise<void> {

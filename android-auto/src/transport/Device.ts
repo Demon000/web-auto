@@ -101,6 +101,12 @@ export abstract class Device {
         release();
     }
 
+    public selfConnect(): void {
+        this.setState(DeviceState.SELF_CONNECTING);
+
+        this.events.onSelfConnection(this);
+    }
+
     protected onData(data: Uint8Array): void {
         this.events.onData(this, data);
     }

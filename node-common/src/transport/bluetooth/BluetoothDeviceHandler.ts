@@ -36,7 +36,13 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
         ignoredDevices: string[] | undefined,
         events: DeviceHandlerEvents,
     ) {
-        super(ignoredDevices, events);
+        super(
+            {
+                ignoredDevices,
+                selfConnectOnAvailable: false,
+            },
+            events,
+        );
 
         this.androidAutoProfile = new AndroidAutoProfile();
     }

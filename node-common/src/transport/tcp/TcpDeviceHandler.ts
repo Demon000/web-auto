@@ -30,7 +30,13 @@ export class TcpDeviceHandler extends DeviceHandler<string> {
         ignoredDevices: string[] | undefined,
         events: DeviceHandlerEvents,
     ) {
-        super(ignoredDevices, events);
+        super(
+            {
+                ignoredDevices,
+                selfConnectOnAvailable: false,
+            },
+            events,
+        );
 
         this.scanBound = this.scan.bind(this);
 

@@ -15,6 +15,11 @@ export interface DeviceHandlerEvents {
     onDeviceTransportError: (device: Device, err: Error) => void;
 }
 
+export interface DeviceHandlerParams {
+    ignoredDevices: string[] | undefined;
+    selfConnectOnAvailable: boolean;
+}
+
 export abstract class DeviceHandler<T = any> {
     protected logger = getLogger(this.constructor.name);
     protected deviceMap = new Map<T, Device>();
@@ -23,7 +28,7 @@ export abstract class DeviceHandler<T = any> {
     protected removeDeviceBound: (data: T) => void;
 
     public constructor(
-        protected ignoredDevices: string[] | undefined,
+        protected params: DeviceHandlerParams,
         protected events: DeviceHandlerEvents,
     ) {
         this.addDeviceBound = this.addDevice.bind(this);
@@ -31,11 +36,11 @@ export abstract class DeviceHandler<T = any> {
     }
 
     protected isIgnoredDevice(device: Device): boolean {
-        if (this.ignoredDevices === undefined) {
+        if (this.params.ignoredDevices === undefined) {
             return false;
         }
 
-        for (const ignoredDevice of this.ignoredDevices) {
+        for (const ignoredDevice of this.params.ignoredDevices) {
             if (ignoredDevice == device.name) {
                 return true;
             }
@@ -81,6 +86,9 @@ export abstract class DeviceHandler<T = any> {
 
         this.deviceMap.set(data, device);
         this.events.onDeviceAvailable(device);
+        if (this.params.selfConnectOnAvailable === true) {
+            device.selfConnect();
+        }
     }
 
     protected async addDeviceAsync(data: T, existing?: true): Promise<void> {

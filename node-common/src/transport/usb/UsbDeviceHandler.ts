@@ -6,16 +6,23 @@ import {
 import { UsbDevice } from './UsbDevice.js';
 import { Device as UsbDeviceImpl, usb } from 'usb';
 
-export interface UsbDeviceHandlerConfig {}
+export interface UsbDeviceHandlerConfig {
+    autoConnect?: boolean;
+}
 
 export class UsbDeviceHandler extends DeviceHandler<UsbDeviceImpl> {
     public constructor(
-        // @ts-expect-error unused
-        private config: UsbDeviceHandlerConfig,
+        protected config: UsbDeviceHandlerConfig,
         ignoredDevices: string[] | undefined,
         events: DeviceHandlerEvents,
     ) {
-        super(ignoredDevices, events);
+        super(
+            {
+                ignoredDevices,
+                selfConnectOnAvailable: config.autoConnect === true,
+            },
+            events,
+        );
     }
 
     protected override createDevice(
