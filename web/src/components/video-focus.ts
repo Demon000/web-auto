@@ -1,4 +1,4 @@
-import { nextTick, watch } from 'vue';
+import { watch } from 'vue';
 import { useVideoFocusModeStore } from '../stores/video-store.js';
 import { VideoFocusMode } from '@web-auto/android-auto-proto';
 import { DecoderWorker } from '../codec/DecoderWorkerWrapper.js';
@@ -39,8 +39,9 @@ export const useVideoFocus = (
 
     const onVideoHidden = async (cookie: bigint) => {
         decoder.destroyRenderer(cookie);
-        await nextTick();
-        await videoFocusModeStore.decreaseUsageCount();
+        setTimeout(async () => {
+            await videoFocusModeStore.decreaseUsageCount();
+        }, 500);
     };
 
     return {
