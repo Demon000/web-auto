@@ -166,9 +166,10 @@ const sendPointerEvent = (eventPointerId: number, event: PointerEvent) => {
         return;
     }
 
-    if (action === PointerAction.ACTION_POINTER_UP) {
-        pointerPositionMap.delete(eventPointerId);
-    } else {
+    if (
+        action === PointerAction.ACTION_POINTER_DOWN ||
+        action === PointerAction.ACTION_MOVED
+    ) {
         pointerPositionMap.set(eventPointerId, [x, y]);
     }
 
@@ -187,6 +188,10 @@ const sendPointerEvent = (eventPointerId: number, event: PointerEvent) => {
             y,
             pointerId: pointerId,
         });
+    }
+
+    if (action === PointerAction.ACTION_POINTER_UP) {
+        pointerPositionMap.delete(eventPointerId);
     }
 
     emit('touch-event', touchEvent);
