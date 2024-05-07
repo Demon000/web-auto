@@ -44,15 +44,26 @@ export class DecoderWorker {
         this.service.on('channelStart', this.onChannelStart);
     }
 
-    public createRenderer(offscreenCanvas: OffscreenCanvas): void {
+    public createRenderer(
+        offscreenCanvas: OffscreenCanvas,
+        cookie: bigint,
+    ): void {
         this.worker.postMessage(
             {
                 type: DecoderWorkerMessageType.CREATE_RENDERER,
                 rendererName: this.config.renderer,
                 canvas: offscreenCanvas,
+                cookie,
             },
             [offscreenCanvas],
         );
+    }
+
+    public destroyRenderer(cookie: bigint): void {
+        this.worker.postMessage({
+            type: DecoderWorkerMessageType.DESTROY_RENDERER,
+            cookie,
+        });
     }
 
     private onFirstFrameData(buffer: Uint8Array): void {

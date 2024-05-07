@@ -29,12 +29,16 @@ export const useVideoFocus = (
         },
     );
 
-    const onVideoVisible = async (offscreenCanvas: OffscreenCanvas) => {
-        decoder.createRenderer(offscreenCanvas);
+    const onVideoVisible = async (
+        offscreenCanvas: OffscreenCanvas,
+        cookie: bigint,
+    ) => {
+        decoder.createRenderer(offscreenCanvas, cookie);
         await videoFocusModeStore.increaseUsageCount();
     };
 
-    const onVideoHidden = async () => {
+    const onVideoHidden = async (cookie: bigint) => {
+        decoder.destroyRenderer(cookie);
         await nextTick();
         await videoFocusModeStore.decreaseUsageCount();
     };

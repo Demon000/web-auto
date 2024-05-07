@@ -4,6 +4,7 @@ import { transformFittedPoint } from 'object-fit-math';
 import type { FitMode } from 'object-fit-math/dist/types.d.ts';
 import { PointerAction } from '@web-auto/android-auto-proto';
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
+import { objectId } from '../utils/objectId.js';
 
 export interface VideoProps {
     touch: boolean;
@@ -13,12 +14,17 @@ export interface VideoProps {
 const props = defineProps<VideoProps>();
 
 const emit = defineEmits<{
-    (e: 'video-visible', offscreenCanvas: OffscreenCanvas): void;
-    (e: 'video-hidden'): void;
+    (
+        e: 'video-visible',
+        offscreenCanvas: OffscreenCanvas,
+        cookie: bigint,
+    ): void;
+    (e: 'video-hidden', cookie: bigint): void;
     (e: 'touch-event', touchEvent: ITouchEvent): void;
 }>();
 
 const canvasRef: Ref<HTMLCanvasElement | undefined> = ref(undefined);
+let canvasCookie: bigint | undefined;
 let canvasObserver: ResizeObserver | undefined;
 
 let canvasPosition: { x: number; y: number } = { x: 0, y: 0 };
@@ -55,16 +61,20 @@ onMounted(() => {
         return;
     }
 
+    canvasCookie = objectId(canvas);
+
     canvasObserver = new ResizeObserver(onCanvasResized);
     canvasObserver.observe(canvas);
 
     const offscreenCanvas = canvas.transferControlToOffscreen();
 
-    emit('video-visible', offscreenCanvas);
+    emit('video-visible', offscreenCanvas, canvasCookie);
 });
 
 onBeforeUnmount(() => {
-    emit('video-hidden');
+    if (canvasCookie !== undefined) {
+        emit('video-hidden', canvasCookie);
+    }
 
     if (canvasObserver !== undefined) {
         canvasObserver.disconnect();

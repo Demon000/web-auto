@@ -8,9 +8,10 @@ import {
 import { Renderer } from './Renderer.js';
 import { WebGLRenderer } from './WebGLRenderer.js';
 
-let renderer: Renderer | null = null;
+const cookieRendererMap = new Map<bigint, Renderer>();
 let pendingFrame: VideoFrame | null = null;
 let lastFrame: VideoFrame | null = null;
+
 let config: VideoCodecConfig = {
     codec: '',
     croppedHeight: 0,
@@ -25,25 +26,34 @@ let config: VideoCodecConfig = {
     },
 };
 
+const renderFrame = async (frame: VideoFrame): Promise<void> => {
+    const promises = Array.from(cookieRendererMap.values(), (renderer) => {
+        return renderer.draw(frame).catch((err) => {
+            console.error('Failed to render last frame', err);
+        });
+    });
+
+    await Promise.all(promises);
+};
+
 const renderPendingFrame = (): void => {
-    if (renderer === null || pendingFrame === null) {
+    const frame = pendingFrame;
+    if (frame === null) {
         return;
     }
 
-    renderer
-        .draw(pendingFrame)
-        .then(() => {
-            lastFrame?.close();
-            lastFrame = pendingFrame;
-            pendingFrame = null;
-        })
-        .catch((err) => {
-            console.error('Failed to draw pending frame', err);
-        });
+    if (lastFrame !== null) {
+        lastFrame.close();
+    }
+
+    lastFrame = frame;
+    pendingFrame = null;
+
+    renderFrame(frame).finally(() => {});
 };
 
-const renderLastFrame = (): void => {
-    if (renderer === null || lastFrame === null) {
+const renderLastFrame = (renderer: Renderer): void => {
+    if (lastFrame === null) {
         return;
     }
 
@@ -75,7 +85,14 @@ const decoder = new VideoDecoder({
 const createRenderer = (
     rendererName: string,
     canvas: OffscreenCanvas,
+    cookie: bigint,
 ): void => {
+    let renderer = cookieRendererMap.get(cookie);
+
+    if (renderer !== undefined) {
+        console.error(`Renderer with cookie ${cookie} already exists found`);
+    }
+
     switch (rendererName) {
         case DecoderWorkerRenderer._2D:
             renderer = new Canvas2DRenderer(canvas, config);
@@ -86,6 +103,27 @@ const createRenderer = (
             break;
         default:
             throw new Error(`Invalid renderer ${rendererName}`);
+    }
+
+    cookieRendererMap.set(cookie, renderer);
+    renderer.setConfig(config);
+    renderLastFrame(renderer);
+};
+
+const destroyRenderer = (cookie: bigint): void => {
+    const renderer = cookieRendererMap.get(cookie);
+    if (renderer === undefined) {
+        console.error(`Renderer with cookie ${cookie} not found`);
+        return;
+    }
+
+    renderer.free();
+    cookieRendererMap.delete(cookie);
+};
+
+const setRenderersConfig = (config: VideoCodecConfig): void => {
+    for (const renderer of cookieRendererMap.values()) {
+        renderer.setConfig(config);
     }
 };
 
@@ -121,9 +159,14 @@ const onMessage = (event: MessageEvent) => {
 
     switch (message.type) {
         case DecoderWorkerMessageType.CREATE_RENDERER:
-            renderer?.free();
-            createRenderer(message.rendererName, message.canvas);
-            renderLastFrame();
+            createRenderer(
+                message.rendererName,
+                message.canvas,
+                message.cookie,
+            );
+            break;
+        case DecoderWorkerMessageType.DESTROY_RENDERER:
+            destroyRenderer(message.cookie);
             break;
         case DecoderWorkerMessageType.CONFIGURE_DECODER:
             checkAcceleration(message.config.codec);
@@ -131,7 +174,7 @@ const onMessage = (event: MessageEvent) => {
                 codec: message.config.codec,
             });
             config = message.config;
-            renderer?.setConfig(config);
+            setRenderersConfig(config);
             break;
         case DecoderWorkerMessageType.DECODE_KEYFRAME:
             decoder.decode(

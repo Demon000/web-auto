@@ -8,6 +8,7 @@ export enum DecoderWorkerRenderer {
 
 export enum DecoderWorkerMessageType {
     CREATE_RENDERER,
+    DESTROY_RENDERER,
     CONFIGURE_DECODER,
     DECODE_KEYFRAME,
     DECODE_DELTA,
@@ -19,6 +20,11 @@ export type DecoderWorkerMessage =
           type: DecoderWorkerMessageType.CREATE_RENDERER;
           rendererName: string;
           canvas: OffscreenCanvas;
+          cookie: bigint;
+      }
+    | {
+          type: DecoderWorkerMessageType.DESTROY_RENDERER;
+          cookie: bigint;
       }
     | {
           type: DecoderWorkerMessageType.CONFIGURE_DECODER;
