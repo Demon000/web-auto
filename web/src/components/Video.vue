@@ -155,21 +155,20 @@ const sendPointerEvent = (pointerId: number, event: PointerEvent) => {
         return;
     }
 
+    const oldCoords = pointerPositionMap.get(pointerId);
+    if (
+        action === PointerAction.ACTION_MOVED &&
+        oldCoords !== undefined &&
+        props.throttlePixels !== undefined &&
+        Math.abs(x - oldCoords[0]) < props.throttlePixels &&
+        Math.abs(y - oldCoords[1]) < props.throttlePixels
+    ) {
+        return;
+    }
+
     if (action === PointerAction.ACTION_POINTER_UP) {
         pointerPositionMap.delete(pointerId);
     } else {
-        const oldCoords = pointerPositionMap.get(pointerId);
-        if (oldCoords !== undefined) {
-            const [oldX, oldY] = oldCoords;
-            if (
-                props.throttlePixels !== undefined &&
-                Math.abs(x - oldX) < props.throttlePixels &&
-                Math.abs(y - oldY) < props.throttlePixels
-            ) {
-                return;
-            }
-        }
-
         pointerPositionMap.set(pointerId, [x, y]);
     }
 
