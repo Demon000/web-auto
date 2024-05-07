@@ -119,7 +119,7 @@ const newTranslatedPointerId = (): number => {
     return translatedPointerId;
 };
 
-const sendPointerEvent = (pointerId: number, event: PointerEvent) => {
+const sendPointerEvent = (eventPointerId: number, event: PointerEvent) => {
     let action;
 
     switch (event.type) {
@@ -155,7 +155,7 @@ const sendPointerEvent = (pointerId: number, event: PointerEvent) => {
         return;
     }
 
-    const oldCoords = pointerPositionMap.get(pointerId);
+    const oldCoords = pointerPositionMap.get(eventPointerId);
     if (
         action === PointerAction.ACTION_MOVED &&
         oldCoords !== undefined &&
@@ -167,22 +167,29 @@ const sendPointerEvent = (pointerId: number, event: PointerEvent) => {
     }
 
     if (action === PointerAction.ACTION_POINTER_UP) {
-        pointerPositionMap.delete(pointerId);
+        pointerPositionMap.delete(eventPointerId);
     } else {
-        pointerPositionMap.set(pointerId, [x, y]);
+        pointerPositionMap.set(eventPointerId, [x, y]);
     }
 
-    emit('touch-event', {
+    const touchEvent: ITouchEvent = {
         action,
-        actionIndex: 0,
-        pointerData: [
-            {
-                x,
-                y,
-                pointerId,
-            },
-        ],
-    });
+    };
+
+    touchEvent.pointerData = [];
+    for (const [pointerId, [x, y]] of pointerPositionMap) {
+        if (eventPointerId === pointerId) {
+            touchEvent.actionIndex = touchEvent.pointerData.length;
+        }
+
+        touchEvent.pointerData.push({
+            x,
+            y,
+            pointerId: pointerId,
+        });
+    }
+
+    emit('touch-event', touchEvent);
 };
 
 const onPointerDown = (event: PointerEvent) => {
