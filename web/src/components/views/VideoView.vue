@@ -16,11 +16,12 @@ import {
 import { ipcClientRegistry } from '../../ipc.js';
 import { getDecoder } from '../../decoders.js';
 import { useVideoFocusModeStore } from '../../stores/video-store.js';
+import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
 
 export interface VideoViewProps {
-    exitVideoPath: string;
+    exitVideoPath?: string;
     serverIpcName: string;
-    inputServiceIpcName: string;
+    inputServiceIpcName?: string;
     videoServiceIpcName: string;
     touchEventThrottlePixels: number;
 }
@@ -32,10 +33,16 @@ const androidAutoServerService = ipcClientRegistry.registerIpcClient<
     AndroidAutoServerService
 >(props.serverIpcName);
 
-const inputservice = ipcClientRegistry.registerIpcClient<
-    AndroidAutoInputClient,
-    AndroidAutoInputService
->(props.inputServiceIpcName);
+let inputService:
+    | IpcClientHandler<AndroidAutoInputClient, AndroidAutoInputService>
+    | undefined;
+
+if (props.inputServiceIpcName !== undefined) {
+    inputService = ipcClientRegistry.registerIpcClient<
+        AndroidAutoInputClient,
+        AndroidAutoInputService
+    >(props.inputServiceIpcName);
+}
 
 const videoService = ipcClientRegistry.registerIpcClient<
     AndroidAutoVideoClient,
@@ -51,7 +58,11 @@ await videoFocusStore.initialize();
 const decoder = getDecoder(props.videoServiceIpcName);
 
 const sendTouchEvent = (touchEvent: ITouchEvent) => {
-    inputservice
+    if (inputService === undefined) {
+        return;
+    }
+
+    inputService
         .sendTouchEvent(touchEvent)
         .then(() => {})
         .catch((err) => {
@@ -60,6 +71,10 @@ const sendTouchEvent = (touchEvent: ITouchEvent) => {
 };
 
 const switchToHomeView = async () => {
+    if (props.exitVideoPath === undefined) {
+        return;
+    }
+
     await router.push({
         path: props.exitVideoPath,
     });
@@ -93,6 +108,7 @@ watch(
             @touch-event="sendTouchEvent"
             @video-visible="onVideoVisible"
             @video-hidden="onVideoHidden"
+            :touch="inputService !== undefined"
             :throttle-pixels="touchEventThrottlePixels"
         ></Video>
     </div>

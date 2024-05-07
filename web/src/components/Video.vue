@@ -6,6 +6,7 @@ import { PointerAction } from '@web-auto/android-auto-proto';
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
 
 export interface VideoProps {
+    touch: boolean;
     throttlePixels?: number;
 }
 
@@ -215,6 +216,7 @@ const onPointerUp = (event: PointerEvent) => {
 <template>
     <canvas
         ref="canvasRef"
+        v-if="touch"
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"
         @pointerup="onPointerUp"
@@ -222,6 +224,7 @@ const onPointerUp = (event: PointerEvent) => {
         @pointerout="onPointerUp"
         @pointerleave="onPointerUp"
     ></canvas>
+    <canvas ref="canvasRef" v-else></canvas>
 </template>
 
 <style scoped>

@@ -18,13 +18,14 @@ import { useVideoFocusModeStore } from '../../stores/video-store.js';
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
 import { getDecoder } from '../../decoders.js';
 import { useVideoFocus } from './../video-focus.js';
+import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
 
 export interface MiniVideoProps {
-    fullVideoPath: string;
+    fullVideoPath?: string;
     serverIpcName: string;
     videoServiceIpcName: string;
-    inputServiceIpcName: string;
-    touchEventThrottlePixels: number;
+    inputServiceIpcName?: string;
+    touchEventThrottlePixels?: number;
 }
 
 const props = defineProps<MiniVideoProps>();
@@ -34,10 +35,16 @@ const androidAutoServerService = ipcClientRegistry.registerIpcClient<
     AndroidAutoServerService
 >(props.serverIpcName);
 
-const inputservice = ipcClientRegistry.registerIpcClient<
-    AndroidAutoInputClient,
-    AndroidAutoInputService
->(props.inputServiceIpcName);
+let inputService:
+    | IpcClientHandler<AndroidAutoInputClient, AndroidAutoInputService>
+    | undefined;
+
+if (props.inputServiceIpcName !== undefined) {
+    inputService = ipcClientRegistry.registerIpcClient<
+        AndroidAutoInputClient,
+        AndroidAutoInputService
+    >(props.inputServiceIpcName);
+}
 
 const videoService = ipcClientRegistry.registerIpcClient<
     AndroidAutoVideoClient,
@@ -59,7 +66,11 @@ const { onVideoVisible, onVideoHidden } = useVideoFocus(
 );
 
 const sendTouchEvent = (touchEvent: ITouchEvent) => {
-    inputservice
+    if (inputService === undefined) {
+        return;
+    }
+
+    inputService
         .sendTouchEvent(touchEvent)
         .then(() => {})
         .catch((err) => {
@@ -68,6 +79,10 @@ const sendTouchEvent = (touchEvent: ITouchEvent) => {
 };
 
 const switchToVideoView = async () => {
+    if (props.fullVideoPath === undefined) {
+        return;
+    }
+
     await router.push({
         path: props.fullVideoPath,
     });
@@ -80,9 +95,15 @@ const switchToVideoView = async () => {
             @touch-event="sendTouchEvent"
             @video-visible="onVideoVisible"
             @video-hidden="onVideoHidden"
+            :touch="inputService !== undefined"
             :throttle-pixels="touchEventThrottlePixels"
         ></Video>
-        <md-fab class="open" variant="primary" @click="switchToVideoView">
+        <md-fab
+            v-if="fullVideoPath !== undefined"
+            class="open"
+            variant="primary"
+            @click="switchToVideoView"
+        >
             <md-icon slot="icon">open_in_full</md-icon>
         </md-fab>
     </div>
