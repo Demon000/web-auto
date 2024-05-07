@@ -48,12 +48,20 @@ export const useVideoFocusModeStore = (
             }
         };
 
-        const showProjected = async () => {
-            await setFocusMode(VideoFocusMode.VIDEO_FOCUS_PROJECTED);
+        const showProjected = () => {
+            setFocusMode(VideoFocusMode.VIDEO_FOCUS_PROJECTED)
+                .then(() => {})
+                .catch((err) => {
+                    console.error('Failed to set projected focus mode', err);
+                });
         };
 
-        const showNative = async () => {
-            await setFocusMode(VideoFocusMode.VIDEO_FOCUS_NATIVE);
+        const showNative = () => {
+            setFocusMode(VideoFocusMode.VIDEO_FOCUS_NATIVE)
+                .then(() => {})
+                .catch((err) => {
+                    console.error('Failed to set native focus mode', err);
+                });
         };
 
         const start = async () => {
@@ -64,10 +72,10 @@ export const useVideoFocusModeStore = (
             try {
                 const channelStarted = await service.getChannelStarted();
                 if (channelStarted) {
-                    await showNative();
+                    showNative();
                 }
 
-                await showProjected();
+                showProjected();
             } catch (err) {
                 console.error(err);
             }
@@ -85,7 +93,7 @@ export const useVideoFocusModeStore = (
             usageCount.value--;
 
             if (usageCount.value === 0) {
-                await showNative();
+                showNative();
             }
         };
 
