@@ -38,9 +38,9 @@ export class Pinger {
 
     public onPingTimeout(): void {
         const isTimeoutPing =
-            this.pingReceivedTime !== undefined &&
             this.pingSentTime !== undefined &&
-            this.pingReceivedTime - this.pingSentTime > this.pingTimeoutUs;
+            (this.pingReceivedTime === undefined ||
+                this.pingReceivedTime - this.pingSentTime > this.pingTimeoutUs);
 
         if (isTimeoutPing) {
             this.events.onPingTimeout();
