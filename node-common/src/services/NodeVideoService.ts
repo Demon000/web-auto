@@ -26,10 +26,7 @@ import {
 import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 import { BufferWriter } from '@web-auto/android-auto';
 import { hasKeyFrame, parseCodecConfig } from '../codec/index.js';
-import type {
-    DisplayConfig,
-    ResolutionConfig,
-} from '../../../android-auto/src/services/VideoResolutionUtils.js';
+import type { DisplayConfig, ResolutionConfig } from '@web-auto/android-auto';
 
 enum CodecState {
     STOPPED,
