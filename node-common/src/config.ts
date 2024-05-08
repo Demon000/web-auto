@@ -20,9 +20,11 @@ export interface NodeAndroidAutoServerConfig {
         | ({ name: 'TcpDeviceHandler' } & TcpDeviceHandlerConfig)
         | ({ name: 'BluetoothDeviceHandler' } & BluetoothDeviceHandlerConfig)
     )[];
-    cryptor: {
-        name: 'NodeCryptor';
-    } & NodeCryptorConfig;
+    cryptor:
+        | ({
+              name: 'NodeCryptor';
+          } & NodeCryptorConfig)
+        | { name: 'OpenSSLCryptor' };
     controlService: {
         name: 'ControlService';
     } & ControlServiceConfig;

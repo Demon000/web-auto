@@ -19,6 +19,7 @@ import {
     type AndroidAutoInputService,
 } from '@web-auto/android-auto-ipc';
 import { NodeCryptor } from './crypto/NodeCryptor.js';
+import { OpenSSLCryptor } from './crypto/OpenSSLCryptor.js';
 import { NodeAudioInputService } from './services/NodeAudioInputService.js';
 import { NodeAudioOutputService } from './services/NodeAudioOutputService.js';
 import { NodeInputService } from './services/NodeInputService.js';
@@ -98,6 +99,8 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
                     certificateBuffer,
                     privateKeyBuffer,
                 );
+            case 'OpenSSLCryptor':
+                return new OpenSSLCryptor(certificateBuffer, privateKeyBuffer);
         }
     }
 
