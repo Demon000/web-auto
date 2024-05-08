@@ -1,4 +1,4 @@
-import { VideoCodecConfig } from '@web-auto/android-auto-ipc';
+import { VideoCodecConfig } from '@web-auto/node-common';
 import { Canvas2DRenderer } from './Canvas2DRenderer.js';
 import {
     DecoderWorkerMessageType,

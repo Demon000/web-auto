@@ -8,32 +8,38 @@ import {
     type DeviceHandlerEvents,
     type ServiceEvents,
 } from '@web-auto/android-auto';
-import {
-    type AndroidAutoVideoService,
-    type AndroidAutoVideoClient,
-    type AndroidAutoMediaStatusService,
-    type AndroidAutoMediaStatusClient,
-    type AndroidAutoServerClient,
-    type AndroidAutoServerService,
-    type AndroidAutoInputClient,
-    type AndroidAutoInputService,
-} from '@web-auto/android-auto-ipc';
 import { NodeCryptor } from './crypto/NodeCryptor.js';
 import { OpenSSLCryptor } from './crypto/OpenSSLCryptor.js';
 import { NodeAudioInputService } from './services/NodeAudioInputService.js';
 import { NodeAudioOutputService } from './services/NodeAudioOutputService.js';
-import { NodeInputService } from './services/NodeInputService.js';
-import { NodeMediaStatusService } from './services/NodeMediaStatusService.js';
+import {
+    NodeInputService,
+    type AndroidAutoInputClient,
+    type AndroidAutoInputService,
+} from './services/NodeInputService.js';
+import {
+    NodeMediaStatusService,
+    type AndroidAutoMediaStatusClient,
+    type AndroidAutoMediaStatusService,
+} from './services/NodeMediaStatusService.js';
 import { NodeNavigationStatusService } from './services/NodeNavigationService.js';
 import { NodeSensorService } from './services/NodeSensorService.js';
-import { NodeVideoService } from './services/NodeVideoService.js';
+import {
+    NodeVideoService,
+    type AndroidAutoVideoClient,
+    type AndroidAutoVideoService,
+} from './services/NodeVideoService.js';
 import { TcpDeviceHandler } from './transport/tcp/TcpDeviceHandler.js';
 import { UsbDeviceHandler } from './transport/usb/UsbDeviceHandler.js';
 import { BluetoothDeviceHandler } from './transport/bluetooth/BluetoothDeviceHandler.js';
 import type { IpcServiceRegistry } from '@web-auto/common-ipc/main.js';
 import { getLogger } from '@web-auto/logging';
 import type { NodeAndroidAutoServerConfig } from './config.js';
-import { NodeAndroidAutoServer } from './NodeAndroidAutoServer.js';
+import {
+    NodeAndroidAutoServer,
+    type AndroidAutoServerClient,
+    type AndroidAutoServerService,
+} from './NodeAndroidAutoServer.js';
 import { NodeRtAudioInputService } from './services/NodeRtAudioInputService.js';
 import { NodeRtAudioOutputService } from './services/NodeRtAudioOutputService.js';
 

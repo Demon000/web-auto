@@ -3,7 +3,7 @@ import { defineAsyncComponent } from 'vue';
 import {
     AndroidAutoServerClient,
     AndroidAutoServerService,
-} from '@web-auto/android-auto-ipc';
+} from '@web-auto/node-common';
 import AppBar from '../AppBar.vue';
 import DeviceNotConnected from '../DeviceNotConnected.vue';
 import { useDeviceStore } from '../../stores/device-store.js';

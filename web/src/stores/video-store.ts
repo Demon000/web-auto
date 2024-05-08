@@ -4,7 +4,7 @@ import { VideoFocusMode } from '@web-auto/android-auto-proto';
 import {
     AndroidAutoVideoClient,
     AndroidAutoVideoService,
-} from '@web-auto/android-auto-ipc';
+} from '@web-auto/node-common';
 import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
 
 export const useVideoFocusModeStore = (

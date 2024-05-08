@@ -1,9 +1,4 @@
 import { type ServiceEvents, VideoService } from '@web-auto/android-auto';
-import type {
-    AndroidAutoVideoClient,
-    AndroidAutoVideoService,
-    VideoCodecConfig,
-} from '@web-auto/android-auto-ipc';
 import {
     type Start,
     type VideoFocusRequestNotification,
@@ -20,8 +15,10 @@ import {
     stringToDisplayType,
     stringToFramerate,
     stringToResolution,
+    type IInsets,
     type IVideoConfiguration,
     type IVideoFocusNotification,
+    type IVideoFocusRequestNotification,
 } from '@web-auto/android-auto-proto/interfaces.js';
 import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 import { BufferWriter } from '@web-auto/android-auto';
@@ -34,6 +31,29 @@ enum CodecState {
     WAITING_FOR_FIRST_FRAME,
     STARTED,
 }
+
+export type VideoCodecConfig = {
+    croppedWidth: number;
+    croppedHeight: number;
+    width: number;
+    height: number;
+    margins: IInsets;
+    codec: string;
+};
+
+export type AndroidAutoVideoService = {
+    sendVideoFocusNotification(data: IVideoFocusNotification): Promise<void>;
+    getChannelStarted(): Promise<boolean>;
+};
+
+export type AndroidAutoVideoClient = {
+    focusRequest(data: IVideoFocusRequestNotification): void;
+    codecConfig(config: VideoCodecConfig): void;
+    firstFrame(buffer: Uint8Array): void;
+    channelStart(): void;
+    channelStop(): void;
+    data(buffer: Uint8Array): void;
+};
 
 export type VideoServiceResolutionConfig = {
     resolution: string | VideoCodecResolutionType;

@@ -8,7 +8,6 @@
       "logging",
       "android-auto-proto",
       "common-ipc",
-      "android-auto-ipc",
       "electron-ipc",
       "socket-ipc",
       "android-auto",

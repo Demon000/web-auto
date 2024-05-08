@@ -1,8 +1,4 @@
 import { MediaStatusService, type ServiceEvents } from '@web-auto/android-auto';
-import type {
-    AndroidAutoMediaStatusClient,
-    AndroidAutoMediaStatusService,
-} from '@web-auto/android-auto-ipc';
 import {
     MediaPlaybackMetadata,
     MediaPlaybackStatus,
@@ -14,6 +10,16 @@ import type {
     IMediaPlaybackStatus,
 } from '@web-auto/android-auto-proto/interfaces.js';
 import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
+
+export type AndroidAutoMediaStatusService = {
+    getStatus(): Promise<IMediaPlaybackStatus | undefined>;
+    getMetadata(): Promise<IMediaPlaybackMetadata | undefined>;
+};
+
+export type AndroidAutoMediaStatusClient = {
+    status(status: IMediaPlaybackStatus | undefined): void;
+    metadata(metadata: IMediaPlaybackMetadata | undefined): void;
+};
 
 export class NodeMediaStatusService extends MediaStatusService {
     private metadata: IMediaPlaybackMetadata | undefined;

@@ -1,4 +1,4 @@
-import { VideoCodecConfig } from '@web-auto/android-auto-ipc';
+import { VideoCodecConfig } from '@web-auto/node-common';
 
 export interface Renderer {
     draw(frame: VideoFrame): Promise<void>;

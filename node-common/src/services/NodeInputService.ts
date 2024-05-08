@@ -1,8 +1,4 @@
 import { InputService, type ServiceEvents } from '@web-auto/android-auto';
-import type {
-    AndroidAutoInputClient,
-    AndroidAutoInputService,
-} from '@web-auto/android-auto-ipc';
 import {
     InputSourceService,
     InputSourceService_TouchScreen,
@@ -19,6 +15,13 @@ import {
     type ITouchEvent,
 } from '@web-auto/android-auto-proto/interfaces.js';
 import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
+
+export type AndroidAutoInputService = {
+    sendTouchEvent: (touchEvent: ITouchEvent) => Promise<void>;
+    sendKey: (keycode: string | KeyCode) => Promise<void>;
+};
+
+export type AndroidAutoInputClient = Record<string, never>;
 
 export type NodeInputServiceConfig = {
     displayId: number;

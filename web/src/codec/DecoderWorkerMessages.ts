@@ -1,4 +1,4 @@
-import { VideoCodecConfig } from '@web-auto/android-auto-ipc';
+import { VideoCodecConfig } from '@web-auto/node-common';
 
 export enum DecoderWorkerRenderer {
     _2D = '2d',

@@ -5,7 +5,7 @@ import { useDeviceStore } from '../stores/device-store.js';
 import {
     AndroidAutoServerClient,
     AndroidAutoServerService,
-} from '@web-auto/android-auto-ipc';
+} from '@web-auto/node-common';
 import { ipcClientRegistry } from '../ipc.js';
 import { AppBarRouteIconProps } from './app-bar-icons/AppBarRouteIcon.vue';
 import { AppBarKeyIconProps } from './app-bar-icons/AppBarKeyIcon.vue';

@@ -14,9 +14,6 @@
             "path": "../android-auto"
         },
         {
-            "path": "../android-auto-ipc"
-        },
-        {
             "path": "../common-ipc"
         }
     ]
