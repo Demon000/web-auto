@@ -86,7 +86,7 @@ export abstract class DeviceHandler<T = any> {
 
         this.deviceMap.set(data, device);
         this.events.onDeviceAvailable(device);
-        if (this.params.selfConnectOnAvailable === true) {
+        if (this.params.selfConnectOnAvailable) {
             device.selfConnect();
         }
     }
