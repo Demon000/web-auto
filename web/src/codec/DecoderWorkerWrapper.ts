@@ -2,7 +2,7 @@ import {
     AndroidAutoVideoClient,
     AndroidAutoVideoService,
     VideoCodecConfig,
-} from '@web-auto/node-common';
+} from '@web-auto/node-common/ipc.js';
 import { DecoderWorkerMessageType } from './DecoderWorkerMessages.js';
 import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
 import { ipcClientRegistry } from '../ipc.js';

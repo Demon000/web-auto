@@ -1,7 +1,7 @@
 import { DecoderWorkerRenderer } from './DecoderWorkerMessages.js';
 import { Renderer } from './Renderer.js';
 import { orthographic, scale, translate, translation } from './m4.js';
-import { VideoCodecConfig } from '@web-auto/node-common';
+import { VideoCodecConfig } from '@web-auto/node-common/ipc.js';
 
 type WebGLCommonRenderingContext =
     | WebGLRenderingContext

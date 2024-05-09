@@ -10,7 +10,7 @@ import {
     AndroidAutoInputService,
     AndroidAutoVideoClient,
     AndroidAutoVideoService,
-} from '@web-auto/node-common';
+} from '@web-auto/node-common/ipc.js';
 import { ipcClientRegistry } from '../../ipc.js';
 import { useDeviceStore } from '../../stores/device-store.js';
 import router from '../../router/index.js';

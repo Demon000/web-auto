@@ -1,5 +1,5 @@
 import { Renderer } from './Renderer.js';
-import { VideoCodecConfig } from '@web-auto/node-common';
+import { VideoCodecConfig } from '@web-auto/node-common/ipc.js';
 
 export class Canvas2DRenderer implements Renderer {
     private context: OffscreenCanvasRenderingContext2D;

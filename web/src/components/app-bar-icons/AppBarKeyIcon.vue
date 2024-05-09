@@ -4,7 +4,7 @@ import AppBarIcon, { AppBarIconProps } from './AppBarIcon.vue';
 import {
     AndroidAutoInputClient,
     AndroidAutoInputService,
-} from '@web-auto/node-common';
+} from '@web-auto/node-common/ipc.js';
 import { ipcClientRegistry } from '../../ipc.js';
 import { KeyCode } from '@web-auto/android-auto-proto';
 

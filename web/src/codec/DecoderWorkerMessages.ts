@@ -1,4 +1,4 @@
-import { VideoCodecConfig } from '@web-auto/node-common';
+import { VideoCodecConfig } from '@web-auto/node-common/ipc.js';
 
 export enum DecoderWorkerRenderer {
     _2D = '2d',

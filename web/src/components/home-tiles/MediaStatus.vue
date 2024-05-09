@@ -16,7 +16,7 @@ import {
     AndroidAutoInputService,
     AndroidAutoMediaStatusClient,
     AndroidAutoMediaStatusService,
-} from '@web-auto/node-common';
+} from '@web-auto/node-common/ipc.js';
 import { useMediaStatusStore } from '../../stores/media-status-store.js';
 
 export interface MediaStatusProps {

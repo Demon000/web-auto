@@ -12,7 +12,7 @@ import {
     AndroidAutoInputService,
     AndroidAutoVideoClient,
     AndroidAutoVideoService,
-} from '@web-auto/node-common';
+} from '@web-auto/node-common/ipc.js';
 import { ipcClientRegistry } from '../../ipc.js';
 import { getDecoder } from '../../decoders.js';
 import { useVideoFocusModeStore } from '../../stores/video-store.js';

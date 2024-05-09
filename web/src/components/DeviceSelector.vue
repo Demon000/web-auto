@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IDevice } from '@web-auto/node-common';
+import { IDevice } from '@web-auto/node-common/ipc.js';
 import Device from './Device.vue';
 
 export interface DeviceSelectorProps {

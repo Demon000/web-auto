@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { IDevice } from '@web-auto/node-common';
+import type { IDevice } from '@web-auto/node-common/ipc.js';
 
 import '@material/web/iconbutton/filled-icon-button.js';
 import '@material/web/icon/icon.js';

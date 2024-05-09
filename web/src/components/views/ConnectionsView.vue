@@ -6,7 +6,7 @@ import { ipcClientRegistry } from '../../ipc.js';
 import {
     AndroidAutoServerClient,
     AndroidAutoServerService,
-} from '@web-auto/node-common';
+} from '@web-auto/node-common/ipc.js';
 import { WEB_CONFIG } from '../../config.js';
 
 export interface ConnectionsViewProps {

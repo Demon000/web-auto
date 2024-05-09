@@ -8,7 +8,7 @@ import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
 import {
     AndroidAutoMediaStatusClient,
     AndroidAutoMediaStatusService,
-} from '@web-auto/node-common';
+} from '@web-auto/node-common/ipc.js';
 
 export const useMediaStatusStore = (
     service: IpcClientHandler<

@@ -4,7 +4,7 @@ import {
     AndroidAutoServerClient,
     AndroidAutoServerService,
     IDevice,
-} from '@web-auto/node-common';
+} from '@web-auto/node-common/ipc.js';
 import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
 
 export const useDeviceStore = (
