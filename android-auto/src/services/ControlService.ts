@@ -43,7 +43,7 @@ export interface ControlServiceConfig {
     pingTimeoutMs: number;
     startTimeoutMs: number;
     headunitInfo: IHeadUnitInfo;
-    serviceDiscoveryResponse: IServiceDiscoveryResponse;
+    serviceDiscoveryResponse: Omit<IServiceDiscoveryResponse, 'services'>;
 }
 
 export class ControlService extends Service {

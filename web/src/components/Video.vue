@@ -175,9 +175,9 @@ const sendPointerEvent = (eventPointerId: number, event: PointerEvent) => {
 
     const touchEvent: ITouchEvent = {
         action,
+        pointerData: [],
     };
 
-    touchEvent.pointerData = [];
     for (const [pointerId, [x, y]] of pointerPositionMap) {
         if (eventPointerId === pointerId) {
             touchEvent.actionIndex = touchEvent.pointerData.length;

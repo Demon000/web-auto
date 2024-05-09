@@ -1,4 +1,4 @@
-import { proto2, type EnumType, type PartialMessage } from '@bufbuild/protobuf';
+import { proto2, type EnumType, type PlainMessage } from '@bufbuild/protobuf';
 
 import {
     AudioStreamType,
@@ -19,17 +19,16 @@ import {
 } from './protos_pb.js';
 import { VideoCodecResolutionType } from './protos_pb.js';
 
-export type ITouchEvent = PartialMessage<TouchEvent>;
-export type IVideoConfiguration = PartialMessage<VideoConfiguration>;
-export type IAudioConfiguration = PartialMessage<AudioConfiguration>;
-export type IVideoFocusNotification = PartialMessage<VideoFocusNotification>;
+export type ITouchEvent = PlainMessage<TouchEvent>;
+export type IVideoConfiguration = PlainMessage<VideoConfiguration>;
+export type IAudioConfiguration = PlainMessage<AudioConfiguration>;
+export type IVideoFocusNotification = PlainMessage<VideoFocusNotification>;
 export type IVideoFocusRequestNotification =
-    PartialMessage<VideoFocusRequestNotification>;
-export type IMediaPlaybackMetadata = PartialMessage<MediaPlaybackMetadata>;
-export type IMediaPlaybackStatus = PartialMessage<MediaPlaybackStatus>;
-export type IServiceDiscoveryResponse =
-    PartialMessage<ServiceDiscoveryResponse>;
-export type IHeadUnitInfo = PartialMessage<HeadUnitInfo>;
+    PlainMessage<VideoFocusRequestNotification>;
+export type IMediaPlaybackMetadata = PlainMessage<MediaPlaybackMetadata>;
+export type IMediaPlaybackStatus = PlainMessage<MediaPlaybackStatus>;
+export type IServiceDiscoveryResponse = PlainMessage<ServiceDiscoveryResponse>;
+export type IHeadUnitInfo = PlainMessage<HeadUnitInfo>;
 export type IInsets = {
     top: number;
     bottom: number;
