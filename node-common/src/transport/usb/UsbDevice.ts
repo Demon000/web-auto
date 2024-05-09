@@ -350,7 +350,7 @@ export class UsbDevice extends Device {
             this.open();
         }
 
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < 100; i++) {
             try {
                 this.logger.info(`Reset attempt ${i}`);
                 await this.resetImpl();
