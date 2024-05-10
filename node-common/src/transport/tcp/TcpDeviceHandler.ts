@@ -33,7 +33,6 @@ export class TcpDeviceHandler extends DeviceHandler<string> {
         super(
             {
                 ignoredDevices,
-                selfConnectOnAvailable: false,
             },
             events,
         );

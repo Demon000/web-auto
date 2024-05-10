@@ -39,7 +39,6 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
         super(
             {
                 ignoredDevices,
-                selfConnectOnAvailable: false,
             },
             events,
         );

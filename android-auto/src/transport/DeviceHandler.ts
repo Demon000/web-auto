@@ -17,7 +17,6 @@ export interface DeviceHandlerEvents {
 
 export interface DeviceHandlerParams {
     ignoredDevices: string[] | undefined;
-    selfConnectOnAvailable: boolean;
 }
 
 export abstract class DeviceHandler<T = any> {
@@ -86,9 +85,6 @@ export abstract class DeviceHandler<T = any> {
 
         this.deviceMap.set(data, device);
         this.events.onDeviceAvailable(device);
-        if (this.params.selfConnectOnAvailable) {
-            device.selfConnect();
-        }
     }
 
     protected async addDeviceAsync(data: T, existing?: true): Promise<void> {

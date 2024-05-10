@@ -6,9 +6,7 @@ import {
 import { UsbDevice } from './UsbDevice.js';
 import { Device as UsbDeviceImpl, usb } from 'usb';
 
-export interface UsbDeviceHandlerConfig {
-    autoConnect?: boolean;
-}
+export interface UsbDeviceHandlerConfig {}
 
 export class UsbDeviceHandler extends DeviceHandler<UsbDeviceImpl> {
     public constructor(
@@ -19,7 +17,6 @@ export class UsbDeviceHandler extends DeviceHandler<UsbDeviceImpl> {
         super(
             {
                 ignoredDevices,
-                selfConnectOnAvailable: config.autoConnect === true,
             },
             events,
         );
