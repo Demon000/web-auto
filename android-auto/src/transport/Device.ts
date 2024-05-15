@@ -18,12 +18,6 @@ export interface DeviceEvents {
     onError: (device: Device, err: Error) => void;
 }
 
-export enum DeviceDisconnectReason {
-    USER = 'user-requested',
-    START_FAILED = 'start-failed',
-    DO_START_FAILED = 'do-start-failed',
-}
-
 export enum DeviceProbeResult {
     SUPPORTED,
     NEEDS_RESET,
@@ -55,7 +49,9 @@ export abstract class Device {
 
     public async reset(): Promise<void> {}
     protected abstract connectImpl(): Promise<void>;
-    protected abstract disconnectImpl(reason: string): Promise<void>;
+    protected abstract disconnectImpl(
+        reason: string | undefined,
+    ): Promise<void>;
     public async rejectSelfConnection(): Promise<void> {}
     public abstract send(buffer: Uint8Array): void;
     // eslint-disable-next-line @typescript-eslint/require-await
@@ -125,9 +121,6 @@ export abstract class Device {
 
     public async disconnect(reason?: string): Promise<void> {
         const release = await this.mutex.acquire();
-        if (reason === undefined) {
-            reason = DeviceDisconnectReason.USER;
-        }
 
         if (this.state !== DeviceState.CONNECTED) {
             this.logger.info(

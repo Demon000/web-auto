@@ -236,7 +236,9 @@ export class BluetoothDevice extends Device {
         });
     }
 
-    protected override async disconnectImpl(reason: string): Promise<void> {
+    protected override async disconnectImpl(
+        reason: string | undefined,
+    ): Promise<void> {
         if (this.transport !== undefined) {
             this.transport.disconnect();
             this.transport = undefined;

@@ -460,7 +460,9 @@ export class UsbDevice extends Device {
         this.startPoll();
     }
 
-    protected override async disconnectImpl(_reason: string): Promise<void> {
+    protected override async disconnectImpl(
+        _reason: string | undefined,
+    ): Promise<void> {
         this.stopPoll();
 
         await this.releaseInterface(INTERFACE_INDEX);

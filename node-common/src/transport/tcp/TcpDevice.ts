@@ -47,7 +47,9 @@ export class TcpDevice extends Device {
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    protected override async disconnectImpl(_reason: string): Promise<void> {
+    protected override async disconnectImpl(
+        _reason: string | undefined,
+    ): Promise<void> {
         if (this.transport !== undefined) {
             this.transport.disconnect();
             this.transport = undefined;

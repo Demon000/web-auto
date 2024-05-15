@@ -3,11 +3,7 @@ import {
     type DeviceHandlerEvents,
 } from './transport/DeviceHandler.js';
 import { getLogger } from '@web-auto/logging';
-import {
-    Device,
-    DeviceDisconnectReason,
-    DeviceState,
-} from './transport/Device.js';
+import { Device, DeviceState } from './transport/Device.js';
 import {
     ANDROID_AUTO_CERTIFICATE,
     ANDROID_AUTO_PRIVATE_KEY,
@@ -452,6 +448,8 @@ export abstract class AndroidAutoServer {
     }
 
     private stopDependencies(): void {
+        this.logger.info('Stopping dependencies');
+
         this.logger.info('Stopping control service');
         try {
             this.controlService.stop();
@@ -475,6 +473,8 @@ export abstract class AndroidAutoServer {
         }
 
         this.frameCodec.stop();
+
+        this.logger.info('Stopped dependencies');
     }
 
     private removeDevice(device: Device): void {
@@ -532,10 +532,7 @@ export abstract class AndroidAutoServer {
             this.logger.info('Started dependencies');
         } catch (err) {
             this.logger.error('Failed to start dependencies', err);
-            await this.disconnectDeviceAsyncLocked(
-                device,
-                DeviceDisconnectReason.START_FAILED,
-            );
+            await this.disconnectDeviceAsyncLocked(device);
             return;
         }
 
@@ -543,10 +540,8 @@ export abstract class AndroidAutoServer {
             await this.controlService.doStart(this.services);
         } catch (err) {
             this.logger.error('Failed to do control service start', err);
-            await this.disconnectDeviceAsyncLocked(
-                device,
-                DeviceDisconnectReason.DO_START_FAILED,
-            );
+            this.stopDependencies();
+            await this.disconnectDeviceAsyncLocked(device);
             return;
         }
     }
@@ -589,16 +584,6 @@ export abstract class AndroidAutoServer {
             `Disconnecting device ${device.name} with reason ${reason}`,
         );
 
-        if (reason !== DeviceDisconnectReason.START_FAILED) {
-            this.logger.info('Stopping dependencies');
-            try {
-                this.stopDependencies();
-                this.logger.info('Stopped dependencies');
-            } catch (err) {
-                this.logger.error('Failed to stop dependencies', err);
-            }
-        }
-
         try {
             await device.disconnect(reason);
         } catch (err) {
@@ -635,6 +620,7 @@ export abstract class AndroidAutoServer {
         const release = await this.connectionLock.acquire();
 
         try {
+            this.stopDependencies();
             await this.disconnectDeviceAsyncLocked(device, reason);
         } catch (err) {
             this.logger.error('Failed to disconnect device', err);
