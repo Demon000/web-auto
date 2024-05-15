@@ -341,8 +341,6 @@ export abstract class AndroidAutoServer {
     }
 
     protected abstract onDevicesUpdatedCallback(devices: Device[]): void;
-    protected abstract onDeviceDisconnectedCallback(): void;
-    protected abstract onDeviceConnectedCallback(device: Device): void;
 
     protected getDevices(): Device[] {
         return Array.from(this.nameDeviceMap.values());
@@ -525,7 +523,6 @@ export abstract class AndroidAutoServer {
         }
 
         this.connectedDevice = device;
-        this.onDeviceConnectedCallback(device);
 
         this.logger.info(`Connected device ${device.name}`);
 
@@ -613,7 +610,6 @@ export abstract class AndroidAutoServer {
 
         this.logger.info(`Disconnected device ${device.name}`);
         this.connectedDevice = undefined;
-        this.onDeviceDisconnectedCallback();
     }
 
     public disconnectDevice(device: Device, reason?: string): void {
@@ -649,10 +645,6 @@ export abstract class AndroidAutoServer {
 
     public getDeviceByName(name: string): Device | undefined {
         return this.nameDeviceMap.get(name);
-    }
-
-    public getConnectedDevice(): Device | undefined {
-        return this.connectedDevice;
     }
 
     public async start(): Promise<void> {

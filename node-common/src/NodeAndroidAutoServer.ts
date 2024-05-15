@@ -16,13 +16,10 @@ export type AndroidAutoServerService = {
     connectDeviceName(name: string): Promise<void>;
     disconnectDeviceName(name: string): Promise<void>;
     getDevices(): Promise<IDevice[]>;
-    getConnectedDevice(): Promise<IDevice | undefined>;
 };
 
 export type AndroidAutoServerClient = {
     devices: (devices: IDevice[]) => void;
-    deviceConnected: (device: IDevice) => void;
-    deviceDisconnected: () => void;
 };
 
 export class NodeAndroidAutoServer extends AndroidAutoServer {
@@ -45,10 +42,6 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
         );
 
         this.ipcHandler.on('getDevices', this.getDevicesObjects.bind(this));
-        this.ipcHandler.on(
-            'getConnectedDevice',
-            this.getConnectedDeviceObject.bind(this),
-        );
     }
 
     protected deviceFromImpl(device: Device): IDevice {
@@ -75,16 +68,6 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
         return this.devicesFromImpl(devices);
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    public async getConnectedDeviceObject(): Promise<IDevice | undefined> {
-        const device = this.getConnectedDevice();
-        if (device === undefined) {
-            return undefined;
-        }
-
-        return this.deviceFromImpl(device);
-    }
-
     public async connectDeviceName(name: string): Promise<void> {
         const device = this.getDeviceByName(name);
         if (device === undefined) {
@@ -106,12 +89,5 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
     protected onDevicesUpdatedCallback(devices: Device[]): void {
         const ipcDevices = this.devicesFromImpl(devices);
         this.ipcHandler.devices(ipcDevices);
-    }
-
-    protected onDeviceDisconnectedCallback(): void {
-        this.ipcHandler.deviceDisconnected();
-    }
-    protected onDeviceConnectedCallback(device: Device): void {
-        this.ipcHandler.deviceConnected(this.deviceFromImpl(device));
     }
 }
