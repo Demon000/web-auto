@@ -628,16 +628,15 @@ export abstract class AndroidAutoServer {
         device: Device,
         reason?: string,
     ): Promise<void> {
-        const release = await this.connectionLock.acquire();
-
         if (!this.isDeviceConnected(device)) {
             this.logger.info(
                 `Cannot disconnect ${device.name}, ` +
                     'device is not the connected device',
             );
-            release();
             return;
         }
+
+        const release = await this.connectionLock.acquire();
 
         try {
             await this.disconnectDeviceInternal(device, reason);
