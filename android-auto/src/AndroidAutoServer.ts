@@ -535,7 +535,7 @@ export abstract class AndroidAutoServer {
             this.logger.info('Started dependencies');
         } catch (err) {
             this.logger.error('Failed to start dependencies', err);
-            await this.disconnectDeviceInternal(
+            await this.disconnectDeviceAsyncLocked(
                 device,
                 DeviceDisconnectReason.START_FAILED,
             );
@@ -546,7 +546,7 @@ export abstract class AndroidAutoServer {
             await this.controlService.doStart(this.services);
         } catch (err) {
             this.logger.error('Failed to do control service start', err);
-            await this.disconnectDeviceInternal(
+            await this.disconnectDeviceAsyncLocked(
                 device,
                 DeviceDisconnectReason.DO_START_FAILED,
             );
@@ -584,7 +584,7 @@ export abstract class AndroidAutoServer {
         release();
     }
 
-    public async disconnectDeviceInternal(
+    public async disconnectDeviceAsyncLocked(
         device: Device,
         reason?: string,
     ): Promise<void> {
@@ -639,7 +639,7 @@ export abstract class AndroidAutoServer {
         const release = await this.connectionLock.acquire();
 
         try {
-            await this.disconnectDeviceInternal(device, reason);
+            await this.disconnectDeviceAsyncLocked(device, reason);
         } catch (err) {
             this.logger.error('Failed to disconnect device', err);
         }
