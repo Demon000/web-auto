@@ -110,6 +110,12 @@ export class BluetoothDevice extends Device {
         this.selfDisconnect(BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE);
     }
 
+    private async connectBluetooth(): Promise<void> {
+        this.logger.info('Connecting to Bluetooth device');
+        await this.device.Connect();
+        this.logger.info('Connected to Bluetooth device');
+    }
+
     private async disconnectBluetooth(): Promise<void> {
         this.logger.info('Disconnecting from Bluetooth');
         try {
@@ -119,6 +125,23 @@ export class BluetoothDevice extends Device {
             return;
         }
         this.logger.info('Disconnected from Bluetooth');
+    }
+
+    private async connectBluetoothProfile(): Promise<Duplex> {
+        let bluetoothSocket;
+        try {
+            this.logger.info('Connecting to Bluetooth profile');
+            bluetoothSocket =
+                await this.profileHandler.waitForConnectionWithTimeout(
+                    this.config.profileConnectionTimeoutMs,
+                );
+            this.logger.info('Connected to Bluetooth profile');
+        } catch (err) {
+            this.logger.error('Failed to connect to Bluetooth profile', err);
+            throw err;
+        }
+
+        return bluetoothSocket;
     }
 
     private async disconnectBluetoothProfile(): Promise<void> {
@@ -205,20 +228,12 @@ export class BluetoothDevice extends Device {
             await this.device.Pair();
         }
 
-        this.logger.info('Connecting to Bluetooth device');
-        await this.device.Connect();
-        this.logger.info('Connected to Bluetooth device');
+        await this.connectBluetooth();
 
         let bluetoothSocket;
         try {
-            this.logger.info('Connecting to Bluetooth profile');
-            bluetoothSocket =
-                await this.profileHandler.waitForConnectionWithTimeout(
-                    this.config.profileConnectionTimeoutMs,
-                );
-            this.logger.info('Connected to Bluetooth profile');
+            bluetoothSocket = await this.connectBluetoothProfile();
         } catch (err) {
-            this.logger.error('Failed to connect to Bluetooth profile', err);
             await this.disconnectBluetooth();
             throw err;
         }
