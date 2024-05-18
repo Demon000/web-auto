@@ -55,7 +55,7 @@ export abstract class AndroidAutoServer {
     public constructor(builder: AndroidAutoServerBuilder) {
         this.deviceHandlers = builder.buildDeviceHandlers({
             onDeviceAvailable: this.onDeviceAvailable.bind(this),
-            onDeviceSelfConnection: this.connectDevice.bind(this),
+            onDeviceSelfConnection: this.onDeviceSelfConnection.bind(this),
             onDeviceSelfDisconnection: this.disconnectDevice.bind(this),
             onDeviceStateUpdated: this.onDeviceStateUpdated.bind(this),
             onDeviceUnavailable: this.onDeviceUnavailable.bind(this),
@@ -499,13 +499,24 @@ export abstract class AndroidAutoServer {
             });
     }
 
-    public connectDevice(device: Device): void {
+    public onDeviceSelfConnection(device: Device): boolean {
+        if (this.connectedDevice !== undefined) {
+            this.logger.error(
+                `Cannot accept self connection from ${device.name}, ` +
+                    `${this.connectedDevice.name} already connected`,
+            );
+
+            return false;
+        }
+
         this.connectDeviceAsync(device).then(
             () => {},
             (err) => {
                 this.logger.error('Failed to connect device', err);
             },
         );
+
+        return true;
     }
 
     public async connectDeviceAsyncLocked(device: Device): Promise<void> {
@@ -543,26 +554,6 @@ export abstract class AndroidAutoServer {
     }
 
     public async connectDeviceAsync(device: Device): Promise<void> {
-        if (
-            this.connectedDevice !== undefined &&
-            device.state === DeviceState.SELF_CONNECTING
-        ) {
-            this.logger.error(
-                `Cannot accept self connection from ${device.name}, ` +
-                    `${this.connectedDevice.name} already connected`,
-            );
-
-            try {
-                await device.rejectSelfConnection();
-            } catch (err) {
-                this.logger.error(
-                    `Failed to reject device ${device.name} self connection`,
-                    err,
-                );
-            }
-            return;
-        }
-
         if (this.connectedDevice !== undefined) {
             await this.disconnectDeviceAsync(this.connectedDevice);
         }

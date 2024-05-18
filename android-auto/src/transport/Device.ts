@@ -12,7 +12,7 @@ export enum DeviceState {
 
 export interface DeviceEvents {
     onStateUpdated: (device: Device) => void;
-    onSelfConnection: (device: Device) => void;
+    onSelfConnection: (device: Device) => boolean;
     onSelfDisconnection: (device: Device, reason?: string) => void;
     onData: (device: Device, buffer: Uint8Array) => void;
     onError: (device: Device, err: Error) => void;
@@ -52,7 +52,6 @@ export abstract class Device {
     protected abstract disconnectImpl(
         reason: string | undefined,
     ): Promise<void>;
-    public async rejectSelfConnection(): Promise<void> {}
     public abstract send(buffer: Uint8Array): void;
     // eslint-disable-next-line @typescript-eslint/require-await
     public async probe(_existing?: true): Promise<DeviceProbeResult> {
@@ -97,10 +96,10 @@ export abstract class Device {
         release();
     }
 
-    public selfConnect(): void {
+    public selfConnect(): boolean {
         this.setState(DeviceState.SELF_CONNECTING);
 
-        this.events.onSelfConnection(this);
+        return this.events.onSelfConnection(this);
     }
 
     protected onData(data: Uint8Array): void {

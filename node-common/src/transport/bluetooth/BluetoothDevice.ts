@@ -77,10 +77,19 @@ export class BluetoothDevice extends Device {
 
         this.logger.info('Received bluetooth profile self-connection');
 
-        this.selfConnect();
+        const success = this.selfConnect();
+        if (success) {
+            return;
+        }
+
+        this.rejectSelfConnection()
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error('Failed to reject self connection', err);
+            });
     }
 
-    public override async rejectSelfConnection(): Promise<void> {
+    private async rejectSelfConnection(): Promise<void> {
         if (this.state !== DeviceState.SELF_CONNECTING) {
             this.logger.error(
                 `Unexpected self-connection reject in state: ${this.state}`,

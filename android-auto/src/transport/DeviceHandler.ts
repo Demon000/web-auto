@@ -6,7 +6,7 @@ export interface DeviceHandlerEvents {
     onDeviceAvailable: (device: Device) => void;
     onDeviceUnavailable: (device: Device) => void;
 
-    onDeviceSelfConnection: (device: Device) => void;
+    onDeviceSelfConnection: (device: Device) => boolean;
     onDeviceSelfDisconnection: (device: Device, reason?: string) => void;
 
     onDeviceStateUpdated: (device: Device) => void;
