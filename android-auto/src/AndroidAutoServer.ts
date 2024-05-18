@@ -94,10 +94,6 @@ export abstract class AndroidAutoServer {
     }
 
     private isDeviceConnected(device: Device): boolean {
-        if (this.connectedDevice === undefined) {
-            return false;
-        }
-
         return this.connectedDevice === device;
     }
 
