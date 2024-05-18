@@ -207,7 +207,7 @@ export abstract class AndroidAutoServer {
             );
         } else if (reason === ControlServiceSelfDisconnectReason.BYE_BYE) {
             this.logger.error(
-                `Self disconnect requested, disconnecting ${this.connectDevice.name}`,
+                `Self disconnect requested, disconnecting ${this.connectedDevice.name}`,
             );
         }
 
