@@ -56,7 +56,8 @@ export abstract class AndroidAutoServer {
         this.deviceHandlers = builder.buildDeviceHandlers({
             onDeviceAvailable: this.onDeviceAvailable.bind(this),
             onDeviceSelfConnection: this.onDeviceSelfConnection.bind(this),
-            onDeviceSelfDisconnection: this.disconnectDevice.bind(this),
+            onDeviceSelfDisconnection:
+                this.onDeviceSelfDisconnection.bind(this),
             onDeviceStateUpdated: this.onDeviceStateUpdated.bind(this),
             onDeviceUnavailable: this.onDeviceUnavailable.bind(this),
             onDeviceTransportData: this.onDeviceTransportData.bind(this),
@@ -584,7 +585,7 @@ export abstract class AndroidAutoServer {
         this.connectedDevice = undefined;
     }
 
-    public disconnectDevice(device: Device, reason?: string): void {
+    public onDeviceSelfDisconnection(device: Device, reason?: string): void {
         this.disconnectDeviceAsync(device, reason)
             .then(() => {})
             .catch((err) => {
