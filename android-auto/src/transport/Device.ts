@@ -59,6 +59,7 @@ export abstract class Device {
     }
 
     protected setState(state: DeviceState): void {
+        this.logger.debug(`Switched state from ${this.state} to ${state}`);
         this.state = state;
         try {
             this.events.onStateUpdated(this);
