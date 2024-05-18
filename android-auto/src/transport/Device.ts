@@ -76,7 +76,7 @@ export abstract class Device {
             this.logger.error(
                 `Tried to connect while device has state ${this.state}`,
             );
-            throw new Error('Device not availalbe');
+            throw new Error('Device not available');
         }
 
         this.setState(DeviceState.CONNECTING);
