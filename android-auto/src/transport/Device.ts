@@ -68,9 +68,7 @@ export abstract class Device {
         }
     }
 
-    public async connect(): Promise<void> {
-        const release = await this.mutex.acquire();
-
+    private async connectLocked(): Promise<void> {
         if (
             this.state !== DeviceState.AVAILABLE &&
             this.state !== DeviceState.SELF_CONNECTING
@@ -78,7 +76,6 @@ export abstract class Device {
             this.logger.error(
                 `Tried to connect while device has state ${this.state}`,
             );
-            release();
             throw new Error('Device not availalbe');
         }
 
@@ -89,12 +86,20 @@ export abstract class Device {
         } catch (err) {
             this.logger.error('Failed to connect', err);
             this.setState(DeviceState.AVAILABLE);
-            release();
             throw err;
         }
 
         this.setState(DeviceState.CONNECTED);
-        release();
+    }
+
+    public async connect(): Promise<void> {
+        const release = await this.mutex.acquire();
+
+        try {
+            await this.connectLocked();
+        } finally {
+            release();
+        }
     }
 
     public selfConnect(): boolean {
