@@ -254,7 +254,7 @@ export class BluetoothDevice extends Device {
         }
 
         if (
-            reason ===
+            reason !==
             (BluetoothDeviceDisconnectReason.BLUETOOTH_PROFILE as string)
         ) {
             await this.disconnectBluetoothProfile();
