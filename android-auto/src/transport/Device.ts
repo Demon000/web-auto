@@ -124,14 +124,11 @@ export abstract class Device {
         this.events.onSelfDisconnection(this, reason);
     }
 
-    public async disconnect(reason?: string): Promise<void> {
-        const release = await this.mutex.acquire();
-
+    private async disconnectLocked(reason?: string): Promise<void> {
         if (this.state !== DeviceState.CONNECTED) {
             this.logger.info(
                 `Tried to disconnect while device has state ${this.state}`,
             );
-            release();
             return;
         }
 
@@ -149,7 +146,15 @@ export abstract class Device {
         }
 
         this.setState(DeviceState.AVAILABLE);
+    }
 
-        release();
+    public async disconnect(reason?: string): Promise<void> {
+        const release = await this.mutex.acquire();
+
+        try {
+            await this.disconnectLocked(reason);
+        } finally {
+            release();
+        }
     }
 }
