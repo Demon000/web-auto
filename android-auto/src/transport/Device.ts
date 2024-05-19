@@ -136,7 +136,6 @@ export abstract class Device {
 
         this.setState(DeviceState.DISCONNECTING);
 
-        this.logger.info('Disconnecting');
         try {
             await this.disconnectImpl(reason);
 
