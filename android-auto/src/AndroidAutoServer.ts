@@ -340,12 +340,22 @@ export abstract class AndroidAutoServer {
         this.onDevicesUpdatedCallback(devices);
     }
 
-    private onDeviceAvailable(device: Device): void {
+    private async addDeviceAsync(device: Device): Promise<void> {
+        const release = await this.connectionLock.acquire();
         this.nameDeviceMap.set(device.name, device);
 
         this.logger.info(`New available device ${device.name}`);
 
         this.callOnDevicesUpdated();
+        release();
+    }
+
+    private onDeviceAvailable(device: Device): void {
+        this.addDeviceAsync(device)
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error('Failed to add device', err);
+            });
     }
 
     private onDeviceStateUpdated(): void {
