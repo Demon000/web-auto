@@ -93,7 +93,10 @@ export abstract class DeviceHandler<T = any> {
             try {
                 await device.reset();
             } catch (err) {
-                this.logger.error('Failed to reset device', err);
+                this.logger.error('Failed to reset device', {
+                    device,
+                    err,
+                });
             }
 
             return;
