@@ -96,7 +96,11 @@ export abstract class DeviceHandler<T = any> {
             return;
         }
 
-        this.events.onDeviceAvailable(device);
+        try {
+            this.events.onDeviceAvailable(device);
+        } catch (err) {
+            this.logger.error('Failed to emit device available event', err);
+        }
     }
 
     protected async addDeviceAsync(data: T, existing?: true): Promise<void> {
