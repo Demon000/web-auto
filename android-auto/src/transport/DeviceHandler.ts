@@ -98,8 +98,6 @@ export abstract class DeviceHandler<T = any> {
                     err,
                 });
             }
-
-            return;
         }
 
         this.deviceMap.set(data, device);
