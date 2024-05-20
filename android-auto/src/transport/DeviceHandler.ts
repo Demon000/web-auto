@@ -67,27 +67,28 @@ export abstract class DeviceHandler<T = any> {
 
         try {
             device = await this.createDevice(data);
-            if (device === undefined || this.isIgnoredDevice(device)) {
-                return;
-            }
-
-            const probed = await device.probe(existing);
-            if (probed === DeviceProbeResult.NEEDS_RESET) {
-                try {
-                    await device.reset();
-                } catch (err) {
-                    this.logger.error('Failed to reset device', err);
-                }
-            }
-
-            if (probed !== DeviceProbeResult.SUPPORTED) {
-                return;
-            }
         } catch (err) {
             this.logger.error('Failed to create device', {
                 device,
                 err,
             });
+            return;
+        }
+
+        if (device === undefined || this.isIgnoredDevice(device)) {
+            return;
+        }
+
+        const probed = await device.probe(existing);
+        if (probed === DeviceProbeResult.NEEDS_RESET) {
+            try {
+                await device.reset();
+            } catch (err) {
+                this.logger.error('Failed to reset device', err);
+            }
+        }
+
+        if (probed !== DeviceProbeResult.SUPPORTED) {
             return;
         }
 
