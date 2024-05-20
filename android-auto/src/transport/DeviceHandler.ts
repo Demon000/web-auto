@@ -88,11 +88,12 @@ export abstract class DeviceHandler<T = any> {
             }
         }
 
+        this.deviceMap.set(data, device);
+
         if (probed === DeviceProbeResult.UNSUPPORTED) {
             return;
         }
 
-        this.deviceMap.set(data, device);
         this.events.onDeviceAvailable(device);
     }
 
