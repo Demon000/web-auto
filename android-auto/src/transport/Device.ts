@@ -10,7 +10,6 @@ export enum DeviceState {
     CONNECTED = 'connected',
     UNSUPPORTED = 'unsupported',
     DISCONNECTING = 'disconnecting',
-    DISCONNECTED = 'disconnected',
 }
 
 export enum GenericDeviceDisconnectReason {
