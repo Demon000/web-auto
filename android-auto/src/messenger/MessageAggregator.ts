@@ -15,6 +15,12 @@ export class MessageAggregator {
     private logger = getLogger(this.constructor.name);
     private serviceIdAggregatorMap = new Map<number, AggregatorData>();
 
+    public start() {}
+
+    public stop() {
+        this.serviceIdAggregatorMap = new Map<number, AggregatorData>();
+    }
+
     public aggregate(frameData: FrameData): Uint8Array | undefined {
         this.logger.debug('Aggregate frame data', frameData);
 

@@ -415,6 +415,7 @@ export abstract class AndroidAutoServer {
 
     private startDependencies(): void {
         this.frameCodec.start();
+        this.messageAggregator.start();
 
         this.logger.info('Starting cryptor');
         try {
@@ -422,6 +423,7 @@ export abstract class AndroidAutoServer {
         } catch (err) {
             this.logger.info('Failed to start cryptor');
             this.frameCodec.stop();
+            this.messageAggregator.stop();
             throw err;
         }
         this.logger.info('Started cryptor');
@@ -439,6 +441,7 @@ export abstract class AndroidAutoServer {
                 this.cryptor.stop();
                 this.logger.info('Stopped cryptor');
                 this.frameCodec.stop();
+                this.messageAggregator.stop();
             } catch (err) {
                 this.logger.error(
                     'Failure after failed to start control service',
@@ -476,6 +479,7 @@ export abstract class AndroidAutoServer {
         }
 
         this.frameCodec.stop();
+        this.messageAggregator.stop();
 
         this.logger.info('Stopped dependencies');
     }
