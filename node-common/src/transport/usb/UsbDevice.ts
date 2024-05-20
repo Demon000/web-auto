@@ -3,6 +3,8 @@ import {
     type DeviceEvents,
     bufferWrapUint8Array,
     DeviceProbeResult,
+    type DeviceDisconnectReason,
+    DeviceConnectReason,
 } from '@web-auto/android-auto';
 import {
     InEndpoint,
@@ -453,7 +455,7 @@ export class UsbDevice extends Device {
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    public async connectImpl(): Promise<void> {
+    public async connectImpl(_reason: DeviceConnectReason): Promise<void> {
         this.open();
         this.claimInterface(INTERFACE_INDEX);
         this.findEndpoints();
@@ -461,7 +463,7 @@ export class UsbDevice extends Device {
     }
 
     protected override async disconnectImpl(
-        _reason: string | undefined,
+        _reason: DeviceDisconnectReason,
     ): Promise<void> {
         this.stopPoll();
 

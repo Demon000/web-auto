@@ -1,4 +1,8 @@
-import { Device, type DeviceEvents } from '@web-auto/android-auto';
+import {
+    Device,
+    DeviceConnectReason,
+    type DeviceEvents,
+} from '@web-auto/android-auto';
 import { DuplexTransport } from '../DuplexTransport.js';
 import { Socket } from 'node:net';
 import { TCP_SERVER_PORT } from './tcp.js';
@@ -13,7 +17,7 @@ export class TcpDevice extends Device {
         super('TCP', ip, events);
     }
 
-    public async connectImpl(): Promise<void> {
+    public async connectImpl(_reason: DeviceConnectReason): Promise<void> {
         return new Promise((resolve, reject) => {
             const socket = new Socket();
 

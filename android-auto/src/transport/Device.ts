@@ -10,10 +10,30 @@ export enum DeviceState {
     DISCONNECTED = 'disconnected',
 }
 
+export enum GenericDeviceDisconnectReason {
+    USER = 'user',
+    START_FAILED = 'start-failed',
+    DO_START_FAILED = 'do-start-failed',
+    SELF_CONNECT_REFUSED = 'self-connect-refused',
+    TRANSPORT_DISCONNECTED = 'transport-disconnected',
+    PING_TIMEOUT = 'ping-timeout',
+    BYE_BYE = 'bye-bye',
+}
+
+export type DeviceDisconnectReason = GenericDeviceDisconnectReason | string;
+
+export enum DeviceConnectReason {
+    USER = 'user',
+    SELF_CONNECT = 'self-connect',
+}
+
 export interface DeviceEvents {
     onStateUpdated: (device: Device) => void;
-    onSelfConnection: (device: Device) => boolean;
-    onSelfDisconnection: (device: Device, reason?: string) => void;
+    onSelfConnection: (device: Device) => void;
+    onSelfDisconnection: (
+        device: Device,
+        reason: DeviceDisconnectReason,
+    ) => void;
     onData: (device: Device, buffer: Uint8Array) => void;
     onError: (device: Device, err: Error) => void;
 }
@@ -48,9 +68,9 @@ export abstract class Device {
     }
 
     public async reset(): Promise<void> {}
-    protected abstract connectImpl(): Promise<void>;
+    protected abstract connectImpl(reason: DeviceConnectReason): Promise<void>;
     protected abstract disconnectImpl(
-        reason: string | undefined,
+        reason: DeviceDisconnectReason,
     ): Promise<void>;
     public abstract send(buffer: Uint8Array): void;
     // eslint-disable-next-line @typescript-eslint/require-await
@@ -58,9 +78,7 @@ export abstract class Device {
         return DeviceProbeResult.SUPPORTED;
     }
 
-    protected setState(state: DeviceState): void {
-        this.logger.debug(`Switched state from ${this.state} to ${state}`);
-        this.state = state;
+    private callOnStateUpdated(): void {
         try {
             this.events.onStateUpdated(this);
         } catch (err) {
@@ -68,7 +86,13 @@ export abstract class Device {
         }
     }
 
-    private async connectLocked(): Promise<void> {
+    protected setState(state: DeviceState): void {
+        this.logger.debug(`Switched state from ${this.state} to ${state}`);
+        this.state = state;
+        this.callOnStateUpdated();
+    }
+
+    private async connectLocked(reason: DeviceConnectReason): Promise<void> {
         if (
             this.state !== DeviceState.AVAILABLE &&
             this.state !== DeviceState.SELF_CONNECTING
@@ -82,7 +106,7 @@ export abstract class Device {
         this.setState(DeviceState.CONNECTING);
 
         try {
-            await this.connectImpl();
+            await this.connectImpl(reason);
         } catch (err) {
             this.logger.error('Failed to connect', err);
             this.setState(DeviceState.AVAILABLE);
@@ -92,20 +116,20 @@ export abstract class Device {
         this.setState(DeviceState.CONNECTED);
     }
 
-    public async connect(): Promise<void> {
+    public async connect(reason: DeviceConnectReason): Promise<void> {
         const release = await this.mutex.acquire();
 
         try {
-            await this.connectLocked();
+            await this.connectLocked(reason);
         } finally {
             release();
         }
     }
 
-    public selfConnect(): boolean {
+    public selfConnect(): void {
         this.setState(DeviceState.SELF_CONNECTING);
 
-        return this.events.onSelfConnection(this);
+        this.events.onSelfConnection(this);
     }
 
     protected onData(data: Uint8Array): void {
@@ -117,15 +141,22 @@ export abstract class Device {
     }
 
     protected onDisconnected(): void {
-        this.selfDisconnect();
+        this.selfDisconnect(
+            GenericDeviceDisconnectReason.TRANSPORT_DISCONNECTED,
+        );
     }
 
-    public selfDisconnect(reason?: string): void {
+    public selfDisconnect(reason: DeviceDisconnectReason): void {
         this.events.onSelfDisconnection(this, reason);
     }
 
-    private async disconnectLocked(reason?: string): Promise<void> {
-        if (this.state !== DeviceState.CONNECTED) {
+    private async disconnectLocked(
+        reason: DeviceDisconnectReason,
+    ): Promise<void> {
+        if (
+            this.state !== DeviceState.CONNECTED &&
+            this.state !== DeviceState.SELF_CONNECTING
+        ) {
             this.logger.info(
                 `Tried to disconnect while device has state ${this.state}`,
             );
@@ -147,7 +178,7 @@ export abstract class Device {
         this.setState(DeviceState.AVAILABLE);
     }
 
-    public async disconnect(reason?: string): Promise<void> {
+    public async disconnect(reason: DeviceDisconnectReason): Promise<void> {
         const release = await this.mutex.acquire();
 
         try {

@@ -1,13 +1,21 @@
 import { getLogger } from '@web-auto/logging';
-import { Device, DeviceProbeResult, type DeviceEvents } from './Device.js';
+import {
+    Device,
+    type DeviceDisconnectReason,
+    DeviceProbeResult,
+    type DeviceEvents,
+} from './Device.js';
 import { Mutex } from 'async-mutex';
 
 export interface DeviceHandlerEvents {
     onDeviceAvailable: (device: Device) => void;
     onDeviceUnavailable: (device: Device) => void;
 
-    onDeviceSelfConnection: (device: Device) => boolean;
-    onDeviceSelfDisconnection: (device: Device, reason?: string) => void;
+    onDeviceSelfConnection: (device: Device) => void;
+    onDeviceSelfDisconnection: (
+        device: Device,
+        reason: DeviceDisconnectReason,
+    ) => void;
 
     onDeviceStateUpdated: (device: Device) => void;
 

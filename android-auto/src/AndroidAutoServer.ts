@@ -3,7 +3,12 @@ import {
     type DeviceHandlerEvents,
 } from './transport/DeviceHandler.js';
 import { getLogger } from '@web-auto/logging';
-import { Device, DeviceState } from './transport/Device.js';
+import {
+    Device,
+    type DeviceDisconnectReason,
+    GenericDeviceDisconnectReason,
+    DeviceConnectReason,
+} from './transport/Device.js';
 import {
     ANDROID_AUTO_CERTIFICATE,
     ANDROID_AUTO_PRIVATE_KEY,
@@ -14,7 +19,6 @@ import { Cryptor } from './crypto/Cryptor.js';
 import { Service, type ServiceEvents } from './services/Service.js';
 import {
     ControlService,
-    ControlServiceSelfDisconnectReason,
     type ControlServiceEvents,
 } from './services/ControlService.js';
 import { type FrameData } from './messenger/FrameData.js';
@@ -184,7 +188,7 @@ export abstract class AndroidAutoServer {
         this.onSendMessage(serviceId, totalPayload, isEncrypted, isControl);
     }
 
-    private onSelfDisconnect(reason: ControlServiceSelfDisconnectReason): void {
+    private onSelfDisconnect(reason: DeviceDisconnectReason): void {
         if (this.connectedDevice === undefined) {
             this.logger.error(
                 'Cannot self disconnect without a connected device',
@@ -192,17 +196,19 @@ export abstract class AndroidAutoServer {
             return;
         }
 
-        if (reason === ControlServiceSelfDisconnectReason.PING_TIMEOUT) {
+        if (reason === (GenericDeviceDisconnectReason.PING_TIMEOUT as string)) {
             this.logger.error(
                 `Pinger timed out, disconnecting ${this.connectedDevice.name}`,
             );
-        } else if (reason === ControlServiceSelfDisconnectReason.BYE_BYE) {
+        } else if (
+            reason === (GenericDeviceDisconnectReason.BYE_BYE as string)
+        ) {
             this.logger.error(
                 `Self disconnect requested, disconnecting ${this.connectedDevice.name}`,
             );
         }
 
-        this.disconnectDeviceAsync(this.connectedDevice)
+        this.disconnectDeviceAsync(this.connectedDevice, reason)
             .then(() => {})
             .catch((err) => {
                 this.logger.error('Failed to handle self disconnect', err);
@@ -465,38 +471,61 @@ export abstract class AndroidAutoServer {
     }
 
     private onDeviceUnavailable(device: Device): void {
+        this.removeDeviceAsync(device)
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error('Failed to remove device', err);
+            });
+    }
+
+    private async removeDeviceAsync(device: Device): Promise<void> {
+        const release = await this.connectionLock.acquire();
         this.logger.info(`Device ${device.name} no longer available`);
 
         this.nameDeviceMap.delete(device.name);
 
         this.callOnDevicesUpdated();
+        release();
     }
 
-    public onDeviceSelfConnection(device: Device): boolean {
-        if (this.connectedDevice !== undefined) {
-            this.logger.error(
-                `Cannot accept self connection from ${device.name}, ` +
-                    `${this.connectedDevice.name} already connected`,
-            );
-
-            return false;
-        }
-
-        this.connectDeviceAsync(device).then(
+    public onDeviceSelfConnection(device: Device): void {
+        this.connectDeviceAsync(device, DeviceConnectReason.SELF_CONNECT).then(
             () => {},
             (err) => {
                 this.logger.error('Failed to connect device', err);
             },
         );
-
-        return true;
     }
 
-    public async connectDeviceAsyncLocked(device: Device): Promise<void> {
+    public async connectDeviceAsyncLocked(
+        device: Device,
+        reason: DeviceConnectReason,
+    ): Promise<void> {
+        if (
+            this.connectedDevice !== undefined &&
+            reason === DeviceConnectReason.SELF_CONNECT
+        ) {
+            await this.disconnectDeviceAsyncLocked(
+                device,
+                GenericDeviceDisconnectReason.SELF_CONNECT_REFUSED,
+            );
+            return;
+        }
+
+        if (
+            this.connectedDevice !== undefined &&
+            reason !== DeviceConnectReason.SELF_CONNECT
+        ) {
+            await this.disconnectDeviceAsyncLocked(
+                this.connectedDevice,
+                GenericDeviceDisconnectReason.USER,
+            );
+        }
+
         this.logger.info(`Connecting device ${device.name}`);
 
         try {
-            await device.connect();
+            await device.connect(reason);
         } catch (err) {
             this.logger.error(`Failed to connect to ${device.name}`, err);
             return;
@@ -512,7 +541,10 @@ export abstract class AndroidAutoServer {
             this.logger.info('Started dependencies');
         } catch (err) {
             this.logger.error('Failed to start dependencies', err);
-            await this.disconnectDeviceAsyncLocked(device);
+            await this.disconnectDeviceAsyncLocked(
+                device,
+                GenericDeviceDisconnectReason.START_FAILED,
+            );
             return;
         }
 
@@ -520,29 +552,50 @@ export abstract class AndroidAutoServer {
             await this.controlService.doStart(this.services);
         } catch (err) {
             this.logger.error('Failed to do control service start', err);
-            this.stopDependencies();
-            await this.disconnectDeviceAsyncLocked(device);
+            await this.disconnectDeviceAsyncLocked(
+                device,
+                GenericDeviceDisconnectReason.DO_START_FAILED,
+            );
             return;
         }
     }
 
-    public async connectDeviceAsync(device: Device): Promise<void> {
-        if (this.connectedDevice !== undefined) {
-            await this.disconnectDeviceAsync(this.connectedDevice);
-        }
-
+    public async connectDeviceAsync(
+        device: Device,
+        reason: DeviceConnectReason,
+    ): Promise<void> {
         const release = await this.connectionLock.acquire();
-        await this.connectDeviceAsyncLocked(device);
+        await this.connectDeviceAsyncLocked(device, reason);
         release();
     }
 
     public async disconnectDeviceAsyncLocked(
         device: Device,
-        reason?: string,
+        reason: DeviceDisconnectReason,
     ): Promise<void> {
+        if (
+            reason !==
+                (GenericDeviceDisconnectReason.SELF_CONNECT_REFUSED as string) &&
+            !this.isDeviceConnected(device)
+        ) {
+            this.logger.info(
+                `Cannot disconnect ${device.name}, ` +
+                    'device is not the connected device',
+            );
+            return;
+        }
+
         this.logger.info(
             `Disconnecting device ${device.name} with reason ${reason}`,
         );
+
+        if (
+            reason !== (GenericDeviceDisconnectReason.START_FAILED as string) &&
+            reason !==
+                (GenericDeviceDisconnectReason.SELF_CONNECT_REFUSED as string)
+        ) {
+            this.stopDependencies();
+        }
 
         try {
             await device.disconnect(reason);
@@ -554,10 +607,16 @@ export abstract class AndroidAutoServer {
         }
 
         this.logger.info(`Disconnected device ${device.name}`);
-        this.connectedDevice = undefined;
+
+        if (this.connectedDevice === device) {
+            this.connectedDevice = undefined;
+        }
     }
 
-    public onDeviceSelfDisconnection(device: Device, reason?: string): void {
+    public onDeviceSelfDisconnection(
+        device: Device,
+        reason: DeviceDisconnectReason,
+    ): void {
         this.disconnectDeviceAsync(device, reason)
             .then(() => {})
             .catch((err) => {
@@ -567,20 +626,11 @@ export abstract class AndroidAutoServer {
 
     public async disconnectDeviceAsync(
         device: Device,
-        reason?: string,
+        reason: DeviceDisconnectReason,
     ): Promise<void> {
-        if (!this.isDeviceConnected(device)) {
-            this.logger.info(
-                `Cannot disconnect ${device.name}, ` +
-                    'device is not the connected device',
-            );
-            return;
-        }
-
         const release = await this.connectionLock.acquire();
 
         try {
-            this.stopDependencies();
             await this.disconnectDeviceAsyncLocked(device, reason);
         } catch (err) {
             this.logger.error('Failed to disconnect device', err);
@@ -623,7 +673,10 @@ export abstract class AndroidAutoServer {
         this.started = false;
 
         if (this.connectedDevice !== undefined) {
-            await this.disconnectDeviceAsync(this.connectedDevice);
+            await this.disconnectDeviceAsync(
+                this.connectedDevice,
+                GenericDeviceDisconnectReason.USER,
+            );
         }
 
         for (const deviceHandler of this.deviceHandlers) {

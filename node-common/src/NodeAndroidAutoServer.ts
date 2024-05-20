@@ -1,6 +1,8 @@
 import {
     AndroidAutoServer,
     Device,
+    DeviceConnectReason,
+    GenericDeviceDisconnectReason,
     type AndroidAutoServerBuilder,
 } from '@web-auto/android-auto';
 import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
@@ -74,7 +76,7 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
             throw new Error(`Unknown device ${name}`);
         }
 
-        await this.connectDeviceAsync(device);
+        await this.connectDeviceAsync(device, DeviceConnectReason.USER);
     }
 
     public async disconnectDeviceName(name: string): Promise<void> {
@@ -83,7 +85,10 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
             throw new Error(`Unknown device ${name}`);
         }
 
-        await this.disconnectDeviceAsync(device);
+        await this.disconnectDeviceAsync(
+            device,
+            GenericDeviceDisconnectReason.USER,
+        );
     }
 
     protected onDevicesUpdatedCallback(devices: Device[]): void {

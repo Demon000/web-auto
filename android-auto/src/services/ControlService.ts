@@ -29,14 +29,13 @@ import type {
     IHeadUnitInfo,
     IServiceDiscoveryResponse,
 } from '@web-auto/android-auto-proto/interfaces.js';
-
-export enum ControlServiceSelfDisconnectReason {
-    PING_TIMEOUT,
-    BYE_BYE,
-}
+import {
+    GenericDeviceDisconnectReason,
+    type DeviceDisconnectReason,
+} from '../transport/Device.js';
 
 export interface ControlServiceEvents extends ServiceEvents {
-    onSelfDisconnect: (reason: ControlServiceSelfDisconnectReason) => void;
+    onSelfDisconnect: (reason: DeviceDisconnectReason) => void;
 }
 
 export interface ControlServiceConfig {
@@ -64,14 +63,12 @@ export class ControlService extends Service {
 
     private onPingTimeout(): void {
         this.events.onSelfDisconnect(
-            ControlServiceSelfDisconnectReason.PING_TIMEOUT,
+            GenericDeviceDisconnectReason.PING_TIMEOUT,
         );
     }
 
     private onByeByeRequest(_data: ByeByeRequest): void {
-        this.events.onSelfDisconnect(
-            ControlServiceSelfDisconnectReason.BYE_BYE,
-        );
+        this.events.onSelfDisconnect(GenericDeviceDisconnectReason.BYE_BYE);
     }
 
     private onPingRequest(data: PingRequest): void {

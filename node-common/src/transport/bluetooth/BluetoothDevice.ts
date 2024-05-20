@@ -1,4 +1,10 @@
-import { Device, type DeviceEvents, DeviceState } from '@web-auto/android-auto';
+import {
+    Device,
+    type DeviceEvents,
+    DeviceState,
+    type DeviceDisconnectReason,
+    DeviceConnectReason,
+} from '@web-auto/android-auto';
 import { Device as BluezDevice } from 'bluez';
 import { BluetoothDeviceWifiConnector } from './BluetoothDeviceWifiConnector.js';
 import { Server } from 'node:net';
@@ -77,29 +83,7 @@ export class BluetoothDevice extends Device {
 
         this.logger.info('Received bluetooth profile self-connection');
 
-        const success = this.selfConnect();
-        if (success) {
-            return;
-        }
-
-        this.rejectSelfConnection()
-            .then(() => {})
-            .catch((err) => {
-                this.logger.error('Failed to reject self connection', err);
-            });
-    }
-
-    private async rejectSelfConnection(): Promise<void> {
-        if (this.state !== DeviceState.SELF_CONNECTING) {
-            this.logger.error(
-                `Unexpected self-connection reject in state: ${this.state}`,
-            );
-            return;
-        }
-
-        this.logger.info('Bluetooth profile self-connection denied');
-        await this.disconnectBluetoothProfile();
-        await this.disconnectBluetooth();
+        this.selfConnect();
     }
 
     public onBluetoothProfileSelfDisconnected(): void {
@@ -222,13 +206,15 @@ export class BluetoothDevice extends Device {
         });
     }
 
-    public async connectImpl(): Promise<void> {
-        const paired = await this.device.Paired();
-        if (!paired) {
-            await this.device.Pair();
-        }
+    public async connectImpl(reason: DeviceConnectReason): Promise<void> {
+        if (reason !== DeviceConnectReason.SELF_CONNECT) {
+            const paired = await this.device.Paired();
+            if (!paired) {
+                await this.device.Pair();
+            }
 
-        await this.connectBluetooth();
+            await this.connectBluetooth();
+        }
 
         let bluetoothSocket;
         try {
@@ -261,7 +247,7 @@ export class BluetoothDevice extends Device {
     }
 
     protected override async disconnectImpl(
-        reason: string | undefined,
+        reason: DeviceDisconnectReason,
     ): Promise<void> {
         if (this.transport !== undefined) {
             this.transport.disconnect();
