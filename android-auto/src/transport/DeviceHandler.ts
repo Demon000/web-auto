@@ -88,7 +88,7 @@ export abstract class DeviceHandler<T = any> {
             }
         }
 
-        if (probed !== DeviceProbeResult.SUPPORTED) {
+        if (probed === DeviceProbeResult.UNSUPPORTED) {
             return;
         }
 
