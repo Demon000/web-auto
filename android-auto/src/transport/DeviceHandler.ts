@@ -104,14 +104,12 @@ export abstract class DeviceHandler<T = any> {
 
         this.deviceMap.set(data, device);
 
-        if (device.state === DeviceState.UNSUPPORTED) {
-            return;
-        }
-
-        try {
-            this.events.onDeviceAvailable(device);
-        } catch (err) {
-            this.logger.error('Failed to emit device available event', err);
+        if (device.state === DeviceState.AVAILABLE) {
+            try {
+                this.events.onDeviceAvailable(device);
+            } catch (err) {
+                this.logger.error('Failed to emit device available event', err);
+            }
         }
     }
 
