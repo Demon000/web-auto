@@ -2,10 +2,13 @@ import { LoggerWrapper, getLogger } from '@web-auto/logging';
 import { Mutex } from 'async-mutex';
 
 export enum DeviceState {
+    UNKNOWN = 'unknown',
+    NEEDS_RESET = 'needs-reset',
     AVAILABLE = 'available',
     CONNECTING = 'connecting',
     SELF_CONNECTING = 'self-connecting',
     CONNECTED = 'connected',
+    UNSUPPORTED = 'unsupported',
     DISCONNECTING = 'disconnecting',
     DISCONNECTED = 'disconnected',
 }
@@ -38,14 +41,8 @@ export interface DeviceEvents {
     onError: (device: Device, err: Error) => void;
 }
 
-export enum DeviceProbeResult {
-    SUPPORTED,
-    NEEDS_RESET,
-    UNSUPPORTED,
-}
-
 export abstract class Device {
-    public state = DeviceState.AVAILABLE;
+    public state = DeviceState.UNKNOWN;
     public name: string;
     protected logger: LoggerWrapper;
     protected mutex = new Mutex();
@@ -74,8 +71,8 @@ export abstract class Device {
     ): Promise<void>;
     public abstract send(buffer: Uint8Array): void;
     // eslint-disable-next-line @typescript-eslint/require-await
-    public async probe(_existing?: true): Promise<DeviceProbeResult> {
-        return DeviceProbeResult.SUPPORTED;
+    public async probe(_existing?: true): Promise<void> {
+        this.setState(DeviceState.AVAILABLE);
     }
 
     private callOnStateUpdated(): void {

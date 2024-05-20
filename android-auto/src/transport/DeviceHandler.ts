@@ -1,8 +1,8 @@
 import { getLogger } from '@web-auto/logging';
 import {
     Device,
+    DeviceState,
     type DeviceDisconnectReason,
-    DeviceProbeResult,
     type DeviceEvents,
 } from './Device.js';
 import { Mutex } from 'async-mutex';
@@ -79,8 +79,9 @@ export abstract class DeviceHandler<T = any> {
             return;
         }
 
-        const probed = await device.probe(existing);
-        if (probed === DeviceProbeResult.NEEDS_RESET) {
+        await device.probe(existing);
+
+        if (device.state === DeviceState.NEEDS_RESET) {
             try {
                 await device.reset();
             } catch (err) {
@@ -92,7 +93,7 @@ export abstract class DeviceHandler<T = any> {
 
         this.deviceMap.set(data, device);
 
-        if (probed === DeviceProbeResult.UNSUPPORTED) {
+        if (device.state === DeviceState.UNSUPPORTED) {
             return;
         }
 
@@ -117,6 +118,11 @@ export abstract class DeviceHandler<T = any> {
 
         this.destroyDevice(data, device);
         this.deviceMap.delete(data);
+
+        if (device.state === DeviceState.UNSUPPORTED) {
+            return;
+        }
+
         try {
             this.events.onDeviceUnavailable(device);
         } catch (err) {

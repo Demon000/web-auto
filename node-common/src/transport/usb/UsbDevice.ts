@@ -2,9 +2,9 @@ import {
     Device,
     type DeviceEvents,
     bufferWrapUint8Array,
-    DeviceProbeResult,
     type DeviceDisconnectReason,
     DeviceConnectReason,
+    DeviceState,
 } from '@web-auto/android-auto';
 import {
     InEndpoint,
@@ -281,22 +281,24 @@ export class UsbDevice extends Device {
         );
     }
 
-    public override async probe(existing?: true): Promise<DeviceProbeResult> {
+    public override async probe(existing?: true): Promise<void> {
         this.logger.debug(`Probing device ${this.name}`);
 
         if (this.isDeviceAoap()) {
             if (existing) {
-                return DeviceProbeResult.NEEDS_RESET;
+                this.setState(DeviceState.NEEDS_RESET);
             } else {
-                return DeviceProbeResult.SUPPORTED;
+                this.setState(DeviceState.AVAILABLE);
             }
+            return;
         }
 
         try {
             this.open();
         } catch (e) {
             this.logger.error(`Failed to open device ${this.name}`);
-            return DeviceProbeResult.UNSUPPORTED;
+            this.setState(DeviceState.UNSUPPORTED);
+            return;
         }
 
         try {
@@ -309,7 +311,8 @@ export class UsbDevice extends Device {
             } catch (e) {
                 this.logger.error(`Failed to close device ${this.name}`);
             }
-            return DeviceProbeResult.UNSUPPORTED;
+            this.setState(DeviceState.UNSUPPORTED);
+            return;
         }
 
         this.logger.debug(`Found device ${this.name} with AOAP`);
@@ -324,9 +327,12 @@ export class UsbDevice extends Device {
             } catch (e) {
                 this.logger.error(`Failed to close device ${this.name}`);
             }
+
+            this.setState(DeviceState.UNSUPPORTED);
+            return;
         }
 
-        return DeviceProbeResult.UNSUPPORTED;
+        this.setState(DeviceState.UNSUPPORTED);
     }
 
     public open(): void {
