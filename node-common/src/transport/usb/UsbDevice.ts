@@ -224,7 +224,7 @@ export class UsbDevice extends Device {
         await this.vendorControlTransferOut(ACC_REQ_START, 0, 0, data);
     }
 
-    private async checkUsbDeviceSupportsAoap(): Promise<void> {
+    private async checkAoap(): Promise<void> {
         const protocolVersion = await this.protocolQuery();
         if (protocolVersion !== 1 && protocolVersion !== 2) {
             throw new Error('Invalid AOAP protocol version');
@@ -238,6 +238,26 @@ export class UsbDevice extends Device {
         await this.sendString(StringType.VERSION, '2.0.1');
 
         await this.start();
+    }
+
+    private async checkAndStartAndroidAutoAoap(): Promise<void> {
+        this.logger.debug('Checking for AOAP support');
+        try {
+            await this.checkAoap();
+        } catch (err) {
+            this.logger.debug('AOAP not supported', err);
+            throw err;
+        }
+        this.logger.debug('AOAP supported');
+
+        this.logger.debug('Starting Android Auto AOAP');
+        try {
+            await this.startAndroidAutoAoap();
+        } catch (err) {
+            this.logger.error('Failed to start Android Auto AOAP');
+            throw err;
+        }
+        this.logger.debug('Started Android Auto AOAP');
     }
 
     private findEndpoints(): void {
@@ -293,46 +313,24 @@ export class UsbDevice extends Device {
             return;
         }
 
+        this.setState(DeviceState.UNSUPPORTED);
+
         try {
             this.open();
         } catch (e) {
             this.logger.error(`Failed to open device ${this.name}`);
-            this.setState(DeviceState.UNSUPPORTED);
             return;
         }
 
         try {
-            await this.checkUsbDeviceSupportsAoap();
+            await this.checkAndStartAndroidAutoAoap();
         } catch (e) {
-            this.logger.debug(`Found device ${this.name} without AOAP`, e);
-
             try {
                 this.close();
             } catch (e) {
                 this.logger.error(`Failed to close device ${this.name}`);
             }
-            this.setState(DeviceState.UNSUPPORTED);
-            return;
         }
-
-        this.logger.debug(`Found device ${this.name} with AOAP`);
-
-        try {
-            await this.startAndroidAutoAoap();
-        } catch (e) {
-            this.logger.error(`Failed to start AA on device ${this.name}`);
-
-            try {
-                this.close();
-            } catch (e) {
-                this.logger.error(`Failed to close device ${this.name}`);
-            }
-
-            this.setState(DeviceState.UNSUPPORTED);
-            return;
-        }
-
-        this.setState(DeviceState.UNSUPPORTED);
     }
 
     public open(): void {
