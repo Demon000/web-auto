@@ -139,16 +139,6 @@ export abstract class AndroidAutoServer {
         isEncrypted: boolean,
         isControl: boolean,
     ): void {
-        if (this.connectedDevice === undefined) {
-            this.logger.error('Device not connected, skip sending message', {
-                serviceId,
-                payload,
-                isEncrypted,
-                isControl,
-            });
-            return;
-        }
-
         const frameDatas = this.messageAggregator.split(
             serviceId,
             payload,
