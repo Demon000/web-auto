@@ -86,6 +86,8 @@ export abstract class DeviceHandler<T = any> {
             } catch (err) {
                 this.logger.error('Failed to reset device', err);
             }
+
+            return;
         }
 
         this.deviceMap.set(data, device);
