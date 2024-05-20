@@ -79,7 +79,15 @@ export abstract class DeviceHandler<T = any> {
             return;
         }
 
-        await device.probe(existing);
+        try {
+            await device.probe(existing);
+        } catch (err) {
+            this.logger.error('Failed to probe device', {
+                device,
+                err,
+            });
+            return;
+        }
 
         if (device.state === DeviceState.NEEDS_RESET) {
             try {
