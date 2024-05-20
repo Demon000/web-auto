@@ -68,8 +68,8 @@ export abstract class DeviceHandler<T = any> {
         try {
             device = await this.createDevice(data);
         } catch (err) {
-            this.logger.error('Failed to create device', {
-                device,
+            this.logger.error('Failed to create device with data', {
+                data,
                 err,
             });
             return;
