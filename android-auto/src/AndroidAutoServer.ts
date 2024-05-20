@@ -524,7 +524,7 @@ export abstract class AndroidAutoServer {
 
         if (
             this.connectedDevice !== undefined &&
-            reason !== DeviceConnectReason.SELF_CONNECT
+            reason === DeviceConnectReason.USER
         ) {
             await this.disconnectDeviceAsyncLocked(
                 this.connectedDevice,
