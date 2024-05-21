@@ -126,14 +126,15 @@ export abstract class DeviceHandler<T = any> {
         this.destroyDevice(data, device);
         this.deviceMap.delete(data);
 
-        if (device.state === DeviceState.UNSUPPORTED) {
-            return;
-        }
-
-        try {
-            this.events.onDeviceUnavailable(device);
-        } catch (err) {
-            this.logger.error('Failed to emit device unavailable event', err);
+        if (device.state === DeviceState.AVAILABLE) {
+            try {
+                this.events.onDeviceUnavailable(device);
+            } catch (err) {
+                this.logger.error(
+                    'Failed to emit device unavailable event',
+                    err,
+                );
+            }
         }
     }
 
