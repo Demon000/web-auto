@@ -181,7 +181,8 @@ export abstract class AndroidAutoServer {
     }
 
     private onSelfDisconnect(reason: DeviceDisconnectReason): void {
-        if (this.connectedDevice === undefined) {
+        const device = this.connectedDevice;
+        if (device === undefined) {
             this.logger.error(
                 'Cannot self disconnect without a connected device',
             );
@@ -189,18 +190,16 @@ export abstract class AndroidAutoServer {
         }
 
         if (reason === (GenericDeviceDisconnectReason.PING_TIMEOUT as string)) {
-            this.logger.error(
-                `Pinger timed out, disconnecting ${this.connectedDevice.name}`,
-            );
+            this.logger.error(`Pinger timed out, disconnecting ${device.name}`);
         } else if (
             reason === (GenericDeviceDisconnectReason.BYE_BYE as string)
         ) {
             this.logger.error(
-                `Self disconnect requested, disconnecting ${this.connectedDevice.name}`,
+                `Self disconnect requested, disconnecting ${device.name}`,
             );
         }
 
-        this.disconnectDeviceAsync(this.connectedDevice, reason)
+        this.disconnectDeviceAsync(device, reason)
             .then(() => {})
             .catch((err) => {
                 this.logger.error('Failed to handle self disconnect', err);
