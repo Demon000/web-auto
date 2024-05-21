@@ -67,10 +67,13 @@ export class DecoderWorker {
     }
 
     private onFirstFrameData(buffer: Uint8Array): void {
-        this.worker.postMessage({
-            type: DecoderWorkerMessageType.DECODE_KEYFRAME,
-            data: buffer,
-        });
+        this.worker.postMessage(
+            {
+                type: DecoderWorkerMessageType.DECODE_KEYFRAME,
+                data: buffer,
+            },
+            [buffer],
+        );
     }
 
     private onFrameData(buffer: Uint8Array): void {
@@ -78,10 +81,13 @@ export class DecoderWorker {
             return;
         }
 
-        this.worker.postMessage({
-            type: DecoderWorkerMessageType.DECODE_DELTA,
-            data: buffer,
-        });
+        this.worker.postMessage(
+            {
+                type: DecoderWorkerMessageType.DECODE_DELTA,
+                data: buffer,
+            },
+            [buffer],
+        );
     }
 
     private onCodecConfig(config: VideoCodecConfig): void {
