@@ -40,24 +40,31 @@ export interface AndroidAutoServerBuilder {
     buildServices(events: ServiceEvents): Service[];
 }
 
+export interface DeviceContext {
+    cryptor: Cryptor;
+    frameCodec: FrameCodec;
+    messageCodec: MessageCodec;
+    messageAggregator: MessageAggregator;
+    services: Service[];
+    controlService: ControlService;
+    serviceIdServiceMap: Map<number, Service>;
+}
+
 export abstract class AndroidAutoServer {
     private logger = getLogger(this.constructor.name);
     private nameDeviceMap = new Map<string, Device>();
+    private nameContextMap = new Map<string, DeviceContext>();
+
+    private connectedDeviceContext: DeviceContext;
     private connectedDevice: Device | undefined;
     private started = false;
 
-    private cryptor: Cryptor;
-    private frameCodec: FrameCodec;
-    private messageCodec: MessageCodec;
-    private messageAggregator: MessageAggregator;
-    private services: Service[];
-    private controlService: ControlService;
-    private serviceIdServiceMap = new Map<number, Service>();
     private deviceHandlers: DeviceHandler[];
     private connectionLock = new Mutex();
 
-    public constructor(builder: AndroidAutoServerBuilder) {
+    public constructor(private builder: AndroidAutoServerBuilder) {
         this.deviceHandlers = builder.buildDeviceHandlers({
+            onDeviceNeedsProbe: this.onDeviceNeedsProbe.bind(this),
             onDeviceAdded: this.onDeviceAdded.bind(this),
             onDeviceSelfConnection: this.onDeviceSelfConnection.bind(this),
             onDeviceSelfDisconnection:
@@ -68,37 +75,159 @@ export abstract class AndroidAutoServer {
             onDeviceTransportError: this.onDeviceTransportError.bind(this),
         });
 
-        this.cryptor = builder.buildCryptor(
+        this.connectedDeviceContext = this.buildDeviceContext(undefined, false);
+    }
+
+    private buildDeviceContext(
+        device: Device | undefined,
+        probe: boolean,
+    ): DeviceContext {
+        const cryptor = this.builder.buildCryptor(
             ANDROID_AUTO_CERTIFICATE,
             ANDROID_AUTO_PRIVATE_KEY,
         );
 
-        this.messageCodec = new MessageCodec();
-        this.frameCodec = new FrameCodec();
-        this.messageAggregator = new MessageAggregator();
+        const messageCodec = new MessageCodec();
+        const frameCodec = new FrameCodec();
+        const messageAggregator = new MessageAggregator();
 
-        this.services = builder.buildServices({
-            onProtoMessageSent: this.onSendProtoMessage.bind(this),
-            onPayloadMessageSent: this.onSendPayloadMessage.bind(this),
-        });
+        const getDevice = () => {
+            let currentDevice = device;
+            if (currentDevice === undefined) {
+                currentDevice = this.connectedDevice;
+            }
 
-        this.controlService = builder.buildControlService(this.cryptor, {
-            onProtoMessageSent: this.onSendProtoMessage.bind(this),
-            onPayloadMessageSent: this.onSendPayloadMessage.bind(this),
-            onSelfDisconnect: this.onSelfDisconnect.bind(this),
-        });
+            return currentDevice;
+        };
 
-        this.serviceIdServiceMap.set(
-            this.controlService.serviceId,
-            this.controlService,
-        );
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const that = this;
 
-        for (const service of this.services) {
-            this.serviceIdServiceMap.set(service.serviceId, service);
+        let services: Service[];
+        if (probe) {
+            services = [];
+        } else {
+            services = this.builder.buildServices({
+                onProtoMessageSent(...args) {
+                    const device = getDevice();
+                    if (device === undefined) {
+                        return;
+                    }
+
+                    return that.onSendProtoMessage.call(that, device, ...args);
+                },
+                onPayloadMessageSent(...args) {
+                    const device = getDevice();
+                    if (device === undefined) {
+                        return;
+                    }
+
+                    return that.onSendPayloadMessage.call(
+                        that,
+                        device,
+                        ...args,
+                    );
+                },
+            });
         }
+
+        const controlService = this.builder.buildControlService(cryptor, {
+            onProtoMessageSent(...args) {
+                const device = getDevice();
+                if (device === undefined) {
+                    return;
+                }
+
+                return that.onSendProtoMessage.call(that, device, ...args);
+            },
+            onPayloadMessageSent(...args) {
+                const device = getDevice();
+                if (device === undefined) {
+                    return;
+                }
+
+                return that.onSendPayloadMessage.call(that, device, ...args);
+            },
+            onSelfDisconnect(...args) {
+                const device = getDevice();
+                if (device === undefined) {
+                    return;
+                }
+
+                return that.onSelfDisconnect.call(that, device, ...args);
+            },
+            onUpdateRealName(...args) {
+                const device = getDevice();
+                if (device === undefined) {
+                    return;
+                }
+
+                return that.onUpdateRealName.call(that, device, ...args);
+            },
+        });
+
+        const serviceIdServiceMap = new Map<number, Service>();
+
+        serviceIdServiceMap.set(controlService.serviceId, controlService);
+
+        for (const service of services) {
+            serviceIdServiceMap.set(service.serviceId, service);
+        }
+
+        return {
+            controlService,
+            cryptor,
+            frameCodec,
+            messageAggregator,
+            messageCodec,
+            serviceIdServiceMap,
+            services,
+        };
     }
 
-    private async encryptFrameData(frameData: FrameData): Promise<void> {
+    private createDeviceContext(device: Device, probe: boolean): DeviceContext {
+        if (device === this.connectedDevice) {
+            return this.connectedDeviceContext;
+        }
+
+        if (this.nameContextMap.has(device.name)) {
+            throw new Error(`Context for device ${device.name} already exists`);
+        }
+
+        const context = this.buildDeviceContext(device, probe);
+        this.nameContextMap.set(device.name, context);
+        return context;
+    }
+
+    private getDeviceContext(device: Device): DeviceContext {
+        if (device === this.connectedDevice) {
+            return this.connectedDeviceContext;
+        }
+
+        const context = this.nameContextMap.get(device.name);
+        if (context === undefined) {
+            throw new Error(`Context for device ${device.name} does not exist`);
+        }
+
+        return context;
+    }
+
+    private destroyDeviceContext(device: Device): void {
+        if (device === this.connectedDevice) {
+            return;
+        }
+
+        if (!this.nameContextMap.has(device.name)) {
+            throw new Error(`Context for device ${device.name} does not exist`);
+        }
+
+        this.nameContextMap.delete(device.name);
+    }
+
+    private async encryptFrameData(
+        ctx: DeviceContext,
+        frameData: FrameData,
+    ): Promise<void> {
         const frameHeader = frameData.frameHeader;
 
         if (!(frameHeader.flags & FrameHeaderFlags.ENCRYPTED)) {
@@ -106,7 +235,7 @@ export abstract class AndroidAutoServer {
         }
 
         try {
-            frameData.payload = await this.cryptor.encrypt(frameData.payload);
+            frameData.payload = await ctx.cryptor.encrypt(frameData.payload);
         } catch (err) {
             this.logger.error('Failed to encrypt', {
                 frameData,
@@ -116,26 +245,27 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    private async onSendFrameData(frameData: FrameData): Promise<void> {
-        await this.encryptFrameData(frameData);
+    private async onSendFrameData(
+        device: Device,
+        ctx: DeviceContext,
+        frameData: FrameData,
+    ): Promise<void> {
+        await this.encryptFrameData(ctx, frameData);
 
-        if (this.connectedDevice === undefined) {
-            this.logger.error('Cannot send frame without a connected device');
-            return;
-        }
+        const buffer = ctx.frameCodec.encodeFrameData(frameData);
 
-        const buffer = this.frameCodec.encodeFrameData(frameData);
-
-        return this.connectedDevice.send(buffer);
+        device.send(buffer);
     }
 
     private onSendMessage(
+        device: Device,
+        ctx: DeviceContext,
         serviceId: number,
         payload: Uint8Array,
         isEncrypted: boolean,
         isControl: boolean,
     ): void {
-        const frameDatas = this.messageAggregator.split(
+        const frameDatas = ctx.messageAggregator.split(
             serviceId,
             payload,
             isEncrypted,
@@ -143,7 +273,7 @@ export abstract class AndroidAutoServer {
         );
 
         for (const frameData of frameDatas) {
-            this.onSendFrameData(frameData)
+            this.onSendFrameData(device, ctx, frameData)
                 .then(() => {})
                 .catch((err) => {
                     this.logger.error('Failed to send frame data', err);
@@ -152,43 +282,55 @@ export abstract class AndroidAutoServer {
     }
 
     private onSendPayloadMessage(
+        device: Device,
         serviceId: number,
         messageId: number,
         payload: Uint8Array,
         isEncrypted: boolean,
         isControl: boolean,
     ): void {
-        const totalPayload = this.messageCodec.encodePayload(
-            messageId,
-            payload,
-        );
+        const ctx = this.getDeviceContext(device);
 
-        this.onSendMessage(serviceId, totalPayload, isEncrypted, isControl);
+        const totalPayload = ctx.messageCodec.encodePayload(messageId, payload);
+
+        this.onSendMessage(
+            device,
+            ctx,
+            serviceId,
+            totalPayload,
+            isEncrypted,
+            isControl,
+        );
     }
     private onSendProtoMessage(
+        device: Device,
         serviceId: number,
         messageId: number,
         protoMessage: ProtoMessage,
         isEncrypted: boolean,
         isControl: boolean,
     ): void {
-        const totalPayload = this.messageCodec.encodeMessage(
+        const ctx = this.getDeviceContext(device);
+
+        const totalPayload = ctx.messageCodec.encodeMessage(
             messageId,
             protoMessage,
         );
 
-        this.onSendMessage(serviceId, totalPayload, isEncrypted, isControl);
+        this.onSendMessage(
+            device,
+            ctx,
+            serviceId,
+            totalPayload,
+            isEncrypted,
+            isControl,
+        );
     }
 
-    private onSelfDisconnect(reason: DeviceDisconnectReason): void {
-        const device = this.connectedDevice;
-        if (device === undefined) {
-            this.logger.error(
-                'Cannot self disconnect without a connected device',
-            );
-            return;
-        }
-
+    private onSelfDisconnect(
+        device: Device,
+        reason: DeviceDisconnectReason,
+    ): void {
         if (reason === (GenericDeviceDisconnectReason.PING_TIMEOUT as string)) {
             this.logger.error(`Pinger timed out, disconnecting ${device.name}`);
         } else if (
@@ -206,13 +348,18 @@ export abstract class AndroidAutoServer {
             });
     }
 
+    private onUpdateRealName(device: Device, name: string): void {
+        device.setRealName(name);
+    }
+
     private async onReceiveMessage(
+        ctx: DeviceContext,
         serviceId: number,
         messageId: number,
         payload: Uint8Array,
         isControl: boolean,
     ): Promise<void> {
-        const service = this.serviceIdServiceMap.get(serviceId);
+        const service = ctx.serviceIdServiceMap.get(serviceId);
         if (service === undefined) {
             this.logger.error(
                 `Unhandled message with id ${messageId} ` +
@@ -240,7 +387,10 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    private async decryptFrameData(frameData: FrameData): Promise<void> {
+    private async decryptFrameData(
+        ctx: DeviceContext,
+        frameData: FrameData,
+    ): Promise<void> {
         const frameHeader = frameData.frameHeader;
 
         if (!(frameHeader.flags & FrameHeaderFlags.ENCRYPTED)) {
@@ -248,7 +398,7 @@ export abstract class AndroidAutoServer {
         }
 
         try {
-            frameData.payload = await this.cryptor.decrypt(frameData.payload);
+            frameData.payload = await ctx.cryptor.decrypt(frameData.payload);
         } catch (err) {
             this.logger.error('Failed to decrypt', {
                 frameData,
@@ -270,17 +420,19 @@ export abstract class AndroidAutoServer {
     }
 
     private async onDeviceTransportDataAsync(
-        _device: Device,
+        device: Device,
         buffer: Uint8Array,
     ): Promise<void> {
-        const frameDatas = this.frameCodec.decodeBuffer(buffer);
+        const ctx = this.getDeviceContext(device);
+
+        const frameDatas = ctx.frameCodec.decodeBuffer(buffer);
 
         for (const frameData of frameDatas) {
-            await this.decryptFrameData(frameData);
+            await this.decryptFrameData(ctx, frameData);
         }
 
         for (const frameData of frameDatas) {
-            const totalPayload = this.messageAggregator.aggregate(frameData);
+            const totalPayload = ctx.messageAggregator.aggregate(frameData);
             if (totalPayload === undefined) {
                 continue;
             }
@@ -291,8 +443,8 @@ export abstract class AndroidAutoServer {
             );
 
             const [messageId, payload] =
-                this.messageCodec.decodeMessage(totalPayload);
-            this.onReceiveMessage(serviceId, messageId, payload, isControl)
+                ctx.messageCodec.decodeMessage(totalPayload);
+            this.onReceiveMessage(ctx, serviceId, messageId, payload, isControl)
                 .then(() => {})
                 .catch((err) => {
                     this.logger.error('Failed to handle received message', err);
@@ -337,14 +489,14 @@ export abstract class AndroidAutoServer {
         this.callOnDevicesUpdated();
     }
 
-    private stopServices(i?: number): void {
+    private stopServices(ctx: DeviceContext, i?: number): void {
         if (i === undefined) {
-            i = this.services.length - 1;
+            i = ctx.services.length - 1;
         }
 
         this.logger.info('Stopping services');
         for (; i >= 0; i--) {
-            const service = this.services[i];
+            const service = ctx.services[i];
             if (service === undefined) {
                 break;
             }
@@ -362,12 +514,12 @@ export abstract class AndroidAutoServer {
         this.logger.info('Stopped services');
     }
 
-    private startServices(): void {
+    private startServices(ctx: DeviceContext): void {
         this.logger.info('Starting services');
         let i = 0;
         try {
-            for (; i < this.services.length; i++) {
-                const service = this.services[i];
+            for (; i < ctx.services.length; i++) {
+                const service = ctx.services[i];
                 if (service === undefined) {
                     break;
                 }
@@ -376,7 +528,7 @@ export abstract class AndroidAutoServer {
         } catch (err) {
             this.logger.error('Failed to start services', err);
             try {
-                this.stopServices(i - 1);
+                this.stopServices(ctx, i - 1);
             } catch (err) {
                 this.logger.error(
                     'Failure after failed to start services',
@@ -388,35 +540,35 @@ export abstract class AndroidAutoServer {
         this.logger.info('Started services');
     }
 
-    private startDependencies(): void {
-        this.frameCodec.start();
-        this.messageAggregator.start();
+    private startDependencies(ctx: DeviceContext): void {
+        ctx.frameCodec.start();
+        ctx.messageAggregator.start();
 
         this.logger.info('Starting cryptor');
         try {
-            this.cryptor.start();
+            ctx.cryptor.start();
         } catch (err) {
             this.logger.info('Failed to start cryptor');
-            this.frameCodec.stop();
-            this.messageAggregator.stop();
+            ctx.frameCodec.stop();
+            ctx.messageAggregator.stop();
             throw err;
         }
         this.logger.info('Started cryptor');
 
-        this.startServices();
+        this.startServices(ctx);
 
         this.logger.info('Starting control service');
         try {
-            this.controlService.start();
+            ctx.controlService.start();
         } catch (err) {
             this.logger.error('Failed to start control service', err);
             try {
-                this.stopServices();
+                this.stopServices(ctx);
                 this.logger.info('Stopping cryptor');
-                this.cryptor.stop();
+                ctx.cryptor.stop();
                 this.logger.info('Stopped cryptor');
-                this.frameCodec.stop();
-                this.messageAggregator.stop();
+                ctx.frameCodec.stop();
+                ctx.messageAggregator.stop();
             } catch (err) {
                 this.logger.error(
                     'Failure after failed to start control service',
@@ -428,33 +580,33 @@ export abstract class AndroidAutoServer {
         this.logger.info('Started control service');
     }
 
-    private stopDependencies(): void {
+    private stopDependencies(ctx: DeviceContext): void {
         this.logger.info('Stopping dependencies');
 
         this.logger.info('Stopping control service');
         try {
-            this.controlService.stop();
+            ctx.controlService.stop();
             this.logger.info('Stopped control service');
         } catch (err) {
             this.logger.error('Failed to stop control service', err);
         }
 
         try {
-            this.stopServices();
+            this.stopServices(ctx);
         } catch (err) {
             this.logger.error('Failed to stop services', err);
         }
 
         this.logger.info('Stopping cryptor');
         try {
-            this.cryptor.stop();
+            ctx.cryptor.stop();
             this.logger.info('Stopped cryptor');
         } catch (err) {
             this.logger.error('Failed to stop cryptor', err);
         }
 
-        this.frameCodec.stop();
-        this.messageAggregator.stop();
+        ctx.frameCodec.stop();
+        ctx.messageAggregator.stop();
 
         this.logger.info('Stopped dependencies');
     }
@@ -486,10 +638,24 @@ export abstract class AndroidAutoServer {
         );
     }
 
+    public onDeviceNeedsProbe(device: Device): void {
+        this.connectDeviceAsync(
+            device,
+            DeviceConnectReason.CONNECT_FOR_PROBE,
+        ).then(
+            () => {},
+            (err) => {
+                this.logger.error('Failed to connect device for probe', err);
+            },
+        );
+    }
+
     public async connectDeviceAsyncLocked(
         device: Device,
         reason: DeviceConnectReason,
     ): Promise<void> {
+        const probe = reason === DeviceConnectReason.CONNECT_FOR_PROBE;
+
         if (
             this.connectedDevice !== undefined &&
             reason === DeviceConnectReason.SELF_CONNECT
@@ -511,7 +677,11 @@ export abstract class AndroidAutoServer {
             );
         }
 
-        this.logger.info(`Connecting device ${device.name}`);
+        if (probe) {
+            this.logger.info(`Connecting device ${device.name} for probe`);
+        } else {
+            this.logger.info(`Connecting device ${device.name}`);
+        }
 
         try {
             await device.connect(reason);
@@ -520,13 +690,17 @@ export abstract class AndroidAutoServer {
             return;
         }
 
-        this.connectedDevice = device;
+        if (!probe) {
+            this.connectedDevice = device;
+        }
+
+        const ctx = this.createDeviceContext(device, probe);
 
         this.logger.info(`Connected device ${device.name}`);
 
         try {
             this.logger.info('Starting dependencies');
-            this.startDependencies();
+            this.startDependencies(ctx);
             this.logger.info('Started dependencies');
         } catch (err) {
             this.logger.error('Failed to start dependencies', err);
@@ -537,8 +711,22 @@ export abstract class AndroidAutoServer {
             return;
         }
 
+        if (probe) {
+            try {
+                await ctx.controlService.doProbe();
+            } catch (err) {
+                this.logger.error('Failed to do control service probe', err);
+                await this.disconnectDeviceAsyncLocked(
+                    device,
+                    GenericDeviceDisconnectReason.PROBE_UNSUPPORTED,
+                );
+            }
+
+            return;
+        }
+
         try {
-            await this.controlService.doStart(this.services);
+            await ctx.controlService.doStart(ctx.services);
         } catch (err) {
             this.logger.error('Failed to do control service start', err);
             await this.disconnectDeviceAsyncLocked(
@@ -561,6 +749,8 @@ export abstract class AndroidAutoServer {
         device: Device,
         reason: DeviceDisconnectReason,
     ): Promise<void> {
+        const ctx = this.getDeviceContext(device);
+
         this.logger.info(
             `Disconnecting device ${device.name} with reason ${reason}`,
         );
@@ -570,7 +760,7 @@ export abstract class AndroidAutoServer {
             reason !==
                 (GenericDeviceDisconnectReason.SELF_CONNECT_REFUSED as string)
         ) {
-            this.stopDependencies();
+            this.stopDependencies(ctx);
         }
 
         try {
@@ -581,6 +771,8 @@ export abstract class AndroidAutoServer {
                 err,
             );
         }
+
+        this.destroyDeviceContext(device);
 
         this.logger.info(`Disconnected device ${device.name}`);
 
@@ -663,8 +855,10 @@ export abstract class AndroidAutoServer {
             }
         }
 
-        for (const service of this.services) {
-            service.destroy();
+        for (const ctx of this.nameContextMap.values()) {
+            for (const service of ctx.services) {
+                service.destroy();
+            }
         }
 
         this.logger.info('Server stopped');

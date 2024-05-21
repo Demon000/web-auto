@@ -9,6 +9,7 @@ import { Mutex } from 'async-mutex';
 
 export interface DeviceHandlerEvents {
     onDeviceAdded: (device: Device) => void;
+    onDeviceNeedsProbe: (device: Device) => void;
     onDeviceRemoved: (device: Device) => void;
 
     onDeviceSelfConnection: (device: Device) => void;
@@ -106,6 +107,14 @@ export abstract class DeviceHandler<T = any> {
             this.events.onDeviceAdded(device);
         } catch (err) {
             this.logger.error('Failed to emit device added event', err);
+        }
+
+        if (device.state === DeviceState.NEEDS_PROBE) {
+            try {
+                this.events.onDeviceNeedsProbe(device);
+            } catch (err) {
+                this.logger.error('Failed to emit device available event', err);
+            }
         }
     }
 

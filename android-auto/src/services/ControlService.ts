@@ -18,6 +18,8 @@ import {
     VoiceSessionNotification,
     BatteryStatusNotification,
     ByeByeRequest,
+    ByeByeReason,
+    ByeByeResponse,
 } from '@web-auto/android-auto-proto';
 
 import { Service, type ServiceEvents } from './Service.js';
@@ -36,6 +38,7 @@ import {
 
 export interface ControlServiceEvents extends ServiceEvents {
     onSelfDisconnect: (reason: DeviceDisconnectReason) => void;
+    onUpdateRealName: (name: string) => void;
 }
 
 export interface ControlServiceConfig {
@@ -236,6 +239,14 @@ export class ControlService extends Service {
         );
     }
 
+    private sendByeByeResponse(): void {
+        const data = new ByeByeResponse();
+        this.sendEncryptedSpecificMessage(
+            ControlMessageType.MESSAGE_BYEBYE_RESPONSE,
+            data,
+        );
+    }
+
     private async doVersionQuery(signal: AbortSignal): Promise<void> {
         this.sendVersionRequest();
         const payload = await this.waitForSpecificMessage(
@@ -278,11 +289,13 @@ export class ControlService extends Service {
 
     public buildServiceDiscoveryResponse(
         services: Service[],
+        probeForSupport: boolean,
     ): ServiceDiscoveryResponse {
         const data = new ServiceDiscoveryResponse({
             ...this.config.serviceDiscoveryResponse,
             headunitInfo: this.config.headunitInfo,
             services: [],
+            probeForSupport,
         });
 
         for (const service of services) {
@@ -308,25 +321,68 @@ export class ControlService extends Service {
             `Discovery request, device name ${request.deviceName}`,
         );
 
+        if (request.deviceName !== undefined) {
+            this.events.onUpdateRealName(request.deviceName);
+        }
+
         this.sendServiceDiscoveryResponse(serviceDiscoveryResponse);
     }
 
     public override start(): void {
         super.start();
-        this.pinger.start();
+    }
+
+    public async doStartWithAbortSignal(
+        services: Service[],
+        probeForSupport: boolean,
+        abortSignal: AbortSignal,
+    ): Promise<void> {
+        await this.doVersionQuery(abortSignal);
+
+        await this.doHandshake(abortSignal);
+
+        const serviceDiscoveryResponse = this.buildServiceDiscoveryResponse(
+            services,
+            probeForSupport,
+        );
+
+        await this.doServiceDiscovery(abortSignal, serviceDiscoveryResponse);
     }
 
     public async doStart(services: Service[]): Promise<void> {
         const abortSignal = AbortSignal.timeout(this.config.startTimeoutMs);
 
-        await this.doVersionQuery(abortSignal);
+        await this.doStartWithAbortSignal(services, false, abortSignal);
 
-        await this.doHandshake(abortSignal);
+        this.pinger.start();
+    }
 
-        const serviceDiscoveryResponse =
-            this.buildServiceDiscoveryResponse(services);
+    public async waitForProbeSupport(
+        abortSignal: AbortSignal,
+    ): Promise<boolean> {
+        let payload;
+        try {
+            payload = await this.waitForSpecificMessage(
+                ControlMessageType.MESSAGE_BYEBYE_REQUEST,
+                abortSignal,
+            );
+        } catch (err) {
+            return false;
+        }
 
-        await this.doServiceDiscovery(abortSignal, serviceDiscoveryResponse);
+        const data = ByeByeRequest.fromBinary(payload);
+
+        this.sendByeByeResponse();
+
+        return data.reason === ByeByeReason.PROBE_SUPPORTED;
+    }
+
+    public async doProbe(): Promise<boolean> {
+        const abortSignal = AbortSignal.timeout(this.config.startTimeoutMs);
+
+        await this.doStartWithAbortSignal([], true, abortSignal);
+
+        return this.waitForProbeSupport(abortSignal);
     }
 
     public override stop(): void {
