@@ -41,8 +41,7 @@ enum StringType {
 const INTERFACE_INDEX = 0;
 
 const GOOGLE_VENDOR_ID = 0x18d1;
-const GOOGLE_AOAP_WITHOUT_ADB_ID = 0x2d00;
-const GOOGLE_AOAP_WITH_ADB_ID = 0x2d01;
+const GOOGLE_AOAP_IDS = [0x2d00, 0x2d01, 0x2d02, 0x2d03, 0x2d04, 0x2d05];
 
 export class UsbDevice extends Device {
     private opened = false;
@@ -296,8 +295,7 @@ export class UsbDevice extends Device {
     private isDeviceAoap(): boolean {
         return (
             this.vendorId === GOOGLE_VENDOR_ID &&
-            (this.productId === GOOGLE_AOAP_WITH_ADB_ID ||
-                this.productId === GOOGLE_AOAP_WITHOUT_ADB_ID)
+            GOOGLE_AOAP_IDS.includes(this.productId)
         );
     }
 
