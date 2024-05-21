@@ -704,10 +704,17 @@ export abstract class AndroidAutoServer {
             this.logger.info('Started dependencies');
         } catch (err) {
             this.logger.error('Failed to start dependencies', err);
-            await this.disconnectDeviceAsyncLocked(
-                device,
-                GenericDeviceDisconnectReason.START_FAILED,
-            );
+            try {
+                await this.disconnectDeviceAsyncLocked(
+                    device,
+                    GenericDeviceDisconnectReason.START_FAILED,
+                );
+            } catch (err) {
+                this.logger.error(
+                    'Failed to disconnect after failed dependencies start',
+                    err,
+                );
+            }
             return;
         }
 
