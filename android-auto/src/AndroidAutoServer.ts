@@ -98,10 +98,6 @@ export abstract class AndroidAutoServer {
         }
     }
 
-    private isDeviceConnected(device: Device): boolean {
-        return this.connectedDevice === device;
-    }
-
     private async encryptFrameData(frameData: FrameData): Promise<void> {
         const frameHeader = frameData.frameHeader;
 
@@ -279,17 +275,9 @@ export abstract class AndroidAutoServer {
     }
 
     private async onDeviceTransportDataAsync(
-        device: Device,
+        _device: Device,
         buffer: Uint8Array,
     ): Promise<void> {
-        if (!this.isDeviceConnected(device)) {
-            this.logger.error(
-                `Cannot accept data from ${device.name}, ` +
-                    'device is not the connected device',
-            );
-            return;
-        }
-
         const frameDatas = this.frameCodec.decodeBuffer(buffer);
 
         for (const frameData of frameDatas) {
@@ -318,14 +306,6 @@ export abstract class AndroidAutoServer {
     }
 
     private onDeviceTransportError(device: Device, err: Error): void {
-        if (!this.isDeviceConnected(device)) {
-            this.logger.error(
-                `Cannot accept error from ${device.name}, ` +
-                    'device is not the connected device',
-            );
-            return;
-        }
-
         this.logger.error(`Received transport error from ${device.name}`, err);
     }
 
@@ -587,18 +567,6 @@ export abstract class AndroidAutoServer {
         device: Device,
         reason: DeviceDisconnectReason,
     ): Promise<void> {
-        if (
-            reason !==
-                (GenericDeviceDisconnectReason.SELF_CONNECT_REFUSED as string) &&
-            !this.isDeviceConnected(device)
-        ) {
-            this.logger.info(
-                `Cannot disconnect ${device.name}, ` +
-                    'device is not the connected device',
-            );
-            return;
-        }
-
         this.logger.info(
             `Disconnecting device ${device.name} with reason ${reason}`,
         );
