@@ -300,7 +300,7 @@ export class UsbDevice extends Device {
     }
 
     public override async probe(existing?: true): Promise<void> {
-        this.logger.debug(`Probing device ${this.name}`);
+        this.logger.debug('Probing');
 
         if (this.isDeviceAoap()) {
             if (existing) {
@@ -316,7 +316,7 @@ export class UsbDevice extends Device {
         try {
             this.open();
         } catch (e) {
-            this.logger.error(`Failed to open device ${this.name}`);
+            this.logger.error('Failed to open');
             return;
         }
 
@@ -326,7 +326,7 @@ export class UsbDevice extends Device {
             try {
                 this.close();
             } catch (e) {
-                this.logger.error(`Failed to close device ${this.name}`);
+                this.logger.error('Failed to close');
             }
         }
     }
