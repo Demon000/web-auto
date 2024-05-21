@@ -723,10 +723,29 @@ export abstract class AndroidAutoServer {
                 await ctx.controlService.doProbe();
             } catch (err) {
                 this.logger.error('Failed to do control service probe', err);
+
+                try {
+                    await this.disconnectDeviceAsyncLocked(
+                        device,
+                        GenericDeviceDisconnectReason.PROBE_UNSUPPORTED,
+                    );
+                } catch (err) {
+                    this.logger.error(
+                        'Failed to disconnect after failed probe',
+                        err,
+                    );
+                }
+
+                return;
+            }
+
+            try {
                 await this.disconnectDeviceAsyncLocked(
                     device,
-                    GenericDeviceDisconnectReason.PROBE_UNSUPPORTED,
+                    GenericDeviceDisconnectReason.PROBE_SUPPORTED,
                 );
+            } catch (err) {
+                this.logger.error('Failed to disconnect after probe', err);
             }
 
             return;
