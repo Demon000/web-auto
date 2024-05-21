@@ -45,8 +45,8 @@ const disconnectDevice = async (name: string) => {
     <div class="connections">
         <div class="main">
             <DeviceSelector
-                :connected-device="deviceStore.notAvailableDevice"
-                :devices="deviceStore.devices"
+                :connected-device="deviceStore.connectedDevice"
+                :devices="deviceStore.supportedDevices"
                 @connect="connectDevice"
                 @disconnect="disconnectDevice"
             ></DeviceSelector>

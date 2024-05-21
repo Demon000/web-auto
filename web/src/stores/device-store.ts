@@ -31,6 +31,17 @@ export const useDeviceStore = (
             initialized = true;
         }
 
+        const supportedDevices = computed(() => {
+            const supportedDevices = [];
+            for (const device of devices.value) {
+                if (device.state !== 'unsupported') {
+                    supportedDevices.push(device);
+                }
+            }
+
+            return supportedDevices;
+        });
+
         const connectedDevice = computed(() => {
             for (const device of devices.value) {
                 if (device.state === 'connected') {
@@ -41,15 +52,5 @@ export const useDeviceStore = (
             return undefined;
         });
 
-        const notAvailableDevice = computed(() => {
-            for (const device of devices.value) {
-                if (device.state !== 'available') {
-                    return device;
-                }
-            }
-
-            return undefined;
-        });
-
-        return { devices, connectedDevice, notAvailableDevice, initialize };
+        return { devices, supportedDevices, connectedDevice, initialize };
     })();
