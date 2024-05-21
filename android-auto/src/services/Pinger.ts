@@ -62,14 +62,18 @@ export class Pinger {
     }
 
     public start(): void {
-        assert(!this.started);
+        if (this.started) {
+            return;
+        }
 
         this.schedulePingTimeout();
         this.started = true;
     }
 
     public stop(): void {
-        assert(this.started);
+        if (!this.started) {
+            return;
+        }
 
         this.cancelPing();
         this.pingReceivedTime = undefined;

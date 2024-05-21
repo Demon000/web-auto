@@ -4,10 +4,13 @@ import { Mutex } from 'async-mutex';
 export enum DeviceState {
     UNKNOWN = 'unknown',
     NEEDS_RESET = 'needs-reset',
+    NEEDS_PROBE = 'needs-probe',
     AVAILABLE = 'available',
     CONNECTING = 'connecting',
     SELF_CONNECTING = 'self-connecting',
+    CONNECTING_FOR_PROBE = 'connecting-for-probe',
     CONNECTED = 'connected',
+    CONNECTED_FOR_PROBE = 'connected-for-probe',
     UNSUPPORTED = 'unsupported',
     DISCONNECTING = 'disconnecting',
 }
@@ -17,6 +20,7 @@ export enum GenericDeviceDisconnectReason {
     START_FAILED = 'start-failed',
     DO_START_FAILED = 'do-start-failed',
     SELF_CONNECT_REFUSED = 'self-connect-refused',
+    PROBE_UNSUPPORTED = 'probe-unsupported',
     TRANSPORT_DISCONNECTED = 'transport-disconnected',
     PING_TIMEOUT = 'ping-timeout',
     BYE_BYE = 'bye-bye',
@@ -27,6 +31,7 @@ export type DeviceDisconnectReason = GenericDeviceDisconnectReason | string;
 export enum DeviceConnectReason {
     USER = 'user',
     SELF_CONNECT = 'self-connect',
+    CONNECT_FOR_PROBE = 'connect-for-probe',
 }
 
 export interface DeviceEvents {
@@ -82,6 +87,11 @@ export abstract class Device {
         }
     }
 
+    public setRealName(realName: string): void {
+        this.realName = realName;
+        this.callOnStateUpdated();
+    }
+
     protected setState(state: DeviceState): void {
         this.logger.debug(`Switched state from ${this.state} to ${state}`);
         this.state = state;
@@ -89,27 +99,43 @@ export abstract class Device {
     }
 
     private async connectLocked(reason: DeviceConnectReason): Promise<void> {
+        const probe = reason === DeviceConnectReason.CONNECT_FOR_PROBE;
+
+        if (probe && this.state !== DeviceState.NEEDS_PROBE) {
+            throw new Error(
+                `Tried to probe while device has state ${this.state}`,
+            );
+        }
+
         if (
+            !probe &&
             this.state !== DeviceState.AVAILABLE &&
             this.state !== DeviceState.SELF_CONNECTING
         ) {
-            this.logger.error(
+            throw new Error(
                 `Tried to connect while device has state ${this.state}`,
             );
-            throw new Error('Device not available');
         }
 
-        this.setState(DeviceState.CONNECTING);
+        if (probe) {
+            this.setState(DeviceState.CONNECTING_FOR_PROBE);
+        } else {
+            this.setState(DeviceState.CONNECTING);
+        }
 
         try {
             await this.connectImpl(reason);
         } catch (err) {
             this.logger.error('Failed to connect', err);
-            this.setState(DeviceState.AVAILABLE);
+            this.setState(DeviceState.UNSUPPORTED);
             throw err;
         }
 
-        this.setState(DeviceState.CONNECTED);
+        if (probe) {
+            this.setState(DeviceState.CONNECTED_FOR_PROBE);
+        } else {
+            this.setState(DeviceState.CONNECTED);
+        }
     }
 
     public async connect(reason: DeviceConnectReason): Promise<void> {
@@ -151,6 +177,7 @@ export abstract class Device {
     ): Promise<void> {
         if (
             this.state !== DeviceState.CONNECTED &&
+            this.state !== DeviceState.CONNECTED_FOR_PROBE &&
             this.state !== DeviceState.SELF_CONNECTING
         ) {
             this.logger.info(
@@ -171,7 +198,14 @@ export abstract class Device {
             this.logger.error('Failed to disconnect', err);
         }
 
-        this.setState(DeviceState.AVAILABLE);
+        if (
+            reason ===
+            (GenericDeviceDisconnectReason.PROBE_UNSUPPORTED as string)
+        ) {
+            this.setState(DeviceState.UNSUPPORTED);
+        } else {
+            this.setState(DeviceState.AVAILABLE);
+        }
     }
 
     public async disconnect(reason: DeviceDisconnectReason): Promise<void> {
