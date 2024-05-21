@@ -58,12 +58,12 @@ export abstract class AndroidAutoServer {
 
     public constructor(builder: AndroidAutoServerBuilder) {
         this.deviceHandlers = builder.buildDeviceHandlers({
-            onDeviceAvailable: this.onDeviceAvailable.bind(this),
+            onDeviceAdded: this.onDeviceAdded.bind(this),
             onDeviceSelfConnection: this.onDeviceSelfConnection.bind(this),
             onDeviceSelfDisconnection:
                 this.onDeviceSelfDisconnection.bind(this),
             onDeviceStateUpdated: this.onDeviceStateUpdated.bind(this),
-            onDeviceUnavailable: this.onDeviceUnavailable.bind(this),
+            onDeviceRemoved: this.onDeviceRemoved.bind(this),
             onDeviceTransportData: this.onDeviceTransportData.bind(this),
             onDeviceTransportError: this.onDeviceTransportError.bind(this),
         });
@@ -325,7 +325,7 @@ export abstract class AndroidAutoServer {
         release();
     }
 
-    private onDeviceAvailable(device: Device): void {
+    private onDeviceAdded(device: Device): void {
         this.addDeviceAsync(device)
             .then(() => {})
             .catch((err) => {
@@ -459,7 +459,7 @@ export abstract class AndroidAutoServer {
         this.logger.info('Stopped dependencies');
     }
 
-    private onDeviceUnavailable(device: Device): void {
+    private onDeviceRemoved(device: Device): void {
         this.removeDeviceAsync(device)
             .then(() => {})
             .catch((err) => {

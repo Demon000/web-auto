@@ -8,8 +8,8 @@ import {
 import { Mutex } from 'async-mutex';
 
 export interface DeviceHandlerEvents {
-    onDeviceAvailable: (device: Device) => void;
-    onDeviceUnavailable: (device: Device) => void;
+    onDeviceAdded: (device: Device) => void;
+    onDeviceRemoved: (device: Device) => void;
 
     onDeviceSelfConnection: (device: Device) => void;
     onDeviceSelfDisconnection: (
@@ -102,12 +102,10 @@ export abstract class DeviceHandler<T = any> {
 
         this.deviceMap.set(data, device);
 
-        if (device.state === DeviceState.AVAILABLE) {
-            try {
-                this.events.onDeviceAvailable(device);
-            } catch (err) {
-                this.logger.error('Failed to emit device available event', err);
-            }
+        try {
+            this.events.onDeviceAdded(device);
+        } catch (err) {
+            this.logger.error('Failed to emit device added event', err);
         }
     }
 
@@ -126,15 +124,10 @@ export abstract class DeviceHandler<T = any> {
         this.destroyDevice(data, device);
         this.deviceMap.delete(data);
 
-        if (device.state === DeviceState.AVAILABLE) {
-            try {
-                this.events.onDeviceUnavailable(device);
-            } catch (err) {
-                this.logger.error(
-                    'Failed to emit device unavailable event',
-                    err,
-                );
-            }
+        try {
+            this.events.onDeviceRemoved(device);
+        } catch (err) {
+            this.logger.error('Failed to emit device removed event', err);
         }
     }
 
