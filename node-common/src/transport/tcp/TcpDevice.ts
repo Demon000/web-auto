@@ -21,13 +21,24 @@ export class TcpDevice extends Device {
         return new Promise((resolve, reject) => {
             const socket = new Socket();
 
+            const timeout = setTimeout(() => {
+                socket.destroy(new Error('Timed out'));
+            }, 1000);
+
+            const cancelTimeout = () => {
+                clearTimeout(timeout);
+            };
+
             const onSocketError = (err: Error) => {
+                cancelTimeout();
                 reject(err);
             };
 
             socket.once('error', onSocketError);
 
             socket.once('connect', () => {
+                cancelTimeout();
+
                 /*
                  * Error handling is handed off to the transport, remove
                  * the handler here.
