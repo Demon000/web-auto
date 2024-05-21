@@ -27,6 +27,8 @@ export class FrameCodec {
         const totalSize = frameData.totalSize;
         const payload = frameData.payload;
 
+        frameData.frameHeader.payloadSize = frameData.payload.byteLength;
+
         this.logger.debug('Encode frame data', frameData);
 
         const buffer = BufferWriter.empty();
