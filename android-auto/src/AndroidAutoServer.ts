@@ -545,7 +545,6 @@ export abstract class AndroidAutoServer {
                 device,
                 GenericDeviceDisconnectReason.DO_START_FAILED,
             );
-            return;
         }
     }
 
