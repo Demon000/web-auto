@@ -1,7 +1,6 @@
 import {
     Device,
     DeviceConnectReason,
-    DeviceState,
     type DeviceEvents,
 } from '@web-auto/android-auto';
 import { DuplexTransport } from '../DuplexTransport.js';
@@ -16,11 +15,6 @@ export class TcpDevice extends Device {
         events: DeviceEvents,
     ) {
         super('TCP', ip, events);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/require-await
-    public override async probe(_existing?: true | undefined): Promise<void> {
-        this.setState(DeviceState.NEEDS_PROBE);
     }
 
     public async connectImpl(_reason: DeviceConnectReason): Promise<void> {
