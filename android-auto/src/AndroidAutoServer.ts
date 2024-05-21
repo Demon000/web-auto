@@ -755,10 +755,17 @@ export abstract class AndroidAutoServer {
             await ctx.controlService.doStart(ctx.services);
         } catch (err) {
             this.logger.error('Failed to do control service start', err);
-            await this.disconnectDeviceAsyncLocked(
-                device,
-                GenericDeviceDisconnectReason.DO_START_FAILED,
-            );
+            try {
+                await this.disconnectDeviceAsyncLocked(
+                    device,
+                    GenericDeviceDisconnectReason.DO_START_FAILED,
+                );
+            } catch (err) {
+                this.logger.error(
+                    'Failed to disconnect after failed start',
+                    err,
+                );
+            }
         }
     }
 
