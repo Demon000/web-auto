@@ -20,7 +20,6 @@ export enum GenericDeviceDisconnectReason {
     START_FAILED = 'start-failed',
     DO_START_FAILED = 'do-start-failed',
     SELF_CONNECT_REFUSED = 'self-connect-refused',
-    PROBE_SUPPORTED = 'probe-supported',
     PROBE_UNSUPPORTED = 'probe-unsupported',
     TRANSPORT_DISCONNECTED = 'transport-disconnected',
     PING_TIMEOUT = 'ping-timeout',
