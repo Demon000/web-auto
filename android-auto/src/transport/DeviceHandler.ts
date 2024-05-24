@@ -23,7 +23,7 @@ export interface DeviceHandlerEvents {
     onDeviceTransportError: (device: Device, err: Error) => void;
 }
 
-export interface DeviceHandlerParams {
+export interface DeviceHandlerConfig {
     ignoredDevices: string[] | undefined;
 }
 
@@ -35,7 +35,7 @@ export abstract class DeviceHandler<T = any> {
     protected removeDeviceBound: (uniqueId: string) => void;
 
     public constructor(
-        protected params: DeviceHandlerParams,
+        protected config: DeviceHandlerConfig,
         protected events: DeviceHandlerEvents,
     ) {
         this.addDeviceBound = this.addDevice.bind(this);
@@ -43,12 +43,12 @@ export abstract class DeviceHandler<T = any> {
     }
 
     protected isIgnoredDevice(device: Device): boolean {
-        if (this.params.ignoredDevices === undefined) {
+        if (this.config.ignoredDevices === undefined) {
             return false;
         }
 
-        for (const ignoredDevice of this.params.ignoredDevices) {
-            if (ignoredDevice == device.name) {
+        for (const ignoredDevice of this.config.ignoredDevices) {
+            if (ignoredDevice == device.realName) {
                 return true;
             }
         }

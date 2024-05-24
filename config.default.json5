@@ -194,13 +194,13 @@
                 name: 'NodeNavigationStatusService',
             },
         ],
-        // Names of devices to be ignored
-        /*
-        ignoredDevices: ['USB: MYSTIC LIGHT '],
-        */
         deviceHandlers: [
             {
                 name: 'UsbDeviceHandler',
+                // Names of devices to be ignored
+                /*
+                ignoredDevices: ['MYSTIC LIGHT '],
+                */
             },
             /*
             {

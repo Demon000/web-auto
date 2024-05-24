@@ -4,6 +4,7 @@ import assert from 'node:assert';
 import {
     Device,
     DeviceHandler,
+    type DeviceHandlerConfig,
     type DeviceHandlerEvents,
 } from '@web-auto/android-auto';
 import { BluetoothDevice } from './BluetoothDevice.js';
@@ -16,7 +17,7 @@ import type {
 
 const AA_OBJECT_PATH = '/com/aa/aa';
 
-export interface BluetoothDeviceHandlerConfig {
+export interface BluetoothDeviceHandlerConfig extends DeviceHandlerConfig {
     profileConnectionTimeoutMs: number;
     wifiConnectionTimeoutMs: number;
     tcpConnectionTimeoutMs: number;
@@ -32,16 +33,10 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
     private tcpServer?: net.Server;
 
     public constructor(
-        private config: BluetoothDeviceHandlerConfig,
-        ignoredDevices: string[] | undefined,
+        protected override config: BluetoothDeviceHandlerConfig,
         events: DeviceHandlerEvents,
     ) {
-        super(
-            {
-                ignoredDevices,
-            },
-            events,
-        );
+        super(config, events);
 
         this.androidAutoProfile = new AndroidAutoProfile();
     }

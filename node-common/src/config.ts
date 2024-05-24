@@ -55,7 +55,6 @@ export interface NodeAndroidAutoServerConfig {
         | { name: 'NodeNavigationStatusService' }
         | { name: 'NodeMediaStatusService'; ipcName: string }
     )[];
-    ignoredDevices?: string[];
 }
 
 export interface NodeCommonAndroidAutoConfig {

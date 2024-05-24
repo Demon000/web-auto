@@ -1,28 +1,23 @@
 import {
     Device,
     DeviceHandler,
+    type DeviceHandlerConfig,
     type DeviceHandlerEvents,
 } from '@web-auto/android-auto';
 import { UsbDevice } from './UsbDevice.js';
 import { Device as UsbDeviceImpl, usb } from 'usb';
 
-export interface UsbDeviceHandlerConfig {}
+export interface UsbDeviceHandlerConfig extends DeviceHandlerConfig {}
 
 export class UsbDeviceHandler extends DeviceHandler<UsbDeviceImpl> {
     private implUniqueIdMap = new Map<UsbDeviceImpl, string>();
     private removeDeviceImplBound: (data: UsbDeviceImpl) => void;
 
     public constructor(
-        protected config: UsbDeviceHandlerConfig,
-        ignoredDevices: string[] | undefined,
+        protected override config: UsbDeviceHandlerConfig,
         events: DeviceHandlerEvents,
     ) {
-        super(
-            {
-                ignoredDevices,
-            },
-            events,
-        );
+        super(config, events);
 
         this.removeDeviceImplBound = this.removeDeviceImpl.bind(this);
     }

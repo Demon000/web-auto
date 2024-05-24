@@ -1,6 +1,7 @@
 import {
     Device,
     DeviceHandler,
+    type DeviceHandlerConfig,
     type DeviceHandlerEvents,
 } from '@web-auto/android-auto';
 import { TcpDevice } from './TcpDevice.js';
@@ -11,7 +12,7 @@ type Unpacked<T> = T extends (infer U)[] ? U : T;
 type Host = Unpacked<Awaited<ReturnType<Arpping['discover']>>>;
 type Interfaces = NonNullable<Arpping['interfaceFilters']['interface']>;
 
-export interface TcpDeviceHandlerConfig {
+export interface TcpDeviceHandlerConfig extends DeviceHandlerConfig {
     scanOptions?: {
         interfaces: string[];
         mask: string;
@@ -25,16 +26,10 @@ export class TcpDeviceHandler extends DeviceHandler<Host> {
     private arp;
 
     public constructor(
-        private config: TcpDeviceHandlerConfig,
-        ignoredDevices: string[] | undefined,
+        protected override config: TcpDeviceHandlerConfig,
         events: DeviceHandlerEvents,
     ) {
-        super(
-            {
-                ignoredDevices,
-            },
-            events,
-        );
+        super(config, events);
 
         this.scanBound = this.scan.bind(this);
 
