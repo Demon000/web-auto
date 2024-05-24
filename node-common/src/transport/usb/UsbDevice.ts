@@ -79,29 +79,47 @@ export class UsbDevice extends Device {
         });
     }
 
-    public static async create(
+    public static async getNameAndSerial(
         device: UsbDeviceImpl,
-        events: DeviceEvents,
-    ): Promise<UsbDevice | undefined> {
+    ): Promise<[string, string]> {
         const descriptor = device.deviceDescriptor;
 
         if (descriptor.bDeviceClass !== 0) {
-            return;
+            throw new Error('Device class not 0');
         }
-
-        device.open();
 
         const name = await this.getStringDescriptor(
             device,
             descriptor.iProduct,
         );
 
+        if (name === '') {
+            throw new Error('Empty name');
+        }
+
         const serial = await this.getStringDescriptor(
             device,
             descriptor.iSerialNumber,
         );
 
-        device.close();
+        if (serial === '') {
+            throw new Error('Empty serial');
+        }
+
+        return [name, serial];
+    }
+
+    public static async create(
+        device: UsbDeviceImpl,
+        events: DeviceEvents,
+    ): Promise<UsbDevice | undefined> {
+        let name, serial;
+        try {
+            device.open();
+            [name, serial] = await this.getNameAndSerial(device);
+        } finally {
+            device.close();
+        }
 
         return new UsbDevice(device, name, serial, events);
     }
