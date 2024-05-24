@@ -13,6 +13,7 @@ import { DuplexTransport } from '../DuplexTransport.js';
 import { Duplex } from 'node:stream';
 import { BluetoothProfileHandler } from './BluetoothProfileHandler.js';
 import type { BluetoothDeviceHandlerConfig } from './BluetoothDeviceHandler.js';
+import { HSP_AG_UUID } from './AndroidAutoProfile.js';
 
 enum BluetoothDeviceDisconnectReason {
     BLUETOOTH_PROFILE = 'bluetooth-profile-disconnected',
@@ -63,6 +64,11 @@ export class BluetoothDevice extends Device {
         events: DeviceEvents,
     ): Promise<BluetoothDevice | undefined> {
         const name = await device.Name();
+
+        const uuids = await device.UUIDs();
+        if (!uuids.includes(HSP_AG_UUID)) {
+            throw new Error('Does not have HSP AG UUID');
+        }
 
         return new BluetoothDevice(
             config,

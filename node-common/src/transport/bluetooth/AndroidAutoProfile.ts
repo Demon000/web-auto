@@ -1,6 +1,7 @@
 import { BluetoothProfile } from './BluetoothProfile.js';
 
 export const ANDROID_AUTO_UUID = '4de17a00-52cb-11e6-bdf4-0800200c9a66';
+export const HSP_AG_UUID = '00001112-0000-1000-8000-00805f9b34fb';
 
 const ANDROID_AUTO_RFCOMM_CHANNEL = 8;
 
