@@ -103,7 +103,6 @@ export class UsbDevice extends Device {
         }
 
         let productName;
-
         try {
             productName = await this.getStringDescriptor(
                 device,
