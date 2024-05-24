@@ -1,7 +1,6 @@
 import {
     Device,
     DeviceHandler,
-    DeviceIndex,
     type DeviceHandlerEvents,
 } from '@web-auto/android-auto';
 import { TcpDevice } from './TcpDevice.js';
@@ -28,14 +27,12 @@ export class TcpDeviceHandler extends DeviceHandler<Host> {
     public constructor(
         private config: TcpDeviceHandlerConfig,
         ignoredDevices: string[] | undefined,
-        index: DeviceIndex,
         events: DeviceHandlerEvents,
     ) {
         super(
             {
                 ignoredDevices,
             },
-            index,
             events,
         );
 
@@ -59,19 +56,33 @@ export class TcpDeviceHandler extends DeviceHandler<Host> {
         return new TcpDevice(data.ip, data.mac, this.getDeviceEvents());
     }
 
+    private updateDevices(hosts: Host[]): void {
+        const newAvailableMacs = new Map<string, Host>();
+
+        for (const host of hosts) {
+            newAvailableMacs.set(host.mac, host);
+        }
+
+        for (const mac of this.deviceMap.keys()) {
+            if (!newAvailableMacs.has(mac)) {
+                this.removeDevice(mac);
+            }
+        }
+
+        for (const [mac, host] of newAvailableMacs.entries()) {
+            if (!this.deviceMap.has(mac)) {
+                this.addDevice(host);
+            }
+        }
+    }
+
     private scan(): void {
         assert(this.arp !== undefined);
 
         this.arp
             .discover()
             .then((hosts) => {
-                const newAvailableMacs = new Map<string, Host>();
-
-                for (const host of hosts) {
-                    newAvailableMacs.set(host.mac, host);
-                }
-
-                this.updateDevices(newAvailableMacs);
+                this.updateDevices(hosts);
             })
             .catch((err) => {
                 this.logger.error('Failed to get ARP table', err);

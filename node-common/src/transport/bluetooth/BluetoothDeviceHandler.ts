@@ -4,7 +4,6 @@ import assert from 'node:assert';
 import {
     Device,
     DeviceHandler,
-    DeviceIndex,
     type DeviceHandlerEvents,
 } from '@web-auto/android-auto';
 import { BluetoothDevice } from './BluetoothDevice.js';
@@ -35,14 +34,12 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
     public constructor(
         private config: BluetoothDeviceHandlerConfig,
         ignoredDevices: string[] | undefined,
-        index: DeviceIndex,
         events: DeviceHandlerEvents,
     ) {
         super(
             {
                 ignoredDevices,
             },
-            index,
             events,
         );
 
