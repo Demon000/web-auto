@@ -76,7 +76,12 @@ export abstract class DeviceHandler<T = any> {
             return;
         }
 
-        if (device === undefined || this.isIgnoredDevice(device)) {
+        if (device === undefined) {
+            return;
+        }
+
+        if (this.isIgnoredDevice(device)) {
+            this.logger.info(`Device ${device.name} ignored`);
             return;
         }
 
