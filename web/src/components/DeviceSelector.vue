@@ -29,22 +29,22 @@ const emitDisconnect = (name: string) => {
 
         <template v-if="connectedDevice !== undefined">
             <div class="section-title">Active</div>
-            <device
+            <Device
                 class="connected-device"
                 :device="connectedDevice"
                 @connect="emitConnect"
                 @disconnect="emitDisconnect"
-            ></device>
+            ></Device>
         </template>
 
         <div class="section-title">Available</div>
         <div class="devices" v-for="device in devices" :key="device.name">
-            <device
+            <Device
                 v-if="device !== connectedDevice"
                 :device="device"
                 @connect="emitConnect"
                 @disconnect="emitDisconnect"
-            ></device>
+            ></Device>
         </div>
     </div>
 </template>
