@@ -2,6 +2,7 @@ import {
     ControlService,
     Cryptor,
     DeviceHandler,
+    DeviceIndex,
     Service,
     type AndroidAutoServerBuilder,
     type ControlServiceEvents,
@@ -59,7 +60,10 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
         return new NodeAndroidAutoServer(this, ipcHandler);
     }
 
-    public buildDeviceHandlers(events: DeviceHandlerEvents): DeviceHandler[] {
+    public buildDeviceHandlers(
+        index: DeviceIndex,
+        events: DeviceHandlerEvents,
+    ): DeviceHandler[] {
         const deviceHandlers: DeviceHandler[] = [];
         for (const entry of this.config.deviceHandlers) {
             let deviceHandler;
@@ -69,6 +73,7 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
                     deviceHandler = new UsbDeviceHandler(
                         entry,
                         this.config.ignoredDevices,
+                        index,
                         events,
                     );
                     break;
@@ -76,6 +81,7 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
                     deviceHandler = new BluetoothDeviceHandler(
                         entry,
                         this.config.ignoredDevices,
+                        index,
                         events,
                     );
                     break;
@@ -83,6 +89,7 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
                     deviceHandler = new TcpDeviceHandler(
                         entry,
                         this.config.ignoredDevices,
+                        index,
                         events,
                     );
                     break;

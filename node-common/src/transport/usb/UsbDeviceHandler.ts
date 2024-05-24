@@ -1,6 +1,7 @@
 import {
     Device,
     DeviceHandler,
+    DeviceIndex,
     type DeviceHandlerEvents,
 } from '@web-auto/android-auto';
 import { UsbDevice } from './UsbDevice.js';
@@ -15,12 +16,14 @@ export class UsbDeviceHandler extends DeviceHandler<UsbDeviceImpl> {
     public constructor(
         protected config: UsbDeviceHandlerConfig,
         ignoredDevices: string[] | undefined,
+        index: DeviceIndex,
         events: DeviceHandlerEvents,
     ) {
         super(
             {
                 ignoredDevices,
             },
+            index,
             events,
         );
 

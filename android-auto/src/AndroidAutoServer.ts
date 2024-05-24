@@ -26,9 +26,13 @@ import { FrameHeaderFlags } from './messenger/FrameHeader.js';
 import { Mutex } from 'async-mutex';
 import { MessageCodec } from './messenger/MessageCodec.js';
 import { Message as ProtoMessage } from '@bufbuild/protobuf';
+import { DeviceIndex } from './transport/DeviceIndex.js';
 
 export interface AndroidAutoServerBuilder {
-    buildDeviceHandlers(events: DeviceHandlerEvents): DeviceHandler[];
+    buildDeviceHandlers(
+        index: DeviceIndex,
+        events: DeviceHandlerEvents,
+    ): DeviceHandler[];
 
     buildCryptor(certificateBuffer: Buffer, privateKeyBuffer: Buffer): Cryptor;
 
@@ -57,13 +61,16 @@ export abstract class AndroidAutoServer {
     private connectionLock = new Mutex();
 
     public constructor(builder: AndroidAutoServerBuilder) {
-        this.deviceHandlers = builder.buildDeviceHandlers({
+        const deviceIndex = new DeviceIndex({
             onDeviceAdded: this.onDeviceAdded.bind(this),
+            onDeviceRemoved: this.onDeviceRemoved.bind(this),
+        });
+
+        this.deviceHandlers = builder.buildDeviceHandlers(deviceIndex, {
             onDeviceSelfConnection: this.onDeviceSelfConnection.bind(this),
             onDeviceSelfDisconnection:
                 this.onDeviceSelfDisconnection.bind(this),
             onDeviceStateUpdated: this.onDeviceStateUpdated.bind(this),
-            onDeviceRemoved: this.onDeviceRemoved.bind(this),
             onDeviceTransportData: this.onDeviceTransportData.bind(this),
             onDeviceTransportError: this.onDeviceTransportError.bind(this),
         });
