@@ -15,8 +15,6 @@ import {
 } from 'usb';
 import assert from 'assert';
 
-const toHex = (n: number) => n.toString(16).padStart(4, '0');
-
 export type UsbDeviceWrapperEndpointTransferOutFunction = (
     buffer: Uint8Array,
 ) => Promise<void>;
@@ -92,39 +90,10 @@ export class UsbDevice extends Device {
 
         device.open();
 
-        let manufacturerName;
-        try {
-            manufacturerName = await this.getStringDescriptor(
-                device,
-                descriptor.iManufacturer,
-            );
-        } catch (err) {
-            /* empty */
-        }
-
-        let productName;
-        try {
-            productName = await this.getStringDescriptor(
-                device,
-                descriptor.iProduct,
-            );
-        } catch (err) {
-            /* empty */
-        }
-
-        let name;
-        if (productName !== undefined && productName.length !== 0) {
-            name = productName;
-        } else if (
-            manufacturerName !== undefined &&
-            manufacturerName.length !== 0
-        ) {
-            name = manufacturerName;
-        } else {
-            const vendor = toHex(descriptor.idVendor);
-            const product = toHex(descriptor.idProduct);
-            name = `${vendor}:${product}`;
-        }
+        const name = await this.getStringDescriptor(
+            device,
+            descriptor.iProduct,
+        );
 
         device.close();
 
