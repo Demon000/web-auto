@@ -62,14 +62,7 @@ export class BluetoothDevice extends Device {
         tcpServer: Server,
         events: DeviceEvents,
     ): Promise<BluetoothDevice | undefined> {
-        let name;
-        try {
-            name = await device.Name();
-        } catch (err) {
-            throw new Error(
-                `Failed to get name for device with address ${address}`,
-            );
-        }
+        const name = await device.Name();
 
         return new BluetoothDevice(
             config,
