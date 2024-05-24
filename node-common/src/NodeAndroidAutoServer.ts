@@ -12,6 +12,7 @@ export interface IDevice {
     name: string;
     realName: string;
     state: string;
+    uniqueId: string;
 }
 
 export type AndroidAutoServerService = {
@@ -52,6 +53,7 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
             prefix: device.prefix,
             realName: device.realName,
             state: device.state,
+            uniqueId: device.uniqueId,
         };
     }
 

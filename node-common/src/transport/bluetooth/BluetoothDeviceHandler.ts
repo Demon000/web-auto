@@ -56,21 +56,25 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
         const device = await BluetoothDevice.create(
             this.config,
             bluezDevice,
+            data,
             this.tcpServer,
             this.getDeviceEvents(),
         );
-        if (device === undefined) {
-            return;
-        }
-
-        this.androidAutoProfile.addHandler(data, device.profileHandler);
 
         return device;
     }
 
-    protected override destroyDevice(data: string, device: Device): void {
+    protected override addDeviceHook(data: string, device: Device): void {
         assert(device instanceof BluetoothDevice);
-        this.androidAutoProfile.removeHandler(data, device.profileHandler);
+        this.androidAutoProfile.addHandler(data, device.profileHandler);
+    }
+
+    protected override removeDeviceHook(device: Device): void {
+        assert(device instanceof BluetoothDevice);
+        this.androidAutoProfile.removeHandler(
+            device.uniqueId,
+            device.profileHandler,
+        );
     }
 
     public async waitForDevices(): Promise<void> {

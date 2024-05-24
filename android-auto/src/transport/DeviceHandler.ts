@@ -29,10 +29,10 @@ export interface DeviceHandlerParams {
 
 export abstract class DeviceHandler<T = any> {
     protected logger = getLogger(this.constructor.name);
-    protected deviceMap = new Map<T, Device>();
+    protected deviceMap = new Map<string, Device>();
     private deviceMapLock = new Mutex();
     protected addDeviceBound: (data: T) => void;
-    protected removeDeviceBound: (data: T) => void;
+    protected removeDeviceBound: (uniqueId: string) => void;
 
     public constructor(
         protected params: DeviceHandlerParams,
@@ -57,7 +57,8 @@ export abstract class DeviceHandler<T = any> {
     }
 
     protected abstract createDevice(data: T): Promise<Device | undefined>;
-    protected destroyDevice(_data: T, _device: Device): void {}
+    protected addDeviceHook(_data: T, _device: Device): void {}
+    protected removeDeviceHook(_device: Device) {}
 
     protected async addDeviceAsyncLocked(
         data: T,
@@ -100,7 +101,8 @@ export abstract class DeviceHandler<T = any> {
             }
         }
 
-        this.deviceMap.set(data, device);
+        this.deviceMap.set(device.uniqueId, device);
+        this.addDeviceHook(data, device);
 
         try {
             this.events.onDeviceAdded(device);
@@ -115,14 +117,14 @@ export abstract class DeviceHandler<T = any> {
         release();
     }
 
-    protected removeDeviceLocked(data: T): void {
-        const device = this.deviceMap.get(data);
+    protected removeDeviceLocked(uniqueId: string): void {
+        const device = this.deviceMap.get(uniqueId);
         if (device === undefined) {
             return;
         }
 
-        this.destroyDevice(data, device);
-        this.deviceMap.delete(data);
+        this.deviceMap.delete(device.uniqueId);
+        this.removeDeviceHook(device);
 
         try {
             this.events.onDeviceRemoved(device);
@@ -131,9 +133,9 @@ export abstract class DeviceHandler<T = any> {
         }
     }
 
-    protected async removeDeviceAsync(data: T): Promise<void> {
+    protected async removeDeviceAsync(uniqueId: string): Promise<void> {
         const release = await this.deviceMapLock.acquire();
-        this.removeDeviceLocked(data);
+        this.removeDeviceLocked(uniqueId);
         release();
     }
 
@@ -145,8 +147,8 @@ export abstract class DeviceHandler<T = any> {
             });
     }
 
-    protected removeDevice(data: T): void {
-        this.removeDeviceAsync(data)
+    protected removeDevice(uniqueId: string): void {
+        this.removeDeviceAsync(uniqueId)
             .then(() => {})
             .catch((err) => {
                 this.logger.error('Failed to handle device remove', err);

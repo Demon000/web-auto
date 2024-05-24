@@ -21,6 +21,7 @@ const emit = defineEmits<{
         <div class="name-state-container">
             <div>
                 <span class="name">{{ device.realName }}</span>
+                <span class="unique-id">{{ device.uniqueId }}</span>
                 <span class="prefix">{{ device.prefix }}</span>
             </div>
             <div class="state">{{ device.state }}</div>
@@ -69,6 +70,11 @@ const emit = defineEmits<{
 
 .name {
     margin-right: 8px;
+}
+
+.unique-id {
+    margin-right: 8px;
+    opacity: 50%;
 }
 
 .prefix {

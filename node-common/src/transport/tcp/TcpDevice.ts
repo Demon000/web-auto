@@ -12,9 +12,10 @@ export class TcpDevice extends Device {
 
     public constructor(
         private ip: string,
+        mac: string,
         events: DeviceEvents,
     ) {
-        super('TCP', ip, events);
+        super('TCP', ip, mac, events);
     }
 
     public async connectImpl(_reason: DeviceConnectReason): Promise<void> {

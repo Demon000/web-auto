@@ -19,7 +19,7 @@ export interface TcpDeviceHandlerConfig {
     };
 }
 
-export class TcpDeviceHandler extends DeviceHandler<string> {
+export class TcpDeviceHandler extends DeviceHandler<Host> {
     private scanBound: () => void;
     private scanInternval: ReturnType<typeof setInterval> | undefined;
     private arp;
@@ -51,30 +51,27 @@ export class TcpDeviceHandler extends DeviceHandler<string> {
 
     // eslint-disable-next-line @typescript-eslint/require-await
     protected override async createDevice(
-        data: string,
+        data: Host,
     ): Promise<Device | undefined> {
-        return new TcpDevice(data, this.getDeviceEvents());
+        return new TcpDevice(data.ip, data.mac, this.getDeviceEvents());
     }
 
     private updateDevices(hosts: Host[]): void {
-        const newAvailableIps: string[] = [];
+        const newAvailableMacs = new Map<string, Host>();
 
         for (const host of hosts) {
-            newAvailableIps.push(host.ip);
+            newAvailableMacs.set(host.mac, host);
         }
 
-        const oldAvailableIps = Array.from(this.deviceMap.keys());
-
-        for (const ip of oldAvailableIps) {
-            if (!newAvailableIps.includes(ip))
-            ) {
-                this.removeDevice(ip);
+        for (const mac of this.deviceMap.keys()) {
+            if (!newAvailableMacs.has(mac)) {
+                this.removeDevice(mac);
             }
         }
 
-        for (const ip of newAvailableIps) {
-            if (!oldAvailableIps.includes(ip)) {
-                this.addDevice(ip);
+        for (const [mac, host] of newAvailableMacs.entries()) {
+            if (!this.deviceMap.has(mac)) {
+                this.addDevice(host);
             }
         }
     }

@@ -31,9 +31,10 @@ export class BluetoothDevice extends Device {
         private device: BluezDevice,
         tcpServer: Server,
         name: string,
+        address: string,
         events: DeviceEvents,
     ) {
-        super('BT', name, events);
+        super('BT', name, address, events);
 
         this.profileHandler = new BluetoothProfileHandler(
             {
@@ -57,6 +58,7 @@ export class BluetoothDevice extends Device {
     public static async create(
         config: BluetoothDeviceHandlerConfig,
         device: BluezDevice,
+        address: string,
         tcpServer: Server,
         events: DeviceEvents,
     ): Promise<BluetoothDevice | undefined> {
@@ -66,7 +68,14 @@ export class BluetoothDevice extends Device {
         } catch (err) {
             return;
         }
-        return new BluetoothDevice(config, device, tcpServer, name, events);
+        return new BluetoothDevice(
+            config,
+            device,
+            tcpServer,
+            name,
+            address,
+            events,
+        );
     }
 
     private onBluetoothProfileError(err: Error): void {
