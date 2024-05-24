@@ -12,7 +12,6 @@ type Host = Unpacked<Awaited<ReturnType<Arpping['discover']>>>;
 type Interfaces = NonNullable<Arpping['interfaceFilters']['interface']>;
 
 export interface TcpDeviceHandlerConfig {
-    ips?: string[];
     scanOptions?: {
         interfaces: string[];
         mask: string;
@@ -67,9 +66,7 @@ export class TcpDeviceHandler extends DeviceHandler<string> {
         const oldAvailableIps = Array.from(this.deviceMap.keys());
 
         for (const ip of oldAvailableIps) {
-            if (
-                !newAvailableIps.includes(ip) &&
-                (this.config.ips === undefined || !this.config.ips.includes(ip))
+            if (!newAvailableIps.includes(ip))
             ) {
                 this.removeDevice(ip);
             }
@@ -120,12 +117,6 @@ export class TcpDeviceHandler extends DeviceHandler<string> {
 
     // eslint-disable-next-line @typescript-eslint/require-await
     public async waitForDevices(): Promise<void> {
-        if (this.config.ips !== undefined) {
-            for (const ip of this.config.ips) {
-                await this.addDeviceAsync(ip);
-            }
-        }
-
         this.startScan();
     }
 

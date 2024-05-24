@@ -51,9 +51,10 @@ export class UsbDevice extends Device {
     public constructor(
         private device: UsbDeviceImpl,
         name: string,
+        uniqueId: string,
         events: DeviceEvents,
     ) {
-        super('USB', name, events);
+        super('USB', name, uniqueId, events);
 
         this.vendorId = this.device.deviceDescriptor.idVendor;
         this.productId = this.device.deviceDescriptor.idProduct;
@@ -95,9 +96,14 @@ export class UsbDevice extends Device {
             descriptor.iProduct,
         );
 
+        const serial = await this.getStringDescriptor(
+            device,
+            descriptor.iSerialNumber,
+        );
+
         device.close();
 
-        return new UsbDevice(device, name, events);
+        return new UsbDevice(device, name, serial, events);
     }
 
     public vendorControlTransferIn(

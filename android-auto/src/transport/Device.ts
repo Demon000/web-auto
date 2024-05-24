@@ -52,6 +52,7 @@ export abstract class Device {
     public constructor(
         public prefix: string,
         public realName: string,
+        public uniqueId: string,
         protected events: DeviceEvents,
     ) {
         this.name = `${prefix}: ${realName}`;
