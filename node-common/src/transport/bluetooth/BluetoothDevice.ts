@@ -66,8 +66,11 @@ export class BluetoothDevice extends Device {
         try {
             name = await device.Name();
         } catch (err) {
-            return;
+            throw new Error(
+                `Failed to get name for device with address ${address}`,
+            );
         }
+
         return new BluetoothDevice(
             config,
             device,
