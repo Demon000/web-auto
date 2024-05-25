@@ -59,8 +59,6 @@ export abstract class Service {
         return this.constructor.name;
     }
 
-    public destroy(): void {}
-
     public start(): void {
         assert(!this.started);
 

@@ -685,10 +685,6 @@ export abstract class AndroidAutoServer {
             }
         }
 
-        for (const service of this.services) {
-            service.destroy();
-        }
-
         this.logger.info('Server stopped');
     }
 }
