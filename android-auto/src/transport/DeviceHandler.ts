@@ -118,8 +118,11 @@ export abstract class DeviceHandler<T = any> {
 
     protected async addDeviceAsync(data: T, existing?: true): Promise<void> {
         const release = await this.deviceMapLock.acquire();
-        await this.addDeviceAsyncLocked(data, existing);
-        release();
+        try {
+            await this.addDeviceAsyncLocked(data, existing);
+        } finally {
+            release();
+        }
     }
 
     protected removeDeviceLocked(uniqueId: string): void {
@@ -140,8 +143,11 @@ export abstract class DeviceHandler<T = any> {
 
     protected async removeDeviceAsync(uniqueId: string): Promise<void> {
         const release = await this.deviceMapLock.acquire();
-        this.removeDeviceLocked(uniqueId);
-        release();
+        try {
+            this.removeDeviceLocked(uniqueId);
+        } finally {
+            release();
+        }
     }
 
     protected addDevice(data: T): void {

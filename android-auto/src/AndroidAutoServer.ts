@@ -305,14 +305,21 @@ export abstract class AndroidAutoServer {
         this.onDevicesUpdatedCallback(devices);
     }
 
-    private async addDeviceAsync(device: Device): Promise<void> {
-        const release = await this.connectionLock.acquire();
+    private addDeviceLocked(device: Device): void {
         this.nameDeviceMap.set(device.name, device);
 
         this.logger.info(`New available device ${device.name}`);
 
         this.callOnDevicesUpdated();
-        release();
+    }
+
+    private async addDeviceAsync(device: Device): Promise<void> {
+        const release = await this.connectionLock.acquire();
+        try {
+            this.addDeviceLocked(device);
+        } finally {
+            release();
+        }
     }
 
     private onDeviceAdded(device: Device): void {
@@ -457,14 +464,21 @@ export abstract class AndroidAutoServer {
             });
     }
 
-    private async removeDeviceAsync(device: Device): Promise<void> {
-        const release = await this.connectionLock.acquire();
+    private removeDeviceLocked(device: Device): void {
         this.logger.info(`Device ${device.name} no longer available`);
 
         this.nameDeviceMap.delete(device.name);
 
         this.callOnDevicesUpdated();
-        release();
+    }
+
+    private async removeDeviceAsync(device: Device): Promise<void> {
+        const release = await this.connectionLock.acquire();
+        try {
+            this.removeDeviceLocked(device);
+        } finally {
+            release();
+        }
     }
 
     public onDeviceSelfConnection(device: Device): void {
@@ -557,8 +571,11 @@ export abstract class AndroidAutoServer {
         reason: DeviceConnectReason,
     ): Promise<void> {
         const release = await this.connectionLock.acquire();
-        await this.connectDeviceAsyncLocked(device, reason);
-        release();
+        try {
+            await this.connectDeviceAsyncLocked(device, reason);
+        } finally {
+            release();
+        }
     }
 
     public async disconnectDeviceAsyncLocked(
@@ -609,14 +626,11 @@ export abstract class AndroidAutoServer {
         reason: DeviceDisconnectReason,
     ): Promise<void> {
         const release = await this.connectionLock.acquire();
-
         try {
             await this.disconnectDeviceAsyncLocked(device, reason);
-        } catch (err) {
-            this.logger.error('Failed to disconnect device', err);
+        } finally {
+            release();
         }
-
-        release();
     }
 
     public getDeviceByName(name: string): Device | undefined {
@@ -653,10 +667,14 @@ export abstract class AndroidAutoServer {
         this.started = false;
 
         if (this.connectedDevice !== undefined) {
-            await this.disconnectDeviceAsync(
-                this.connectedDevice,
-                GenericDeviceDisconnectReason.USER,
-            );
+            try {
+                await this.disconnectDeviceAsync(
+                    this.connectedDevice,
+                    GenericDeviceDisconnectReason.USER,
+                );
+            } catch (err) {
+                this.logger.error('Failed to disconnect connected device', err);
+            }
         }
 
         for (const deviceHandler of this.deviceHandlers) {
