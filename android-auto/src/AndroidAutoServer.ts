@@ -189,16 +189,6 @@ export abstract class AndroidAutoServer {
             return;
         }
 
-        if (reason === (GenericDeviceDisconnectReason.PING_TIMEOUT as string)) {
-            this.logger.error(`Pinger timed out, disconnecting ${device.name}`);
-        } else if (
-            reason === (GenericDeviceDisconnectReason.BYE_BYE as string)
-        ) {
-            this.logger.error(
-                `Self disconnect requested, disconnecting ${device.name}`,
-            );
-        }
-
         this.disconnectDeviceAsync(device, reason)
             .then(() => {})
             .catch((err) => {
