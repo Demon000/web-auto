@@ -6,7 +6,7 @@
 
 `sudo apt install nodejs npm protobuf-compiler`
 
-If using `androidAuto.tcpDeviceHandlerConfig.scanOptions` config:
+If using `TcpDeviceHandler`:
 
 `sudo apt install nmap`
 
