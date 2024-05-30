@@ -47,7 +47,6 @@ export interface IpcServiceRegistry {
 export type SocketMessageCallback = (socket: IpcSocket, data: any) => void;
 
 export interface IpcServiceRegistrySocketHandler {
-    get sockets(): IpcSocket[];
     socketsForHandleName(
         handle: string,
         name: string,
@@ -60,7 +59,6 @@ export abstract class BaseIpcServiceRegistrySocketHandler
     implements IpcServiceRegistrySocketHandler
 {
     protected messageCallback: SocketMessageCallback | undefined;
-    public sockets: IpcSocket[] = [];
     protected handleNameSocketsMap = new Map<
         string,
         Map<string, Map<IpcSocket, number>>
@@ -107,7 +105,6 @@ export abstract class BaseIpcServiceRegistrySocketHandler
             .then(() => {
                 socket.onData(this.onData.bind(this));
                 socket.onClose(this.onClose.bind(this));
-                this.sockets.push(socket);
             })
             .catch((err) => {
                 console.error('Failed to register socket', socket, err);
@@ -122,14 +119,7 @@ export abstract class BaseIpcServiceRegistrySocketHandler
     protected onClose(socket: IpcSocket): void {
         socket.offClose();
         socket.offData();
-        const socketIndex = this.sockets.indexOf(socket);
-        if (socketIndex === -1) {
-            console.error('IPC socket not registered');
-            return;
-        }
-
         this.unsubscribeAll(socket);
-        this.sockets.splice(socketIndex, 1);
     }
 
     private unsubscribeAll(socket: IpcSocket): void {
