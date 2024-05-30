@@ -123,9 +123,13 @@ export abstract class BaseIpcServiceRegistrySocketHandler
     }
 
     private unsubscribeAll(socket: IpcSocket): void {
-        for (const handleMap of this.handleNameSocketsMap.values()) {
-            for (const socketsMap of handleMap.values()) {
-                socketsMap.delete(socket);
+        for (const [handle, handleMap] of this.handleNameSocketsMap) {
+            for (const name of handleMap.keys()) {
+                this.handleSocketSubscribe(socket, {
+                    handle,
+                    name,
+                    subscribe: false,
+                });
             }
         }
     }
