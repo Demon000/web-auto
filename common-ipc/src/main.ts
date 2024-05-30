@@ -136,12 +136,20 @@ export abstract class BaseIpcServiceRegistrySocketHandler
     ): void {
         let handleMap = this.handleNameSocketsMap.get(ipcEvent.handle);
         if (handleMap === undefined) {
+            if (!ipcEvent.subscribe) {
+                return;
+            }
+
             handleMap = new Map();
             this.handleNameSocketsMap.set(ipcEvent.handle, handleMap);
         }
 
         let socketsMap = handleMap.get(ipcEvent.name);
         if (socketsMap === undefined) {
+            if (!ipcEvent.subscribe) {
+                return;
+            }
+
             socketsMap = new Map();
             handleMap.set(ipcEvent.name, socketsMap);
         }
@@ -149,6 +157,10 @@ export abstract class BaseIpcServiceRegistrySocketHandler
         const modifier = ipcEvent.subscribe ? +1 : -1;
         let value = socketsMap.get(socket);
         if (value === undefined) {
+            if (!ipcEvent.subscribe) {
+                return;
+            }
+
             value = 0;
         }
 
