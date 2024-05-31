@@ -9,6 +9,9 @@ export type IpcClient = {
     [key: string]: IpcClientFunction;
 };
 
+export type IpcClientHandlerKey<L extends IpcClient> = keyof L & string;
+export type IpcServiceHandlerKey<L extends IpcService> = keyof L & string;
+
 export type IpcSubscribeEvent = {
     handle: string;
     name: string;

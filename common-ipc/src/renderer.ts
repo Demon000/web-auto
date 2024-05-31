@@ -1,12 +1,11 @@
 import type {
     IpcClient,
+    IpcClientHandlerKey,
     IpcEvent,
     IpcSerializer,
     IpcService,
     IpcSocket,
 } from './common.js';
-
-export type IpcClientHandlerKey<L extends IpcClient> = keyof L & string;
 
 export type IpcClientHandlerCallback<
     L extends IpcClient,

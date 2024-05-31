@@ -6,10 +6,10 @@ import type {
     IpcSerializer,
     IpcSocket,
     IpcSubscribeEvent,
+    IpcServiceHandlerKey,
+    IpcClientHandlerKey,
 } from './common.js';
-import type { IpcClientHandlerKey } from './renderer.js';
 
-export type IpcServiceHandlerKey<L extends IpcService> = keyof L & string;
 export type IpcServiceHandlerCallback<
     L extends IpcService,
     K extends IpcServiceHandlerKey<L>,
