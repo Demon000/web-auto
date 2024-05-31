@@ -267,9 +267,10 @@ export class GenericIpcClientRegistry implements IpcClientRegistry {
     }
 
     private onData(_socket: IpcSocket, data: any): void {
-        if (this.rawIpcEvent !== undefined) {
-            this.handleRaw(this.rawIpcEvent, data);
+        const rawIpcEvent = this.rawIpcEvent;
+        if (rawIpcEvent !== undefined) {
             this.rawIpcEvent = undefined;
+            this.handleRaw(rawIpcEvent, data);
             return;
         }
 
