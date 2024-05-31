@@ -98,6 +98,8 @@ export abstract class AndroidAutoServer {
         }
     }
 
+    public destroy() {}
+
     private async encryptFrameData(frameData: FrameData): Promise<void> {
         const frameHeader = frameData.frameHeader;
 

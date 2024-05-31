@@ -47,6 +47,12 @@ export class NodeAndroidAutoServer extends AndroidAutoServer {
         this.ipcHandler.on('getDevices', this.getDevicesObjects.bind(this));
     }
 
+    public override destroy(): void {
+        this.ipcHandler.off('connectDeviceName');
+        this.ipcHandler.off('disconnectDeviceName');
+        this.ipcHandler.off('getDevices');
+    }
+
     protected deviceFromImpl(device: Device): IDevice {
         return {
             name: device.name,

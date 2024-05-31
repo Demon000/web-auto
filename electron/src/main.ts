@@ -94,6 +94,7 @@ const beforeQuit = async (event: {
 
     if (androidAutoServer !== undefined) {
         await androidAutoServer.stop();
+        androidAutoServer.destroy();
     }
 
     if (androidAutoIpcServiceRegistry !== undefined) {

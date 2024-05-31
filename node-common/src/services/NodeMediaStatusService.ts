@@ -38,6 +38,11 @@ export class NodeMediaStatusService extends MediaStatusService {
         this.ipcHandler.on('getStatus', this.getStatus.bind(this));
     }
 
+    public override destroy(): void {
+        this.ipcHandler.off('getMetadata');
+        this.ipcHandler.off('getStatus');
+    }
+
     public override stop(): void {
         super.stop();
         this.metadata = undefined;

@@ -112,6 +112,11 @@ export class NodeVideoService extends VideoService {
         ipcHandler.on('getChannelStarted', this.getChannelStarted.bind(this));
     }
 
+    public override destroy(): void {
+        this.ipcHandler.off('sendVideoFocusNotification');
+        this.ipcHandler.off('getChannelStarted');
+    }
+
     // eslint-disable-next-line @typescript-eslint/require-await
     public async getChannelStarted(): Promise<boolean> {
         return this.channelStarted;

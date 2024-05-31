@@ -51,6 +51,10 @@ export class NodeInputService extends InputService {
         this.ipcHandler.on('sendKey', this.sendKey.bind(this));
     }
 
+    public override destroy(): void {
+        this.ipcHandler.off('sendKey');
+    }
+
     protected async bind(_data: KeyBindingRequest): Promise<void> {}
 
     // eslint-disable-next-line @typescript-eslint/require-await
