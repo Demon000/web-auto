@@ -7,6 +7,7 @@ import {
     MediaCodecType,
     TouchScreenType,
     VideoFrameRateType,
+    VideoCodecResolutionType,
     type AudioConfiguration,
     type HeadUnitInfo,
     type MediaPlaybackMetadata,
@@ -17,7 +18,6 @@ import {
     type VideoFocusNotification,
     type VideoFocusRequestNotification,
 } from './protos_pb.js';
-import { VideoCodecResolutionType } from './protos_pb.js';
 
 export type ITouchEvent = PlainMessage<TouchEvent>;
 export type IVideoConfiguration = PlainMessage<VideoConfiguration>;
