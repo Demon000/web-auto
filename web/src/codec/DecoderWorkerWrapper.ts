@@ -72,7 +72,7 @@ export class DecoderWorker {
                 type: DecoderWorkerMessageType.DECODE_KEYFRAME,
                 data: buffer,
             },
-            [buffer],
+            [buffer.buffer],
         );
     }
 
@@ -86,7 +86,7 @@ export class DecoderWorker {
                 type: DecoderWorkerMessageType.DECODE_DELTA,
                 data: buffer,
             },
-            [buffer],
+            [buffer.buffer],
         );
     }
 
