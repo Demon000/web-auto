@@ -17,7 +17,7 @@
   "dependencies": {
     "@types/ws": "^8.5.10",
     "bufferutil": "^4.0.8",
-    "msgpackr": "^1.10.0",
+    "msgpackr": "^1.10.2",
     "ws": "^8.15.1"
   }
 }
