@@ -2,6 +2,8 @@ import {
     MediaPlaybackMetadata,
     MediaPlaybackStatus,
     MediaPlaybackStatusMessageId,
+    MediaPlaybackStatusService,
+    type Service as ProtoService,
 } from '@web-auto/android-auto-proto';
 
 import { Service, type ServiceEvents } from './Service.js';
@@ -47,5 +49,11 @@ export abstract class MediaStatusService extends Service {
         }
 
         return true;
+    }
+
+    protected fillChannelDescriptor(channelDescriptor: ProtoService): void {
+        channelDescriptor.mediaPlaybackService = new MediaPlaybackStatusService(
+            {},
+        );
     }
 }

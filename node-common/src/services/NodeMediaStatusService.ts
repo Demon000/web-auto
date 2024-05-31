@@ -2,8 +2,6 @@ import { MediaStatusService, type ServiceEvents } from '@web-auto/android-auto';
 import {
     MediaPlaybackMetadata,
     MediaPlaybackStatus,
-    MediaPlaybackStatusService,
-    Service,
 } from '@web-auto/android-auto-proto';
 import type {
     IMediaPlaybackMetadata,
@@ -75,11 +73,5 @@ export class NodeMediaStatusService extends MediaStatusService {
             ...data,
         };
         this.ipcHandler.status(this.status);
-    }
-
-    protected fillChannelDescriptor(channelDescriptor: Service): void {
-        channelDescriptor.mediaPlaybackService = new MediaPlaybackStatusService(
-            {},
-        );
     }
 }
