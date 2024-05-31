@@ -14,7 +14,6 @@
     "lint": "eslint --fix ."
   },
   "dependencies": {
-    "async-mutex": "^0.5.0",
-    "long": "^5.2.3"
+    "async-mutex": "^0.5.0"
   }
 }
