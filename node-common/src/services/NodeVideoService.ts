@@ -1,7 +1,7 @@
 import { type ServiceEvents, VideoService } from '@web-auto/android-auto';
 import {
     type Start,
-    type VideoFocusRequestNotification,
+    VideoFocusRequestNotification,
     VideoFocusNotification,
     VideoFocusMode,
     DisplayType,
@@ -110,9 +110,14 @@ export class NodeVideoService extends VideoService {
             this.sendVideoFocusNotificationObject.bind(this),
         );
         ipcHandler.on('getChannelStarted', this.getChannelStarted.bind(this));
+        ipcHandler.onNoClients(
+            'channelStart',
+            this.onNoChannelStartClients.bind(this),
+        );
     }
 
     public override destroy(): void {
+        this.ipcHandler.offNoClients('channelStart');
         this.ipcHandler.off('sendVideoFocusNotification');
         this.ipcHandler.off('getChannelStarted');
     }
@@ -141,6 +146,22 @@ export class NodeVideoService extends VideoService {
         this.codecState = CodecState.WAITING_FOR_CONFIG;
         this.logger.info('Selected configuration', channelConfig);
         this.ipcHandler.channelStart();
+    }
+
+    private onNoChannelStartClients(): void {
+        this.sendVideoFocusNotificationObject(
+            new VideoFocusNotification({
+                focus: VideoFocusMode.VIDEO_FOCUS_NATIVE,
+                unsolicited: true,
+            }),
+        )
+            .then(() => {})
+            .catch((err) => {
+                this.logger.error(
+                    'Failed to send native focus notification on no clients',
+                    err,
+                );
+            });
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await

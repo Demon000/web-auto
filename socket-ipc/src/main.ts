@@ -2,6 +2,7 @@ import { BaseIpcSocket } from '@web-auto/common-ipc';
 import {
     BaseIpcServiceRegistrySocketHandler,
     GenericIpcServiceRegistry,
+    type NoClientsCallback,
     type SocketMessageCallback,
 } from '@web-auto/common-ipc/main.js';
 import { IncomingMessage, Server } from 'node:http';
