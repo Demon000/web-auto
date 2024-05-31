@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@rushstack/eslint-patch": "^1.3.3",
-    "@yume-chan/scrcpy": "^0.0.21",
+    "@yume-chan/scrcpy": "^0.0.23",
     "arpping": "^4.0.0",
     "async-mutex": "^0.5.0",
     "audify": "^1.8.2",
