@@ -45,7 +45,8 @@ class SocketClientIpcSocket extends BaseIpcSocket {
     }
 
     public onDataInternal(message: MessageEvent): void {
-        this.callOnData(message.data);
+        const buffer = new Uint8Array(message.data as ArrayBuffer);
+        this.callOnData(buffer);
     }
 
     public onCloseInternal(): void {
