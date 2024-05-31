@@ -89,8 +89,11 @@ export class SocketIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistr
         this.wss = new WebSocketServer({ noServer: true });
     }
 
-    public override register(callback: SocketMessageCallback) {
-        super.register(callback);
+    public override register(
+        callback: SocketMessageCallback,
+        noClientsCallback: NoClientsCallback,
+    ) {
+        super.register(callback, noClientsCallback);
 
         this.wss.on('connection', this.onConnectionBound);
         this.server.prependListener('upgrade', this.onServerUpgradeBound);

@@ -3,6 +3,7 @@ import { DummyIpcSerializer, BaseIpcSocket } from '@web-auto/common-ipc';
 import {
     BaseIpcServiceRegistrySocketHandler,
     GenericIpcServiceRegistry,
+    type NoClientsCallback,
     type SocketMessageCallback,
 } from '@web-auto/common-ipc/main.js';
 
@@ -60,8 +61,11 @@ export class ElectronIpcServiceRegistrySocketHandler extends BaseIpcServiceRegis
         this.onWebContentsCreatedBound = this.onWebContentsCreated.bind(this);
     }
 
-    public override register(callback: SocketMessageCallback): void {
-        super.register(callback);
+    public override register(
+        callback: SocketMessageCallback,
+        noClientsCallback: NoClientsCallback,
+    ): void {
+        super.register(callback, noClientsCallback);
 
         app.on('web-contents-created', this.onWebContentsCreatedBound);
     }

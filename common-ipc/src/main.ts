@@ -15,12 +15,20 @@ export type IpcServiceHandlerCallback<
     K extends IpcServiceHandlerKey<L>,
 > = L[K];
 
-export type IpcServiceHandlerEmitter<L extends IpcService> = {
+export type IpcServiceHandlerEmitter<
+    L extends IpcService,
+    R extends IpcClient,
+> = {
     on<K extends IpcServiceHandlerKey<L>>(
         name: K,
         cb: IpcServiceHandlerCallback<L, K>,
     ): void;
     off<K extends IpcServiceHandlerKey<L>>(name: K): void;
+    onNoClients<K extends IpcClientHandlerKey<R>>(
+        name: K,
+        cb: () => void,
+    ): void;
+    offNoClients<K extends IpcClientHandlerKey<R>>(name: K): void;
 };
 
 export type IpcServiceHandlerSender<R extends IpcClient> = {
@@ -35,7 +43,7 @@ export type IpcServiceHandlerSender<R extends IpcClient> = {
 };
 
 export type IpcServiceHandler<L extends IpcService, R extends IpcClient> = R &
-    IpcServiceHandlerEmitter<L> &
+    IpcServiceHandlerEmitter<L, R> &
     IpcServiceHandlerSender<R>;
 
 export interface IpcServiceRegistry {
@@ -45,13 +53,17 @@ export interface IpcServiceRegistry {
 }
 
 export type SocketMessageCallback = (socket: IpcSocket, data: any) => void;
+export type NoClientsCallback = (handle: string, name: string) => void;
 
 export interface IpcServiceRegistrySocketHandler {
     socketsForHandleName(
         handle: string,
         name: string,
     ): Iterable<IpcSocket> | undefined;
-    register(callback: SocketMessageCallback): void;
+    register(
+        callback: SocketMessageCallback,
+        noClientsCallback: NoClientsCallback,
+    ): void;
     unregister(): void;
 }
 
@@ -59,6 +71,7 @@ export abstract class BaseIpcServiceRegistrySocketHandler
     implements IpcServiceRegistrySocketHandler
 {
     protected messageCallback: SocketMessageCallback | undefined;
+    protected noClientsCallback: NoClientsCallback | undefined;
     protected handleNameSocketsMap = new Map<
         string,
         Map<string, Map<IpcSocket, number>>
@@ -66,20 +79,31 @@ export abstract class BaseIpcServiceRegistrySocketHandler
 
     public constructor(protected name: string) {}
 
-    public register(callback: SocketMessageCallback): void {
-        if (this.messageCallback !== undefined) {
+    public register(
+        callback: SocketMessageCallback,
+        noClientsCallback: NoClientsCallback,
+    ): void {
+        if (
+            this.messageCallback !== undefined ||
+            this.noClientsCallback !== undefined
+        ) {
             throw new Error('Cannot register twice');
         }
 
         this.messageCallback = callback;
+        this.noClientsCallback = noClientsCallback;
     }
 
     public unregister(): void {
-        if (this.messageCallback !== undefined) {
+        if (
+            this.messageCallback !== undefined ||
+            this.noClientsCallback !== undefined
+        ) {
             throw new Error('Cannot unregister before registering');
         }
 
         this.messageCallback = undefined;
+        this.noClientsCallback = undefined;
     }
 
     public socketsForHandleName(
@@ -176,6 +200,9 @@ export abstract class BaseIpcServiceRegistrySocketHandler
         }
 
         if (value === 0) {
+            if (this.noClientsCallback !== undefined) {
+                this.noClientsCallback(ipcEvent.handle, ipcEvent.name);
+            }
             socketsMap.delete(socket);
         } else {
             socketsMap.set(socket, value);
@@ -183,12 +210,16 @@ export abstract class BaseIpcServiceRegistrySocketHandler
     }
 }
 
-export class IpcServiceHandlerHelper<L extends IpcService>
-    implements IpcServiceHandlerEmitter<L>
+export class IpcServiceHandlerHelper<L extends IpcService, R extends IpcClient>
+    implements IpcServiceHandlerEmitter<L, R>
 {
     private handlersMap = new Map<
         IpcServiceHandlerKey<L>,
         IpcServiceHandlerCallback<L, IpcServiceHandlerKey<L>>
+    >();
+    private noClientsHandlersMap = new Map<
+        IpcServiceHandlerKey<L>,
+        () => void
     >();
 
     public constructor(
@@ -254,6 +285,19 @@ export class IpcServiceHandlerHelper<L extends IpcService>
         this.handlersMap.set(name, cb);
     }
 
+    public onNoClients<K extends IpcClientHandlerKey<R>>(
+        name: K,
+        cb: () => void,
+    ): void {
+        assert(!this.noClientsHandlersMap.has(name));
+        this.noClientsHandlersMap.set(name, cb);
+    }
+
+    public offNoClients<K extends IpcServiceHandlerKey<L>>(name: K): void {
+        assert(this.noClientsHandlersMap.has(name));
+        this.noClientsHandlersMap.delete(name);
+    }
+
     public off<K extends IpcServiceHandlerKey<L>>(name: K): void {
         assert(this.handlersMap.has(name));
         this.handlersMap.delete(name);
@@ -271,10 +315,19 @@ export class IpcServiceHandlerHelper<L extends IpcService>
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         return handlerFn(...ipcEvent.args);
     }
+
+    public handleNoClients(name: string): void {
+        const handlerFn = this.noClientsHandlersMap.get(name);
+        if (handlerFn === undefined) {
+            return;
+        }
+
+        handlerFn();
+    }
 }
 
 export const createIpcClientProxy = <L extends IpcService, R extends IpcClient>(
-    ipcHandler: IpcServiceHandlerHelper<L>,
+    ipcHandler: IpcServiceHandlerHelper<L, R>,
 ): IpcServiceHandler<L, R> => {
     return new Proxy(
         {},
@@ -291,6 +344,8 @@ export const createIpcClientProxy = <L extends IpcService, R extends IpcClient>(
                         switch (property) {
                             case 'on':
                             case 'off':
+                            case 'onNoClients':
+                            case 'offNoClients':
                             case 'sendRaw':
                                 Reflect.apply(
                                     ipcHandler[property],
@@ -310,7 +365,10 @@ export const createIpcClientProxy = <L extends IpcService, R extends IpcClient>(
 };
 
 export class GenericIpcServiceRegistry implements IpcServiceRegistry {
-    protected ipcHandlers = new Map<string, IpcServiceHandlerHelper<any>>();
+    protected ipcHandlers = new Map<
+        string,
+        IpcServiceHandlerHelper<any, any>
+    >();
 
     public constructor(
         protected socketHandler: BaseIpcServiceRegistrySocketHandler,
@@ -318,11 +376,23 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
     ) {}
 
     public register(): void {
-        this.socketHandler.register(this.handleMessage.bind(this));
+        this.socketHandler.register(
+            this.handleMessage.bind(this),
+            this.handleNoClients.bind(this),
+        );
     }
 
     public unregister(): void {
         this.socketHandler.unregister();
+    }
+
+    private handleNoClients(handle: string, name: string): void {
+        const ipcHandler = this.ipcHandlers.get(handle);
+        if (ipcHandler === undefined) {
+            return;
+        }
+
+        ipcHandler.handleNoClients(name);
     }
 
     private handleMessage(socket: IpcSocket, data: Uint8Array): void {
@@ -387,7 +457,7 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
         handle: string,
     ): IpcServiceHandler<L, R> {
         assert(!this.ipcHandlers.has(handle));
-        const ipcHandler = new IpcServiceHandlerHelper<L>(
+        const ipcHandler = new IpcServiceHandlerHelper<L, R>(
             this.socketHandler,
             this.serializer,
             handle,
