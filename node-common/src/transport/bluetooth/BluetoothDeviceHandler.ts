@@ -14,7 +14,6 @@ import type {
     INetworkInfo,
     ISocketInfoRequest,
 } from '@web-auto/android-auto-proto/bluetooth_interfaces.js';
-import { BluetoothAgent } from './BluetoothAgent.js';
 
 const AA_OBJECT_PATH = '/com/aa/aa';
 
@@ -24,12 +23,10 @@ export interface BluetoothDeviceHandlerConfig extends DeviceHandlerConfig {
     tcpConnectionTimeoutMs: number;
     networkInfo: INetworkInfo;
     socketInfo: ISocketInfoRequest;
-    adapterName?: string;
 }
 
 export class BluetoothDeviceHandler extends DeviceHandler<string> {
     private androidAutoProfile: AndroidAutoProfile;
-    private agent: BluetoothAgent;
     private bus?: dbus.MessageBus;
     private bluetooth?: Bluez;
     private adapter?: Adapter;
@@ -42,7 +39,6 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
         super(config, events);
 
         this.androidAutoProfile = new AndroidAutoProfile();
-        this.agent = new BluetoothAgent();
     }
 
     protected override async createDevice(
@@ -113,8 +109,6 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
             AA_OBJECT_PATH,
         );
         this.logger.info('Registered Android Auto Bluetooth profile');
-
-        await this.bluetooth.registerAgent(this.agent);
 
         this.logger.info('Powering adapter on');
         try {
