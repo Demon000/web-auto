@@ -2,18 +2,12 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { lilconfigSync } from 'lilconfig';
-import JSON5 from 'json5';
+import { loadConfig } from '@web-auto/config-loader';
+import { NodeAndroidAutoConfig } from '@web-auto/node';
 
-const config = lilconfigSync('web-auto', {
-    loaders: {
-        '.json5': (_filepath, content) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            return JSON5.parse(content);
-        },
-    },
-    searchPlaces: ['config.json5'],
-}).search()?.config;
+const config = loadConfig<NodeAndroidAutoConfig>(
+    (data) => data as NodeAndroidAutoConfig,
+);
 
 const { port: nodePort, host: nodeHost } =
     config.nodeAndroidAuto.webSocketServer;

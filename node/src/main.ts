@@ -1,8 +1,6 @@
 import { getLogger, setConfig } from '@web-auto/logging';
-import { lilconfigSync } from 'lilconfig';
-import JSON5 from 'json5';
-
-import { assert } from 'typia';
+import { loadConfig } from '@web-auto/config-loader';
+import { createAssert } from 'typia';
 import {
     NodeAndroidAutoServerBuilder,
     type NodeCommonAndroidAutoConfig,
@@ -20,23 +18,15 @@ export type NodeAndroidAutoConfig = {
     };
 } & NodeCommonAndroidAutoConfig;
 
-const config = lilconfigSync('web-auto', {
-    loaders: {
-        '.json5': (_filepath, content) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            return JSON5.parse(content);
-        },
-    },
-    searchPlaces: ['config.json5'],
-}).search()?.config as NodeAndroidAutoConfig;
+const configAssert = createAssert<NodeAndroidAutoConfig>();
 
-assert<NodeAndroidAutoConfig>(config);
+const config = loadConfig<NodeAndroidAutoConfig>(configAssert);
 
 setConfig(config.logging);
 
 const logger = getLogger('node');
 
-logger.info('Electron config', config);
+logger.info('Config', config);
 
 const startAndroidAuto = async (server: Server): Promise<void> => {
     if (config.androidAuto === undefined) {

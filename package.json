@@ -2,6 +2,7 @@
   "private": true,
   "workspaces": {
     "packages": [
+      "config-loader",
       "eslint-config",
       "eslint-config-node",
       "prettier-config",
