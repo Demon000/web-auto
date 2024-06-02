@@ -9,13 +9,10 @@ const config = loadConfig<NodeAndroidAutoConfig>(
     (data) => data as NodeAndroidAutoConfig,
 );
 
-const { port: nodePort, host: nodeHost } =
-    config.nodeAndroidAuto.webSocketServer;
-
 // https://vitejs.dev/config/
 export default defineConfig({
     server: {
-        host: nodeHost,
+        host: config.nodeAndroidAuto.webSocketServer.host,
         https: {
             cert: readFileSync('../cert.crt'),
             key: readFileSync('../cert.key'),
@@ -53,7 +50,5 @@ export default defineConfig({
     ],
     define: {
         'import.meta.env.CONFIG': JSON.stringify(config),
-        'import.meta.env.VITE_SOCKET_IPC_CLIENT_HOST': `"wss://${nodeHost}"`,
-        'import.meta.env.VITE_SOCKET_IPC_CLIENT_PORT': `${nodePort}`,
     },
 });

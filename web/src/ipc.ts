@@ -9,8 +9,8 @@ try {
     ipcClientRegistry = new ElectronIpcClientRegistry(CONFIG.registryName);
 } catch (err) {
     ipcClientRegistry = new SocketIpcClientRegistry(
-        import.meta.env.VITE_SOCKET_IPC_CLIENT_HOST,
-        parseInt(import.meta.env.VITE_SOCKET_IPC_CLIENT_PORT),
+        CONFIG.nodeAndroidAuto.webSocketServer.host,
+        CONFIG.nodeAndroidAuto.webSocketServer.port,
         CONFIG.registryName,
     );
 }

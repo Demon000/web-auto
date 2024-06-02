@@ -87,7 +87,9 @@ class SocketClientIpcSocket extends BaseIpcSocket {
 
 export class SocketIpcClientRegistry extends GenericIpcClientRegistry {
     public constructor(host: string, port: number, name: string) {
-        const socket = new SocketClientIpcSocket(`${host}:${port}/${name}`);
+        const socket = new SocketClientIpcSocket(
+            `wss://${host}:${port}/${name}`,
+        );
         const serializer = new MessagePackIpcSerializer();
         super(serializer, socket);
     }
