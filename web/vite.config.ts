@@ -4,7 +4,6 @@ import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { loadConfig } from '@web-auto/config-loader';
 import { NodeAndroidAutoConfig } from '@web-auto/node';
-import UnpluginTypia from '@ryoppippi/unplugin-typia/vite';
 
 const config = loadConfig<NodeAndroidAutoConfig>(
     (data) => data as NodeAndroidAutoConfig,
@@ -33,7 +32,6 @@ export default defineConfig({
         },
     },
     plugins: [
-        UnpluginTypia({}),
         vue({
             template: {
                 compilerOptions: {
