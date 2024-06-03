@@ -46,6 +46,7 @@ export interface NodeRtAudioOutputServiceConfig {
 
 export class NodeRtAudioOutputService extends NodeAudioOutputService {
     private rtaudio;
+    private stopTimeout: ReturnType<typeof setTimeout> | undefined;
 
     public constructor(
         config: NodeRtAudioOutputServiceConfig,
@@ -95,11 +96,21 @@ export class NodeRtAudioOutputService extends NodeAudioOutputService {
     }
 
     protected override channelStart(_data: Start): void {
+        if (this.stopTimeout !== undefined) {
+            clearTimeout(this.stopTimeout);
+        }
+
         this.rtaudio.start();
     }
 
     protected override channelStop(): void {
-        this.rtaudio.stop();
+        if (this.stopTimeout !== undefined) {
+            clearTimeout(this.stopTimeout);
+        }
+
+        this.stopTimeout = setTimeout(() => {
+            this.rtaudio.stop();
+        }, 1000);
     }
 
     public override stop(): void {
