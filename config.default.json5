@@ -1,5 +1,8 @@
 {
     registryName: 'android-auto',
+    variables: {
+        IP_ADDRESS: '192.168.0.106',
+    },
     logging: {
         debug: false,
         // To enable debugging:
@@ -224,7 +227,7 @@
                 tcpConnectionTimeoutMs: 5000,
                 socketInfo: {
                     // IP address and port on which to expose the TCP server
-                    ipAddress: '192.168.0.106',
+                    ipAddress: '=IP_ADDRESS',
                     port: 5000,
                 },
                 networkInfo: {
@@ -252,7 +255,7 @@
     nodeAndroidAuto: {
         webSocketServer: {
             port: 8081,
-            host: 'localhost',
+            host: '=IP_ADDRESS',
         },
     },
     web: {
@@ -361,7 +364,7 @@
                     // URL if running it separately (useful for development)
                     // When using url, do not specify path, or index
                     /*
-                    url: 'http://localhost:5173/',
+                    url: '`https://${IP_ADDRESS}:5173/`',
                     */
                 },
             },
