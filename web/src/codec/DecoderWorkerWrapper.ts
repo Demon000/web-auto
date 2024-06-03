@@ -66,17 +66,18 @@ export class DecoderWorker {
         });
     }
 
-    private onFirstFrameData(buffer: Uint8Array): void {
+    private onFirstFrameData(data: Uint8Array, timestamp?: bigint): void {
         this.worker.postMessage(
             {
                 type: DecoderWorkerMessageType.DECODE_KEYFRAME,
-                data: buffer,
+                data,
+                timestamp,
             },
-            [buffer.buffer],
+            [data.buffer],
         );
     }
 
-    private onFrameData(buffer: Uint8Array): void {
+    private onFrameData(data: Uint8Array, timestamp?: bigint): void {
         if (!this.acceptData) {
             return;
         }
@@ -84,9 +85,10 @@ export class DecoderWorker {
         this.worker.postMessage(
             {
                 type: DecoderWorkerMessageType.DECODE_DELTA,
-                data: buffer,
+                data,
+                timestamp,
             },
-            [buffer.buffer],
+            [data.buffer],
         );
     }
 

@@ -49,10 +49,10 @@ export type AndroidAutoVideoService = {
 export type AndroidAutoVideoClient = {
     focusRequest(data: IVideoFocusRequestNotification): void;
     codecConfig(config: VideoCodecConfig): void;
-    firstFrame(buffer: Uint8Array): void;
+    firstFrame(buffer: Uint8Array, timestamp?: bigint): void;
     channelStart(): void;
     channelStop(): void;
-    data(buffer: Uint8Array): void;
+    data(buffer: Uint8Array, timestamp?: bigint): void;
 };
 
 export type VideoServiceResolutionConfig = {
@@ -259,13 +259,16 @@ export class NodeVideoService extends VideoService {
         };
     }
 
-    protected handleData(buffer: Uint8Array, _timestamp?: bigint): void {
+    protected override handleData(
+        buffer: Uint8Array,
+        timestamp?: bigint,
+    ): void {
         const channelConfig = this.channelConfig();
         const videoCodecType = channelConfig.videoCodecType;
         assert(videoCodecType !== undefined);
 
         if (this.codecState === CodecState.STARTED) {
-            this.ipcHandler.sendRaw('data', buffer);
+            this.ipcHandler.sendRaw('data', buffer, timestamp);
         } else if (this.codecState === CodecState.WAITING_FOR_CONFIG) {
             assert(this.codecBuffer === undefined);
 
@@ -294,7 +297,7 @@ export class NodeVideoService extends VideoService {
                 this.codecBuffer,
                 buffer,
             );
-            this.ipcHandler.sendRaw('firstFrame', firstFrameBuffer);
+            this.ipcHandler.sendRaw('firstFrame', firstFrameBuffer, timestamp);
 
             this.codecBuffer = undefined;
             this.codecState = CodecState.STARTED;

@@ -33,10 +33,12 @@ export type DecoderWorkerMessage =
     | {
           type: DecoderWorkerMessageType.DECODE_KEYFRAME;
           data: Uint8Array;
+          timestamp?: bigint;
       }
     | {
           type: DecoderWorkerMessageType.DECODE_DELTA;
           data: Uint8Array;
+          timestamp?: bigint;
       }
     | {
           type: DecoderWorkerMessageType.RESET_DECODER;

@@ -177,23 +177,23 @@ const onMessage = (event: MessageEvent) => {
             setRenderersConfig(config);
             break;
         case DecoderWorkerMessageType.DECODE_KEYFRAME:
+        case DecoderWorkerMessageType.DECODE_DELTA: {
+            const type =
+                message.type === DecoderWorkerMessageType.DECODE_KEYFRAME
+                    ? 'key'
+                    : 'delta';
             decoder.decode(
                 new EncodedVideoChunk({
-                    type: 'key',
+                    type,
                     data: message.data,
-                    timestamp: 0,
+                    timestamp:
+                        message.timestamp === undefined
+                            ? 0
+                            : Number(message.timestamp),
                 }),
             );
             break;
-        case DecoderWorkerMessageType.DECODE_DELTA:
-            decoder.decode(
-                new EncodedVideoChunk({
-                    type: 'delta',
-                    data: message.data,
-                    timestamp: 0,
-                }),
-            );
-            break;
+        }
         case DecoderWorkerMessageType.RESET_DECODER:
             decoder.reset();
             break;
