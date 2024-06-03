@@ -97,6 +97,9 @@ export class IpcClientHandlerHelper<L extends IpcClient>
             let args;
             if (raw === undefined && 'args' in ipcEvent) {
                 args = ipcEvent.args;
+            } else if (raw !== undefined && 'args' in ipcEvent) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                args = [raw, ...ipcEvent.args];
             } else if (raw !== undefined) {
                 args = [raw];
             } else {

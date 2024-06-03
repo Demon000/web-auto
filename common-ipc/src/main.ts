@@ -35,7 +35,7 @@ export type IpcServiceHandlerSender<R extends IpcClient> = {
     sendRaw<
         K extends IpcClientHandlerKey<R>,
         F extends R[K],
-        P extends Parameters<F> & [Uint8Array],
+        P extends Parameters<F> & [Uint8Array, ...any],
     >(
         name: K,
         ...args: P
@@ -228,12 +228,16 @@ export class IpcServiceHandlerHelper<L extends IpcService, R extends IpcClient>
         private handle: string,
     ) {}
 
-    public sendRaw(name: string, raw: any): void {
+    public sendRaw(name: string, raw: any, ...args: any[]): void {
         const ipcEvent: IpcEvent = {
             handle: this.handle,
             name,
             raw: true,
         };
+
+        if (args.length) {
+            ipcEvent.args = args;
+        }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const data = this.serializer.serialize(ipcEvent);
