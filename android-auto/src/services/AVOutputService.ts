@@ -37,6 +37,8 @@ export abstract class AVOutputService extends AVService {
     protected onAvMediaIndication(buffer: Uint8Array): void {
         this.handleData(buffer);
 
+        this.printReceive('data');
+
         this.sendAvMediaAckIndication();
     }
 
@@ -44,6 +46,8 @@ export abstract class AVOutputService extends AVService {
         const reader = BufferReader.fromBuffer(payload);
         const timestamp = reader.readUint64BE();
         const buffer = reader.readBuffer();
+
+        this.printReceive('data', timestamp.toString());
 
         this.handleData(buffer, timestamp);
 
@@ -87,11 +91,9 @@ export abstract class AVOutputService extends AVService {
 
         switch (messageId as MediaMessageId) {
             case MediaMessageId.MEDIA_MESSAGE_DATA:
-                this.printReceive('data');
                 this.onAvMediaWithTimestampIndication(payload);
                 break;
             case MediaMessageId.MEDIA_MESSAGE_CODEC_CONFIG:
-                this.printReceive('data');
                 this.onAvMediaIndication(payload);
                 break;
             case MediaMessageId.MEDIA_MESSAGE_START:
