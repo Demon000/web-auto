@@ -205,10 +205,6 @@
             /*
             {
                 name: 'TcpDeviceHandler',
-                // Static IPs that can be connected to
-                // These will be Android devices with head unit servers
-                // started manually
-                ips: ['192.168.0.103'],
                 // Automatic scan for IPs with Android Auto head unit server available
                 scanOptions: {
                     interfaces: ['wlp4s0'],
