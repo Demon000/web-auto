@@ -85,6 +85,7 @@ const resolutionConfigToResolution = (
 export class NodeVideoService extends VideoService {
     private codecState = CodecState.STOPPED;
     private codecBuffer: Uint8Array | undefined;
+    private startTimestamp: bigint | undefined;
 
     public constructor(
         private ipcHandler: IpcServiceHandler<
@@ -179,6 +180,7 @@ export class NodeVideoService extends VideoService {
 
     protected override channelStop(): void {
         super.channelStop();
+        this.startTimestamp = undefined;
         this.codecBuffer = undefined;
         this.codecState = CodecState.STOPPED;
         this.ipcHandler.channelStop();
@@ -259,6 +261,14 @@ export class NodeVideoService extends VideoService {
         };
     }
 
+    protected getTimestampOffset(timestamp?: bigint): bigint | undefined {
+        if (this.startTimestamp === undefined || timestamp === undefined) {
+            return undefined;
+        }
+
+        return timestamp - this.startTimestamp;
+    }
+
     protected override handleData(
         buffer: Uint8Array,
         timestamp?: bigint,
@@ -268,7 +278,8 @@ export class NodeVideoService extends VideoService {
         assert(videoCodecType !== undefined);
 
         if (this.codecState === CodecState.STARTED) {
-            this.ipcHandler.sendRaw('data', buffer, timestamp);
+            const timestampOffset = this.getTimestampOffset(timestamp);
+            this.ipcHandler.sendRaw('data', buffer, timestampOffset);
         } else if (this.codecState === CodecState.WAITING_FOR_CONFIG) {
             assert(this.codecBuffer === undefined);
 
@@ -297,7 +308,13 @@ export class NodeVideoService extends VideoService {
                 this.codecBuffer,
                 buffer,
             );
-            this.ipcHandler.sendRaw('firstFrame', firstFrameBuffer, timestamp);
+            this.startTimestamp = timestamp;
+            const timestampOffset = this.getTimestampOffset(timestamp);
+            this.ipcHandler.sendRaw(
+                'firstFrame',
+                firstFrameBuffer,
+                timestampOffset,
+            );
 
             this.codecBuffer = undefined;
             this.codecState = CodecState.STARTED;
