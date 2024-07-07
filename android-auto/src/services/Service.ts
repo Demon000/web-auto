@@ -270,16 +270,21 @@ export abstract class Service {
         this.sendMessageWithId(messageId, message, true, true);
     }
 
-    protected abstract fillChannelDescriptor(
-        channelDescriptor: ProtoService,
-    ): void;
+    protected fillChannelDescriptor(_channelDescriptor: ProtoService): void {
+        throw new Error('Channel descriptor filling not implemented');
+    }
 
     public fillFeatures(response: ServiceDiscoveryResponse): void {
         const channelDescriptor = new ProtoService({
             id: this.serviceId,
         });
 
-        this.fillChannelDescriptor(channelDescriptor);
+        try {
+            this.fillChannelDescriptor(channelDescriptor);
+        } catch (err) {
+            this.logger.error('Failed to fill channel descriptor', err);
+            return;
+        }
 
         response.services.push(channelDescriptor);
     }

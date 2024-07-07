@@ -98,7 +98,7 @@ export abstract class VideoService extends AVOutputService {
         );
     }
 
-    protected fillChannelDescriptor(channelDescriptor: Service): void {
+    protected override fillChannelDescriptor(channelDescriptor: Service): void {
         channelDescriptor.mediaSinkService = new MediaSinkService({
             videoConfigs: this.configs,
             displayId: this.config.id,

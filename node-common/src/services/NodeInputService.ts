@@ -92,7 +92,7 @@ export class NodeInputService extends InputService {
         }
     }
 
-    protected fillChannelDescriptor(channelDescriptor: Service): void {
+    protected override fillChannelDescriptor(channelDescriptor: Service): void {
         channelDescriptor.inputSourceService = new InputSourceService({
             displayId: this.config.displayId,
         });

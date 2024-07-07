@@ -51,7 +51,9 @@ export abstract class MediaStatusService extends Service {
         return true;
     }
 
-    protected fillChannelDescriptor(channelDescriptor: ProtoService): void {
+    protected override fillChannelDescriptor(
+        channelDescriptor: ProtoService,
+    ): void {
         channelDescriptor.mediaPlaybackService = new MediaPlaybackStatusService(
             {},
         );

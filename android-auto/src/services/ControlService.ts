@@ -13,7 +13,6 @@ import {
     PingResponse,
     ServiceDiscoveryRequest,
     ServiceDiscoveryResponse,
-    type Service as ProtoService,
     GalConstants,
     VoiceSessionNotification,
     BatteryStatusNotification,
@@ -332,9 +331,5 @@ export class ControlService extends Service {
     public override stop(): void {
         this.pinger.stop();
         super.stop();
-    }
-
-    protected fillChannelDescriptor(_channelDescriptor: ProtoService): void {
-        throw new Error('Control service does not support discovery');
     }
 }

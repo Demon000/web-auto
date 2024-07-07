@@ -57,7 +57,7 @@ export abstract class AudioOutputService extends AVOutputService {
         return numberOfBits;
     }
 
-    protected fillChannelDescriptor(channelDescriptor: Service): void {
+    protected override fillChannelDescriptor(channelDescriptor: Service): void {
         channelDescriptor.mediaSinkService = new MediaSinkService({
             availableType: MediaCodecType.MEDIA_CODEC_AUDIO_PCM,
             audioType: this.config.audioType,

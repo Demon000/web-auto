@@ -103,7 +103,9 @@ export abstract class SensorService extends Service {
         );
     }
 
-    protected fillChannelDescriptor(channelDescriptor: ProtoService): void {
+    protected override fillChannelDescriptor(
+        channelDescriptor: ProtoService,
+    ): void {
         channelDescriptor.sensorSourceService = new SensorSourceService({
             sensors: [],
         });

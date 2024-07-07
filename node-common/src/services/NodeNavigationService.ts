@@ -35,7 +35,7 @@ export class NodeNavigationStatusService extends NavigationStatusService {
         // TODO
     }
 
-    protected fillChannelDescriptor(channelDescriptor: Service): void {
+    protected override fillChannelDescriptor(channelDescriptor: Service): void {
         channelDescriptor.navigationStatusService =
             new NavigationStatusServiceProto({
                 minimumIntervalMs: 1000,

@@ -103,7 +103,7 @@ export abstract class AudioInputService extends AVService {
         );
     }
 
-    protected fillChannelDescriptor(channelDescriptor: Service): void {
+    protected override fillChannelDescriptor(channelDescriptor: Service): void {
         channelDescriptor.mediaSourceService = new MediaSourceService({
             availableType: MediaCodecType.MEDIA_CODEC_AUDIO_PCM,
             audioConfig: {
