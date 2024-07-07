@@ -16,7 +16,7 @@
     "@fontsource/nunito-sans": "^5.0.13",
     "@fontsource/roboto": "^5.0.13",
     "@material/material-color-utilities": "^0.2.7",
-    "@material/web": "^1.5.0",
+    "@material/web": "^1.5.1",
     "json5": "^2.2.3",
     "material-symbols": "^0.19.0",
     "object-fit-math": "^1.0.0",
