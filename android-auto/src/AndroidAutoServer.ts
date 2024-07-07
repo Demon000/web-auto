@@ -654,6 +654,10 @@ export abstract class AndroidAutoServer {
             }
         }
 
+        for (const service of this.services) {
+            await service.init();
+        }
+
         this.logger.info('Server started');
 
         this.started = true;
