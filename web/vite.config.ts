@@ -42,6 +42,7 @@ export default defineConfig({
                             'md-filled-icon-button',
                             'md-fab',
                             'md-linear-progress',
+                            'md-slider',
                         ].includes(tag);
                     },
                 },

@@ -12,6 +12,7 @@ import type { NodeRtAudioOutputServiceConfig } from './services/NodeRtAudioOutpu
 import type { NodeInputServiceConfig } from './services/NodeInputService.js';
 import type { NodeVideoServiceConfig } from './services/NodeVideoService.js';
 import type { NodeAudioInputServiceConfig } from './services/NodeAudioInputService.js';
+import type { NodeDdcBrightnessServiceConfig } from './services/NodeDdcBrightnessService.js';
 
 export interface NodeAndroidAutoServerConfig {
     serverIpcName: string;
@@ -54,6 +55,10 @@ export interface NodeAndroidAutoServerConfig {
           } & NodeInputServiceConfig)
         | { name: 'NodeNavigationStatusService' }
         | { name: 'NodeMediaStatusService'; ipcName: string }
+        | ({
+              name: 'NodeDdcBrightnessService';
+              ipcName: string;
+          } & NodeDdcBrightnessServiceConfig)
     )[];
 }
 

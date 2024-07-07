@@ -12,6 +12,10 @@ export type {
     AndroidAutoMediaStatusClient,
 } from './services/NodeMediaStatusService.js';
 export type {
+    AndroidAutoBrightnessService,
+    AndroidAutoBrightnessClient,
+} from './services/NodeBrightnessService.js';
+export type {
     IDevice,
     AndroidAutoServerService,
     AndroidAutoServerClient,

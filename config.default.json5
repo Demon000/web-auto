@@ -196,6 +196,12 @@
             {
                 name: 'NodeNavigationStatusService',
             },
+            {
+                name: 'NodeDdcBrightnessService',
+                ipcName: 'brightness-service',
+                /* Can be obtained using ddcutil detect */
+                serialNumber: '9TT0T63',
+            },
         ],
         deviceHandlers: [
             {
@@ -307,6 +313,11 @@
                     onlyShowIfDeviceConnected: true,
                     keycode: 'SEARCH',
                     content: 'mic',
+                },
+                {
+                    name: 'AppBarBrightness',
+                    brightnessServiceIpcName: 'brightness-service',
+                    content: 'brightness_high',
                 },
             ],
         },

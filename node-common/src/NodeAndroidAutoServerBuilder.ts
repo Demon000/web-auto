@@ -42,6 +42,11 @@ import {
 } from './NodeAndroidAutoServer.js';
 import { NodeRtAudioInputService } from './services/NodeRtAudioInputService.js';
 import { NodeRtAudioOutputService } from './services/NodeRtAudioOutputService.js';
+import type {
+    AndroidAutoBrightnessClient,
+    AndroidAutoBrightnessService,
+} from './services/NodeBrightnessService.js';
+import { NodeDdcBrightnessService } from './services/NodeDdcBrightnessService.js';
 
 export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
     protected logger = getLogger(this.constructor.name);
@@ -159,6 +164,16 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
                 case 'NodeNavigationStatusService':
                     service = new NodeNavigationStatusService(events);
                     break;
+                case 'NodeDdcBrightnessService':
+                    ipcHandler = this.ipcRegistry.registerIpcService<
+                        AndroidAutoBrightnessService,
+                        AndroidAutoBrightnessClient
+                    >(entry.ipcName);
+                    service = new NodeDdcBrightnessService(
+                        entry,
+                        ipcHandler,
+                        events,
+                    );
             }
 
             services.push(service);
