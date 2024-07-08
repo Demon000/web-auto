@@ -1,13 +1,11 @@
 import { inspect } from 'node:util';
 import { format, transports, loggers, Logger } from 'winston';
+import { resolve } from 'node:path';
 import { type TransformableInfo } from 'logform';
 
 export const LOGGER_NAME = 'logger';
 
-import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const LOG_PATH = resolve(import.meta.dirname, '..', '..', '..');
 
 type TransformableInfoWithMetadata = TransformableInfo & {
     metadata: {
@@ -63,7 +61,7 @@ const fileTransport = new transports.File({
         format.errors({ stack: true }),
         format.printf(printfFile),
     ),
-    dirname: resolve(__dirname, '..', '..', '..'),
+    dirname: LOG_PATH,
     filename: 'web-auto.log',
 });
 

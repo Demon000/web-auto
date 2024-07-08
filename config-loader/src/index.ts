@@ -1,7 +1,6 @@
 import JSON5 from 'json5';
 import { readFileSync } from 'fs';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
+import { resolve } from 'node:path';
 import type { JsonObject, JsonValue, WritableDeep } from 'type-fest';
 
 export type Value = WritableDeep<JsonValue>;
@@ -12,8 +11,13 @@ export type VariableConfig = {
     variables?: Variables;
 } & Config;
 
-const CURRENT_DIR = dirname(fileURLToPath(import.meta.url));
-const CONFIG_PATH = join(CURRENT_DIR, '../../../config.json5');
+const CONFIG_PATH = resolve(
+    import.meta.dirname,
+    '..',
+    '..',
+    '..',
+    'config.json5',
+);
 
 const lookupVariable = (
     name: string,
