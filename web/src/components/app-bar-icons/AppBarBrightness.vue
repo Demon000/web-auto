@@ -7,13 +7,11 @@ import {
     AndroidAutoBrightnessService,
 } from '@web-auto/node-common/ipc.js';
 import { ipcClientRegistry } from '../../ipc.js';
-import { ref } from 'vue';
+import { useBrightnessStore } from '../../stores/brightness-store.js';
 
 export interface AppBarBirghtnessProps extends AppBarIconProps {
     brightnessServiceIpcName: string;
 }
-
-const brightness = ref(0);
 
 const props = defineProps<AppBarBirghtnessProps>();
 
@@ -22,18 +20,15 @@ const brightnessService = ipcClientRegistry.registerIpcClient<
     AndroidAutoBrightnessService
 >(props.brightnessServiceIpcName);
 
-brightnessService
-    .getBrightness()
-    .then((value) => {
-        brightness.value = value;
-    })
-    .catch((err) => {
-        console.error('Failed to get brightness', err);
-    });
+const brightnessStore = useBrightnessStore(brightnessService);
 
-const setBrightness = () => {
+await brightnessStore.initialize();
+
+const setBrightness = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const value = target.value as unknown as number;
     brightnessService
-        .setBrightness(brightness.value)
+        .setBrightness(value)
         .then(() => {})
         .catch((err) => {
             console.error('Failed to set brightness', err);
@@ -48,7 +43,7 @@ const setBrightness = () => {
             min="0"
             max="1"
             step="0.1"
-            v-model="brightness"
+            :value="brightnessStore.brightness"
             @change="setBrightness"
         ></md-slider>
     </div>
