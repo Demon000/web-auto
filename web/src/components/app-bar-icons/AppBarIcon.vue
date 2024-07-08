@@ -15,7 +15,7 @@ defineProps<AppBarIconProps>();
         <md-icon-button
             class="icon-button"
             :class="{
-                selected: selected,
+                selected,
             }"
         >
             <md-icon>
