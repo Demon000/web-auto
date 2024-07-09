@@ -28,7 +28,7 @@ export interface ServiceEvents {
     ) => void;
 }
 
-type ServiceMessageCallback = (messageId: number, payload: Uint8Array) => void;
+type ServiceMessageCallback = (payload: Uint8Array) => void;
 
 export abstract class Service {
     public static nextServiceId = 1;
@@ -167,7 +167,7 @@ export abstract class Service {
         if (callback === undefined) {
             return this.onSpecificMessage(messageId, payload);
         } else {
-            callback(messageId, payload);
+            callback(payload);
             return true;
         }
     }
@@ -187,7 +187,7 @@ export abstract class Service {
                 reject(new Error('Aborted'));
             };
 
-            const onMessage = (messageId: number, payload: Uint8Array) => {
+            const onMessage = (payload: Uint8Array) => {
                 this.logger.info(
                     `Received waited message with id ${messageId}`,
                 );
