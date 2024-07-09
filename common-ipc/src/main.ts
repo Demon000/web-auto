@@ -297,7 +297,7 @@ export class IpcServiceHandlerHelper<L extends IpcService, R extends IpcClient>
         this.noClientsHandlersMap.set(name, cb);
     }
 
-    public offNoClients<K extends IpcServiceHandlerKey<L>>(name: K): void {
+    public offNoClients<K extends IpcClientHandlerKey<R>>(name: K): void {
         assert(this.noClientsHandlersMap.has(name));
         this.noClientsHandlersMap.delete(name);
     }
