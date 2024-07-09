@@ -8,7 +8,10 @@ import {
 } from '@web-auto/android-auto-proto';
 import { getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
-import { Message as ProtoMessage } from '@bufbuild/protobuf';
+import {
+    Message as ProtoMessage,
+    type BinaryReadOptions,
+} from '@bufbuild/protobuf';
 import { bufferWrapUint8Array } from '../utils/buffer.js';
 
 export interface ServiceEvents {
@@ -28,7 +31,16 @@ export interface ServiceEvents {
     ) => void;
 }
 
-type SpecificMessageCallback = (payload: Uint8Array) => void;
+type MessageCallbackFn<T> = (data: T) => void | Promise<void>;
+
+type MessageType<T> = {
+    fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): T;
+};
+
+interface MessageCallback<T> {
+    fn: MessageCallbackFn<T> | undefined;
+    clazz: MessageType<T> | undefined;
+}
 
 export abstract class Service {
     public static nextServiceId = 1;
@@ -39,10 +51,11 @@ export abstract class Service {
 
     protected started = false;
 
-    private specificMessageCallbacks = new Map<
+    private permanentSpecificMessageCallbacks = new Map<
         number,
-        SpecificMessageCallback
+        MessageCallback<any>
     >();
+    private specificMessageCallbacks = new Map<number, MessageCallback<any>>();
 
     public constructor(
         protected events: ServiceEvents,
@@ -53,6 +66,18 @@ export abstract class Service {
         }
 
         this.serviceId = serviceId;
+    }
+
+    protected addMessageCallback<T>(
+        id: number,
+        fn?: MessageCallbackFn<T>,
+        clazz?: MessageType<T>,
+    ): void {
+        assert(!this.permanentSpecificMessageCallbacks.has(id));
+        this.permanentSpecificMessageCallbacks.set(id, {
+            fn,
+            clazz,
+        });
     }
 
     public name(): string {
@@ -78,8 +103,6 @@ export abstract class Service {
     protected open(_data: ChannelOpenRequest): void {}
 
     protected onChannelOpenRequest(data: ChannelOpenRequest): void {
-        this.printReceive(data);
-
         let status = false;
 
         try {
@@ -125,16 +148,16 @@ export abstract class Service {
         this.printMessage('Send', message, extra);
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    protected async onControlMessage(
+    public handleControlMessage(
         messageId: number,
         payload: Uint8Array,
-    ): Promise<boolean> {
+    ): boolean {
         let data;
 
         switch (messageId as ControlMessageType) {
             case ControlMessageType.MESSAGE_CHANNEL_OPEN_REQUEST:
                 data = ChannelOpenRequest.fromBinary(payload);
+                this.printReceive(data);
                 this.onChannelOpenRequest(data);
                 break;
             default:
@@ -144,38 +167,38 @@ export abstract class Service {
         return true;
     }
 
-    public async handleControlMessage(
-        messageId: number,
-        payload: Uint8Array,
-    ): Promise<boolean> {
-        return this.onControlMessage(messageId, payload);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/require-await
-    protected async onSpecificMessage(
-        _messageId: number,
-        _payload: Uint8Array,
-    ): Promise<boolean> {
-        return false;
-    }
-
     public async handleSpecificMessage(
         messageId: number,
         payload: Uint8Array,
-    ): Promise<boolean> {
-        const callback = this.specificMessageCallbacks.get(messageId);
+    ): Promise<boolean | void> {
+        let callback = this.specificMessageCallbacks.get(messageId);
         if (callback === undefined) {
-            return this.onSpecificMessage(messageId, payload);
-        } else {
-            callback(payload);
+            callback = this.permanentSpecificMessageCallbacks.get(messageId);
+        }
+
+        if (callback === undefined) {
+            return false;
+        }
+
+        if (callback.fn === undefined) {
             return true;
         }
+
+        let data = payload;
+        if (callback.clazz !== undefined) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            data = callback.clazz.fromBinary(payload);
+        }
+        this.printReceive(data);
+
+        return callback.fn(data);
     }
 
-    protected waitForSpecificMessage(
+    protected waitForSpecificMessage<T = Uint8Array>(
         messageId: number,
         signal: AbortSignal,
-    ): Promise<Uint8Array> {
+        clazz?: MessageType<T>,
+    ): Promise<T> {
         return new Promise((resolve, reject) => {
             assert(!this.specificMessageCallbacks.has(messageId));
 
@@ -187,7 +210,7 @@ export abstract class Service {
                 reject(new Error('Aborted'));
             };
 
-            const onMessage = (payload: Uint8Array) => {
+            const onMessage = (payload: T) => {
                 this.logger.info(
                     `Received waited message with id ${messageId}`,
                 );
@@ -198,7 +221,10 @@ export abstract class Service {
 
             signal.addEventListener('abort', onAbort);
 
-            this.specificMessageCallbacks.set(messageId, onMessage);
+            this.specificMessageCallbacks.set(messageId, {
+                clazz,
+                fn: onMessage,
+            });
         });
     }
 

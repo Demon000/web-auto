@@ -24,6 +24,25 @@ export abstract class AVOutputService extends AVService {
         events: ServiceEvents,
     ) {
         super(events);
+
+        this.addMessageCallback(
+            MediaMessageId.MEDIA_MESSAGE_DATA,
+            this.onAvMediaWithTimestampIndication.bind(this),
+        );
+        this.addMessageCallback(
+            MediaMessageId.MEDIA_MESSAGE_CODEC_CONFIG,
+            this.onAvMediaIndication.bind(this),
+        );
+        this.addMessageCallback(
+            MediaMessageId.MEDIA_MESSAGE_START,
+            this.onStartIndication.bind(this),
+            Start,
+        );
+        this.addMessageCallback(
+            MediaMessageId.MEDIA_MESSAGE_STOP,
+            this.onStopIndication.bind(this),
+            Stop,
+        );
     }
 
     protected override getConfig(status: boolean): Config {
@@ -37,8 +56,6 @@ export abstract class AVOutputService extends AVService {
     protected onAvMediaIndication(buffer: Uint8Array): void {
         this.handleData(buffer);
 
-        this.printReceive('data');
-
         this.sendAvMediaAckIndication();
     }
 
@@ -47,16 +64,12 @@ export abstract class AVOutputService extends AVService {
         const timestamp = reader.readUint64BE();
         const buffer = reader.readBuffer();
 
-        this.printReceive('data', timestamp.toString());
-
         this.handleData(buffer, timestamp);
 
         this.sendAvMediaAckIndication();
     }
 
     protected onStopIndication(data: Stop): void {
-        this.printReceive(data);
-
         try {
             this.channelStop();
         } catch (err) {
@@ -68,8 +81,6 @@ export abstract class AVOutputService extends AVService {
     }
 
     protected onStartIndication(data: Start): void {
-        this.printReceive(data);
-
         assert(data.sessionId !== undefined);
         this.session = data.sessionId;
         this.sessionAckBuffer = new Ack({
@@ -85,34 +96,6 @@ export abstract class AVOutputService extends AVService {
                 err,
             });
         }
-    }
-
-    public override async onSpecificMessage(
-        messageId: number,
-        payload: Uint8Array,
-    ): Promise<boolean> {
-        let data;
-
-        switch (messageId as MediaMessageId) {
-            case MediaMessageId.MEDIA_MESSAGE_DATA:
-                this.onAvMediaWithTimestampIndication(payload);
-                break;
-            case MediaMessageId.MEDIA_MESSAGE_CODEC_CONFIG:
-                this.onAvMediaIndication(payload);
-                break;
-            case MediaMessageId.MEDIA_MESSAGE_START:
-                data = Start.fromBinary(payload);
-                this.onStartIndication(data);
-                break;
-            case MediaMessageId.MEDIA_MESSAGE_STOP:
-                data = Stop.fromBinary(payload);
-                this.onStopIndication(data);
-                break;
-            default:
-                return super.onSpecificMessage(messageId, payload);
-        }
-
-        return true;
     }
 
     public get channelStarted(): boolean {

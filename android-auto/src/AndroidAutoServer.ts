@@ -216,12 +216,12 @@ export abstract class AndroidAutoServer {
 
         let handled;
         if (isControl) {
-            handled = await service.handleControlMessage(messageId, payload);
+            handled = service.handleControlMessage(messageId, payload);
         } else {
             handled = await service.handleSpecificMessage(messageId, payload);
         }
 
-        if (!handled) {
+        if (handled === false) {
             const tag = isControl ? 'control' : 'specific';
 
             this.logger.error(

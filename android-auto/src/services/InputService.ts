@@ -12,13 +12,17 @@ import {
 export abstract class InputService extends Service {
     public constructor(events: ServiceEvents) {
         super(events);
+
+        this.addMessageCallback(
+            InputMessageId.INPUT_MESSAGE_KEY_BINDING_REQUEST,
+            this.onBindingRequest.bind(this),
+            KeyBindingRequest,
+        );
     }
 
     protected abstract bind(data: KeyBindingRequest): Promise<void>;
 
     protected async onBindingRequest(data: KeyBindingRequest): Promise<void> {
-        this.printReceive(data);
-
         let status = false;
 
         try {
@@ -33,24 +37,6 @@ export abstract class InputService extends Service {
         }
 
         return this.sendBindingResponse(status);
-    }
-
-    public override async onSpecificMessage(
-        messageId: number,
-        payload: Uint8Array,
-    ): Promise<boolean> {
-        let data;
-
-        switch (messageId as InputMessageId) {
-            case InputMessageId.INPUT_MESSAGE_KEY_BINDING_REQUEST:
-                data = KeyBindingRequest.fromBinary(payload);
-                await this.onBindingRequest(data);
-                break;
-            default:
-                return super.onSpecificMessage(messageId, payload);
-        }
-
-        return true;
     }
 
     protected sendBindingResponse(status: boolean): void {

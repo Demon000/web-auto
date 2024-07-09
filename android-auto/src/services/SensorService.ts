@@ -19,6 +19,12 @@ export abstract class SensorService extends Service {
 
     public constructor(events: ServiceEvents) {
         super(events);
+
+        this.addMessageCallback(
+            SensorMessageId.SENSOR_MESSAGE_REQUEST,
+            this.onSensorStartRequest.bind(this),
+            SensorRequest,
+        );
     }
 
     protected findSensor(sensorType: SensorType): Sensor | undefined {
@@ -43,8 +49,6 @@ export abstract class SensorService extends Service {
     }
 
     protected onSensorStartRequest(data: SensorRequest): void {
-        this.printReceive(data);
-
         try {
             assert(data.type !== undefined);
             const sensor = this.getSensor(data.type);
@@ -58,24 +62,6 @@ export abstract class SensorService extends Service {
         }
 
         this.sendSensorStartResponse(data.type, true);
-    }
-
-    public override async onSpecificMessage(
-        messageId: number,
-        payload: Uint8Array,
-    ): Promise<boolean> {
-        let data;
-
-        switch (messageId as SensorMessageId) {
-            case SensorMessageId.SENSOR_MESSAGE_REQUEST:
-                data = SensorRequest.fromBinary(payload);
-                this.onSensorStartRequest(data);
-                break;
-            default:
-                return super.onSpecificMessage(messageId, payload);
-        }
-
-        return true;
     }
 
     protected sendSensorStartResponse(

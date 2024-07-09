@@ -24,13 +24,22 @@ export abstract class AudioInputService extends AVService {
         events: ServiceEvents,
     ) {
         super(events);
+
+        this.addMessageCallback(
+            MediaMessageId.MEDIA_MESSAGE_MICROPHONE_REQUEST,
+            this.onInputOpenRequest.bind(this),
+            MicrophoneRequest,
+        );
+        this.addMessageCallback(
+            MediaMessageId.MEDIA_MESSAGE_ACK,
+            this.onAckIndication.bind(this),
+            Ack,
+        );
     }
 
     protected abstract inputOpen(data: MicrophoneRequest): void;
 
     protected onInputOpenRequest(data: MicrophoneRequest): void {
-        this.printReceive(data);
-
         try {
             this.inputOpen(data);
         } catch (err) {
@@ -44,31 +53,7 @@ export abstract class AudioInputService extends AVService {
         this.sendInputOpenResponse();
     }
 
-    protected onAckIndication(data: Ack): void {
-        this.printReceive(data);
-    }
-
-    public override async onSpecificMessage(
-        messageId: number,
-        payload: Uint8Array,
-    ): Promise<boolean> {
-        let data;
-
-        switch (messageId as MediaMessageId) {
-            case MediaMessageId.MEDIA_MESSAGE_MICROPHONE_REQUEST:
-                data = MicrophoneRequest.fromBinary(payload);
-                this.onInputOpenRequest(data);
-                break;
-            case MediaMessageId.MEDIA_MESSAGE_ACK:
-                data = Ack.fromBinary(payload);
-                this.onAckIndication(data);
-                break;
-            default:
-                return super.onSpecificMessage(messageId, payload);
-        }
-
-        return true;
-    }
+    protected onAckIndication(_data: Ack): void {}
 
     protected sendInputOpenResponse(): void {
         if (this.session === undefined) {

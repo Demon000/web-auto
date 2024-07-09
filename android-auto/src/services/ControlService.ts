@@ -58,6 +58,42 @@ export class ControlService extends Service {
             onPingTimeout: this.onPingTimeout.bind(this),
             onPingRequest: this.sendPingRequest.bind(this),
         });
+
+        this.addMessageCallback(
+            ControlMessageType.MESSAGE_PING_REQUEST,
+            this.onPingRequest.bind(this),
+            PingRequest,
+        );
+        this.addMessageCallback(
+            ControlMessageType.MESSAGE_PING_RESPONSE,
+            this.onPingResponse.bind(this),
+            PingResponse,
+        );
+        this.addMessageCallback(
+            ControlMessageType.MESSAGE_AUDIO_FOCUS_REQUEST,
+            this.onAudioFocusRequest.bind(this),
+            AudioFocusRequestNotification,
+        );
+        this.addMessageCallback(
+            ControlMessageType.MESSAGE_NAV_FOCUS_REQUEST,
+            this.onNavigationFocusRequest.bind(this),
+            NavFocusRequestNotification,
+        );
+        this.addMessageCallback(
+            ControlMessageType.MESSAGE_VOICE_SESSION_NOTIFICATION,
+            this.onVoiceSessionNotification.bind(this),
+            VoiceSessionNotification,
+        );
+        this.addMessageCallback(
+            ControlMessageType.MESSAGE_BATTERY_STATUS_NOTIFICATION,
+            this.onBatteryStatusNotification.bind(this),
+            BatteryStatusNotification,
+        );
+        this.addMessageCallback(
+            ControlMessageType.MESSAGE_BYEBYE_REQUEST,
+            this.onByeByeRequest.bind(this),
+            ByeByeRequest,
+        );
     }
 
     private onPingTimeout(): void {
@@ -66,27 +102,20 @@ export class ControlService extends Service {
         );
     }
 
-    private onByeByeRequest(data: ByeByeRequest): void {
-        this.printReceive(data);
-
+    private onByeByeRequest(_data: ByeByeRequest): void {
         this.events.onSelfDisconnect(GenericDeviceDisconnectReason.BYE_BYE);
     }
 
     private onPingRequest(data: PingRequest): void {
-        this.printReceive(data);
-
         assert(data.timestamp !== undefined);
         this.sendPingResponse(data.timestamp);
     }
 
     private onPingResponse(data: PingResponse): void {
-        this.printReceive(data);
         this.pinger.onPingResponse(data);
     }
 
     private onAudioFocusRequest(data: AudioFocusRequestNotification): void {
-        this.printReceive(data);
-
         const audioFocusState =
             data.request === AudioFocusRequestType.AUDIO_FOCUS_RELEASE
                 ? AudioFocusStateType.AUDIO_FOCUS_STATE_LOSS
@@ -96,8 +125,6 @@ export class ControlService extends Service {
     }
 
     private onNavigationFocusRequest(data: NavFocusRequestNotification): void {
-        this.printReceive(data);
-
         if (data.focusType === undefined) {
             return;
         }
@@ -105,57 +132,13 @@ export class ControlService extends Service {
         this.sendNavigationFocusResponse(data.focusType);
     }
 
-    protected onVoiceSessionNotification(data: VoiceSessionNotification): void {
-        this.printReceive(data);
-    }
+    protected onVoiceSessionNotification(
+        _data: VoiceSessionNotification,
+    ): void {}
 
     protected onBatteryStatusNotification(
-        data: BatteryStatusNotification,
-    ): void {
-        this.printReceive(data);
-    }
-
-    protected override async onSpecificMessage(
-        messageId: number,
-        payload: Uint8Array,
-    ): Promise<boolean> {
-        let data;
-
-        switch (messageId as ControlMessageType) {
-            case ControlMessageType.MESSAGE_PING_REQUEST:
-                data = PingRequest.fromBinary(payload);
-                this.onPingRequest(data);
-                break;
-            case ControlMessageType.MESSAGE_PING_RESPONSE:
-                data = PingResponse.fromBinary(payload);
-                this.onPingResponse(data);
-                break;
-            case ControlMessageType.MESSAGE_AUDIO_FOCUS_REQUEST:
-                data = AudioFocusRequestNotification.fromBinary(payload);
-                this.onAudioFocusRequest(data);
-                break;
-            case ControlMessageType.MESSAGE_NAV_FOCUS_REQUEST:
-                data = NavFocusRequestNotification.fromBinary(payload);
-                this.onNavigationFocusRequest(data);
-                break;
-            case ControlMessageType.MESSAGE_VOICE_SESSION_NOTIFICATION:
-                data = VoiceSessionNotification.fromBinary(payload);
-                this.onVoiceSessionNotification(data);
-                break;
-            case ControlMessageType.MESSAGE_BATTERY_STATUS_NOTIFICATION:
-                data = BatteryStatusNotification.fromBinary(payload);
-                this.onBatteryStatusNotification(data);
-                break;
-            case ControlMessageType.MESSAGE_BYEBYE_REQUEST:
-                data = ByeByeRequest.fromBinary(payload);
-                this.onByeByeRequest(data);
-                break;
-            default:
-                return super.onSpecificMessage(messageId, payload);
-        }
-
-        return true;
-    }
+        _data: BatteryStatusNotification,
+    ): void {}
 
     private sendPingResponse(timestamp: bigint): void {
         const data = new PingResponse({
@@ -274,7 +257,6 @@ export class ControlService extends Service {
                 ControlMessageType.MESSAGE_ENCAPSULATED_SSL,
                 signal,
             );
-            this.printReceive(receivedPayload, 'Handshake');
             await this.cryptor.writeHandshakeBuffer(receivedPayload);
         }
 
@@ -303,13 +285,11 @@ export class ControlService extends Service {
         signal: AbortSignal,
         serviceDiscoveryResponse: ServiceDiscoveryResponse,
     ): Promise<void> {
-        const payload = await this.waitForSpecificMessage(
+        const request = await this.waitForSpecificMessage(
             ControlMessageType.MESSAGE_SERVICE_DISCOVERY_REQUEST,
             signal,
+            ServiceDiscoveryRequest,
         );
-
-        const request = ServiceDiscoveryRequest.fromBinary(payload);
-        this.printReceive(request);
 
         this.logger.info(
             `Discovery request, device name ${request.deviceName}`,

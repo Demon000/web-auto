@@ -11,11 +11,15 @@ export abstract class AVService extends Service {
 
     public constructor(events: ServiceEvents) {
         super(events);
+
+        this.addMessageCallback(
+            MediaMessageId.MEDIA_MESSAGE_SETUP,
+            this.onSetupRequest.bind(this),
+            Setup,
+        );
     }
 
     protected async onSetupRequest(data: Setup): Promise<void> {
-        this.printReceive(data);
-
         let status = false;
 
         try {
@@ -30,24 +34,6 @@ export abstract class AVService extends Service {
         }
 
         this.sendSetupResponse(status);
-    }
-
-    public override async onSpecificMessage(
-        messageId: number,
-        payload: Uint8Array,
-    ): Promise<boolean> {
-        let data;
-
-        switch (messageId as MediaMessageId) {
-            case MediaMessageId.MEDIA_MESSAGE_SETUP:
-                data = Setup.fromBinary(payload);
-                await this.onSetupRequest(data);
-                break;
-            default:
-                return super.onSpecificMessage(messageId, payload);
-        }
-
-        return true;
     }
 
     protected async setup(_data: Setup): Promise<void> {}

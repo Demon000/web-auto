@@ -11,6 +11,17 @@ import { Service, type ServiceEvents } from './Service.js';
 export abstract class MediaStatusService extends Service {
     public constructor(events: ServiceEvents) {
         super(events);
+
+        this.addMessageCallback(
+            MediaPlaybackStatusMessageId.MEDIA_PLAYBACK_METADATA,
+            this.onMetadata.bind(this),
+            MediaPlaybackMetadata,
+        );
+        this.addMessageCallback(
+            MediaPlaybackStatusMessageId.MEDIA_PLAYBACK_STATUS,
+            this.onPlayback.bind(this),
+            MediaPlaybackStatus,
+        );
     }
 
     protected abstract handleMetadata(
@@ -20,35 +31,11 @@ export abstract class MediaStatusService extends Service {
     protected abstract handlePlayback(data: MediaPlaybackStatus): Promise<void>;
 
     protected async onMetadata(data: MediaPlaybackMetadata): Promise<void> {
-        this.printReceive(data);
         await this.handleMetadata(data);
     }
 
     protected async onPlayback(data: MediaPlaybackStatus): Promise<void> {
-        this.printReceive(data);
         await this.handlePlayback(data);
-    }
-
-    public override async onSpecificMessage(
-        messageId: number,
-        payload: Uint8Array,
-    ): Promise<boolean> {
-        let data;
-
-        switch (messageId as MediaPlaybackStatusMessageId) {
-            case MediaPlaybackStatusMessageId.MEDIA_PLAYBACK_METADATA:
-                data = MediaPlaybackMetadata.fromBinary(payload);
-                await this.onMetadata(data);
-                break;
-            case MediaPlaybackStatusMessageId.MEDIA_PLAYBACK_STATUS:
-                data = MediaPlaybackStatus.fromBinary(payload);
-                await this.onPlayback(data);
-                break;
-            default:
-                return super.onSpecificMessage(messageId, payload);
-        }
-
-        return true;
     }
 
     protected override fillChannelDescriptor(

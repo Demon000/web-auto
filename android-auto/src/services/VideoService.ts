@@ -45,6 +45,12 @@ export abstract class VideoService extends AVOutputService {
         );
 
         this.configs = configs;
+
+        this.addMessageCallback(
+            MediaMessageId.MEDIA_MESSAGE_VIDEO_FOCUS_REQUEST,
+            this.onVideoFocusRequest.bind(this),
+            VideoFocusRequestNotification,
+        );
     }
 
     protected channelConfig(): IVideoConfiguration {
@@ -54,24 +60,6 @@ export abstract class VideoService extends AVOutputService {
         return config;
     }
 
-    public override async onSpecificMessage(
-        messageId: number,
-        payload: Uint8Array,
-    ): Promise<boolean> {
-        let data;
-
-        switch (messageId as MediaMessageId) {
-            case MediaMessageId.MEDIA_MESSAGE_VIDEO_FOCUS_REQUEST:
-                data = VideoFocusRequestNotification.fromBinary(payload);
-                await this.onVideoFocusRequest(data);
-                break;
-            default:
-                return await super.onSpecificMessage(messageId, payload);
-        }
-
-        return true;
-    }
-
     protected abstract focus(
         data: VideoFocusRequestNotification,
     ): Promise<void>;
@@ -79,8 +67,6 @@ export abstract class VideoService extends AVOutputService {
     protected async onVideoFocusRequest(
         data: VideoFocusRequestNotification,
     ): Promise<void> {
-        this.printReceive(data);
-
         try {
             await this.focus(data);
         } catch (err) {
