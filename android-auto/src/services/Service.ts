@@ -119,7 +119,14 @@ export abstract class Service {
         this.sendChannelOpenResponse(status);
     }
 
-    protected printMessage(type: string, message: any, extra?: string): void {
+    protected printMessage(
+        type: string,
+        id: number,
+        message: any,
+        isEncrypted: boolean,
+        isControl: boolean,
+        extra?: string,
+    ): void {
         if (!this.logger.debuggable) {
             return;
         }
@@ -137,15 +144,31 @@ export abstract class Service {
             message = buffer.toString('hex');
         }
 
-        this.logger.debug(`${type} ${extra}`, message);
+        const encrypted = isEncrypted ? 'encrypted ' : '';
+        const control = isControl ? 'control ' : '';
+        this.logger.debug(
+            `${type} ${id} ${encrypted}${control}${extra}`,
+            message,
+        );
     }
 
-    protected printReceive(message: any, extra?: string): void {
-        this.printMessage('Receive', message, extra);
+    protected printReceive(
+        id: number,
+        message: any,
+        isControl: boolean,
+        extra?: string,
+    ): void {
+        this.printMessage('Receive', id, message, false, isControl, extra);
     }
 
-    protected printSend(message: any, extra?: string): void {
-        this.printMessage('Send', message, extra);
+    protected printSend(
+        id: number,
+        message: any,
+        isEncrypted: boolean,
+        isControl: boolean,
+        extra?: string,
+    ): void {
+        this.printMessage('Send', id, message, isEncrypted, isControl, extra);
     }
 
     public handleControlMessage(
@@ -157,7 +180,7 @@ export abstract class Service {
         switch (messageId as ControlMessageType) {
             case ControlMessageType.MESSAGE_CHANNEL_OPEN_REQUEST:
                 data = ChannelOpenRequest.fromBinary(payload);
-                this.printReceive(data);
+                this.printReceive(messageId, data, true);
                 this.onChannelOpenRequest(data);
                 break;
             default:
@@ -189,7 +212,7 @@ export abstract class Service {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             data = callback.clazz.fromBinary(payload);
         }
-        this.printReceive(data);
+        this.printReceive(messageId, data, false);
 
         return callback.fn(data);
     }
@@ -248,7 +271,13 @@ export abstract class Service {
         isEncrypted: boolean,
         isControl: boolean,
     ): void {
-        this.printSend(dataPayload, printMessage);
+        this.printSend(
+            messageId,
+            dataPayload,
+            isEncrypted,
+            isControl,
+            printMessage,
+        );
 
         this.events.onPayloadMessageSent(
             this.serviceId,
@@ -265,7 +294,7 @@ export abstract class Service {
         isEncrypted: boolean,
         isControl: boolean,
     ): void {
-        this.printSend(protoMessage);
+        this.printSend(messageId, protoMessage, isEncrypted, isControl);
 
         this.events.onProtoMessageSent(
             this.serviceId,
