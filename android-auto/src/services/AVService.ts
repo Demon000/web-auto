@@ -14,6 +14,8 @@ export abstract class AVService extends Service {
     }
 
     protected async onSetupRequest(data: Setup): Promise<void> {
+        this.printReceive(data);
+
         let status = false;
 
         try {
@@ -39,7 +41,6 @@ export abstract class AVService extends Service {
         switch (messageId as MediaMessageId) {
             case MediaMessageId.MEDIA_MESSAGE_SETUP:
                 data = Setup.fromBinary(payload);
-                this.printReceive(data);
                 await this.onSetupRequest(data);
                 break;
             default:

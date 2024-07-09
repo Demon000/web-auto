@@ -29,6 +29,8 @@ export abstract class AudioInputService extends AVService {
     protected abstract inputOpen(data: MicrophoneRequest): void;
 
     protected onInputOpenRequest(data: MicrophoneRequest): void {
+        this.printReceive(data);
+
         try {
             this.inputOpen(data);
         } catch (err) {
@@ -42,7 +44,9 @@ export abstract class AudioInputService extends AVService {
         this.sendInputOpenResponse();
     }
 
-    protected async onAckIndication(_data: Ack): Promise<void> {}
+    protected onAckIndication(data: Ack): void {
+        this.printReceive(data);
+    }
 
     public override async onSpecificMessage(
         messageId: number,
@@ -53,13 +57,11 @@ export abstract class AudioInputService extends AVService {
         switch (messageId as MediaMessageId) {
             case MediaMessageId.MEDIA_MESSAGE_MICROPHONE_REQUEST:
                 data = MicrophoneRequest.fromBinary(payload);
-                this.printReceive(data);
                 this.onInputOpenRequest(data);
                 break;
             case MediaMessageId.MEDIA_MESSAGE_ACK:
                 data = Ack.fromBinary(payload);
-                this.printReceive(data);
-                await this.onAckIndication(data);
+                this.onAckIndication(data);
                 break;
             default:
                 return super.onSpecificMessage(messageId, payload);

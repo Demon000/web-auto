@@ -63,7 +63,6 @@ export abstract class VideoService extends AVOutputService {
         switch (messageId as MediaMessageId) {
             case MediaMessageId.MEDIA_MESSAGE_VIDEO_FOCUS_REQUEST:
                 data = VideoFocusRequestNotification.fromBinary(payload);
-                this.printReceive(data);
                 await this.onVideoFocusRequest(data);
                 break;
             default:
@@ -80,6 +79,8 @@ export abstract class VideoService extends AVOutputService {
     protected async onVideoFocusRequest(
         data: VideoFocusRequestNotification,
     ): Promise<void> {
+        this.printReceive(data);
+
         try {
             await this.focus(data);
         } catch (err) {

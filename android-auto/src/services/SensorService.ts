@@ -43,6 +43,8 @@ export abstract class SensorService extends Service {
     }
 
     protected onSensorStartRequest(data: SensorRequest): void {
+        this.printReceive(data);
+
         try {
             assert(data.type !== undefined);
             const sensor = this.getSensor(data.type);
@@ -67,7 +69,6 @@ export abstract class SensorService extends Service {
         switch (messageId as SensorMessageId) {
             case SensorMessageId.SENSOR_MESSAGE_REQUEST:
                 data = SensorRequest.fromBinary(payload);
-                this.printReceive(data);
                 this.onSensorStartRequest(data);
                 break;
             default:

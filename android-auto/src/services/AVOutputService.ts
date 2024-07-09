@@ -55,6 +55,8 @@ export abstract class AVOutputService extends AVService {
     }
 
     protected onStopIndication(data: Stop): void {
+        this.printReceive(data);
+
         try {
             this.channelStop();
         } catch (err) {
@@ -66,6 +68,8 @@ export abstract class AVOutputService extends AVService {
     }
 
     protected onStartIndication(data: Start): void {
+        this.printReceive(data);
+
         assert(data.sessionId !== undefined);
         this.session = data.sessionId;
         this.sessionAckBuffer = new Ack({
@@ -98,12 +102,10 @@ export abstract class AVOutputService extends AVService {
                 break;
             case MediaMessageId.MEDIA_MESSAGE_START:
                 data = Start.fromBinary(payload);
-                this.printReceive(data);
                 this.onStartIndication(data);
                 break;
             case MediaMessageId.MEDIA_MESSAGE_STOP:
                 data = Stop.fromBinary(payload);
-                this.printReceive(data);
                 this.onStopIndication(data);
                 break;
             default:

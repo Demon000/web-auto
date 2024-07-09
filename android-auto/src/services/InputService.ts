@@ -17,6 +17,8 @@ export abstract class InputService extends Service {
     protected abstract bind(data: KeyBindingRequest): Promise<void>;
 
     protected async onBindingRequest(data: KeyBindingRequest): Promise<void> {
+        this.printReceive(data);
+
         let status = false;
 
         try {
@@ -42,7 +44,6 @@ export abstract class InputService extends Service {
         switch (messageId as InputMessageId) {
             case InputMessageId.INPUT_MESSAGE_KEY_BINDING_REQUEST:
                 data = KeyBindingRequest.fromBinary(payload);
-                this.printReceive(data);
                 await this.onBindingRequest(data);
                 break;
             default:

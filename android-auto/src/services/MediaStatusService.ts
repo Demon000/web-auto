@@ -20,10 +20,12 @@ export abstract class MediaStatusService extends Service {
     protected abstract handlePlayback(data: MediaPlaybackStatus): Promise<void>;
 
     protected async onMetadata(data: MediaPlaybackMetadata): Promise<void> {
+        this.printReceive(data);
         await this.handleMetadata(data);
     }
 
     protected async onPlayback(data: MediaPlaybackStatus): Promise<void> {
+        this.printReceive(data);
         await this.handlePlayback(data);
     }
 
@@ -36,12 +38,10 @@ export abstract class MediaStatusService extends Service {
         switch (messageId as MediaPlaybackStatusMessageId) {
             case MediaPlaybackStatusMessageId.MEDIA_PLAYBACK_METADATA:
                 data = MediaPlaybackMetadata.fromBinary(payload);
-                this.printReceive(data);
                 await this.onMetadata(data);
                 break;
             case MediaPlaybackStatusMessageId.MEDIA_PLAYBACK_STATUS:
                 data = MediaPlaybackStatus.fromBinary(payload);
-                this.printReceive(data);
                 await this.onPlayback(data);
                 break;
             default:

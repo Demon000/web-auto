@@ -66,16 +66,27 @@ export class ControlService extends Service {
         );
     }
 
-    private onByeByeRequest(_data: ByeByeRequest): void {
+    private onByeByeRequest(data: ByeByeRequest): void {
+        this.printReceive(data);
+
         this.events.onSelfDisconnect(GenericDeviceDisconnectReason.BYE_BYE);
     }
 
     private onPingRequest(data: PingRequest): void {
+        this.printReceive(data);
+
         assert(data.timestamp !== undefined);
         this.sendPingResponse(data.timestamp);
     }
 
+    private onPingResponse(data: PingResponse): void {
+        this.printReceive(data);
+        this.pinger.onPingResponse(data);
+    }
+
     private onAudioFocusRequest(data: AudioFocusRequestNotification): void {
+        this.printReceive(data);
+
         const audioFocusState =
             data.request === AudioFocusRequestType.AUDIO_FOCUS_RELEASE
                 ? AudioFocusStateType.AUDIO_FOCUS_STATE_LOSS
@@ -85,6 +96,8 @@ export class ControlService extends Service {
     }
 
     private onNavigationFocusRequest(data: NavFocusRequestNotification): void {
+        this.printReceive(data);
+
         if (data.focusType === undefined) {
             return;
         }
@@ -92,13 +105,15 @@ export class ControlService extends Service {
         this.sendNavigationFocusResponse(data.focusType);
     }
 
-    protected async onVoiceSessionNotification(
-        _data: VoiceSessionNotification,
-    ): Promise<void> {}
+    protected onVoiceSessionNotification(data: VoiceSessionNotification): void {
+        this.printReceive(data);
+    }
 
-    protected async onBatteryStatusNotification(
-        _data: BatteryStatusNotification,
-    ): Promise<void> {}
+    protected onBatteryStatusNotification(
+        data: BatteryStatusNotification,
+    ): void {
+        this.printReceive(data);
+    }
 
     protected override async onSpecificMessage(
         messageId: number,
@@ -109,37 +124,30 @@ export class ControlService extends Service {
         switch (messageId as ControlMessageType) {
             case ControlMessageType.MESSAGE_PING_REQUEST:
                 data = PingRequest.fromBinary(payload);
-                this.printReceive(data);
                 this.onPingRequest(data);
                 break;
             case ControlMessageType.MESSAGE_PING_RESPONSE:
                 data = PingResponse.fromBinary(payload);
-                this.printReceive(data);
-                this.pinger.onPingResponse(data);
+                this.onPingResponse(data);
                 break;
             case ControlMessageType.MESSAGE_AUDIO_FOCUS_REQUEST:
                 data = AudioFocusRequestNotification.fromBinary(payload);
-                this.printReceive(data);
                 this.onAudioFocusRequest(data);
                 break;
             case ControlMessageType.MESSAGE_NAV_FOCUS_REQUEST:
                 data = NavFocusRequestNotification.fromBinary(payload);
-                this.printReceive(data);
                 this.onNavigationFocusRequest(data);
                 break;
             case ControlMessageType.MESSAGE_VOICE_SESSION_NOTIFICATION:
                 data = VoiceSessionNotification.fromBinary(payload);
-                this.printReceive(data);
-                await this.onVoiceSessionNotification(data);
+                this.onVoiceSessionNotification(data);
                 break;
             case ControlMessageType.MESSAGE_BATTERY_STATUS_NOTIFICATION:
                 data = BatteryStatusNotification.fromBinary(payload);
-                this.printReceive(data);
-                await this.onBatteryStatusNotification(data);
+                this.onBatteryStatusNotification(data);
                 break;
             case ControlMessageType.MESSAGE_BYEBYE_REQUEST:
                 data = ByeByeRequest.fromBinary(payload);
-                this.printReceive(data);
                 this.onByeByeRequest(data);
                 break;
             default:

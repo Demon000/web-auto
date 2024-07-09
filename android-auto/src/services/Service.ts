@@ -78,6 +78,8 @@ export abstract class Service {
     protected open(_data: ChannelOpenRequest): void {}
 
     protected onChannelOpenRequest(data: ChannelOpenRequest): void {
+        this.printReceive(data);
+
         let status = false;
 
         try {
@@ -133,7 +135,6 @@ export abstract class Service {
         switch (messageId as ControlMessageType) {
             case ControlMessageType.MESSAGE_CHANNEL_OPEN_REQUEST:
                 data = ChannelOpenRequest.fromBinary(payload);
-                this.printReceive(data);
                 this.onChannelOpenRequest(data);
                 break;
             default:
