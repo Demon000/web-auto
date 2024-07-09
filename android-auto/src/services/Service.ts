@@ -28,7 +28,7 @@ export interface ServiceEvents {
     ) => void;
 }
 
-type ServiceMessageCallback = (payload: Uint8Array) => void;
+type SpecificMessageCallback = (payload: Uint8Array) => void;
 
 export abstract class Service {
     public static nextServiceId = 1;
@@ -41,7 +41,7 @@ export abstract class Service {
 
     private specificMessageCallbacks = new Map<
         number,
-        ServiceMessageCallback
+        SpecificMessageCallback
     >();
 
     public constructor(
