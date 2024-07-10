@@ -12,47 +12,55 @@ export type IpcClient = {
 export type IpcClientHandlerKey<L extends IpcClient> = keyof L & string;
 export type IpcServiceHandlerKey<L extends IpcService> = keyof L & string;
 
+export type IpcResponseEvent = {
+    replyToId: number;
+    handle: string;
+    result: any;
+};
+
+export type IpcErrorResponseEvent = {
+    replyToId: number;
+    handle: string;
+    err: string;
+};
+
+export type IpcNotificationEvent = {
+    handle: string;
+    name: string;
+    args: any[];
+};
+
+export type IpcRawNotificationEvent = {
+    handle: string;
+    name: string;
+    args?: any[];
+    raw: true;
+};
+
+export type IpcClientEvent =
+    | IpcResponseEvent
+    | IpcErrorResponseEvent
+    | IpcNotificationEvent
+    | IpcRawNotificationEvent;
+
+export type IpcCallEvent = {
+    id: number;
+    handle: string;
+    name: string;
+    args: any[];
+};
+
 export type IpcSubscribeEvent = {
     handle: string;
     name: string;
     subscribe: boolean;
 };
 
-export type IpcEvent =
-    /* Client to server call */
-    | {
-          id: number;
-          handle: string;
-          name: string;
-          args: any[];
-      }
-    /* Server to client response */
-    | {
-          replyToId: number;
-          handle: string;
-          result: any;
-      }
-    /* Server to client error */
-    | {
-          replyToId: number;
-          handle: string;
-          err: string;
-      }
-    /* Server to client message */
-    | {
-          handle: string;
-          name: string;
-          args: any[];
-      }
-    /* Server to client message with optional args followed by raw payload */
-    | {
-          handle: string;
-          name: string;
-          args?: any[];
-          raw: true;
-      }
-    /* Subscribe / unsubscribe. */
+export type IpcServiceEvent =
+    | IpcCallEvent
     | IpcSubscribeEvent;
+
+export type IpcEvent = IpcClientEvent | IpcServiceEvent;
 
 export interface IpcSerializer {
     serialize(ipcEvent: IpcEvent): any;

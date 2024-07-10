@@ -2,12 +2,13 @@ import assert from 'node:assert';
 import type {
     IpcService,
     IpcClient,
-    IpcEvent,
     IpcSerializer,
     IpcSocket,
     IpcSubscribeEvent,
     IpcServiceHandlerKey,
     IpcClientHandlerKey,
+    IpcClientEvent,
+    IpcServiceEvent,
 } from './common.js';
 
 export type IpcServiceHandlerCallback<
@@ -229,7 +230,7 @@ export class IpcServiceHandlerHelper<L extends IpcService, R extends IpcClient>
     ) {}
 
     public sendRaw(name: string, raw: any, ...args: any[]): void {
-        const ipcEvent: IpcEvent = {
+        const ipcEvent: IpcClientEvent = {
             handle: this.handle,
             name,
             raw: true,
@@ -258,7 +259,7 @@ export class IpcServiceHandlerHelper<L extends IpcService, R extends IpcClient>
     }
 
     public send(name: string, ...args: any[]): void {
-        const ipcEvent: IpcEvent = {
+        const ipcEvent: IpcClientEvent = {
             handle: this.handle,
             name,
             args,
@@ -307,7 +308,7 @@ export class IpcServiceHandlerHelper<L extends IpcService, R extends IpcClient>
         this.handlersMap.delete(name);
     }
 
-    public handleMessage(ipcEvent: IpcEvent): Promise<any> {
+    public handleMessage(ipcEvent: IpcServiceEvent): Promise<any> {
         assert('name' in ipcEvent);
         assert('args' in ipcEvent);
 
@@ -423,7 +424,7 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
 
         const ipcHandler = this.ipcHandlers.get(ipcEvent.handle);
 
-        let replyIpcEvent: IpcEvent;
+        let replyIpcEvent: IpcClientEvent;
 
         if (ipcHandler === undefined) {
             replyIpcEvent = {
