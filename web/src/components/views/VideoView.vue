@@ -16,7 +16,10 @@ import {
 import { ipcClientRegistry } from '../../ipc.js';
 import { getDecoder } from '../../decoders.js';
 import { useVideoFocusModeStore } from '../../stores/video-store.js';
-import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
+import {
+    IpcClientHandler,
+    IpcClientHandlerHelper,
+} from '@web-auto/common-ipc/renderer.js';
 
 export interface VideoViewProps {
     exitVideoPath?: string;
@@ -36,12 +39,16 @@ const androidAutoServerService = ipcClientRegistry.registerIpcClient<
 let inputService:
     | IpcClientHandler<AndroidAutoInputClient, AndroidAutoInputService>
     | undefined;
+let inputServiceHelper:
+    | IpcClientHandlerHelper<AndroidAutoInputClient, AndroidAutoInputService>
+    | undefined;
 
 if (props.inputServiceIpcName !== undefined) {
     inputService = ipcClientRegistry.registerIpcClient<
         AndroidAutoInputClient,
         AndroidAutoInputService
     >(props.inputServiceIpcName);
+    inputServiceHelper = inputService.helper;
 }
 
 const videoService = ipcClientRegistry.registerIpcClient<
@@ -58,12 +65,12 @@ await videoFocusStore.initialize();
 const decoder = getDecoder(props.videoServiceIpcName);
 
 const sendTouchEvent = (touchEvent: ITouchEvent) => {
-    if (inputService === undefined) {
+    if (inputServiceHelper === undefined) {
         return;
     }
 
-    inputService
-        .sendTouchEvent(touchEvent)
+    inputServiceHelper
+        .send('sendTouchEvent', touchEvent)
         .then(() => {})
         .catch((err) => {
             console.error('Failed to send touch event', err);

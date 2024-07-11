@@ -18,7 +18,10 @@ import { useVideoFocusModeStore } from '../../stores/video-store.js';
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
 import { getDecoder } from '../../decoders.js';
 import { useVideoFocus } from './../video-focus.js';
-import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
+import {
+    IpcClientHandler,
+    IpcClientHandlerHelper,
+} from '@web-auto/common-ipc/renderer.js';
 
 export interface MiniVideoProps {
     fullVideoPath?: string;
@@ -38,12 +41,16 @@ const androidAutoServerService = ipcClientRegistry.registerIpcClient<
 let inputService:
     | IpcClientHandler<AndroidAutoInputClient, AndroidAutoInputService>
     | undefined;
+let inputServiceHelper:
+    | IpcClientHandlerHelper<AndroidAutoInputClient, AndroidAutoInputService>
+    | undefined;
 
 if (props.inputServiceIpcName !== undefined) {
     inputService = ipcClientRegistry.registerIpcClient<
         AndroidAutoInputClient,
         AndroidAutoInputService
     >(props.inputServiceIpcName);
+    inputServiceHelper = inputService.helper;
 }
 
 const videoService = ipcClientRegistry.registerIpcClient<
@@ -66,12 +73,12 @@ const { onVideoVisible, onVideoHidden } = useVideoFocus(
 );
 
 const sendTouchEvent = (touchEvent: ITouchEvent) => {
-    if (inputService === undefined) {
+    if (inputServiceHelper === undefined) {
         return;
     }
 
-    inputService
-        .sendTouchEvent(touchEvent)
+    inputServiceHelper
+        .send('sendTouchEvent', touchEvent)
         .then(() => {})
         .catch((err) => {
             console.error('Failed to send touch event', err);

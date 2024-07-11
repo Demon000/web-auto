@@ -20,7 +20,10 @@ import {
     type IVideoFocusNotification,
     type IVideoFocusRequestNotification,
 } from '@web-auto/android-auto-proto/interfaces.js';
-import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
+import type {
+    IpcServiceHandler,
+    IpcServiceHandlerHelper,
+} from '@web-auto/common-ipc/main.js';
 import { BufferWriter } from '@web-auto/android-auto';
 import { hasKeyFrame, parseCodecConfig } from '../codec/index.js';
 import type { DisplayConfig, ResolutionConfig } from '@web-auto/android-auto';
@@ -83,6 +86,10 @@ const resolutionConfigToResolution = (
 };
 
 export class NodeVideoService extends VideoService {
+    private ipcHelper: IpcServiceHandlerHelper<
+        AndroidAutoVideoService,
+        AndroidAutoVideoClient
+    >;
     private codecState = CodecState.STOPPED;
     private codecBuffer: Uint8Array | undefined;
     private startTimestamp: bigint | undefined;
@@ -105,6 +112,8 @@ export class NodeVideoService extends VideoService {
             },
             events,
         );
+
+        this.ipcHelper = ipcHandler.helper;
 
         ipcHandler.on(
             'sendVideoFocusNotification',
@@ -279,7 +288,7 @@ export class NodeVideoService extends VideoService {
 
         if (this.codecState === CodecState.STARTED) {
             const timestampOffset = this.getTimestampOffset(timestamp);
-            this.ipcHandler.sendRaw('data', buffer, timestampOffset);
+            this.ipcHelper.sendRaw('data', buffer, timestampOffset);
         } else if (this.codecState === CodecState.WAITING_FOR_CONFIG) {
             assert(this.codecBuffer === undefined);
 
@@ -310,7 +319,7 @@ export class NodeVideoService extends VideoService {
             );
             this.startTimestamp = timestamp;
             const timestampOffset = this.getTimestampOffset(timestamp);
-            this.ipcHandler.sendRaw(
+            this.ipcHelper.sendRaw(
                 'firstFrame',
                 firstFrameBuffer,
                 timestampOffset,
