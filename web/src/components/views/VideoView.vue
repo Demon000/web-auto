@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import Video from '../Video.vue';
 import router from '../../router/index.js';
-import { useVideoFocus } from '../video-focus.js';
 import { watch } from 'vue';
 import { useDeviceStore } from '../../stores/device-store.js';
 import {
@@ -11,8 +10,8 @@ import {
     AndroidAutoVideoService,
 } from '@web-auto/node-common/ipc.js';
 import { ipcClientRegistry } from '../../ipc.js';
-import { getDecoder } from '../../decoders.js';
 import { useVideoFocusModeStore } from '../../stores/video-store.js';
+import { VideoFocusMode } from '@web-auto/android-auto-proto';
 
 export interface VideoViewProps {
     exitVideoPath?: string;
@@ -40,8 +39,6 @@ const videoFocusStore = useVideoFocusModeStore(videoService);
 await deviceStore.initialize();
 await videoFocusStore.initialize();
 
-const decoder = getDecoder(props.videoServiceIpcName);
-
 const switchToHomeView = async () => {
     if (props.exitVideoPath === undefined) {
         return;
@@ -52,12 +49,12 @@ const switchToHomeView = async () => {
     });
 };
 
-const { onVideoVisible, onVideoHidden } = useVideoFocus(
-    decoder,
-    videoFocusStore,
-    true,
-    async () => {
-        await switchToHomeView();
+watch(
+    () => videoFocusStore.requestedFocusMode,
+    async (mode?: VideoFocusMode) => {
+        if (mode === VideoFocusMode.VIDEO_FOCUS_NATIVE) {
+            await switchToHomeView();
+        }
     },
 );
 
@@ -77,8 +74,8 @@ watch(
 <template>
     <div class="video">
         <Video
-            @video-visible="onVideoVisible"
-            @video-hidden="onVideoHidden"
+            @video-visible="videoFocusStore.onVideoVisible"
+            @video-hidden="videoFocusStore.onVideoHidden"
             :input-service-ipc-name="inputServiceIpcName"
             :touch-event-throttle-pixels="touchEventThrottlePixels"
         ></Video>

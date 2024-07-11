@@ -6,11 +6,14 @@ import {
     AndroidAutoVideoService,
 } from '@web-auto/node-common/ipc.js';
 import { IpcClientHandler } from '@web-auto/common-ipc/renderer.js';
+import { getDecoder } from '../decoders.ts';
 
 export const useVideoFocusModeStore = (
     service: IpcClientHandler<AndroidAutoVideoClient, AndroidAutoVideoService>,
 ) =>
     defineStore(service.handle, () => {
+        const decoder = getDecoder(service.handle);
+
         let initialized = false;
 
         const requestedFocusMode: Ref<VideoFocusMode | undefined> =
@@ -24,7 +27,32 @@ export const useVideoFocusModeStore = (
 
             requestedFocusMode.value = undefined;
 
+            service.on('channelStop', async () => {
+                /*
+                 * Channel stopped but we're still displaying, restart.
+                 */
+                if (usageCount.value !== 0) {
+                    await start();
+                }
+            });
+
             service.on('focusRequest', async (data) => {
+                if (
+                    /*
+                     * User pressed the exit button,
+                     * but we might still be displaying, restart.
+                     */
+                    (data.mode === VideoFocusMode.VIDEO_FOCUS_NATIVE &&
+                        usageCount.value !== 0) ||
+                    /*
+                     * Server notifies us that video can be used now, show it.
+                     */
+                    (data.mode === VideoFocusMode.VIDEO_FOCUS_PROJECTED &&
+                        usageCount.value !== 0)
+                ) {
+                    await start();
+                }
+
                 requestedFocusMode.value = data.mode;
                 await nextTick();
                 requestedFocusMode.value = undefined;
@@ -97,12 +125,27 @@ export const useVideoFocusModeStore = (
             }
         };
 
+        const onVideoVisible = async (
+            offscreenCanvas: OffscreenCanvas,
+            cookie: bigint,
+        ) => {
+            decoder.createRenderer(offscreenCanvas, cookie);
+            await increaseUsageCount();
+        };
+
+        const onVideoHidden = async (cookie: bigint) => {
+            decoder.destroyRenderer(cookie);
+            setTimeout(async () => {
+                await decreaseUsageCount();
+            }, 500);
+        };
+
         return {
             requestedFocusMode,
             setFocusMode,
             start,
-            increaseUsageCount,
-            decreaseUsageCount,
+            onVideoVisible,
+            onVideoHidden,
             initialize,
         };
     })();

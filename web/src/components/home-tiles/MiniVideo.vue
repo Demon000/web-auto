@@ -10,8 +10,6 @@ import {
 import { ipcClientRegistry } from '../../ipc.js';
 import router from '../../router/index.js';
 import { useVideoFocusModeStore } from '../../stores/video-store.js';
-import { getDecoder } from '../../decoders.js';
-import { useVideoFocus } from './../video-focus.js';
 
 export interface MiniVideoProps {
     fullVideoPath?: string;
@@ -31,14 +29,6 @@ const videoFocusStore = useVideoFocusModeStore(videoService);
 
 await videoFocusStore.initialize();
 
-const decoder = getDecoder(props.videoServiceIpcName);
-
-const { onVideoVisible, onVideoHidden } = useVideoFocus(
-    decoder,
-    videoFocusStore,
-    true,
-);
-
 const switchToVideoView = async () => {
     if (props.fullVideoPath === undefined) {
         return;
@@ -53,8 +43,8 @@ const switchToVideoView = async () => {
 <template>
     <div class="mini-video">
         <Video
-            @video-visible="onVideoVisible"
-            @video-hidden="onVideoHidden"
+            @video-visible="videoFocusStore.onVideoVisible"
+            @video-hidden="videoFocusStore.onVideoHidden"
             :input-service-ipc-name="inputServiceIpcName"
             :touch-event-throttle-pixels="touchEventThrottlePixels"
         ></Video>
