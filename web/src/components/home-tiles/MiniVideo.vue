@@ -4,21 +4,14 @@ import Video from '../Video.vue';
 import '@material/web/fab/fab.js';
 import '@material/web/icon/icon.js';
 import {
-    AndroidAutoInputClient,
-    AndroidAutoInputService,
     AndroidAutoVideoClient,
     AndroidAutoVideoService,
 } from '@web-auto/node-common/ipc.js';
 import { ipcClientRegistry } from '../../ipc.js';
 import router from '../../router/index.js';
 import { useVideoFocusModeStore } from '../../stores/video-store.js';
-import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
 import { getDecoder } from '../../decoders.js';
 import { useVideoFocus } from './../video-focus.js';
-import {
-    IpcClientHandler,
-    IpcClientHandlerHelper,
-} from '@web-auto/common-ipc/renderer.js';
 
 export interface MiniVideoProps {
     fullVideoPath?: string;
@@ -28,21 +21,6 @@ export interface MiniVideoProps {
 }
 
 const props = defineProps<MiniVideoProps>();
-
-let inputService:
-    | IpcClientHandler<AndroidAutoInputClient, AndroidAutoInputService>
-    | undefined;
-let inputServiceHelper:
-    | IpcClientHandlerHelper<AndroidAutoInputClient, AndroidAutoInputService>
-    | undefined;
-
-if (props.inputServiceIpcName !== undefined) {
-    inputService = ipcClientRegistry.registerIpcClient<
-        AndroidAutoInputClient,
-        AndroidAutoInputService
-    >(props.inputServiceIpcName);
-    inputServiceHelper = inputService.helper;
-}
 
 const videoService = ipcClientRegistry.registerIpcClient<
     AndroidAutoVideoClient,
@@ -61,19 +39,6 @@ const { onVideoVisible, onVideoHidden } = useVideoFocus(
     true,
 );
 
-const sendTouchEvent = (touchEvent: ITouchEvent) => {
-    if (inputServiceHelper === undefined) {
-        return;
-    }
-
-    inputServiceHelper
-        .send('sendTouchEvent', touchEvent)
-        .then(() => {})
-        .catch((err) => {
-            console.error('Failed to send touch event', err);
-        });
-};
-
 const switchToVideoView = async () => {
     if (props.fullVideoPath === undefined) {
         return;
@@ -88,10 +53,9 @@ const switchToVideoView = async () => {
 <template>
     <div class="mini-video">
         <Video
-            @touch-event="sendTouchEvent"
             @video-visible="onVideoVisible"
             @video-hidden="onVideoHidden"
-            :touch="inputService !== undefined"
+            :input-service-ipc-name="inputServiceIpcName"
             :touch-event-throttle-pixels="touchEventThrottlePixels"
         ></Video>
         <md-fab

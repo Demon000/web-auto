@@ -5,9 +5,15 @@ import type { FitMode } from 'object-fit-math/dist/types.d.ts';
 import { PointerAction } from '@web-auto/android-auto-proto';
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
 import { objectId } from '../utils/objectId.js';
+import { IpcClientHandlerHelper } from '@web-auto/common-ipc/renderer.js';
+import {
+    AndroidAutoInputClient,
+    AndroidAutoInputService,
+} from '@web-auto/node-common/ipc.js';
+import { ipcClientRegistry } from '../ipc.js';
 
 export interface VideoProps {
-    touch: boolean;
+    inputServiceIpcName?: string;
     touchEventThrottlePixels?: number;
 }
 
@@ -20,8 +26,31 @@ const emit = defineEmits<{
         cookie: bigint,
     ): void;
     (e: 'video-hidden', cookie: bigint): void;
-    (e: 'touch-event', touchEvent: ITouchEvent): void;
 }>();
+
+let inputServiceHelper:
+    | IpcClientHandlerHelper<AndroidAutoInputClient, AndroidAutoInputService>
+    | undefined;
+
+if (props.inputServiceIpcName !== undefined) {
+    inputServiceHelper = ipcClientRegistry.registerIpcClient<
+        AndroidAutoInputClient,
+        AndroidAutoInputService
+    >(props.inputServiceIpcName).helper;
+}
+
+const sendTouchEvent = (touchEvent: ITouchEvent) => {
+    if (inputServiceHelper === undefined) {
+        return;
+    }
+
+    inputServiceHelper
+        .send('sendTouchEvent', touchEvent)
+        .then(() => {})
+        .catch((err) => {
+            console.error('Failed to send touch event', err);
+        });
+};
 
 const canvasRef: Ref<HTMLCanvasElement | undefined> = ref(undefined);
 let canvasCookie: bigint | undefined;
@@ -194,7 +223,7 @@ const sendPointerEvent = (eventPointerId: number, event: PointerEvent) => {
         pointerPositionMap.delete(eventPointerId);
     }
 
-    emit('touch-event', touchEvent);
+    sendTouchEvent(touchEvent);
 };
 
 const onPointerDown = (event: PointerEvent) => {
@@ -237,7 +266,7 @@ const onPointerUp = (event: PointerEvent) => {
 <template>
     <canvas
         ref="canvasRef"
-        v-if="touch"
+        v-if="inputServiceIpcName !== undefined"
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"
         @pointerup="onPointerUp"

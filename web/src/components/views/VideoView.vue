@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import Video from '../Video.vue';
-import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
 import router from '../../router/index.js';
 import { useVideoFocus } from '../video-focus.js';
 import { watch } from 'vue';
@@ -8,18 +7,12 @@ import { useDeviceStore } from '../../stores/device-store.js';
 import {
     AndroidAutoServerClient,
     AndroidAutoServerService,
-    AndroidAutoInputClient,
-    AndroidAutoInputService,
     AndroidAutoVideoClient,
     AndroidAutoVideoService,
 } from '@web-auto/node-common/ipc.js';
 import { ipcClientRegistry } from '../../ipc.js';
 import { getDecoder } from '../../decoders.js';
 import { useVideoFocusModeStore } from '../../stores/video-store.js';
-import {
-    IpcClientHandler,
-    IpcClientHandlerHelper,
-} from '@web-auto/common-ipc/renderer.js';
 
 export interface VideoViewProps {
     exitVideoPath?: string;
@@ -36,21 +29,6 @@ const androidAutoServerService = ipcClientRegistry.registerIpcClient<
     AndroidAutoServerService
 >(props.serverIpcName);
 
-let inputService:
-    | IpcClientHandler<AndroidAutoInputClient, AndroidAutoInputService>
-    | undefined;
-let inputServiceHelper:
-    | IpcClientHandlerHelper<AndroidAutoInputClient, AndroidAutoInputService>
-    | undefined;
-
-if (props.inputServiceIpcName !== undefined) {
-    inputService = ipcClientRegistry.registerIpcClient<
-        AndroidAutoInputClient,
-        AndroidAutoInputService
-    >(props.inputServiceIpcName);
-    inputServiceHelper = inputService.helper;
-}
-
 const videoService = ipcClientRegistry.registerIpcClient<
     AndroidAutoVideoClient,
     AndroidAutoVideoService
@@ -63,19 +41,6 @@ await deviceStore.initialize();
 await videoFocusStore.initialize();
 
 const decoder = getDecoder(props.videoServiceIpcName);
-
-const sendTouchEvent = (touchEvent: ITouchEvent) => {
-    if (inputServiceHelper === undefined) {
-        return;
-    }
-
-    inputServiceHelper
-        .send('sendTouchEvent', touchEvent)
-        .then(() => {})
-        .catch((err) => {
-            console.error('Failed to send touch event', err);
-        });
-};
 
 const switchToHomeView = async () => {
     if (props.exitVideoPath === undefined) {
@@ -112,10 +77,9 @@ watch(
 <template>
     <div class="video">
         <Video
-            @touch-event="sendTouchEvent"
             @video-visible="onVideoVisible"
             @video-hidden="onVideoHidden"
-            :touch="inputService !== undefined"
+            :input-service-ipc-name="inputServiceIpcName"
             :touch-event-throttle-pixels="touchEventThrottlePixels"
         ></Video>
     </div>
