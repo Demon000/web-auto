@@ -4,6 +4,7 @@ import {
     DeviceState,
     type DeviceDisconnectReason,
     DeviceConnectReason,
+    DeviceCreateIgnoredError,
 } from '@web-auto/android-auto';
 import { Device as BluezDevice } from 'bluez';
 import { BluetoothDeviceWifiConnector } from './BluetoothDeviceWifiConnector.js';
@@ -63,11 +64,22 @@ export class BluetoothDevice extends Device {
         tcpServer: Server,
         events: DeviceEvents,
     ): Promise<BluetoothDevice | undefined> {
-        const name = await device.Name();
+        let name;
+        try {
+            name = await device.Name();
+        } catch (err) {
+            throw new DeviceCreateIgnoredError('Failed to query name');
+        }
 
-        const uuids = await device.UUIDs();
+        let uuids;
+        try {
+            uuids = await device.UUIDs();
+        } catch (err) {
+            throw new DeviceCreateIgnoredError('Failed to query UUIDs');
+        }
+
         if (!uuids.includes(HSP_AG_UUID)) {
-            throw new Error('Does not have HSP AG UUID');
+            throw new DeviceCreateIgnoredError('Does not have HSP AG UUID');
         }
 
         return new BluetoothDevice(

@@ -2,6 +2,7 @@ import { getLogger } from '@web-auto/logging';
 import {
     Device,
     DeviceState,
+    DeviceCreateIgnoredError,
     type DeviceDisconnectReason,
     type DeviceEvents,
 } from './Device.js';
@@ -69,6 +70,14 @@ export abstract class DeviceHandler<T = any> {
         try {
             device = await this.createDevice(data);
         } catch (err) {
+            if (err instanceof DeviceCreateIgnoredError) {
+                this.logger.info(
+                    `Ignored device with data: ${err.message}`,
+                    data,
+                );
+                return;
+            }
+
             this.logger.error('Failed to create device with data', {
                 data,
                 err,

@@ -1,6 +1,8 @@
 import { LoggerWrapper, getLogger } from '@web-auto/logging';
 import { Mutex } from 'async-mutex';
 
+export class DeviceCreateIgnoredError extends Error {}
+
 export enum DeviceState {
     UNKNOWN = 'unknown',
     NEEDS_RESET = 'needs-reset',

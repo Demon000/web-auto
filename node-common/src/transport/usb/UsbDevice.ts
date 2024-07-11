@@ -5,6 +5,7 @@ import {
     type DeviceDisconnectReason,
     DeviceConnectReason,
     DeviceState,
+    DeviceCreateIgnoredError,
 } from '@web-auto/android-auto';
 import {
     InEndpoint,
@@ -85,7 +86,7 @@ export class UsbDevice extends Device {
         const descriptor = device.deviceDescriptor;
 
         if (descriptor.bDeviceClass !== 0) {
-            throw new Error('Device class not 0');
+            throw new DeviceCreateIgnoredError('Device class not 0');
         }
 
         const name = await this.getStringDescriptor(
@@ -94,7 +95,7 @@ export class UsbDevice extends Device {
         );
 
         if (name === '') {
-            throw new Error('Empty name');
+            throw new DeviceCreateIgnoredError('Empty name');
         }
 
         const serial = await this.getStringDescriptor(
@@ -103,7 +104,7 @@ export class UsbDevice extends Device {
         );
 
         if (serial === '') {
-            throw new Error('Empty serial');
+            throw new DeviceCreateIgnoredError('Empty serial');
         }
 
         return [name, serial];
