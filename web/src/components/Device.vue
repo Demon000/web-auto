@@ -19,7 +19,7 @@ const emit = defineEmits<{
 <template>
     <div class="device">
         <div class="name-state-container">
-            <div>
+            <div class="name-container">
                 <span class="name">{{ device.realName }}</span>
                 <span class="unique-id">{{ device.uniqueId }}</span>
                 <span class="prefix">{{ device.prefix }}</span>
@@ -66,6 +66,11 @@ const emit = defineEmits<{
 .state {
     color: var(--md-sys-color-on-surface);
     opacity: 50%;
+}
+
+.name-container > * {
+    display: inline-block;
+    word-break: break-all;
 }
 
 .name {
