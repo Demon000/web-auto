@@ -116,7 +116,7 @@ watch(
             @video-visible="onVideoVisible"
             @video-hidden="onVideoHidden"
             :touch="inputService !== undefined"
-            :throttle-pixels="touchEventThrottlePixels"
+            :touch-event-throttle-pixels="touchEventThrottlePixels"
         ></Video>
     </div>
 </template>

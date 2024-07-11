@@ -8,7 +8,7 @@ import { objectId } from '../utils/objectId.js';
 
 export interface VideoProps {
     touch: boolean;
-    throttlePixels?: number;
+    touchEventThrottlePixels?: number;
 }
 
 const props = defineProps<VideoProps>();
@@ -159,9 +159,9 @@ const sendPointerEvent = (eventPointerId: number, event: PointerEvent) => {
     if (
         action === PointerAction.ACTION_MOVED &&
         oldCoords !== undefined &&
-        props.throttlePixels !== undefined &&
-        Math.abs(x - oldCoords[0]) < props.throttlePixels &&
-        Math.abs(y - oldCoords[1]) < props.throttlePixels
+        props.touchEventThrottlePixels !== undefined &&
+        Math.abs(x - oldCoords[0]) < props.touchEventThrottlePixels &&
+        Math.abs(y - oldCoords[1]) < props.touchEventThrottlePixels
     ) {
         return;
     }

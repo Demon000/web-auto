@@ -92,7 +92,7 @@ const switchToVideoView = async () => {
             @video-visible="onVideoVisible"
             @video-hidden="onVideoHidden"
             :touch="inputService !== undefined"
-            :throttle-pixels="touchEventThrottlePixels"
+            :touch-event-throttle-pixels="touchEventThrottlePixels"
         ></Video>
         <md-fab
             v-if="fullVideoPath !== undefined"
