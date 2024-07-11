@@ -308,6 +308,9 @@
                     ',
                 },
                 {
+                    name: 'AppBarSpacer',
+                },
+                {
                     name: 'AppBarKeyIcon',
                     inputServiceIpcName: 'main-display-input-service',
                     onlyShowIfDeviceConnected: true,

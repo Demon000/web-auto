@@ -20,6 +20,7 @@ export type AppBarComponent = {
     | ({ name: 'AppBarRouteIcon' } & AppBarRouteIconProps)
     | ({ name: 'AppBarKeyIcon' } & AppBarKeyIconProps)
     | ({ name: 'AppBarBrightness' } & AppBarBirghtnessProps)
+    | { name: 'AppBarSpacer' }
 );
 
 export interface AppBarProps {
