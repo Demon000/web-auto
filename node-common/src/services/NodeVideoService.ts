@@ -192,6 +192,9 @@ export class NodeVideoService extends VideoService {
         this.startTimestamp = undefined;
         this.codecBuffer = undefined;
         this.codecState = CodecState.STOPPED;
+        this.ipcHandler.focusRequest({
+            mode: VideoFocusMode.VIDEO_FOCUS_NATIVE,
+        });
         this.ipcHandler.channelStop();
     }
 
