@@ -16,36 +16,13 @@ export type IpcServiceHandlerCallback<
     K extends IpcServiceHandlerKey<L>,
 > = L[K];
 
-export type IpcServiceHandlerEmitter<
-    L extends IpcService,
-    R extends IpcClient,
-> = {
-    on<K extends IpcServiceHandlerKey<L>>(
-        name: K,
-        cb: IpcServiceHandlerCallback<L, K>,
-    ): void;
-    off<K extends IpcServiceHandlerKey<L>>(name: K): void;
-    onNoClients<K extends IpcClientHandlerKey<R>>(
-        name: K,
-        cb: () => void,
-    ): void;
-    offNoClients<K extends IpcClientHandlerKey<R>>(name: K): void;
-};
-
-export type IpcServiceHandlerSender<R extends IpcClient> = {
-    sendRaw<
-        K extends IpcClientHandlerKey<R>,
-        F extends R[K],
-        P extends Parameters<F> & [Uint8Array, ...any],
-    >(
-        name: K,
-        ...args: P
-    ): void;
-};
-
 export type IpcServiceHandler<L extends IpcService, R extends IpcClient> = R &
-    IpcServiceHandlerEmitter<L, R> &
-    IpcServiceHandlerSender<R>;
+    Pick<
+        IpcServiceHandlerHelper<L, R>,
+        'on' | 'off' | 'onNoClients' | 'offNoClients' | 'send' | 'sendRaw'
+    > & {
+        helper: IpcServiceHandlerHelper<L, R>;
+    };
 
 export interface IpcServiceRegistry {
     registerIpcService<L extends IpcService, R extends IpcClient>(
@@ -211,9 +188,10 @@ export abstract class BaseIpcServiceRegistrySocketHandler
     }
 }
 
-export class IpcServiceHandlerHelper<L extends IpcService, R extends IpcClient>
-    implements IpcServiceHandlerEmitter<L, R>
-{
+export class IpcServiceHandlerHelper<
+    L extends IpcService,
+    R extends IpcClient,
+> {
     private handlersMap = new Map<
         IpcServiceHandlerKey<L>,
         IpcServiceHandlerCallback<L, IpcServiceHandlerKey<L>>
@@ -229,7 +207,13 @@ export class IpcServiceHandlerHelper<L extends IpcService, R extends IpcClient>
         private handle: string,
     ) {}
 
-    public sendRaw(name: string, raw: any, ...args: any[]): void {
+    public sendRaw<
+        K extends IpcClientHandlerKey<R>,
+        F extends R[K],
+        P extends Parameters<F> & [Uint8Array, ...any],
+    >(name: K, ...allArgs: P): void {
+        const raw = allArgs[0];
+        const args = allArgs.slice(1);
         const ipcEvent: IpcClientEvent = {
             handle: this.handle,
             name,
@@ -258,7 +242,11 @@ export class IpcServiceHandlerHelper<L extends IpcService, R extends IpcClient>
         }
     }
 
-    public send(name: string, ...args: any[]): void {
+    public send<
+        K extends IpcClientHandlerKey<R>,
+        F extends R[K],
+        P extends Parameters<F>,
+    >(name: K, ...args: P): void {
         const ipcEvent: IpcClientEvent = {
             handle: this.handle,
             name,
@@ -344,6 +332,10 @@ export const createIpcClientProxy = <L extends IpcService, R extends IpcClient>(
                     );
                 }
 
+                if (property === 'helper') {
+                    return ipcHandler;
+                }
+
                 return new Proxy(() => {}, {
                     apply(_target, _thisArg, args) {
                         switch (property) {
@@ -351,6 +343,7 @@ export const createIpcClientProxy = <L extends IpcService, R extends IpcClient>(
                             case 'off':
                             case 'onNoClients':
                             case 'offNoClients':
+                            case 'send':
                             case 'sendRaw':
                                 Reflect.apply(
                                     ipcHandler[property],
@@ -361,7 +354,7 @@ export const createIpcClientProxy = <L extends IpcService, R extends IpcClient>(
                         }
 
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                        return ipcHandler.send(property, ...args);
+                        return ipcHandler.send(property, ...(args as any));
                     },
                 });
             },

@@ -15,25 +15,12 @@ export type IpcClientHandlerCallback<
     F extends L[K],
 > = (...args: Parameters<F>) => ReturnType<F>;
 
-export type IpcClientHandlerEmitter<L extends IpcClient> = {
-    on<K extends IpcClientHandlerKey<L>, F extends L[K]>(
-        name: K,
-        cb: IpcClientHandlerCallback<L, K, F>,
-    ): void;
-    off<K extends IpcClientHandlerKey<L>, F extends L[K]>(
-        name: K,
-        cb: IpcClientHandlerCallback<L, K, F>,
-    ): void;
-};
-
 export type IpcClientHandler<L extends IpcClient, R extends IpcService> = R &
-    IpcClientHandlerEmitter<L> & {
-        handle: string;
+    Pick<IpcClientHandlerHelper<L, R>, 'on' | 'off' | 'send' | 'handle'> & {
+        helper: IpcClientHandlerHelper<L, R>;
     };
 
-export class IpcClientHandlerHelper<L extends IpcClient>
-    implements IpcClientHandlerEmitter<L>
-{
+export class IpcClientHandlerHelper<L extends IpcClient, R extends IpcService> {
     private callbacksMap = new Map<
         number,
         (ipcEvent: IpcClientEvent) => void
@@ -58,7 +45,12 @@ export class IpcClientHandlerHelper<L extends IpcClient>
         return this.id++;
     }
 
-    public send(name: string, ...args: any[]): Promise<any> {
+    public send<
+        K extends IpcClientHandlerKey<R>,
+        F extends R[K],
+        P extends Parameters<F>,
+        E extends ReturnType<F>,
+    >(name: K, ...args: P): Promise<E> {
         const id = this.getId();
         const ipcEvent: IpcServiceEvent = {
             id,
@@ -82,9 +74,9 @@ export class IpcClientHandlerHelper<L extends IpcClient>
                 }
 
                 if ('result' in replyIpcEvent) {
-                    resolve(replyIpcEvent.result);
+                    resolve(replyIpcEvent.result as E);
                 } else {
-                    resolve(undefined);
+                    resolve(undefined as E);
                 }
             });
         });
@@ -174,7 +166,7 @@ export const createIpcServiceProxy = <
     L extends IpcClient,
     R extends IpcService,
 >(
-    ipcHandler: IpcClientHandlerHelper<L>,
+    ipcHandler: IpcClientHandlerHelper<L, R>,
 ): IpcClientHandler<L, R> => {
     return new Proxy(
         {},
@@ -186,6 +178,10 @@ export const createIpcServiceProxy = <
                     );
                 }
 
+                if (property === 'helper') {
+                    return ipcHandler;
+                }
+
                 if (property == 'handle') {
                     return Reflect.get(ipcHandler, property);
                 }
@@ -195,6 +191,7 @@ export const createIpcServiceProxy = <
                         switch (property) {
                             case 'on':
                             case 'off':
+                            case 'send':
                                 Reflect.apply(
                                     ipcHandler[property],
                                     ipcHandler,
@@ -204,7 +201,7 @@ export const createIpcServiceProxy = <
                         }
 
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                        return ipcHandler.send(property, ...args);
+                        return ipcHandler.send(property, ...(args as any));
                     },
                 });
             },
@@ -221,7 +218,7 @@ export interface IpcClientRegistry {
 }
 
 export class GenericIpcClientRegistry implements IpcClientRegistry {
-    private ipcHandlers = new Map<string, IpcClientHandlerHelper<any>>();
+    private ipcHandlers = new Map<string, IpcClientHandlerHelper<any, any>>();
     private rawIpcEvent: IpcClientEvent | undefined;
 
     public constructor(
@@ -291,7 +288,7 @@ export class GenericIpcClientRegistry implements IpcClientRegistry {
     ): IpcClientHandler<L, R> {
         let ipcHandler = this.ipcHandlers.get(handle);
         if (ipcHandler === undefined) {
-            ipcHandler = new IpcClientHandlerHelper<L>(
+            ipcHandler = new IpcClientHandlerHelper<L, R>(
                 this.serializer,
                 this.socket,
                 handle,
@@ -299,7 +296,7 @@ export class GenericIpcClientRegistry implements IpcClientRegistry {
             this.ipcHandlers.set(handle, ipcHandler);
         }
 
-        return createIpcServiceProxy(ipcHandler);
+        return createIpcServiceProxy(ipcHandler) as IpcClientHandler<L, R>;
     }
     public unregisterIpcClient(handle: string): void {
         if (!this.ipcHandlers.has(handle)) {
