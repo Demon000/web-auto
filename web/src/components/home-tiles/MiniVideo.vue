@@ -4,15 +4,12 @@ import Video from '../Video.vue';
 import '@material/web/fab/fab.js';
 import '@material/web/icon/icon.js';
 import {
-    AndroidAutoServerClient,
-    AndroidAutoServerService,
     AndroidAutoInputClient,
     AndroidAutoInputService,
     AndroidAutoVideoClient,
     AndroidAutoVideoService,
 } from '@web-auto/node-common/ipc.js';
 import { ipcClientRegistry } from '../../ipc.js';
-import { useDeviceStore } from '../../stores/device-store.js';
 import router from '../../router/index.js';
 import { useVideoFocusModeStore } from '../../stores/video-store.js';
 import { ITouchEvent } from '@web-auto/android-auto-proto/interfaces.js';
@@ -25,18 +22,12 @@ import {
 
 export interface MiniVideoProps {
     fullVideoPath?: string;
-    serverIpcName: string;
     videoServiceIpcName: string;
     inputServiceIpcName?: string;
     touchEventThrottlePixels?: number;
 }
 
 const props = defineProps<MiniVideoProps>();
-
-const androidAutoServerService = ipcClientRegistry.registerIpcClient<
-    AndroidAutoServerClient,
-    AndroidAutoServerService
->(props.serverIpcName);
 
 let inputService:
     | IpcClientHandler<AndroidAutoInputClient, AndroidAutoInputService>
@@ -58,10 +49,8 @@ const videoService = ipcClientRegistry.registerIpcClient<
     AndroidAutoVideoService
 >(props.videoServiceIpcName);
 
-const deviceStore = useDeviceStore(androidAutoServerService);
 const videoFocusStore = useVideoFocusModeStore(videoService);
 
-await deviceStore.initialize();
 await videoFocusStore.initialize();
 
 const decoder = getDecoder(props.videoServiceIpcName);

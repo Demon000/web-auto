@@ -332,7 +332,6 @@
                 components: [
                     {
                         name: 'MiniVideo',
-                        serverIpcName: 'server',
                         videoServiceIpcName: 'main-display-video-service',
                         inputServiceIpcName: 'main-display-input-service',
                         touchEventThrottlePixels: 10,
