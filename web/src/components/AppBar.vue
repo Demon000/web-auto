@@ -10,7 +10,7 @@ import { ipcClientRegistry } from '../ipc.js';
 import { AppBarRouteIconProps } from './app-bar-icons/AppBarRouteIcon.vue';
 import { AppBarKeyIconProps } from './app-bar-icons/AppBarKeyIcon.vue';
 import { AppBarIconProps } from './app-bar-icons/AppBarIcon.vue';
-import { AppBarBirghtnessProps } from './app-bar-icons/AppBarBrightness.vue';
+import { AppBarBrightnessProps } from './app-bar-icons/AppBarBrightness.vue';
 
 export type AppBarComponent = {
     onlyShowIfDeviceConnected?: boolean;
@@ -19,7 +19,7 @@ export type AppBarComponent = {
     | ({ name: 'AppBarIcon' } & AppBarIconProps)
     | ({ name: 'AppBarRouteIcon' } & AppBarRouteIconProps)
     | ({ name: 'AppBarKeyIcon' } & AppBarKeyIconProps)
-    | ({ name: 'AppBarBrightness' } & AppBarBirghtnessProps)
+    | ({ name: 'AppBarBrightness' } & AppBarBrightnessProps)
     | { name: 'AppBarSpacer' }
 );
 

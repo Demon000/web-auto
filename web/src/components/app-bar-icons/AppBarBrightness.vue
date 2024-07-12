@@ -9,11 +9,11 @@ import {
 import { ipcClientRegistry } from '../../ipc.js';
 import { useBrightnessStore } from '../../stores/brightness-store.js';
 
-export interface AppBarBirghtnessProps extends AppBarIconProps {
+export interface AppBarBrightnessProps extends AppBarIconProps {
     brightnessServiceIpcName: string;
 }
 
-const props = defineProps<AppBarBirghtnessProps>();
+const props = defineProps<AppBarBrightnessProps>();
 
 const brightnessService = ipcClientRegistry.registerIpcClient<
     AndroidAutoBrightnessClient,
