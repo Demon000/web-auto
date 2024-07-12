@@ -11,6 +11,7 @@ import { AppBarRouteIconProps } from './app-bar-icons/AppBarRouteIcon.vue';
 import { AppBarKeyIconProps } from './app-bar-icons/AppBarKeyIcon.vue';
 import { AppBarIconProps } from './app-bar-icons/AppBarIcon.vue';
 import { AppBarBrightnessProps } from './app-bar-icons/AppBarBrightness.vue';
+import { AppBarVolumeProps } from './app-bar-icons/AppBarVolume.vue';
 
 export type AppBarComponent = {
     onlyShowIfDeviceConnected?: boolean;
@@ -20,6 +21,7 @@ export type AppBarComponent = {
     | ({ name: 'AppBarRouteIcon' } & AppBarRouteIconProps)
     | ({ name: 'AppBarKeyIcon' } & AppBarKeyIconProps)
     | ({ name: 'AppBarBrightness' } & AppBarBrightnessProps)
+    | ({ name: 'AppBarVolume' } & AppBarVolumeProps)
     | { name: 'AppBarSpacer' }
 );
 

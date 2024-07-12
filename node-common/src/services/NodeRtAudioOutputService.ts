@@ -11,7 +11,12 @@ import {
 import RtAudioPackage from 'audify';
 import assert from 'node:assert';
 import { bufferWrapUint8Array } from '@web-auto/android-auto';
-import { NodeAudioOutputService } from './NodeAudioOutputService.js';
+import {
+    NodeAudioOutputService,
+    type AndroidAutoAudioOutputClient,
+    type AndroidAutoAudioOutputService,
+} from './NodeAudioOutputService.js';
+import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 
 const { RtAudio } = RtAudioPackage;
 
@@ -49,10 +54,15 @@ export class NodeRtAudioOutputService extends NodeAudioOutputService {
     private stopTimeout: ReturnType<typeof setTimeout> | undefined;
 
     public constructor(
+        ipcHandler: IpcServiceHandler<
+            AndroidAutoAudioOutputService,
+            AndroidAutoAudioOutputClient
+        >,
         config: NodeRtAudioOutputServiceConfig,
         events: ServiceEvents,
     ) {
         super(
+            ipcHandler,
             {
                 ...config,
                 audioType: stringToAudioStreamType(config.audioType),
@@ -61,6 +71,16 @@ export class NodeRtAudioOutputService extends NodeAudioOutputService {
         );
 
         this.rtaudio = new RtAudio();
+    }
+
+    // eslint-disable-next-line @typescript-eslint/require-await
+    protected override async getVolume(): Promise<number> {
+        return this.rtaudio.outputVolume;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/require-await
+    protected override async setVolume(volume: number): Promise<void> {
+        this.rtaudio.outputVolume = volume;
     }
 
     protected chunkSize(): number {

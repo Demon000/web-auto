@@ -11,7 +11,11 @@ import {
 import { NodeCryptor } from './crypto/NodeCryptor.js';
 import { OpenSSLCryptor } from './crypto/OpenSSLCryptor.js';
 import { NodeAudioInputService } from './services/NodeAudioInputService.js';
-import { NodeAudioOutputService } from './services/NodeAudioOutputService.js';
+import {
+    NodeAudioOutputService,
+    type AndroidAutoAudioOutputService,
+    type AndroidAutoAudioOutputClient,
+} from './services/NodeAudioOutputService.js';
 import {
     NodeInputService,
     type AndroidAutoInputClient,
@@ -135,10 +139,26 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
                     service = new NodeRtAudioInputService(entry, events);
                     break;
                 case 'NodeAudioOutputService':
-                    service = new NodeAudioOutputService(entry, events);
+                    ipcHandler = this.ipcRegistry.registerIpcService<
+                        AndroidAutoAudioOutputService,
+                        AndroidAutoAudioOutputClient
+                    >(entry.ipcName);
+                    service = new NodeAudioOutputService(
+                        ipcHandler,
+                        entry,
+                        events,
+                    );
                     break;
                 case 'NodeRtAudioOutputService':
-                    service = new NodeRtAudioOutputService(entry, events);
+                    ipcHandler = this.ipcRegistry.registerIpcService<
+                        AndroidAutoAudioOutputService,
+                        AndroidAutoAudioOutputClient
+                    >(entry.ipcName);
+                    service = new NodeRtAudioOutputService(
+                        ipcHandler,
+                        entry,
+                        events,
+                    );
                     break;
                 case 'NodeVideoService':
                     ipcHandler = this.ipcRegistry.registerIpcService<

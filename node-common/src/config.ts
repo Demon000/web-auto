@@ -41,9 +41,11 @@ export interface NodeAndroidAutoServerConfig {
           } & NodeRtAudioInputServiceConfig)
         | ({
               name: 'NodeAudioOutputService';
+              ipcName: string;
           } & NodeAudioOutputServiceConfig)
         | ({
               name: 'NodeRtAudioOutputService';
+              ipcName: string;
           } & NodeRtAudioOutputServiceConfig)
         | ({
               name: 'NodeVideoService';

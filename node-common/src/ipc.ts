@@ -16,6 +16,10 @@ export type {
     AndroidAutoBrightnessClient,
 } from './services/NodeBrightnessService.js';
 export type {
+    AndroidAutoAudioOutputService,
+    AndroidAutoAudioOutputClient,
+} from './services/NodeAudioOutputService.js';
+export type {
     IDevice,
     AndroidAutoServerService,
     AndroidAutoServerClient,
