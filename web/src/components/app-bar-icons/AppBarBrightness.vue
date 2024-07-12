@@ -27,7 +27,7 @@ await brightnessStore.initialize();
 const setBrightness = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const value = target.value as unknown as number;
-    brightnessService
+    brightnessStore
         .setBrightness(value)
         .then(() => {})
         .catch((err) => {
