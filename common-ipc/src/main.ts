@@ -33,16 +33,16 @@ export interface IpcServiceRegistry {
 }
 
 export type SocketOpenCallback = (
-    socketHandler: IpcServiceRegistrySocketHandler,
+    socketHandler: IpcSocketHandler,
     socket: IpcSocket,
 ) => void;
 export type SocketMessageCallback = (
-    socketHandler: IpcServiceRegistrySocketHandler,
+    socketHandler: IpcSocketHandler,
     socket: IpcSocket,
     data: any,
 ) => void;
 export type SocketCloseCallback = (
-    socketHandler: IpcServiceRegistrySocketHandler,
+    socketHandler: IpcSocketHandler,
     socket: IpcSocket,
 ) => void;
 export type SendIpcNotificationEvent = (
@@ -50,7 +50,7 @@ export type SendIpcNotificationEvent = (
     raw?: Uint8Array,
 ) => void;
 
-export interface IpcServiceRegistrySocketHandler {
+export interface IpcSocketHandler {
     serializer: IpcSerializer;
     register(
         openCallback: SocketOpenCallback,
@@ -60,9 +60,7 @@ export interface IpcServiceRegistrySocketHandler {
     unregister(): void;
 }
 
-export abstract class BaseIpcServiceRegistrySocketHandler
-    implements IpcServiceRegistrySocketHandler
-{
+export abstract class BaseIpcSocketHandler implements IpcSocketHandler {
     protected openCallback: SocketOpenCallback | undefined;
     protected messageCallback: SocketMessageCallback | undefined;
     protected closeCallback: SocketCloseCallback | undefined;
@@ -291,14 +289,9 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
         Map<string, Map<IpcSocket, number>>
     >();
 
-    protected socketHandlerMap = new Map<
-        IpcSocket,
-        IpcServiceRegistrySocketHandler
-    >();
+    protected socketHandlerMap = new Map<IpcSocket, IpcSocketHandler>();
 
-    public constructor(
-        protected socketHandlers: IpcServiceRegistrySocketHandler[],
-    ) {}
+    public constructor(protected socketHandlers: IpcSocketHandler[]) {}
 
     public register(): void {
         for (const socketHandler of this.socketHandlers) {
@@ -334,7 +327,7 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
     }
 
     private onSocketOpen(
-        socketHandler: IpcServiceRegistrySocketHandler,
+        socketHandler: IpcSocketHandler,
         socket: IpcSocket,
     ): void {
         assert(!this.socketHandlerMap.has(socket));
@@ -342,7 +335,7 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
     }
 
     private onSocketClose(
-        socketHandler: IpcServiceRegistrySocketHandler,
+        socketHandler: IpcSocketHandler,
         socket: IpcSocket,
     ): void {
         assert(this.socketHandlerMap.get(socket) === socketHandler);
@@ -418,7 +411,7 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
     }
 
     private handleMessage(
-        socketHandler: IpcServiceRegistrySocketHandler,
+        socketHandler: IpcSocketHandler,
         socket: IpcSocket,
         data: any,
     ): void {
@@ -442,10 +435,7 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
             return;
         }
 
-        const socketHandlerDataMap = new Map<
-            IpcServiceRegistrySocketHandler,
-            any
-        >();
+        const socketHandlerDataMap = new Map<IpcSocketHandler, any>();
 
         for (const socket of sockets) {
             const socketHandler = this.socketHandlerMap.get(socket);
@@ -468,7 +458,7 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
     }
 
     private async handleMessageAsync(
-        socketHandler: IpcServiceRegistrySocketHandler,
+        socketHandler: IpcSocketHandler,
         socket: IpcSocket,
         data: any,
     ): Promise<void> {

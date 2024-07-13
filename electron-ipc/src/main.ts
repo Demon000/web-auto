@@ -1,6 +1,6 @@
 import { app, ipcMain, type IpcMainEvent, type WebContents } from 'electron';
 import { BaseIpcSocket, type IpcSerializer } from '@web-auto/common-ipc';
-import { BaseIpcServiceRegistrySocketHandler } from '@web-auto/common-ipc/main.js';
+import { BaseIpcSocketHandler } from '@web-auto/common-ipc/main.js';
 
 class ElectronServiceIpcSocket extends BaseIpcSocket {
     private onDataInternalBound: (event: IpcMainEvent, data: any) => void;
@@ -44,7 +44,7 @@ class ElectronServiceIpcSocket extends BaseIpcSocket {
     }
 }
 
-export class ElectronIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistrySocketHandler {
+export class ElectronIpcServiceRegistrySocketHandler extends BaseIpcSocketHandler {
     private onWebContentsCreatedBound: (
         _event: Electron.Event,
         webContents: WebContents,
