@@ -11,7 +11,7 @@ import {
     NodeAndroidAutoServerBuilder,
     type NodeCommonAndroidAutoConfig,
 } from '@web-auto/node-common';
-import { GenericIpcServiceRegistry } from '@web-auto/common-ipc/main.js';
+import { IpcServiceRegistry } from '@web-auto/common-ipc/main.js';
 import { ElectronIpcServiceRegistrySocketHandler } from '@web-auto/electron-ipc/main.js';
 import { DummyIpcSerializer } from '@web-auto/common-ipc';
 
@@ -30,10 +30,10 @@ const logger = getLogger('electron');
 logger.info('Electron config', config);
 
 let androidAutoServer: NodeAndroidAutoServer | undefined;
-let androidAutoIpcServiceRegistry: GenericIpcServiceRegistry | undefined;
+let androidAutoIpcServiceRegistry: IpcServiceRegistry | undefined;
 
 if (config.androidAuto !== undefined) {
-    androidAutoIpcServiceRegistry = new GenericIpcServiceRegistry([
+    androidAutoIpcServiceRegistry = new IpcServiceRegistry([
         new ElectronIpcServiceRegistrySocketHandler(
             new DummyIpcSerializer(),
             config.registryName,

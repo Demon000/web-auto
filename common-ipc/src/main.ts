@@ -26,12 +26,6 @@ export type IpcServiceHandler<L extends IpcService, R extends IpcClient> = R &
         helper: IpcServiceHandlerHelper<L, R>;
     };
 
-export interface IpcServiceRegistry {
-    registerIpcService<L extends IpcService, R extends IpcClient>(
-        handle: string,
-    ): IpcServiceHandler<L, R>;
-}
-
 type SocketOpenCallback = (
     socketHandler: IpcSocketHandler,
     socket: IpcSocket,
@@ -50,17 +44,7 @@ type SendIpcNotificationEvent = (
     raw?: Uint8Array,
 ) => void;
 
-interface IpcSocketHandler {
-    serializer: IpcSerializer;
-    register(
-        openCallback: SocketOpenCallback,
-        callback: SocketMessageCallback,
-        closeCallback: SocketCloseCallback,
-    ): void;
-    unregister(): void;
-}
-
-export abstract class BaseIpcSocketHandler implements IpcSocketHandler {
+export abstract class IpcSocketHandler {
     protected openCallback: SocketOpenCallback | undefined;
     protected messageCallback: SocketMessageCallback | undefined;
     protected closeCallback: SocketCloseCallback | undefined;
@@ -278,7 +262,7 @@ export const createIpcClientProxy = <L extends IpcService, R extends IpcClient>(
     ) as IpcServiceHandler<L, R>;
 };
 
-export class GenericIpcServiceRegistry implements IpcServiceRegistry {
+export class IpcServiceRegistry {
     protected ipcHandlers = new Map<
         string,
         IpcServiceHandlerHelper<any, any>

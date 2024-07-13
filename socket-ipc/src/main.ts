@@ -1,5 +1,5 @@
 import { BaseIpcSocket, type IpcSerializer } from '@web-auto/common-ipc';
-import { BaseIpcSocketHandler } from '@web-auto/common-ipc/main.js';
+import { IpcSocketHandler } from '@web-auto/common-ipc/main.js';
 import { IncomingMessage, Server } from 'node:http';
 import type { Duplex } from 'node:stream';
 import {
@@ -63,7 +63,7 @@ class SocketServiceIpcSocket extends BaseIpcSocket {
     }
 }
 
-export class SocketIpcServiceRegistrySocketHandler extends BaseIpcSocketHandler {
+export class SocketIpcServiceRegistrySocketHandler extends IpcSocketHandler {
     private wss: WebSocketServer;
     private onServerUpgradeBound: (
         req: InstanceType<typeof IncomingMessage>,
