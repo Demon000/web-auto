@@ -74,8 +74,8 @@ export abstract class BaseIpcServiceRegistrySocketHandler
 
     public unregister(): void {
         if (
-            this.messageCallback !== undefined ||
-            this.noClientsCallback !== undefined
+            this.messageCallback === undefined ||
+            this.noClientsCallback === undefined
         ) {
             throw new Error('Cannot unregister before registering');
         }
