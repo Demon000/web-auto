@@ -1,11 +1,6 @@
 import { app, ipcMain, type IpcMainEvent, type WebContents } from 'electron';
 import { DummyIpcSerializer, BaseIpcSocket } from '@web-auto/common-ipc';
-import {
-    BaseIpcServiceRegistrySocketHandler,
-    GenericIpcServiceRegistry,
-    type NoClientsCallback,
-    type SocketMessageCallback,
-} from '@web-auto/common-ipc/main.js';
+import { BaseIpcServiceRegistrySocketHandler } from '@web-auto/common-ipc/main.js';
 
 class ElectronServiceIpcSocket extends BaseIpcSocket {
     private onDataInternalBound: (event: IpcMainEvent, data: any) => void;
@@ -61,16 +56,11 @@ export class ElectronIpcServiceRegistrySocketHandler extends BaseIpcServiceRegis
         this.onWebContentsCreatedBound = this.onWebContentsCreated.bind(this);
     }
 
-    public override register(
-        callback: SocketMessageCallback,
-        noClientsCallback: NoClientsCallback,
-    ): void {
-        super.register(callback, noClientsCallback);
-
+    protected override registerImpl(): void {
         app.on('web-contents-created', this.onWebContentsCreatedBound);
     }
 
-    public override unregister(): void {
+    protected override unregisterImpl(): void {
         app.off('web-contents-created', this.onWebContentsCreatedBound);
     }
 

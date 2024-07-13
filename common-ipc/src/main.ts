@@ -57,6 +57,9 @@ export abstract class BaseIpcServiceRegistrySocketHandler
 
     public constructor(protected name: string) {}
 
+    protected abstract registerImpl(): void;
+    protected abstract unregisterImpl(): void;
+
     public register(
         callback: SocketMessageCallback,
         noClientsCallback: NoClientsCallback,
@@ -70,6 +73,8 @@ export abstract class BaseIpcServiceRegistrySocketHandler
 
         this.messageCallback = callback;
         this.noClientsCallback = noClientsCallback;
+
+        this.registerImpl();
     }
 
     public unregister(): void {
@@ -82,6 +87,8 @@ export abstract class BaseIpcServiceRegistrySocketHandler
 
         this.messageCallback = undefined;
         this.noClientsCallback = undefined;
+
+        this.unregisterImpl();
     }
 
     public socketsForHandleName(

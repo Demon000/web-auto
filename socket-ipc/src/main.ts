@@ -1,10 +1,5 @@
 import { BaseIpcSocket } from '@web-auto/common-ipc';
-import {
-    BaseIpcServiceRegistrySocketHandler,
-    GenericIpcServiceRegistry,
-    type NoClientsCallback,
-    type SocketMessageCallback,
-} from '@web-auto/common-ipc/main.js';
+import { BaseIpcServiceRegistrySocketHandler } from '@web-auto/common-ipc/main.js';
 import { IncomingMessage, Server } from 'node:http';
 import type { Duplex } from 'node:stream';
 import {
@@ -90,19 +85,12 @@ export class SocketIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistr
         this.wss = new WebSocketServer({ noServer: true });
     }
 
-    public override register(
-        callback: SocketMessageCallback,
-        noClientsCallback: NoClientsCallback,
-    ) {
-        super.register(callback, noClientsCallback);
-
+    protected override registerImpl() {
         this.wss.on('connection', this.onConnectionBound);
         this.server.prependListener('upgrade', this.onServerUpgradeBound);
     }
 
-    public override unregister() {
-        super.unregister();
-
+    protected override unregisterImpl() {
         this.server.removeListener('upgrade', this.onServerUpgradeBound);
         this.wss.off('connection', this.onConnectionBound);
     }
