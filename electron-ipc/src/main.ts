@@ -1,5 +1,5 @@
 import { app, ipcMain, type IpcMainEvent, type WebContents } from 'electron';
-import { DummyIpcSerializer, BaseIpcSocket } from '@web-auto/common-ipc';
+import { BaseIpcSocket, type IpcSerializer } from '@web-auto/common-ipc';
 import { BaseIpcServiceRegistrySocketHandler } from '@web-auto/common-ipc/main.js';
 
 class ElectronServiceIpcSocket extends BaseIpcSocket {
@@ -50,8 +50,11 @@ export class ElectronIpcServiceRegistrySocketHandler extends BaseIpcServiceRegis
         webContents: WebContents,
     ) => void;
 
-    public constructor(name: string) {
-        super(name);
+    public constructor(
+        serializer: IpcSerializer,
+        private name: string,
+    ) {
+        super(serializer);
 
         this.onWebContentsCreatedBound = this.onWebContentsCreated.bind(this);
     }
@@ -71,16 +74,5 @@ export class ElectronIpcServiceRegistrySocketHandler extends BaseIpcServiceRegis
         const socket = new ElectronServiceIpcSocket(this.name, webContents);
 
         this.addSocket(socket);
-    }
-}
-
-export class ElectronIpcServiceRegistry extends GenericIpcServiceRegistry {
-    protected override socketHandler: ElectronIpcServiceRegistrySocketHandler;
-
-    public constructor(name: string) {
-        const socketHandler = new ElectronIpcServiceRegistrySocketHandler(name);
-        const serializer = new DummyIpcSerializer();
-        super(socketHandler, serializer);
-        this.socketHandler = socketHandler;
     }
 }

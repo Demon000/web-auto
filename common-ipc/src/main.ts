@@ -9,6 +9,8 @@ import type {
     IpcClientHandlerKey,
     IpcClientEvent,
     IpcServiceEvent,
+    IpcRawNotificationEvent,
+    IpcNotificationEvent,
 } from './common.js';
 
 export type IpcServiceHandlerCallback<
@@ -30,17 +32,30 @@ export interface IpcServiceRegistry {
     ): IpcServiceHandler<L, R>;
 }
 
-export type SocketMessageCallback = (socket: IpcSocket, data: any) => void;
-export type NoClientsCallback = (handle: string, name: string) => void;
+export type SocketOpenCallback = (
+    socketHandler: IpcServiceRegistrySocketHandler,
+    socket: IpcSocket,
+) => void;
+export type SocketMessageCallback = (
+    socketHandler: IpcServiceRegistrySocketHandler,
+    socket: IpcSocket,
+    data: any,
+) => void;
+export type SocketCloseCallback = (
+    socketHandler: IpcServiceRegistrySocketHandler,
+    socket: IpcSocket,
+) => void;
+export type SendIpcNotificationEvent = (
+    ipcEvent: IpcNotificationEvent | IpcRawNotificationEvent,
+    raw?: Uint8Array,
+) => void;
 
 export interface IpcServiceRegistrySocketHandler {
-    socketsForHandleName(
-        handle: string,
-        name: string,
-    ): Iterable<IpcSocket> | undefined;
+    serializer: IpcSerializer;
     register(
+        openCallback: SocketOpenCallback,
         callback: SocketMessageCallback,
-        noClientsCallback: NoClientsCallback,
+        closeCallback: SocketCloseCallback,
     ): void;
     unregister(): void;
 }
@@ -48,64 +63,49 @@ export interface IpcServiceRegistrySocketHandler {
 export abstract class BaseIpcServiceRegistrySocketHandler
     implements IpcServiceRegistrySocketHandler
 {
+    protected openCallback: SocketOpenCallback | undefined;
     protected messageCallback: SocketMessageCallback | undefined;
-    protected noClientsCallback: NoClientsCallback | undefined;
-    protected handleNameSocketsMap = new Map<
-        string,
-        Map<string, Map<IpcSocket, number>>
-    >();
+    protected closeCallback: SocketCloseCallback | undefined;
 
-    public constructor(protected name: string) {}
+    public constructor(public serializer: IpcSerializer) {}
 
     protected abstract registerImpl(): void;
     protected abstract unregisterImpl(): void;
 
     public register(
-        callback: SocketMessageCallback,
-        noClientsCallback: NoClientsCallback,
+        openCallback: SocketOpenCallback,
+        messageCallback: SocketMessageCallback,
+        closeCallback: SocketCloseCallback,
     ): void {
         if (
+            this.openCallback !== undefined ||
             this.messageCallback !== undefined ||
-            this.noClientsCallback !== undefined
+            this.closeCallback !== undefined
         ) {
             throw new Error('Cannot register twice');
         }
 
-        this.messageCallback = callback;
-        this.noClientsCallback = noClientsCallback;
+        this.openCallback = openCallback;
+        this.messageCallback = messageCallback;
+        this.closeCallback = closeCallback;
 
         this.registerImpl();
     }
 
     public unregister(): void {
         if (
+            this.openCallback === undefined ||
             this.messageCallback === undefined ||
-            this.noClientsCallback === undefined
+            this.closeCallback === undefined
         ) {
             throw new Error('Cannot unregister before registering');
         }
 
+        this.openCallback = undefined;
         this.messageCallback = undefined;
-        this.noClientsCallback = undefined;
+        this.closeCallback = undefined;
 
         this.unregisterImpl();
-    }
-
-    public socketsForHandleName(
-        handle: string,
-        name: string,
-    ): Iterable<IpcSocket> | undefined {
-        const handleMap = this.handleNameSocketsMap.get(handle);
-        if (handleMap === undefined) {
-            return undefined;
-        }
-
-        const sockets = handleMap.get(name);
-        if (sockets === undefined) {
-            return undefined;
-        }
-
-        return sockets.keys();
     }
 
     public addSocket(socket: IpcSocket): void {
@@ -114,6 +114,8 @@ export abstract class BaseIpcServiceRegistrySocketHandler
             .then(() => {
                 socket.onData(this.onData.bind(this));
                 socket.onClose(this.onClose.bind(this));
+                assert(this.openCallback !== undefined);
+                this.openCallback(this, socket);
             })
             .catch((err) => {
                 console.error('Failed to register socket', socket, err);
@@ -122,75 +124,14 @@ export abstract class BaseIpcServiceRegistrySocketHandler
 
     protected onData(socket: IpcSocket, data: any): void {
         assert(this.messageCallback !== undefined);
-        this.messageCallback(socket, data);
+        this.messageCallback(this, socket, data);
     }
 
     protected onClose(socket: IpcSocket): void {
         socket.offClose();
         socket.offData();
-        this.unsubscribeAll(socket);
-    }
-
-    private unsubscribeAll(socket: IpcSocket): void {
-        for (const [handle, handleMap] of this.handleNameSocketsMap) {
-            for (const name of handleMap.keys()) {
-                this.handleSocketSubscribe(socket, {
-                    handle,
-                    name,
-                    subscribe: false,
-                });
-            }
-        }
-    }
-
-    public handleSocketSubscribe(
-        socket: IpcSocket,
-        ipcEvent: IpcSubscribeEvent,
-    ): void {
-        let handleMap = this.handleNameSocketsMap.get(ipcEvent.handle);
-        if (handleMap === undefined) {
-            if (!ipcEvent.subscribe) {
-                return;
-            }
-
-            handleMap = new Map();
-            this.handleNameSocketsMap.set(ipcEvent.handle, handleMap);
-        }
-
-        let socketsMap = handleMap.get(ipcEvent.name);
-        if (socketsMap === undefined) {
-            if (!ipcEvent.subscribe) {
-                return;
-            }
-
-            socketsMap = new Map();
-            handleMap.set(ipcEvent.name, socketsMap);
-        }
-
-        const modifier = ipcEvent.subscribe ? +1 : -1;
-        let value = socketsMap.get(socket);
-        if (value === undefined) {
-            if (!ipcEvent.subscribe) {
-                return;
-            }
-
-            value = 0;
-        }
-
-        value += modifier;
-
-        if (value < 0) {
-            console.error('Socket subscribe count < 0', ipcEvent, socket);
-            return;
-        }
-
-        if (value === 0) {
-            assert(this.noClientsCallback !== undefined);
-            this.noClientsCallback(ipcEvent.handle, ipcEvent.name);
-            socketsMap.delete(socket);
-        } else {
-            socketsMap.set(socket, value);
-        }
+        assert(this.closeCallback !== undefined);
+        this.closeCallback(this, socket);
     }
 }
 
@@ -202,15 +143,15 @@ export class IpcServiceHandlerHelper<
         IpcServiceHandlerKey<L>,
         IpcServiceHandlerCallback<L, IpcServiceHandlerKey<L>>
     >();
+
     private noClientsHandlersMap = new Map<
         IpcServiceHandlerKey<L>,
         () => void
     >();
 
     public constructor(
-        private socketHandler: IpcServiceRegistrySocketHandler,
-        private serializer: IpcSerializer,
         private handle: string,
+        private sendIpcNotificationEvent: SendIpcNotificationEvent,
     ) {}
 
     public sendRaw<
@@ -220,7 +161,7 @@ export class IpcServiceHandlerHelper<
     >(name: K, ...allArgs: P): void {
         const raw = allArgs[0];
         const args = allArgs.slice(1);
-        const ipcEvent: IpcClientEvent = {
+        const ipcEvent: IpcRawNotificationEvent = {
             handle: this.handle,
             name,
             raw: true,
@@ -230,22 +171,7 @@ export class IpcServiceHandlerHelper<
             ipcEvent.args = args;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const data = this.serializer.serialize(ipcEvent);
-
-        const sockets = this.socketHandler.socketsForHandleName(
-            this.handle,
-            name,
-        );
-
-        if (sockets === undefined) {
-            return;
-        }
-
-        for (const socket of sockets) {
-            socket.send(data);
-            socket.send(raw);
-        }
+        this.sendIpcNotificationEvent(ipcEvent, raw);
     }
 
     public send<
@@ -253,27 +179,13 @@ export class IpcServiceHandlerHelper<
         F extends R[K],
         P extends Parameters<F>,
     >(name: K, ...args: P): void {
-        const ipcEvent: IpcClientEvent = {
+        const ipcEvent: IpcNotificationEvent = {
             handle: this.handle,
             name,
             args,
         };
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const data = this.serializer.serialize(ipcEvent);
-
-        const sockets = this.socketHandler.socketsForHandleName(
-            this.handle,
-            name,
-        );
-
-        if (sockets === undefined) {
-            return;
-        }
-
-        for (const socket of sockets) {
-            socket.send(data);
-        }
+        this.sendIpcNotificationEvent(ipcEvent);
     }
 
     public on<K extends IpcServiceHandlerKey<L>>(
@@ -374,22 +286,125 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
         IpcServiceHandlerHelper<any, any>
     >();
 
+    protected handleNameSocketsMap = new Map<
+        string,
+        Map<string, Map<IpcSocket, number>>
+    >();
+
+    protected socketHandlerMap = new Map<
+        IpcSocket,
+        IpcServiceRegistrySocketHandler
+    >();
+
     public constructor(
-        protected socketHandler: BaseIpcServiceRegistrySocketHandler,
-        private serializer: IpcSerializer,
+        protected socketHandlers: IpcServiceRegistrySocketHandler[],
     ) {}
 
     public register(): void {
-        this.socketHandler.register(
-            this.handleMessage.bind(this),
-            this.handleNoClients.bind(this),
-        );
+        for (const socketHandler of this.socketHandlers) {
+            socketHandler.register(
+                this.onSocketOpen.bind(this),
+                this.handleMessage.bind(this),
+                this.onSocketClose.bind(this),
+            );
+        }
     }
 
     public unregister(): void {
-        this.socketHandler.unregister();
+        for (const socketHandler of this.socketHandlers) {
+            socketHandler.unregister();
+        }
     }
 
+    private socketsForHandleName(
+        handle: string,
+        name: string,
+    ): Iterable<IpcSocket> | undefined {
+        const handleMap = this.handleNameSocketsMap.get(handle);
+        if (handleMap === undefined) {
+            return undefined;
+        }
+
+        const sockets = handleMap.get(name);
+        if (sockets === undefined) {
+            return undefined;
+        }
+
+        return sockets.keys();
+    }
+
+    private onSocketOpen(
+        socketHandler: IpcServiceRegistrySocketHandler,
+        socket: IpcSocket,
+    ): void {
+        assert(!this.socketHandlerMap.has(socket));
+        this.socketHandlerMap.set(socket, socketHandler);
+    }
+
+    private onSocketClose(
+        socketHandler: IpcServiceRegistrySocketHandler,
+        socket: IpcSocket,
+    ): void {
+        assert(this.socketHandlerMap.get(socket) === socketHandler);
+        this.socketHandlerMap.delete(socket);
+        for (const [handle, handleMap] of this.handleNameSocketsMap) {
+            for (const name of handleMap.keys()) {
+                this.handleSocketSubscribe(socket, {
+                    handle,
+                    name,
+                    subscribe: false,
+                });
+            }
+        }
+    }
+    public handleSocketSubscribe(
+        socket: IpcSocket,
+        ipcEvent: IpcSubscribeEvent,
+    ): void {
+        let handleMap = this.handleNameSocketsMap.get(ipcEvent.handle);
+        if (handleMap === undefined) {
+            if (!ipcEvent.subscribe) {
+                return;
+            }
+
+            handleMap = new Map();
+            this.handleNameSocketsMap.set(ipcEvent.handle, handleMap);
+        }
+
+        let socketsMap = handleMap.get(ipcEvent.name);
+        if (socketsMap === undefined) {
+            if (!ipcEvent.subscribe) {
+                return;
+            }
+
+            socketsMap = new Map();
+            handleMap.set(ipcEvent.name, socketsMap);
+        }
+
+        const modifier = ipcEvent.subscribe ? +1 : -1;
+        let value = socketsMap.get(socket);
+        if (value === undefined) {
+            if (!ipcEvent.subscribe) {
+                return;
+            }
+
+            value = 0;
+        }
+
+        value += modifier;
+
+        if (value < 0) {
+            console.error('Socket subscribe count < 0', ipcEvent, socket);
+            return;
+        }
+
+        if (value === 0) {
+            this.handleNoClients(ipcEvent.handle, ipcEvent.name);
+            socketsMap.delete(socket);
+        } else {
+            socketsMap.set(socket, value);
+        }
+    }
     private handleNoClients(handle: string, name: string): void {
         const ipcHandler = this.ipcHandlers.get(handle);
         if (ipcHandler === undefined) {
@@ -399,22 +414,65 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
         ipcHandler.handleNoClients(name);
     }
 
-    private handleMessage(socket: IpcSocket, data: Uint8Array): void {
-        this.handleMessageAsync(socket, data)
+    private handleMessage(
+        socketHandler: IpcServiceRegistrySocketHandler,
+        socket: IpcSocket,
+        data: any,
+    ): void {
+        this.handleMessageAsync(socketHandler, socket, data)
             .then(() => {})
             .catch((err) => {
                 console.error(err);
             });
     }
 
+    private sendIpcNotificationEvent(
+        ipcEvent: IpcNotificationEvent | IpcRawNotificationEvent,
+        raw?: Uint8Array,
+    ) {
+        const sockets = this.socketsForHandleName(
+            ipcEvent.handle,
+            ipcEvent.name,
+        );
+
+        if (sockets === undefined) {
+            return;
+        }
+
+        const socketHandlerDataMap = new Map<
+            IpcServiceRegistrySocketHandler,
+            any
+        >();
+
+        for (const socket of sockets) {
+            const socketHandler = this.socketHandlerMap.get(socket);
+            assert(socketHandler !== undefined);
+
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            let data = socketHandlerDataMap.get(socketHandler);
+            if (data === undefined) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                data = socketHandler.serializer.serialize(ipcEvent);
+                socketHandlerDataMap.set(socketHandler, data);
+            }
+
+            socket.send(data);
+
+            if (raw !== undefined) {
+                socket.send(raw);
+            }
+        }
+    }
+
     private async handleMessageAsync(
+        socketHandler: IpcServiceRegistrySocketHandler,
         socket: IpcSocket,
-        data: Uint8Array,
+        data: any,
     ): Promise<void> {
-        const ipcEvent = this.serializer.deserialize(data);
+        const ipcEvent = socketHandler.serializer.deserialize(data);
 
         if ('subscribe' in ipcEvent) {
-            this.socketHandler.handleSocketSubscribe(socket, ipcEvent);
+            this.handleSocketSubscribe(socket, ipcEvent);
             return;
         }
 
@@ -452,7 +510,7 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const replyData = this.serializer.serialize(replyIpcEvent);
+        const replyData = socketHandler.serializer.serialize(replyIpcEvent);
 
         socket.send(replyData);
     }
@@ -462,9 +520,8 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
     ): IpcServiceHandler<L, R> {
         assert(!this.ipcHandlers.has(handle));
         const ipcHandler = new IpcServiceHandlerHelper<L, R>(
-            this.socketHandler,
-            this.serializer,
             handle,
+            this.sendIpcNotificationEvent.bind(this),
         );
         this.ipcHandlers.set(handle, ipcHandler);
 

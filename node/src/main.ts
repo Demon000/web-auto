@@ -5,9 +5,11 @@ import {
     NodeAndroidAutoServerBuilder,
     type NodeCommonAndroidAutoConfig,
 } from '@web-auto/node-common';
-import { SocketIpcServiceRegistry } from '@web-auto/socket-ipc/main.js';
+import { MessagePackIpcSerializer } from '@web-auto/socket-ipc/common.js';
+import { SocketIpcServiceRegistrySocketHandler } from '@web-auto/socket-ipc/main.js';
 import { Server, createServer } from 'node:https';
 import { readFileSync } from 'node:fs';
+import { GenericIpcServiceRegistry } from '@web-auto/common-ipc/main.js';
 
 export type NodeAndroidAutoConfig = {
     nodeAndroidAuto: {
@@ -33,10 +35,13 @@ const startAndroidAuto = async (server: Server): Promise<void> => {
         return;
     }
 
-    const androidAutoIpcServiceRegistry = new SocketIpcServiceRegistry(
-        config.registryName,
-        server,
-    );
+    const androidAutoIpcServiceRegistry = new GenericIpcServiceRegistry([
+        new SocketIpcServiceRegistrySocketHandler(
+            new MessagePackIpcSerializer(),
+            config.registryName,
+            server,
+        ),
+    ]);
 
     androidAutoIpcServiceRegistry.register();
 

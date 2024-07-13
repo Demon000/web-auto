@@ -1,4 +1,4 @@
-import { BaseIpcSocket } from '@web-auto/common-ipc';
+import { BaseIpcSocket, type IpcSerializer } from '@web-auto/common-ipc';
 import { BaseIpcServiceRegistrySocketHandler } from '@web-auto/common-ipc/main.js';
 import { IncomingMessage, Server } from 'node:http';
 import type { Duplex } from 'node:stream';
@@ -8,7 +8,6 @@ import {
     type MessageEvent,
     type CloseEvent,
 } from 'ws';
-import { MessagePackIpcSerializer } from './common.js';
 
 class SocketServiceIpcSocket extends BaseIpcSocket {
     private onDataInternalBound: (event: MessageEvent) => void;
@@ -74,10 +73,11 @@ export class SocketIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistr
     private onConnectionBound: (webSocket: WebSocket) => void;
 
     public constructor(
-        name: string,
+        serializer: IpcSerializer,
+        private name: string,
         private server: Server,
     ) {
-        super(name);
+        super(serializer);
 
         this.onServerUpgradeBound = this.onServerUpgrade.bind(this);
         this.onConnectionBound = this.onConnection.bind(this);
@@ -110,16 +110,5 @@ export class SocketIpcServiceRegistrySocketHandler extends BaseIpcServiceRegistr
     private onConnection(webSocket: WebSocket): void {
         const socket = new SocketServiceIpcSocket(webSocket);
         this.addSocket(socket);
-    }
-}
-
-export class SocketIpcServiceRegistry extends GenericIpcServiceRegistry {
-    public constructor(name: string, server: Server) {
-        const socketHandler = new SocketIpcServiceRegistrySocketHandler(
-            name,
-            server,
-        );
-        const serializer = new MessagePackIpcSerializer();
-        super(socketHandler, serializer);
     }
 }
