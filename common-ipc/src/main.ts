@@ -399,10 +399,13 @@ export class GenericIpcServiceRegistry implements IpcServiceRegistry {
         }
 
         if (value === 0) {
-            this.handleNoClients(ipcEvent.handle, ipcEvent.name);
             socketsMap.delete(socket);
         } else {
             socketsMap.set(socket, value);
+        }
+
+        if (socketsMap.size === 0) {
+            this.handleNoClients(ipcEvent.handle, ipcEvent.name);
         }
     }
     private handleNoClients(handle: string, name: string): void {
