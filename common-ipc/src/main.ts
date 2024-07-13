@@ -178,9 +178,8 @@ export abstract class BaseIpcServiceRegistrySocketHandler
         }
 
         if (value === 0) {
-            if (this.noClientsCallback !== undefined) {
-                this.noClientsCallback(ipcEvent.handle, ipcEvent.name);
-            }
+            assert(this.noClientsCallback !== undefined);
+            this.noClientsCallback(ipcEvent.handle, ipcEvent.name);
             socketsMap.delete(socket);
         } else {
             socketsMap.set(socket, value);
