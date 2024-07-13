@@ -32,25 +32,25 @@ export interface IpcServiceRegistry {
     ): IpcServiceHandler<L, R>;
 }
 
-export type SocketOpenCallback = (
+type SocketOpenCallback = (
     socketHandler: IpcSocketHandler,
     socket: IpcSocket,
 ) => void;
-export type SocketMessageCallback = (
+type SocketMessageCallback = (
     socketHandler: IpcSocketHandler,
     socket: IpcSocket,
     data: any,
 ) => void;
-export type SocketCloseCallback = (
+type SocketCloseCallback = (
     socketHandler: IpcSocketHandler,
     socket: IpcSocket,
 ) => void;
-export type SendIpcNotificationEvent = (
+type SendIpcNotificationEvent = (
     ipcEvent: IpcNotificationEvent | IpcRawNotificationEvent,
     raw?: Uint8Array,
 ) => void;
 
-export interface IpcSocketHandler {
+interface IpcSocketHandler {
     serializer: IpcSerializer;
     register(
         openCallback: SocketOpenCallback,
