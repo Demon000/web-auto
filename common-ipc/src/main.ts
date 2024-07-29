@@ -4,7 +4,6 @@ import type {
     IpcClient,
     IpcSerializer,
     IpcSocket,
-    IpcSubscribeEvent,
     IpcServiceHandlerKey,
     IpcClientHandlerKey,
     IpcClientEvent,
@@ -324,42 +323,46 @@ export class IpcServiceRegistry {
     ): void {
         for (const [handle, handleMap] of this.handleNameSocketsMap) {
             for (const name of handleMap.keys()) {
-                this.handleSocketSubscribe(socket, {
-                    handle,
-                    name,
-                    subscribe: false,
-                });
+                this.handleSocketSubscribe(socket, handle, name, undefined);
             }
         }
         assert(this.socketHandlerMap.get(socket) === socketHandler);
         this.socketHandlerMap.delete(socket);
     }
+
     public handleSocketSubscribe(
         socket: IpcSocket,
-        ipcEvent: IpcSubscribeEvent,
+        handle: string,
+        name: string,
+        subscribe: boolean | undefined,
     ): void {
-        let handleMap = this.handleNameSocketsMap.get(ipcEvent.handle);
+        let handleMap = this.handleNameSocketsMap.get(handle);
         if (handleMap === undefined) {
             handleMap = new Map();
-            this.handleNameSocketsMap.set(ipcEvent.handle, handleMap);
+            this.handleNameSocketsMap.set(handle, handleMap);
         }
 
-        let socketsMap = handleMap.get(ipcEvent.name);
+        let socketsMap = handleMap.get(name);
         if (socketsMap === undefined) {
             socketsMap = new Map();
-            handleMap.set(ipcEvent.name, socketsMap);
+            handleMap.set(name, socketsMap);
         }
 
-        const modifier = ipcEvent.subscribe ? +1 : -1;
-        let value = socketsMap.get(socket);
-        if (value === undefined) {
+        let value;
+        if (subscribe === undefined) {
             value = 0;
-        }
+        } else {
+            const modifier = subscribe ? +1 : -1;
+            value = socketsMap.get(socket);
+            if (value === undefined) {
+                value = 0;
+            }
 
-        value += modifier;
+            value += modifier;
+        }
 
         if (value < 0) {
-            console.error('Socket subscribe count < 0', ipcEvent, socket);
+            console.error('Socket subscribe count < 0', handle, name, socket);
             return;
         }
 
@@ -370,7 +373,7 @@ export class IpcServiceRegistry {
         }
 
         if (socketsMap.size === 0) {
-            this.handleNoClients(ipcEvent.handle, ipcEvent.name);
+            this.handleNoClients(handle, name);
         }
     }
     private handleNoClients(handle: string, name: string): void {
@@ -437,7 +440,12 @@ export class IpcServiceRegistry {
         const ipcEvent = socketHandler.serializer.deserialize(data);
 
         if ('subscribe' in ipcEvent) {
-            this.handleSocketSubscribe(socket, ipcEvent);
+            this.handleSocketSubscribe(
+                socket,
+                ipcEvent.handle,
+                ipcEvent.name,
+                ipcEvent.subscribe,
+            );
             return;
         }
 
