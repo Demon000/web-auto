@@ -57,15 +57,15 @@ export class UsbDeviceHandler extends DeviceHandler<UsbDeviceImpl> {
 
         this.logger.info('Processing already connected devices');
 
+        usb.on('attach', this.addDeviceBound);
+        usb.on('detach', this.removeDeviceImplBound);
+
         const aoapDevices = usb.getDeviceList();
         for (const device of aoapDevices) {
             await this.addDeviceAsync(device, true);
         }
 
         this.logger.info('Finshed processing already connected devices');
-
-        usb.on('attach', this.addDeviceBound);
-        usb.on('detach', this.removeDeviceImplBound);
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
