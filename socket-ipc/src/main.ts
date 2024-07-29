@@ -3,10 +3,7 @@ import {
     type IpcSerializer,
     type IpcSocketEvents,
 } from '@web-auto/common-ipc';
-import {
-    IpcSocketHandler,
-    type IpcSocketHandlerEvents,
-} from '@web-auto/common-ipc/main.js';
+import { IpcSocketHandler } from '@web-auto/common-ipc/main.js';
 import { IncomingMessage, Server } from 'node:http';
 import type { Duplex } from 'node:stream';
 import {
@@ -89,7 +86,7 @@ export class SocketIpcServiceRegistrySocketHandler extends IpcSocketHandler {
         serializer: IpcSerializer,
         private name: string,
         private server: Server,
-        events: IpcSocketHandlerEvents,
+        events: IpcSocketEvents,
     ) {
         super(serializer, events);
 

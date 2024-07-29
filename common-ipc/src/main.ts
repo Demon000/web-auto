@@ -11,6 +11,7 @@ import type {
     IpcRawNotificationEvent,
     IpcNotificationEvent,
     IpcSocketCreateCallback,
+    IpcSocketEvents,
 } from './common.js';
 
 export type IpcServiceHandlerCallback<
@@ -26,32 +27,22 @@ export type IpcServiceHandler<L extends IpcService, R extends IpcClient> = R &
         helper: IpcServiceHandlerHelper<L, R>;
     };
 
-type SocketMessageCallback = (socket: IpcSocket, data: any) => void;
-type SocketCloseCallback = (socket: IpcSocket) => void;
 type SendIpcNotificationEvent = (
     ipcEvent: IpcNotificationEvent | IpcRawNotificationEvent,
     raw?: Uint8Array,
 ) => void;
 
-export type IpcSocketHandlerEvents = {
-    onSocketData: SocketMessageCallback;
-    onSocketClose: SocketCloseCallback;
-};
-
 export abstract class IpcSocketHandler {
     public constructor(
         public serializer: IpcSerializer,
-        protected events: IpcSocketHandlerEvents,
+        protected events: IpcSocketEvents,
     ) {}
 
     public abstract register(): void;
     public abstract unregister(): void;
 
     public addSocket(cb: IpcSocketCreateCallback): void {
-        const socket = cb({
-            onSocketData: this.events.onSocketData,
-            onSocketClose: this.events.onSocketClose,
-        });
+        const socket = cb(this.events);
 
         socket
             .open()
@@ -208,7 +199,7 @@ export const createIpcClientProxy = <L extends IpcService, R extends IpcClient>(
 };
 
 export type IpcSocketHandlersCreateCallback = (
-    events: IpcSocketHandlerEvents,
+    events: IpcSocketEvents,
 ) => IpcSocketHandler[];
 
 export class IpcServiceRegistry {
