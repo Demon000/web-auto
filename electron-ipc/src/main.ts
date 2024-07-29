@@ -33,6 +33,7 @@ class ElectronServiceIpcSocket extends BaseIpcSocket {
     // eslint-disable-next-line @typescript-eslint/require-await
     public async close(): Promise<void> {
         ipcMain.off(this.channelName, this.onDataInternalBound);
+        this.webContents.off('destroyed', this.onCloseInternalBound);
     }
 
     public onDataInternal(event: IpcMainEvent, data: any): void {
