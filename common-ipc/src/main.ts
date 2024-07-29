@@ -34,7 +34,7 @@ type SendIpcNotificationEvent = (
 ) => void;
 
 export type IpcSocketHandlerEvents = {
-    onSocketMessage: SocketMessageCallback;
+    onSocketData: SocketMessageCallback;
     onSocketClose: SocketCloseCallback;
 };
 
@@ -49,8 +49,8 @@ export abstract class IpcSocketHandler {
 
     public addSocket(cb: IpcSocketCreateCallback): void {
         const socket = cb({
-            onSocketData: this.onData.bind(this),
-            onSocketClose: this.onClose.bind(this),
+            onSocketData: this.events.onSocketData,
+            onSocketClose: this.events.onSocketClose,
         });
 
         socket
@@ -59,14 +59,6 @@ export abstract class IpcSocketHandler {
             .catch((err) => {
                 console.error('Failed to register socket', socket, err);
             });
-    }
-
-    protected onData(socket: IpcSocket, data: any): void {
-        this.events.onSocketMessage(socket, data);
-    }
-
-    protected onClose(socket: IpcSocket): void {
-        this.events.onSocketClose(socket);
     }
 }
 
@@ -234,7 +226,7 @@ export class IpcServiceRegistry {
 
     public constructor(cb: IpcSocketHandlersCreateCallback) {
         this.socketHandlers = cb({
-            onSocketMessage: this.handleMessage.bind(this),
+            onSocketData: this.onSocketData.bind(this),
             onSocketClose: this.onSocketClose.bind(this),
         });
     }
@@ -331,7 +323,7 @@ export class IpcServiceRegistry {
         ipcHandler.handleNoClients(name);
     }
 
-    private handleMessage(socket: IpcSocket, data: any): void {
+    private onSocketData(socket: IpcSocket, data: any): void {
         this.handleMessageAsync(socket, data)
             .then(() => {})
             .catch((err) => {
