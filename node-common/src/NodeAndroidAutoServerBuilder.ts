@@ -194,6 +194,7 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
                         ipcHandler,
                         events,
                     );
+                    break;
             }
 
             services.push(service);
