@@ -11,10 +11,7 @@ import {
     NodeAndroidAutoServerBuilder,
     type NodeCommonAndroidAutoConfig,
 } from '@web-auto/node-common';
-import {
-    IpcServiceRegistry,
-    type IpcSocketHandlerEvents,
-} from '@web-auto/common-ipc/main.js';
+import { IpcServiceRegistry } from '@web-auto/common-ipc/main.js';
 import { ElectronIpcServiceRegistrySocketHandler } from '@web-auto/electron-ipc/main.js';
 import { DummyIpcSerializer } from '@web-auto/common-ipc';
 
@@ -36,17 +33,15 @@ let androidAutoServer: NodeAndroidAutoServer | undefined;
 let androidAutoIpcServiceRegistry: IpcServiceRegistry | undefined;
 
 if (config.androidAuto !== undefined) {
-    androidAutoIpcServiceRegistry = new IpcServiceRegistry(
-        (events: IpcSocketHandlerEvents) => {
-            return [
-                new ElectronIpcServiceRegistrySocketHandler(
-                    new DummyIpcSerializer(),
-                    config.registryName,
-                    events,
-                ),
-            ];
-        },
-    );
+    androidAutoIpcServiceRegistry = new IpcServiceRegistry((events) => {
+        return [
+            new ElectronIpcServiceRegistrySocketHandler(
+                new DummyIpcSerializer(),
+                config.registryName,
+                events,
+            ),
+        ];
+    });
 
     androidAutoIpcServiceRegistry.register();
 
