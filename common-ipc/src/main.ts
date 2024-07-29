@@ -322,8 +322,6 @@ export class IpcServiceRegistry {
         socketHandler: IpcSocketHandler,
         socket: IpcSocket,
     ): void {
-        assert(this.socketHandlerMap.get(socket) === socketHandler);
-        this.socketHandlerMap.delete(socket);
         for (const [handle, handleMap] of this.handleNameSocketsMap) {
             for (const name of handleMap.keys()) {
                 this.handleSocketSubscribe(socket, {
@@ -333,6 +331,8 @@ export class IpcServiceRegistry {
                 });
             }
         }
+        assert(this.socketHandlerMap.get(socket) === socketHandler);
+        this.socketHandlerMap.delete(socket);
     }
     public handleSocketSubscribe(
         socket: IpcSocket,
