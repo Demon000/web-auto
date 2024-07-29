@@ -10,6 +10,7 @@ import type {
     IpcServiceEvent,
     IpcRawNotificationEvent,
     IpcNotificationEvent,
+    IpcSocketCreateCallback,
 } from './common.js';
 
 export type IpcServiceHandlerCallback<
@@ -43,76 +44,46 @@ type SendIpcNotificationEvent = (
     raw?: Uint8Array,
 ) => void;
 
+export type IpcSocketHandlerEvents = {
+    onSocketOpen: SocketOpenCallback;
+    onSocketMessage: SocketMessageCallback;
+    onSocketClose: SocketCloseCallback;
+};
+
 export abstract class IpcSocketHandler {
-    protected openCallback: SocketOpenCallback | undefined;
-    protected messageCallback: SocketMessageCallback | undefined;
-    protected closeCallback: SocketCloseCallback | undefined;
+    public constructor(
+        public serializer: IpcSerializer,
+        protected events: IpcSocketHandlerEvents,
+    ) {}
 
-    public constructor(public serializer: IpcSerializer) {}
+    public abstract register(): void;
+    public abstract unregister(): void;
 
-    protected abstract registerImpl(): void;
-    protected abstract unregisterImpl(): void;
+    public addSocket(cb: IpcSocketCreateCallback): void {
+        const socket = cb({
+            onSocketOpen: this.onOpen.bind(this),
+            onSocketData: this.onData.bind(this),
+            onSocketClose: this.onClose.bind(this),
+        });
 
-    public register(
-        openCallback: SocketOpenCallback,
-        messageCallback: SocketMessageCallback,
-        closeCallback: SocketCloseCallback,
-    ): void {
-        if (
-            this.openCallback !== undefined ||
-            this.messageCallback !== undefined ||
-            this.closeCallback !== undefined
-        ) {
-            throw new Error('Cannot register twice');
-        }
-
-        this.openCallback = openCallback;
-        this.messageCallback = messageCallback;
-        this.closeCallback = closeCallback;
-
-        this.registerImpl();
-    }
-
-    public unregister(): void {
-        if (
-            this.openCallback === undefined ||
-            this.messageCallback === undefined ||
-            this.closeCallback === undefined
-        ) {
-            throw new Error('Cannot unregister before registering');
-        }
-
-        this.openCallback = undefined;
-        this.messageCallback = undefined;
-        this.closeCallback = undefined;
-
-        this.unregisterImpl();
-    }
-
-    public addSocket(socket: IpcSocket): void {
         socket
             .open()
-            .then(() => {
-                socket.onData(this.onData.bind(this));
-                socket.onClose(this.onClose.bind(this));
-                assert(this.openCallback !== undefined);
-                this.openCallback(this, socket);
-            })
+            .then(() => {})
             .catch((err) => {
                 console.error('Failed to register socket', socket, err);
             });
     }
 
+    protected onOpen(socket: IpcSocket): void {
+        this.events.onSocketOpen(this, socket);
+    }
+
     protected onData(socket: IpcSocket, data: any): void {
-        assert(this.messageCallback !== undefined);
-        this.messageCallback(this, socket, data);
+        this.events.onSocketMessage(this, socket, data);
     }
 
     protected onClose(socket: IpcSocket): void {
-        socket.offClose();
-        socket.offData();
-        assert(this.closeCallback !== undefined);
-        this.closeCallback(this, socket);
+        this.events.onSocketClose(this, socket);
     }
 }
 
@@ -261,6 +232,10 @@ export const createIpcClientProxy = <L extends IpcService, R extends IpcClient>(
     ) as IpcServiceHandler<L, R>;
 };
 
+export type IpcSocketHandlersCreateCallback = (
+    events: IpcSocketHandlerEvents,
+) => IpcSocketHandler[];
+
 export class IpcServiceRegistry {
     protected ipcHandlers = new Map<
         string,
@@ -273,16 +248,19 @@ export class IpcServiceRegistry {
     >();
 
     protected socketHandlerMap = new Map<IpcSocket, IpcSocketHandler>();
+    protected socketHandlers: IpcSocketHandler[];
 
-    public constructor(protected socketHandlers: IpcSocketHandler[]) {}
+    public constructor(cb: IpcSocketHandlersCreateCallback) {
+        this.socketHandlers = cb({
+            onSocketOpen: this.onSocketOpen.bind(this),
+            onSocketMessage: this.handleMessage.bind(this),
+            onSocketClose: this.onSocketClose.bind(this),
+        });
+    }
 
     public register(): void {
         for (const socketHandler of this.socketHandlers) {
-            socketHandler.register(
-                this.onSocketOpen.bind(this),
-                this.handleMessage.bind(this),
-                this.onSocketClose.bind(this),
-            );
+            socketHandler.register();
         }
     }
 

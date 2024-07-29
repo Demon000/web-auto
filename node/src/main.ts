@@ -9,7 +9,10 @@ import { MessagePackIpcSerializer } from '@web-auto/socket-ipc/common.js';
 import { SocketIpcServiceRegistrySocketHandler } from '@web-auto/socket-ipc/main.js';
 import { Server, createServer } from 'node:https';
 import { readFileSync } from 'node:fs';
-import { IpcServiceRegistry } from '@web-auto/common-ipc/main.js';
+import {
+    IpcServiceRegistry,
+    type IpcSocketHandlerEvents,
+} from '@web-auto/common-ipc/main.js';
 
 export type NodeAndroidAutoConfig = {
     nodeAndroidAuto: {
@@ -35,13 +38,18 @@ const startAndroidAuto = async (server: Server): Promise<void> => {
         return;
     }
 
-    const androidAutoIpcServiceRegistry = new IpcServiceRegistry([
-        new SocketIpcServiceRegistrySocketHandler(
-            new MessagePackIpcSerializer(),
-            config.registryName,
-            server,
-        ),
-    ]);
+    const androidAutoIpcServiceRegistry = new IpcServiceRegistry(
+        (events: IpcSocketHandlerEvents) => {
+            return [
+                new SocketIpcServiceRegistrySocketHandler(
+                    new MessagePackIpcSerializer(),
+                    config.registryName,
+                    server,
+                    events,
+                ),
+            ];
+        },
+    );
 
     androidAutoIpcServiceRegistry.register();
 

@@ -6,6 +6,7 @@ import type {
     IpcService,
     IpcServiceEvent,
     IpcSocket,
+    IpcSocketCreateCallback,
     IpcSubscribeEvent,
 } from './common.js';
 
@@ -217,29 +218,32 @@ export interface IpcClientRegistry {
     unregisterIpcClient(handle: string): void;
 }
 
+export interface GenericIpcClientRegistryEvents {
+    open(): void;
+    close(): void;
+}
+
 export class GenericIpcClientRegistry implements IpcClientRegistry {
     private ipcHandlers = new Map<string, IpcClientHandlerHelper<any, any>>();
     private rawIpcEvent: IpcClientEvent | undefined;
+    private socket: IpcSocket;
 
     public constructor(
         private serializer: IpcSerializer,
-        private socket: IpcSocket,
-    ) {}
+        cb: IpcSocketCreateCallback,
+    ) {
+        this.socket = cb({
+            onSocketOpen: this.onOpen.bind(this),
+            onSocketData: this.onData.bind(this),
+            onSocketClose: this.onClose.bind(this),
+        });
+    }
 
     public async register(): Promise<void> {
         await this.socket.open();
-
-        this.socket.onData(this.onData.bind(this));
-        this.socket.onClose(this.onClose.bind(this));
-    }
-
-    private onClose(): void {
-        this.socket.offClose();
-        this.socket.offData();
     }
 
     public async unregister(): Promise<void> {
-        this.onClose();
         await this.socket.close();
     }
 
@@ -270,6 +274,10 @@ export class GenericIpcClientRegistry implements IpcClientRegistry {
 
         console.error(`Unhandled IPC event for handler ${ipcEvent.handle}`);
     }
+
+    private onOpen(): void {}
+
+    private onClose(): void {}
 
     private onData(_socket: IpcSocket, data: any): void {
         const rawIpcEvent = this.rawIpcEvent;

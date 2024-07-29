@@ -2,7 +2,11 @@ import {
     ELECTRON_IPC_COMMUNICATION_CHANNEL,
     type IpcPreloadExposed,
 } from './common.js';
-import { BaseIpcSocket, DummyIpcSerializer } from '@web-auto/common-ipc';
+import {
+    BaseIpcSocket,
+    DummyIpcSerializer,
+    type IpcSocketEvents,
+} from '@web-auto/common-ipc';
 import { GenericIpcClientRegistry } from '@web-auto/common-ipc/renderer.js';
 import type { IpcRendererEvent } from 'electron';
 
@@ -14,8 +18,11 @@ class ElectronClientIpcSocket extends BaseIpcSocket {
     private exposed: IpcPreloadExposed;
     private onDataInternalBound: (_event: IpcRendererEvent, data: any) => void;
 
-    public constructor(private channelName: string) {
-        super();
+    public constructor(
+        private channelName: string,
+        events: IpcSocketEvents,
+    ) {
+        super(events);
 
         this.onDataInternalBound = this.onDataInternal.bind(this);
 
@@ -39,12 +46,7 @@ class ElectronClientIpcSocket extends BaseIpcSocket {
     }
 
     private onDataInternal(_event: IpcRendererEvent, data: any): void {
-        if (this.dataCallback === undefined) {
-            console.error('Received data without callback', data);
-            return;
-        }
-
-        this.dataCallback(this, data);
+        this.callOnData(data);
     }
 
     public send(data: any): void {
@@ -55,8 +57,9 @@ class ElectronClientIpcSocket extends BaseIpcSocket {
 
 export class ElectronIpcClientRegistry extends GenericIpcClientRegistry {
     public constructor(name: string) {
-        const socket = new ElectronClientIpcSocket(name);
         const serializer = new DummyIpcSerializer();
-        super(serializer, socket);
+        super(serializer, (events) => {
+            return new ElectronClientIpcSocket(name, events);
+        });
     }
 }

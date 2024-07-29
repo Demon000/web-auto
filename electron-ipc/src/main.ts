@@ -1,6 +1,13 @@
 import { app, ipcMain, type IpcMainEvent, type WebContents } from 'electron';
-import { BaseIpcSocket, type IpcSerializer } from '@web-auto/common-ipc';
-import { IpcSocketHandler } from '@web-auto/common-ipc/main.js';
+import {
+    BaseIpcSocket,
+    type IpcSerializer,
+    type IpcSocketEvents,
+} from '@web-auto/common-ipc';
+import {
+    IpcSocketHandler,
+    type IpcSocketHandlerEvents,
+} from '@web-auto/common-ipc/main.js';
 
 class ElectronServiceIpcSocket extends BaseIpcSocket {
     private onDataInternalBound: (event: IpcMainEvent, data: any) => void;
@@ -9,8 +16,9 @@ class ElectronServiceIpcSocket extends BaseIpcSocket {
     public constructor(
         private channelName: string,
         private webContents: WebContents,
+        events: IpcSocketEvents,
     ) {
-        super();
+        super(events);
 
         this.onDataInternalBound = this.onDataInternal.bind(this);
         this.onCloseInternalBound = this.onCloseInternal.bind(this);
@@ -53,17 +61,18 @@ export class ElectronIpcServiceRegistrySocketHandler extends IpcSocketHandler {
     public constructor(
         serializer: IpcSerializer,
         private name: string,
+        events: IpcSocketHandlerEvents,
     ) {
-        super(serializer);
+        super(serializer, events);
 
         this.onWebContentsCreatedBound = this.onWebContentsCreated.bind(this);
     }
 
-    protected override registerImpl(): void {
+    public register(): void {
         app.on('web-contents-created', this.onWebContentsCreatedBound);
     }
 
-    protected override unregisterImpl(): void {
+    public unregister(): void {
         app.off('web-contents-created', this.onWebContentsCreatedBound);
     }
 
@@ -71,8 +80,8 @@ export class ElectronIpcServiceRegistrySocketHandler extends IpcSocketHandler {
         _event: Electron.Event,
         webContents: WebContents,
     ): void {
-        const socket = new ElectronServiceIpcSocket(this.name, webContents);
-
-        this.addSocket(socket);
+        this.addSocket((events) => {
+            return new ElectronServiceIpcSocket(this.name, webContents, events);
+        });
     }
 }

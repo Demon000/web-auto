@@ -1,15 +1,18 @@
 import { GenericIpcClientRegistry } from '@web-auto/common-ipc/renderer.js';
 
 import { MessagePackIpcSerializer } from './common.js';
-import { BaseIpcSocket } from '@web-auto/common-ipc';
+import { BaseIpcSocket, type IpcSocketEvents } from '@web-auto/common-ipc';
 
 class SocketClientIpcSocket extends BaseIpcSocket {
     private socket?: WebSocket;
     private onDataInternalBound: (message: MessageEvent) => void;
     private onCloseInternalBound: () => void;
 
-    public constructor(private url: string) {
-        super();
+    public constructor(
+        private url: string,
+        events: IpcSocketEvents,
+    ) {
+        super(events);
 
         this.onDataInternalBound = this.onDataInternal.bind(this);
         this.onCloseInternalBound = this.onCloseInternal.bind(this);
@@ -50,6 +53,15 @@ class SocketClientIpcSocket extends BaseIpcSocket {
     }
 
     private onCloseInternal(): void {
+        if (this.socket === undefined) {
+            console.error('Cannot receive close event before open');
+            return;
+        }
+
+        const socket = this.socket;
+
+        socket.removeEventListener('close', this.onCloseInternalBound);
+        socket.removeEventListener('message', this.onDataInternalBound);
         this.callOnClose();
     }
 
@@ -59,9 +71,6 @@ class SocketClientIpcSocket extends BaseIpcSocket {
         }
 
         const socket = this.socket;
-
-        socket.removeEventListener('close', this.onCloseInternalBound);
-        socket.removeEventListener('message', this.onDataInternalBound);
 
         return new Promise((resolve) => {
             const onClose = () => {
@@ -87,10 +96,12 @@ class SocketClientIpcSocket extends BaseIpcSocket {
 
 export class SocketIpcClientRegistry extends GenericIpcClientRegistry {
     public constructor(host: string, port: number, name: string) {
-        const socket = new SocketClientIpcSocket(
-            `wss://${host}:${port}/${name}`,
-        );
         const serializer = new MessagePackIpcSerializer();
-        super(serializer, socket);
+        super(serializer, (events) => {
+            return new SocketClientIpcSocket(
+                `wss://${host}:${port}/${name}`,
+                events,
+            );
+        });
     }
 }

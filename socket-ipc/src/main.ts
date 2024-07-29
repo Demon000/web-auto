@@ -1,5 +1,12 @@
-import { BaseIpcSocket, type IpcSerializer } from '@web-auto/common-ipc';
-import { IpcSocketHandler } from '@web-auto/common-ipc/main.js';
+import {
+    BaseIpcSocket,
+    type IpcSerializer,
+    type IpcSocketEvents,
+} from '@web-auto/common-ipc';
+import {
+    IpcSocketHandler,
+    type IpcSocketHandlerEvents,
+} from '@web-auto/common-ipc/main.js';
 import { IncomingMessage, Server } from 'node:http';
 import type { Duplex } from 'node:stream';
 import {
@@ -13,8 +20,11 @@ class SocketServiceIpcSocket extends BaseIpcSocket {
     private onDataInternalBound: (event: MessageEvent) => void;
     private onCloseInternalBound: (_event: CloseEvent) => void;
 
-    public constructor(private socket: WebSocket) {
-        super();
+    public constructor(
+        private socket: WebSocket,
+        events: IpcSocketEvents,
+    ) {
+        super(events);
 
         this.onDataInternalBound = this.onDataInternal.bind(this);
         this.onCloseInternalBound = this.onCloseInternal.bind(this);
@@ -47,6 +57,8 @@ class SocketServiceIpcSocket extends BaseIpcSocket {
     }
 
     public onCloseInternal(_event: CloseEvent): void {
+        this.socket.removeEventListener('message', this.onDataInternalBound);
+        this.socket.removeEventListener('close', this.onCloseInternalBound);
         this.callOnClose();
     }
 
@@ -76,8 +88,9 @@ export class SocketIpcServiceRegistrySocketHandler extends IpcSocketHandler {
         serializer: IpcSerializer,
         private name: string,
         private server: Server,
+        events: IpcSocketHandlerEvents,
     ) {
-        super(serializer);
+        super(serializer, events);
 
         this.onServerUpgradeBound = this.onServerUpgrade.bind(this);
         this.onConnectionBound = this.onConnection.bind(this);
@@ -85,12 +98,12 @@ export class SocketIpcServiceRegistrySocketHandler extends IpcSocketHandler {
         this.wss = new WebSocketServer({ noServer: true });
     }
 
-    protected override registerImpl() {
+    public register() {
         this.wss.on('connection', this.onConnectionBound);
         this.server.prependListener('upgrade', this.onServerUpgradeBound);
     }
 
-    protected override unregisterImpl() {
+    public unregister() {
         this.server.removeListener('upgrade', this.onServerUpgradeBound);
         this.wss.off('connection', this.onConnectionBound);
     }
@@ -108,7 +121,8 @@ export class SocketIpcServiceRegistrySocketHandler extends IpcSocketHandler {
     }
 
     private onConnection(webSocket: WebSocket): void {
-        const socket = new SocketServiceIpcSocket(webSocket);
-        this.addSocket(socket);
+        this.addSocket((events) => {
+            return new SocketServiceIpcSocket(webSocket, events);
+        });
     }
 }
