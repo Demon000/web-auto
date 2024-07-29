@@ -48,7 +48,7 @@ class ElectronClientIpcSocket extends BaseIpcSocket {
     }
 
     private onDataInternal(_event: IpcRendererEvent, data: any): void {
-        this.callOnData(data);
+        this.events.onSocketData(this, data);
     }
 
     public send(data: any): void {

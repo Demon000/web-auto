@@ -39,11 +39,11 @@ class ElectronServiceIpcSocket extends BaseIpcSocket {
             return;
         }
 
-        this.callOnData(data);
+        this.events.onSocketData(this, data);
     }
 
     public onCloseInternal(): void {
-        this.callOnClose();
+        this.events.onSocketClose(this);
     }
 
     public send(data: any): void {

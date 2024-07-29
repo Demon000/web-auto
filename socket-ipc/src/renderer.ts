@@ -54,7 +54,7 @@ class SocketClientIpcSocket extends BaseIpcSocket {
 
     private onDataInternal(message: MessageEvent): void {
         const buffer = new Uint8Array(message.data as ArrayBuffer);
-        this.callOnData(buffer);
+        this.events.onSocketData(this, buffer);
     }
 
     private onCloseInternal(): void {
@@ -67,7 +67,7 @@ class SocketClientIpcSocket extends BaseIpcSocket {
 
         socket.removeEventListener('close', this.onCloseInternalBound);
         socket.removeEventListener('message', this.onDataInternalBound);
-        this.callOnClose();
+        this.events.onSocketClose(this);
     }
 
     public async close(): Promise<void> {

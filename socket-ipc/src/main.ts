@@ -51,13 +51,13 @@ class SocketServiceIpcSocket extends BaseIpcSocket {
     }
 
     public onDataInternal(event: MessageEvent): void {
-        this.callOnData(event.data);
+        this.events.onSocketData(this, event.data);
     }
 
     public onCloseInternal(_event: CloseEvent): void {
         this.socket.removeEventListener('message', this.onDataInternalBound);
         this.socket.removeEventListener('close', this.onCloseInternalBound);
-        this.callOnClose();
+        this.events.onSocketClose(this);
     }
 
     public send(data: any): void {

@@ -85,20 +85,12 @@ export type IpcSocketCreateCallback = (events: IpcSocketEvents) => IpcSocket;
 export abstract class BaseIpcSocket implements IpcSocket {
     public constructor(
         public serializer: IpcSerializer,
-        private events: IpcSocketEvents,
+        protected events: IpcSocketEvents,
     ) {}
 
     public abstract send(data: any): void;
     public abstract open(): Promise<void>;
     public abstract close(): Promise<void>;
-
-    protected callOnData(data: any): void {
-        this.events.onSocketData(this, data);
-    }
-
-    protected callOnClose(): void {
-        this.events.onSocketClose(this);
-    }
 }
 
 export class DummyIpcSerializer implements IpcSerializer {
