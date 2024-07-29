@@ -4,7 +4,7 @@ import { MessagePackIpcSerializer } from './common.js';
 import { BaseIpcSocket, type IpcSocketEvents } from '@web-auto/common-ipc';
 
 class SocketClientIpcSocket extends BaseIpcSocket {
-    private socket?: WebSocket;
+    private socket: WebSocket | undefined;
     private onDataInternalBound: (message: MessageEvent) => void;
     private onCloseInternalBound: () => void;
 
@@ -74,6 +74,7 @@ class SocketClientIpcSocket extends BaseIpcSocket {
 
         return new Promise((resolve) => {
             const onClose = () => {
+                this.socket = undefined;
                 socket.removeEventListener('close', onClose);
                 resolve();
             };
