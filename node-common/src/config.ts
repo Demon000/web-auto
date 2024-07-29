@@ -61,6 +61,9 @@ export interface NodeAndroidAutoServerConfig {
               name: 'NodeDdcBrightnessService';
               ipcName: string;
           } & NodeDdcBrightnessServiceConfig)
+        | {
+              name: 'RadioService';
+          }
     )[];
 }
 
