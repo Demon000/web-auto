@@ -38,7 +38,7 @@ class ElectronClientIpcSocket extends BaseIpcSocket {
         this.exposed.off(this.channelName, this.onDataInternalBound);
     }
 
-    public onDataInternal(_event: IpcRendererEvent, data: any): void {
+    private onDataInternal(_event: IpcRendererEvent, data: any): void {
         if (this.dataCallback === undefined) {
             console.error('Received data without callback', data);
             return;

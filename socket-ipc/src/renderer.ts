@@ -44,12 +44,12 @@ class SocketClientIpcSocket extends BaseIpcSocket {
         });
     }
 
-    public onDataInternal(message: MessageEvent): void {
+    private onDataInternal(message: MessageEvent): void {
         const buffer = new Uint8Array(message.data as ArrayBuffer);
         this.callOnData(buffer);
     }
 
-    public onCloseInternal(): void {
+    private onCloseInternal(): void {
         this.callOnClose();
     }
 
