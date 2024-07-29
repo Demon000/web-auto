@@ -89,11 +89,11 @@ export abstract class BaseIpcSocket implements IpcSocket {
     public abstract open(): Promise<void>;
     public abstract close(): Promise<void>;
 
-    public callOnData(data: any): void {
+    protected callOnData(data: any): void {
         this.events.onSocketData(this, data);
     }
 
-    public callOnClose(): void {
+    protected callOnClose(): void {
         this.events.onSocketClose(this);
     }
 }
