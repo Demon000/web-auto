@@ -69,13 +69,13 @@ export type IpcSocketOpenCallback = (socket: IpcSocket) => void;
 export type IpcSocketDataCallback = (socket: IpcSocket, data: any) => void;
 export type IpcSocketCloseCallback = (socket: IpcSocket) => void;
 export type IpcSocket = {
+    serializer: IpcSerializer;
     send(data: any): void;
     open(): Promise<void>;
     close(): Promise<void>;
 };
 
 export interface IpcSocketEvents {
-    onSocketOpen: IpcSocketOpenCallback;
     onSocketData: IpcSocketDataCallback;
     onSocketClose: IpcSocketCloseCallback;
 }
@@ -83,7 +83,10 @@ export interface IpcSocketEvents {
 export type IpcSocketCreateCallback = (events: IpcSocketEvents) => IpcSocket;
 
 export abstract class BaseIpcSocket implements IpcSocket {
-    public constructor(private events: IpcSocketEvents) {}
+    public constructor(
+        public serializer: IpcSerializer,
+        private events: IpcSocketEvents,
+    ) {}
 
     public abstract send(data: any): void;
     public abstract open(): Promise<void>;

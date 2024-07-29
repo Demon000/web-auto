@@ -16,9 +16,10 @@ class ElectronServiceIpcSocket extends BaseIpcSocket {
     public constructor(
         private channelName: string,
         private webContents: WebContents,
+        serializer: IpcSerializer,
         events: IpcSocketEvents,
     ) {
-        super(events);
+        super(serializer, events);
 
         this.onDataInternalBound = this.onDataInternal.bind(this);
         this.onCloseInternalBound = this.onCloseInternal.bind(this);
@@ -82,7 +83,12 @@ export class ElectronIpcServiceRegistrySocketHandler extends IpcSocketHandler {
         webContents: WebContents,
     ): void {
         this.addSocket((events) => {
-            return new ElectronServiceIpcSocket(this.name, webContents, events);
+            return new ElectronServiceIpcSocket(
+                this.name,
+                webContents,
+                this.serializer,
+                events,
+            );
         });
     }
 }

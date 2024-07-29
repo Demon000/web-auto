@@ -2,7 +2,6 @@ import type {
     IpcClient,
     IpcClientEvent,
     IpcClientHandlerKey,
-    IpcSerializer,
     IpcService,
     IpcServiceEvent,
     IpcSocket,
@@ -33,7 +32,6 @@ export class IpcClientHandlerHelper<L extends IpcClient, R extends IpcService> {
     private id = 0;
 
     public constructor(
-        private serializer: IpcSerializer,
         private socket: IpcSocket,
         public handle: string,
     ) {}
@@ -61,7 +59,7 @@ export class IpcClientHandlerHelper<L extends IpcClient, R extends IpcService> {
         };
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const data = this.serializer.serialize(ipcEvent);
+        const data = this.socket.serializer.serialize(ipcEvent);
 
         return new Promise((resolve, reject) => {
             this.socket.send(data);
@@ -125,7 +123,7 @@ export class IpcClientHandlerHelper<L extends IpcClient, R extends IpcService> {
         };
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const data = this.serializer.serialize(ipcEvent);
+        const data = this.socket.serializer.serialize(ipcEvent);
 
         this.socket.send(data);
     }
@@ -228,12 +226,8 @@ export class GenericIpcClientRegistry implements IpcClientRegistry {
     private rawIpcEvent: IpcClientEvent | undefined;
     private socket: IpcSocket;
 
-    public constructor(
-        private serializer: IpcSerializer,
-        cb: IpcSocketCreateCallback,
-    ) {
+    public constructor(cb: IpcSocketCreateCallback) {
         this.socket = cb({
-            onSocketOpen: this.onOpen.bind(this),
             onSocketData: this.onData.bind(this),
             onSocketClose: this.onClose.bind(this),
         });
@@ -275,11 +269,9 @@ export class GenericIpcClientRegistry implements IpcClientRegistry {
         console.error(`Unhandled IPC event for handler ${ipcEvent.handle}`);
     }
 
-    private onOpen(): void {}
-
     private onClose(): void {}
 
-    private onData(_socket: IpcSocket, data: any): void {
+    private onData(socket: IpcSocket, data: any): void {
         const rawIpcEvent = this.rawIpcEvent;
         if (rawIpcEvent !== undefined) {
             this.rawIpcEvent = undefined;
@@ -287,7 +279,7 @@ export class GenericIpcClientRegistry implements IpcClientRegistry {
             return;
         }
 
-        const ipcEvent = this.serializer.deserialize(data) as IpcClientEvent;
+        const ipcEvent = socket.serializer.deserialize(data) as IpcClientEvent;
         this.handleMessage(ipcEvent);
     }
 
@@ -296,11 +288,7 @@ export class GenericIpcClientRegistry implements IpcClientRegistry {
     ): IpcClientHandler<L, R> {
         let ipcHandler = this.ipcHandlers.get(handle);
         if (ipcHandler === undefined) {
-            ipcHandler = new IpcClientHandlerHelper<L, R>(
-                this.serializer,
-                this.socket,
-                handle,
-            );
+            ipcHandler = new IpcClientHandlerHelper<L, R>(this.socket, handle);
             this.ipcHandlers.set(handle, ipcHandler);
         }
 

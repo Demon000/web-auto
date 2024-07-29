@@ -5,6 +5,7 @@ import {
 import {
     BaseIpcSocket,
     DummyIpcSerializer,
+    type IpcSerializer,
     type IpcSocketEvents,
 } from '@web-auto/common-ipc';
 import { GenericIpcClientRegistry } from '@web-auto/common-ipc/renderer.js';
@@ -20,9 +21,10 @@ class ElectronClientIpcSocket extends BaseIpcSocket {
 
     public constructor(
         private channelName: string,
+        serializer: IpcSerializer,
         events: IpcSocketEvents,
     ) {
-        super(events);
+        super(serializer, events);
 
         this.onDataInternalBound = this.onDataInternal.bind(this);
 
@@ -58,8 +60,8 @@ class ElectronClientIpcSocket extends BaseIpcSocket {
 export class ElectronIpcClientRegistry extends GenericIpcClientRegistry {
     public constructor(name: string) {
         const serializer = new DummyIpcSerializer();
-        super(serializer, (events) => {
-            return new ElectronClientIpcSocket(name, events);
+        super((events) => {
+            return new ElectronClientIpcSocket(name, serializer, events);
         });
     }
 }

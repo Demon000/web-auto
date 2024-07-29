@@ -1,7 +1,11 @@
 import { GenericIpcClientRegistry } from '@web-auto/common-ipc/renderer.js';
 
 import { MessagePackIpcSerializer } from './common.js';
-import { BaseIpcSocket, type IpcSocketEvents } from '@web-auto/common-ipc';
+import {
+    BaseIpcSocket,
+    type IpcSerializer,
+    type IpcSocketEvents,
+} from '@web-auto/common-ipc';
 
 class SocketClientIpcSocket extends BaseIpcSocket {
     private socket: WebSocket | undefined;
@@ -10,9 +14,10 @@ class SocketClientIpcSocket extends BaseIpcSocket {
 
     public constructor(
         private url: string,
+        serializer: IpcSerializer,
         events: IpcSocketEvents,
     ) {
-        super(events);
+        super(serializer, events);
 
         this.onDataInternalBound = this.onDataInternal.bind(this);
         this.onCloseInternalBound = this.onCloseInternal.bind(this);
@@ -98,9 +103,10 @@ class SocketClientIpcSocket extends BaseIpcSocket {
 export class SocketIpcClientRegistry extends GenericIpcClientRegistry {
     public constructor(host: string, port: number, name: string) {
         const serializer = new MessagePackIpcSerializer();
-        super(serializer, (events) => {
+        super((events) => {
             return new SocketClientIpcSocket(
                 `wss://${host}:${port}/${name}`,
+                serializer,
                 events,
             );
         });

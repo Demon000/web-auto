@@ -22,9 +22,10 @@ class SocketServiceIpcSocket extends BaseIpcSocket {
 
     public constructor(
         private socket: WebSocket,
+        serializer: IpcSerializer,
         events: IpcSocketEvents,
     ) {
-        super(events);
+        super(serializer, events);
 
         this.onDataInternalBound = this.onDataInternal.bind(this);
         this.onCloseInternalBound = this.onCloseInternal.bind(this);
@@ -122,7 +123,11 @@ export class SocketIpcServiceRegistrySocketHandler extends IpcSocketHandler {
 
     private onConnection(webSocket: WebSocket): void {
         this.addSocket((events) => {
-            return new SocketServiceIpcSocket(webSocket, events);
+            return new SocketServiceIpcSocket(
+                webSocket,
+                this.serializer,
+                events,
+            );
         });
     }
 }
