@@ -2,7 +2,6 @@ import {
     ControlService,
     Cryptor,
     DeviceHandler,
-    RadioService,
     Service,
     type AndroidAutoServerBuilder,
     type ControlServiceEvents,
@@ -195,9 +194,6 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
                         ipcHandler,
                         events,
                     );
-                    break;
-                case 'RadioService':
-                    service = new RadioService(events);
                     break;
             }
 
