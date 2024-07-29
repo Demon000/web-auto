@@ -1,12 +1,13 @@
 import { getLogger } from '@web-auto/logging';
+import { Mutex } from 'async-mutex';
+
 import {
     Device,
-    DeviceState,
     DeviceCreateIgnoredError,
     type DeviceDisconnectReason,
     type DeviceEvents,
+    DeviceState,
 } from './Device.js';
-import { Mutex } from 'async-mutex';
 
 export interface DeviceHandlerEvents {
     onDeviceAdded: (device: Device) => void;

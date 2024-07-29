@@ -1,16 +1,17 @@
+import { IncomingMessage, Server } from 'node:http';
+import type { Duplex } from 'node:stream';
+
 import {
     BaseIpcSocket,
     type IpcSerializer,
     type IpcSocketEvents,
 } from '@web-auto/common-ipc';
 import { IpcSocketHandler } from '@web-auto/common-ipc/main.js';
-import { IncomingMessage, Server } from 'node:http';
-import type { Duplex } from 'node:stream';
 import {
+    type CloseEvent,
+    type MessageEvent,
     WebSocket,
     WebSocketServer,
-    type MessageEvent,
-    type CloseEvent,
 } from 'ws';
 
 class SocketServiceIpcSocket extends BaseIpcSocket {

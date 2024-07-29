@@ -1,5 +1,3 @@
-import { Service, type ServiceEvents } from './Service.js';
-import { microsecondsTime } from '../utils/time.js';
 import {
     InputMessageId,
     InputReport,
@@ -8,6 +6,9 @@ import {
     KeyEvent,
     TouchEvent,
 } from '@web-auto/android-auto-proto';
+
+import { microsecondsTime } from '../utils/time.js';
+import { Service, type ServiceEvents } from './Service.js';
 
 export abstract class InputService extends Service {
     public constructor(events: ServiceEvents) {

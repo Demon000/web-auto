@@ -1,15 +1,16 @@
 import assert from 'node:assert';
+
 import type {
-    IpcService,
     IpcClient,
-    IpcSerializer,
-    IpcSocket,
-    IpcServiceHandlerKey,
-    IpcClientHandlerKey,
     IpcClientEvent,
-    IpcServiceEvent,
-    IpcRawNotificationEvent,
+    IpcClientHandlerKey,
     IpcNotificationEvent,
+    IpcRawNotificationEvent,
+    IpcSerializer,
+    IpcService,
+    IpcServiceEvent,
+    IpcServiceHandlerKey,
+    IpcSocket,
     IpcSocketCreateCallback,
     IpcSocketEvents,
 } from './common.js';

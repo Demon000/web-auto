@@ -1,18 +1,19 @@
-import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 import {
-    NodeBrightnessService,
-    type AndroidAutoBrightnessClient,
-    type AndroidAutoBrightnessService,
-} from './NodeBrightnessService.js';
-import type { ServiceEvents } from '@web-auto/android-auto';
-import {
+    type Continuous,
     Display,
     DisplayManager,
     VCPFeatureCode,
     VcpValueType,
-    type Continuous,
 } from '@ddc-node/ddc-node';
+import type { ServiceEvents } from '@web-auto/android-auto';
+import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 import assert from 'assert';
+
+import {
+    type AndroidAutoBrightnessClient,
+    type AndroidAutoBrightnessService,
+    NodeBrightnessService,
+} from './NodeBrightnessService.js';
 
 export type NodeDdcBrightnessServiceConfig = {
     serialNumber: string;

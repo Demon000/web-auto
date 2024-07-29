@@ -1,20 +1,22 @@
+import { Server } from 'node:net';
+import { Duplex } from 'node:stream';
+
 import {
     Device,
-    type DeviceEvents,
-    DeviceState,
-    type DeviceDisconnectReason,
     DeviceConnectReason,
     DeviceCreateIgnoredError,
+    type DeviceDisconnectReason,
+    type DeviceEvents,
+    DeviceState,
 } from '@web-auto/android-auto';
 import { Device as BluezDevice } from 'bluez';
-import { BluetoothDeviceWifiConnector } from './BluetoothDeviceWifiConnector.js';
-import { Server } from 'node:net';
-import { BluetoothDeviceTcpConnector } from './BluetoothDeviceTcpConnector.js';
+
 import { DuplexTransport } from '../DuplexTransport.js';
-import { Duplex } from 'node:stream';
-import { BluetoothProfileHandler } from './BluetoothProfileHandler.js';
-import type { BluetoothDeviceHandlerConfig } from './BluetoothDeviceHandler.js';
 import { HSP_AG_UUID } from './AndroidAutoProfile.js';
+import type { BluetoothDeviceHandlerConfig } from './BluetoothDeviceHandler.js';
+import { BluetoothDeviceTcpConnector } from './BluetoothDeviceTcpConnector.js';
+import { BluetoothDeviceWifiConnector } from './BluetoothDeviceWifiConnector.js';
+import { BluetoothProfileHandler } from './BluetoothProfileHandler.js';
 
 enum BluetoothDeviceDisconnectReason {
     BLUETOOTH_PROFILE = 'bluetooth-profile-disconnected',

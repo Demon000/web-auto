@@ -1,3 +1,5 @@
+import assert from 'node:assert';
+
 import {
     DisplayType,
     KeyCode,
@@ -7,15 +9,14 @@ import {
     VideoFocusNotification,
     VideoFocusRequestNotification,
 } from '@web-auto/android-auto-proto';
+import { type IVideoConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
 
 import { AVOutputService } from './AVOutputService.js';
-import { type IVideoConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
 import type { ServiceEvents } from './Service.js';
-import assert from 'node:assert';
 import {
-    VideoResolutionUtils,
     type DisplayConfig,
     type ResolutionConfig,
+    VideoResolutionUtils,
 } from './VideoResolutionUtils.js';
 
 export interface VideoServiceConfig {

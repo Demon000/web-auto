@@ -1,13 +1,15 @@
+import assert from 'node:assert';
+
 import {
     AudioStreamType,
     MediaCodecType,
     MediaSinkService,
     type Service,
 } from '@web-auto/android-auto-proto';
+import { type IAudioConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
+
 import { AVOutputService } from './AVOutputService.js';
 import { type ServiceEvents } from './Service.js';
-import assert from 'node:assert';
-import { type IAudioConfiguration } from '@web-auto/android-auto-proto/interfaces.js';
 
 export interface AudioOutputServiceConfig {
     audioType: AudioStreamType;

@@ -1,4 +1,5 @@
 import { annexBSplitNalu, h264ParseConfiguration } from '@yume-chan/scrcpy';
+
 import type { CodecParsedConfig } from './codec.js';
 
 const toHex = (value: number) =>

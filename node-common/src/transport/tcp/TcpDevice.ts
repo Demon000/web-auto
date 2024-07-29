@@ -1,10 +1,12 @@
+import { Socket } from 'node:net';
+
 import {
     Device,
     DeviceConnectReason,
     type DeviceEvents,
 } from '@web-auto/android-auto';
+
 import { DuplexTransport } from '../DuplexTransport.js';
-import { Socket } from 'node:net';
 import { TCP_SERVER_PORT } from './tcp.js';
 
 export class TcpDevice extends Device {

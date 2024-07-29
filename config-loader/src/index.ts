@@ -1,6 +1,7 @@
-import JSON5 from 'json5';
-import { readFileSync } from 'fs';
 import { resolve } from 'node:path';
+
+import { readFileSync } from 'fs';
+import JSON5 from 'json5';
 import type { JsonObject, JsonValue, WritableDeep } from 'type-fest';
 
 export type Value = WritableDeep<JsonValue>;

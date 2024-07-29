@@ -42,6 +42,7 @@
     "@webgpu/types": "^0.1.42",
     "electron": "^30.0.9",
     "eslint": "^8.46.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
     "ts-patch": "^3.1.2"
   }
 }

@@ -1,10 +1,15 @@
+import assert from 'node:assert';
+
 import {
     AudioFocusNotification,
     AudioFocusRequestNotification,
     AudioFocusRequestType,
     AudioFocusStateType,
     AuthResponse,
+    BatteryStatusNotification,
+    ByeByeRequest,
     ControlMessageType,
+    GalConstants,
     MessageStatus,
     NavFocusNotification,
     NavFocusRequestNotification,
@@ -13,25 +18,21 @@ import {
     PingResponse,
     ServiceDiscoveryRequest,
     ServiceDiscoveryResponse,
-    GalConstants,
     VoiceSessionNotification,
-    BatteryStatusNotification,
-    ByeByeRequest,
 } from '@web-auto/android-auto-proto';
-
-import { Service, type ServiceEvents } from './Service.js';
-import { Pinger } from './Pinger.js';
-import assert from 'node:assert';
-import type { Cryptor } from '../crypto/Cryptor.js';
-import { BufferWriter, BufferReader } from '../utils/buffer.js';
 import type {
     IHeadUnitInfo,
     IServiceDiscoveryResponse,
 } from '@web-auto/android-auto-proto/interfaces.js';
+
+import type { Cryptor } from '../crypto/Cryptor.js';
 import {
-    GenericDeviceDisconnectReason,
     type DeviceDisconnectReason,
+    GenericDeviceDisconnectReason,
 } from '../transport/Device.js';
+import { BufferReader, BufferWriter } from '../utils/buffer.js';
+import { Pinger } from './Pinger.js';
+import { Service, type ServiceEvents } from './Service.js';
 
 export interface ControlServiceEvents extends ServiceEvents {
     onSelfDisconnect: (reason: DeviceDisconnectReason) => void;

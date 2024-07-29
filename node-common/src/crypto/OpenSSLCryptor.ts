@@ -1,3 +1,5 @@
+import { BufferWriter, Cryptor } from '@web-auto/android-auto';
+
 import {
     sslBioCtrlPending,
     sslBioRead,
@@ -22,7 +24,6 @@ import {
     sslSetConnectState,
     sslWrite,
 } from './openssl.js';
-import { BufferWriter, Cryptor } from '@web-auto/android-auto';
 import { SSL_ERROR_NONE, SSL_ERROR_WANT_READ } from './openssl_bindings.js';
 
 export class OpenSSLCryptor extends Cryptor {

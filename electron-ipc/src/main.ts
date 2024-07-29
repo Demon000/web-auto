@@ -1,10 +1,10 @@
-import { app, ipcMain, type IpcMainEvent, type WebContents } from 'electron';
 import {
     BaseIpcSocket,
     type IpcSerializer,
     type IpcSocketEvents,
 } from '@web-auto/common-ipc';
 import { IpcSocketHandler } from '@web-auto/common-ipc/main.js';
+import { app, ipcMain, type IpcMainEvent, type WebContents } from 'electron';
 
 class ElectronServiceIpcSocket extends BaseIpcSocket {
     private onDataInternalBound: (event: IpcMainEvent, data: any) => void;

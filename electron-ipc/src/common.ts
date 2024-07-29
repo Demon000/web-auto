@@ -1,5 +1,5 @@
-import type { IpcRendererEvent } from 'electron/renderer';
 import type { IpcClientEvent, IpcServiceEvent } from '@web-auto/common-ipc';
+import type { IpcRendererEvent } from 'electron/renderer';
 
 export const ELECTRON_IPC_COMMUNICATION_CHANNEL = 'electron-ipc';
 

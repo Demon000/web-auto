@@ -1,12 +1,14 @@
+import assert from 'node:assert';
+
 import {
     Device,
     DeviceHandler,
     type DeviceHandlerConfig,
     type DeviceHandlerEvents,
 } from '@web-auto/android-auto';
-import { TcpDevice } from './TcpDevice.js';
-import assert from 'node:assert';
 import Arpping from 'arpping';
+
+import { TcpDevice } from './TcpDevice.js';
 
 type Unpacked<T> = T extends (infer U)[] ? U : T;
 type Host = Unpacked<Awaited<ReturnType<Arpping['discover']>>>;

@@ -1,18 +1,19 @@
+import assert from 'node:assert';
+
 import {
-    SensorMessageId,
-    type Service as ProtoService,
-    SensorSourceService_Sensor,
-    SensorRequest,
-    SensorType,
-    SensorResponse,
     MessageStatus,
     SensorBatch,
+    SensorMessageId,
+    SensorRequest,
+    SensorResponse,
     SensorSourceService,
+    SensorSourceService_Sensor,
+    SensorType,
+    type Service as ProtoService,
 } from '@web-auto/android-auto-proto';
 
 import { Sensor } from '../sensors/Sensor.js';
 import { Service, type ServiceEvents } from './Service.js';
-import assert from 'node:assert';
 
 export abstract class SensorService extends Service {
     protected abstract sensors: Sensor[];

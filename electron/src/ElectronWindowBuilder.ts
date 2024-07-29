@@ -1,14 +1,14 @@
+import assert from 'node:assert';
+import { join, resolve } from 'node:path';
+
+import { getLogger } from '@web-auto/logging';
 import {
     BrowserWindow,
+    type BrowserWindowConstructorOptions,
     net,
     screen,
     session,
-    type BrowserWindowConstructorOptions,
 } from 'electron';
-import { join, resolve } from 'node:path';
-import assert from 'node:assert';
-import { getLogger } from '@web-auto/logging';
-
 import { fileURLToPath, pathToFileURL } from 'url';
 
 export type ElectronWindowDisplayConfig =

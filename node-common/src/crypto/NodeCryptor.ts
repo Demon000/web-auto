@@ -1,10 +1,11 @@
-import { BufferWriter, Cryptor } from '@web-auto/android-auto';
-import DuplexPair from 'native-duplexpair';
-import { Duplex, Readable, Writable } from 'node:stream';
-import { TLSSocket, connect } from 'node:tls';
-import { Mutex } from 'async-mutex';
-import { getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
+import { Duplex, Readable, Writable } from 'node:stream';
+import { connect, TLSSocket } from 'node:tls';
+
+import { BufferWriter, Cryptor } from '@web-auto/android-auto';
+import { getLogger } from '@web-auto/logging';
+import { Mutex } from 'async-mutex';
+import DuplexPair from 'native-duplexpair';
 
 export interface NodeCryptorConfig {
     ciphers: string;

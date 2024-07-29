@@ -3,6 +3,7 @@ import {
     h265ParseConfiguration,
     h265ParseNaluHeader,
 } from '@yume-chan/scrcpy';
+
 import type { CodecParsedConfig } from './codec.js';
 
 export const toUint32Le = (data: Uint8Array, offset: number) => {

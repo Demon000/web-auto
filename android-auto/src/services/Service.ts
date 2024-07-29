@@ -1,17 +1,19 @@
+import assert from 'node:assert';
+
 import {
-    ControlMessageType,
+    type BinaryReadOptions,
+    Message as ProtoMessage,
+} from '@bufbuild/protobuf';
+import {
     ChannelOpenRequest,
     ChannelOpenResponse,
+    ControlMessageType,
     MessageStatus,
     Service as ProtoService,
     ServiceDiscoveryResponse,
 } from '@web-auto/android-auto-proto';
 import { getLogger } from '@web-auto/logging';
-import assert from 'node:assert';
-import {
-    Message as ProtoMessage,
-    type BinaryReadOptions,
-} from '@bufbuild/protobuf';
+
 import { bufferWrapUint8Array } from '../utils/buffer.js';
 
 export interface ServiceEvents {

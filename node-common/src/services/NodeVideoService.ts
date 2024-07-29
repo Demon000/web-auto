@@ -1,32 +1,34 @@
+import assert from 'node:assert';
+
+import type { DisplayConfig, ResolutionConfig } from '@web-auto/android-auto';
 import { type ServiceEvents, VideoService } from '@web-auto/android-auto';
+import { BufferWriter } from '@web-auto/android-auto';
 import {
-    type Start,
-    VideoFocusRequestNotification,
-    VideoFocusNotification,
-    VideoFocusMode,
     DisplayType,
     MediaCodecType,
+    type Start,
     VideoCodecResolutionType,
+    VideoFocusMode,
+    VideoFocusNotification,
+    VideoFocusRequestNotification,
     VideoFrameRateType,
 } from '@web-auto/android-auto-proto';
-import assert from 'node:assert';
 import {
-    stringToCodec,
-    stringToDisplayType,
-    stringToFramerate,
-    stringToResolution,
     type IInsets,
     type IVideoConfiguration,
     type IVideoFocusNotification,
     type IVideoFocusRequestNotification,
+    stringToCodec,
+    stringToDisplayType,
+    stringToFramerate,
+    stringToResolution,
 } from '@web-auto/android-auto-proto/interfaces.js';
 import type {
     IpcServiceHandler,
     IpcServiceHandlerHelper,
 } from '@web-auto/common-ipc/main.js';
-import { BufferWriter } from '@web-auto/android-auto';
+
 import { hasKeyFrame, parseCodecConfig } from '../codec/index.js';
-import type { DisplayConfig, ResolutionConfig } from '@web-auto/android-auto';
 
 enum CodecState {
     STOPPED,

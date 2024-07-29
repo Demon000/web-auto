@@ -1,19 +1,20 @@
-import { getLogger, setConfig } from '@web-auto/logging';
+import { DummyIpcSerializer } from '@web-auto/common-ipc';
+import { IpcServiceRegistry } from '@web-auto/common-ipc/main.js';
 import { loadConfig } from '@web-auto/config-loader';
-import { app } from 'electron';
-import {
-    ElectronWindowBuilder,
-    type ElectronWindowBuilderConfig,
-} from './ElectronWindowBuilder.js';
-import { createAssert } from 'typia';
+import { ElectronIpcServiceRegistrySocketHandler } from '@web-auto/electron-ipc/main.js';
+import { getLogger, setConfig } from '@web-auto/logging';
 import {
     NodeAndroidAutoServer,
     NodeAndroidAutoServerBuilder,
     type NodeCommonAndroidAutoConfig,
 } from '@web-auto/node-common';
-import { IpcServiceRegistry } from '@web-auto/common-ipc/main.js';
-import { ElectronIpcServiceRegistrySocketHandler } from '@web-auto/electron-ipc/main.js';
-import { DummyIpcSerializer } from '@web-auto/common-ipc';
+import { app } from 'electron';
+import { createAssert } from 'typia';
+
+import {
+    ElectronWindowBuilder,
+    type ElectronWindowBuilderConfig,
+} from './ElectronWindowBuilder.js';
 
 type ElectronAndroidAutoConfig = {
     electronWindowBuilder: ElectronWindowBuilderConfig;

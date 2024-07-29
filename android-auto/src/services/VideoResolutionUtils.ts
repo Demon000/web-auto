@@ -1,6 +1,6 @@
 import {
-    VideoCodecResolutionType,
     MediaCodecType,
+    VideoCodecResolutionType,
     VideoFrameRateType,
 } from '@web-auto/android-auto-proto';
 import type {

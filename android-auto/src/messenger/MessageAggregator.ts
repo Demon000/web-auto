@@ -1,8 +1,10 @@
-import { type FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
-import { getLogger } from '@web-auto/logging';
 import assert from 'node:assert';
-import { type FrameData } from './FrameData.js';
+
+import { getLogger } from '@web-auto/logging';
+
 import { BufferReader, BufferWriter } from '../utils/buffer.js';
+import { type FrameData } from './FrameData.js';
+import { type FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
 
 interface AggregatorData {
     frameHeader: FrameHeader;

@@ -8,7 +8,11 @@ module.exports = {
         'prettier',
         '@web-auto/eslint-config',
     ],
-    plugins: ['@typescript-eslint'],
+    rules: {
+        'simple-import-sort/imports': 'error',
+        'simple-import-sort/exports': 'error',
+    },
+    plugins: ['@typescript-eslint', 'simple-import-sort'],
     parser: '@typescript-eslint/parser',
     parserOptions: {
         ecmaVersion: 'latest',

@@ -1,7 +1,8 @@
-import assert from 'assert';
 import { Duplex } from 'node:stream';
-import BluetoothSocket from 'bluetooth-socket';
+
 import { getLogger, type LoggerWrapper } from '@web-auto/logging';
+import assert from 'assert';
+import BluetoothSocket from 'bluetooth-socket';
 
 export interface BluetoothProfileEvents {
     onUnhandledConnection: (socket: BluetoothSocket) => void;

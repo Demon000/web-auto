@@ -1,6 +1,8 @@
-import { PingRequest, PingResponse } from '@web-auto/android-auto-proto';
 import assert from 'node:assert';
+
+import { PingRequest, PingResponse } from '@web-auto/android-auto-proto';
 import { getLogger } from '@web-auto/logging';
+
 import { microsecondsTime, milliToMicro } from './../utils/time.js';
 
 export interface PingerEvents {

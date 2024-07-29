@@ -1,7 +1,5 @@
 import assert from 'node:assert';
-import { BufferReader } from '../utils/buffer.js';
-import { AVService } from './AVService.js';
-import { type ServiceEvents } from './Service.js';
+
 import {
     Ack,
     Config,
@@ -10,6 +8,10 @@ import {
     Start,
     Stop,
 } from '@web-auto/android-auto-proto';
+
+import { BufferReader } from '../utils/buffer.js';
+import { AVService } from './AVService.js';
+import { type ServiceEvents } from './Service.js';
 
 export interface AVOutputServiceConfig {
     priorities: number[];

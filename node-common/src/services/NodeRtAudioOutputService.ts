@@ -1,22 +1,24 @@
+import assert from 'node:assert';
+
 import { type ServiceEvents } from '@web-auto/android-auto';
+import { bufferWrapUint8Array } from '@web-auto/android-auto';
 import {
     AudioStreamType,
     ChannelOpenRequest,
     Start,
 } from '@web-auto/android-auto-proto';
 import {
-    stringToAudioStreamType,
     type IAudioConfiguration,
+    stringToAudioStreamType,
 } from '@web-auto/android-auto-proto/interfaces.js';
+import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 import RtAudioPackage from 'audify';
-import assert from 'node:assert';
-import { bufferWrapUint8Array } from '@web-auto/android-auto';
+
 import {
-    NodeAudioOutputService,
     type AndroidAutoAudioOutputClient,
     type AndroidAutoAudioOutputService,
+    NodeAudioOutputService,
 } from './NodeAudioOutputService.js';
-import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 
 const { RtAudio } = RtAudioPackage;
 

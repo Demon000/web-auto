@@ -1,19 +1,21 @@
-import { Bluez, Adapter } from 'bluez';
-import dbus from 'dbus-next';
 import assert from 'node:assert';
+import net from 'node:net';
+
 import {
     Device,
     DeviceHandler,
     type DeviceHandlerConfig,
     type DeviceHandlerEvents,
 } from '@web-auto/android-auto';
-import { BluetoothDevice } from './BluetoothDevice.js';
-import { AndroidAutoProfile } from './AndroidAutoProfile.js';
-import net from 'node:net';
 import type {
     INetworkInfo,
     ISocketInfoRequest,
 } from '@web-auto/android-auto-proto/bluetooth_interfaces.js';
+import { Adapter, Bluez } from 'bluez';
+import dbus from 'dbus-next';
+
+import { AndroidAutoProfile } from './AndroidAutoProfile.js';
+import { BluetoothDevice } from './BluetoothDevice.js';
 
 const AA_OBJECT_PATH = '/com/aa/aa';
 

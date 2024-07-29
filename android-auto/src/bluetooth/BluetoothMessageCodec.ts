@@ -1,6 +1,7 @@
 import { getLogger } from '@web-auto/logging';
+
+import { BufferReader, BufferWriter } from '../utils/buffer.js';
 import { BluetoothMessage } from './BluetoothMessage.js';
-import { BufferWriter, BufferReader } from '../utils/buffer.js';
 
 export class BluetoothMessageCodec {
     protected logger = getLogger(this.constructor.name);

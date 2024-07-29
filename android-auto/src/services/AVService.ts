@@ -4,6 +4,7 @@ import {
     MediaMessageId,
     Setup,
 } from '@web-auto/android-auto-proto';
+
 import { Service, type ServiceEvents } from './Service.js';
 
 export abstract class AVService extends Service {

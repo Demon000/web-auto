@@ -1,4 +1,4 @@
-import { LoggerWrapper, getLogger } from '@web-auto/logging';
+import { getLogger, LoggerWrapper } from '@web-auto/logging';
 import { Mutex } from 'async-mutex';
 
 export class DeviceCreateIgnoredError extends Error {}

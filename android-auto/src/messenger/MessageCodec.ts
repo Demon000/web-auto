@@ -1,6 +1,7 @@
-import { BufferWriter } from '../utils/BufferWriter.js';
-import { BufferReader } from '../utils/BufferReader.js';
 import { Message as ProtoMessage } from '@bufbuild/protobuf';
+
+import { BufferReader } from '../utils/BufferReader.js';
+import { BufferWriter } from '../utils/BufferWriter.js';
 
 export class MessageCodec {
     public encodeMessage(messageId: number, message: ProtoMessage): Uint8Array {

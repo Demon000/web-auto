@@ -1,7 +1,8 @@
 import { getLogger } from '@web-auto/logging';
+
+import { BufferReader, BufferWriter } from '../utils/buffer.js';
 import { type FrameData } from './FrameData.js';
 import { type FrameHeader, FrameHeaderFlags } from './FrameHeader.js';
-import { BufferWriter, BufferReader } from '../utils/buffer.js';
 
 export class FrameCodec {
     protected logger = getLogger(this.constructor.name);

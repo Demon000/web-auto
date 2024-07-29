@@ -1,8 +1,8 @@
 import { AudioOutputService, type ServiceEvents } from '@web-auto/android-auto';
 import { AudioStreamType } from '@web-auto/android-auto-proto';
 import {
-    stringToAudioStreamType,
     type IAudioConfiguration,
+    stringToAudioStreamType,
 } from '@web-auto/android-auto-proto/interfaces.js';
 import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 

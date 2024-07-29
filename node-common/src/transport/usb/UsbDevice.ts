@@ -1,20 +1,20 @@
 import {
-    Device,
-    type DeviceEvents,
     bufferWrapUint8Array,
-    type DeviceDisconnectReason,
+    Device,
     DeviceConnectReason,
-    DeviceState,
     DeviceCreateIgnoredError,
+    type DeviceDisconnectReason,
+    type DeviceEvents,
+    DeviceState,
 } from '@web-auto/android-auto';
+import assert from 'assert';
 import {
+    Device as UsbDeviceImpl,
     InEndpoint,
     LibUSBException,
     OutEndpoint,
     usb,
-    Device as UsbDeviceImpl,
 } from 'usb';
-import assert from 'assert';
 
 export type UsbDeviceWrapperEndpointTransferOutFunction = (
     buffer: Uint8Array,

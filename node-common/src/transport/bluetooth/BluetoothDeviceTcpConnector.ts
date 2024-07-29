@@ -1,6 +1,7 @@
-import { Duplex } from 'node:stream';
-import { LoggerWrapper, getLogger } from '@web-auto/logging';
 import { Server } from 'node:net';
+import { Duplex } from 'node:stream';
+
+import { getLogger, LoggerWrapper } from '@web-auto/logging';
 
 export class BluetoothDeviceTcpConnector {
     protected logger: LoggerWrapper;

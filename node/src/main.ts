@@ -1,15 +1,16 @@
-import { getLogger, setConfig } from '@web-auto/logging';
+import { readFileSync } from 'node:fs';
+import { createServer, Server } from 'node:https';
+
+import { IpcServiceRegistry } from '@web-auto/common-ipc/main.js';
 import { loadConfig } from '@web-auto/config-loader';
-import { createAssert } from 'typia';
+import { getLogger, setConfig } from '@web-auto/logging';
 import {
     NodeAndroidAutoServerBuilder,
     type NodeCommonAndroidAutoConfig,
 } from '@web-auto/node-common';
 import { MessagePackIpcSerializer } from '@web-auto/socket-ipc/common.js';
 import { SocketIpcServiceRegistrySocketHandler } from '@web-auto/socket-ipc/main.js';
-import { Server, createServer } from 'node:https';
-import { readFileSync } from 'node:fs';
-import { IpcServiceRegistry } from '@web-auto/common-ipc/main.js';
+import { createAssert } from 'typia';
 
 export type NodeAndroidAutoConfig = {
     nodeAndroidAuto: {

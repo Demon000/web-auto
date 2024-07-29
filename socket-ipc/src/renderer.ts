@@ -1,11 +1,11 @@
-import { GenericIpcClientRegistry } from '@web-auto/common-ipc/renderer.js';
-
-import { MessagePackIpcSerializer } from './common.js';
 import {
     BaseIpcSocket,
     type IpcSerializer,
     type IpcSocketEvents,
 } from '@web-auto/common-ipc';
+import { GenericIpcClientRegistry } from '@web-auto/common-ipc/renderer.js';
+
+import { MessagePackIpcSerializer } from './common.js';
 
 class SocketClientIpcSocket extends BaseIpcSocket {
     private socket: WebSocket | undefined;

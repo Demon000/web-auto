@@ -1,7 +1,8 @@
-import { inspect } from 'node:util';
-import { format, transports, loggers, Logger } from 'winston';
 import { resolve } from 'node:path';
+import { inspect } from 'node:util';
+
 import { type TransformableInfo } from 'logform';
+import { format, Logger, loggers, transports } from 'winston';
 
 export const LOGGER_NAME = 'logger';
 

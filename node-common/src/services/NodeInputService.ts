@@ -10,9 +10,9 @@ import {
     TouchScreenType,
 } from '@web-auto/android-auto-proto';
 import {
+    type ITouchEvent,
     stringToKeycode,
     stringToTouchscreenType,
-    type ITouchEvent,
 } from '@web-auto/android-auto-proto/interfaces.js';
 import type { IpcServiceHandler } from '@web-auto/common-ipc/main.js';
 

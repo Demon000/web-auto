@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+
 import {
     ELECTRON_IPC_COMMUNICATION_CHANNEL,
     type IpcPreloadExposed,

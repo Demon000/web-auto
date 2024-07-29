@@ -4,8 +4,9 @@ import {
     type DeviceHandlerConfig,
     type DeviceHandlerEvents,
 } from '@web-auto/android-auto';
-import { UsbDevice } from './UsbDevice.js';
 import { Device as UsbDeviceImpl, usb } from 'usb';
+
+import { UsbDevice } from './UsbDevice.js';
 
 export interface UsbDeviceHandlerConfig extends DeviceHandlerConfig {}
 

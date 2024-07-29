@@ -1,7 +1,8 @@
-import { Device, type Profile, type ProfileOptions } from 'bluez';
-import type { BluetoothProfileHandler } from './BluetoothProfileHandler.js';
-import assert from 'assert';
 import { getLogger } from '@web-auto/logging';
+import assert from 'assert';
+import { Device, type Profile, type ProfileOptions } from 'bluez';
+
+import type { BluetoothProfileHandler } from './BluetoothProfileHandler.js';
 
 export class BluetoothProfile implements Profile {
     private logger = getLogger(this.constructor.name);

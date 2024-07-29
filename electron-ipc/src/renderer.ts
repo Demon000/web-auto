@@ -1,8 +1,4 @@
 import {
-    ELECTRON_IPC_COMMUNICATION_CHANNEL,
-    type IpcPreloadExposed,
-} from './common.js';
-import {
     BaseIpcSocket,
     DummyIpcSerializer,
     type IpcSerializer,
@@ -10,6 +6,11 @@ import {
 } from '@web-auto/common-ipc';
 import { GenericIpcClientRegistry } from '@web-auto/common-ipc/renderer.js';
 import type { IpcRendererEvent } from 'electron';
+
+import {
+    ELECTRON_IPC_COMMUNICATION_CHANNEL,
+    type IpcPreloadExposed,
+} from './common.js';
 
 declare const window: {
     [ELECTRON_IPC_COMMUNICATION_CHANNEL]?: IpcPreloadExposed;

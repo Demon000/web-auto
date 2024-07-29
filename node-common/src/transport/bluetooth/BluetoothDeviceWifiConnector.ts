@@ -1,18 +1,19 @@
-import { LoggerWrapper, getLogger } from '@web-auto/logging';
+import assert from 'node:assert';
+import { Duplex } from 'node:stream';
+
 import {
     BluetoothMessage,
     BluetoothMessageCodec,
     BluetoothMessageType,
 } from '@web-auto/android-auto';
-import assert from 'node:assert';
-import { Duplex } from 'node:stream';
-
 import {
-    SocketInfoRequest,
-    NetworkInfo,
     ConnectStatus,
+    NetworkInfo,
+    SocketInfoRequest,
     SocketInfoResponseStatus,
 } from '@web-auto/android-auto-proto/bluetooth.js';
+import { getLogger, LoggerWrapper } from '@web-auto/logging';
+
 import type { BluetoothDeviceHandlerConfig } from './BluetoothDeviceHandler.js';
 
 type BluetoothMessageCallback = (message: BluetoothMessage) => void;

@@ -1,17 +1,18 @@
 import {
-    SensorService,
     type Sensor,
     type SensorEvents,
+    SensorService,
     type ServiceEvents,
 } from '@web-auto/android-auto';
-import {
-    DummyNightDataSensor,
-    type DummyNightDataSensorConfig,
-} from '../sensors/DummyNightDataSensor.js';
+
 import {
     DummyDrivingStatusSensor,
     type DummyDrivingStatusSensorConfig,
 } from '../sensors/DummyDrivingStatusSensor.js';
+import {
+    DummyNightDataSensor,
+    type DummyNightDataSensorConfig,
+} from '../sensors/DummyNightDataSensor.js';
 
 export type NodeSensorConfig =
     | ({

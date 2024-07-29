@@ -1,6 +1,3 @@
-import { AVService } from './AVService.js';
-import { microsecondsTime } from '../utils/time.js';
-import { type ServiceEvents } from './Service.js';
 import {
     Ack,
     MediaCodecType,
@@ -10,7 +7,11 @@ import {
     MicrophoneResponse,
     Service,
 } from '@web-auto/android-auto-proto';
+
 import { BufferWriter } from '../utils/buffer.js';
+import { microsecondsTime } from '../utils/time.js';
+import { AVService } from './AVService.js';
+import { type ServiceEvents } from './Service.js';
 
 export interface AudioInputServiceConfig {
     channelCount: number;

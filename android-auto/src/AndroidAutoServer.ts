@@ -1,31 +1,32 @@
-import {
-    DeviceHandler,
-    type DeviceHandlerEvents,
-} from './transport/DeviceHandler.js';
+import { Message as ProtoMessage } from '@bufbuild/protobuf';
 import { getLogger } from '@web-auto/logging';
-import {
-    Device,
-    type DeviceDisconnectReason,
-    GenericDeviceDisconnectReason,
-    DeviceConnectReason,
-} from './transport/Device.js';
+import { Mutex } from 'async-mutex';
+
+import { Cryptor } from './crypto/Cryptor.js';
 import {
     ANDROID_AUTO_CERTIFICATE,
     ANDROID_AUTO_PRIVATE_KEY,
 } from './crypto/keys.js';
 import { FrameCodec } from './messenger/FrameCodec.js';
+import { type FrameData } from './messenger/FrameData.js';
+import { FrameHeaderFlags } from './messenger/FrameHeader.js';
 import { MessageAggregator } from './messenger/MessageAggregator.js';
-import { Cryptor } from './crypto/Cryptor.js';
-import { Service, type ServiceEvents } from './services/Service.js';
+import { MessageCodec } from './messenger/MessageCodec.js';
 import {
     ControlService,
     type ControlServiceEvents,
 } from './services/ControlService.js';
-import { type FrameData } from './messenger/FrameData.js';
-import { FrameHeaderFlags } from './messenger/FrameHeader.js';
-import { Mutex } from 'async-mutex';
-import { MessageCodec } from './messenger/MessageCodec.js';
-import { Message as ProtoMessage } from '@bufbuild/protobuf';
+import { Service, type ServiceEvents } from './services/Service.js';
+import {
+    Device,
+    DeviceConnectReason,
+    type DeviceDisconnectReason,
+    GenericDeviceDisconnectReason,
+} from './transport/Device.js';
+import {
+    DeviceHandler,
+    type DeviceHandlerEvents,
+} from './transport/DeviceHandler.js';
 
 export interface AndroidAutoServerBuilder {
     buildDeviceHandlers(events: DeviceHandlerEvents): DeviceHandler[];
