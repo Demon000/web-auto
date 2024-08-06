@@ -58,6 +58,7 @@ export abstract class DeviceHandler<T = any> {
         return false;
     }
 
+    public destroy(): void {}
     protected abstract createDevice(data: T): Promise<Device | undefined>;
     protected addDeviceHook(_data: T, _device: Device): void {}
     protected removeDeviceHook(_device: Device) {}

@@ -29,7 +29,7 @@ import {
 } from './transport/DeviceHandler.js';
 
 export interface AndroidAutoServerBuilder {
-    buildDeviceHandlers(events: DeviceHandlerEvents): DeviceHandler[];
+    buildDeviceHandlers(events: DeviceHandlerEvents): Promise<DeviceHandler[]>;
 
     buildCryptor(certificateBuffer: Buffer, privateKeyBuffer: Buffer): Cryptor;
 
@@ -54,21 +54,10 @@ export abstract class AndroidAutoServer {
     private services: Service[];
     private controlService: ControlService;
     private serviceIdServiceMap = new Map<number, Service>();
-    private deviceHandlers: DeviceHandler[];
+    private deviceHandlers: DeviceHandler[] = [];
     private connectionLock = new Mutex();
 
-    public constructor(builder: AndroidAutoServerBuilder) {
-        this.deviceHandlers = builder.buildDeviceHandlers({
-            onDeviceAdded: this.onDeviceAdded.bind(this),
-            onDeviceSelfConnection: this.onDeviceSelfConnection.bind(this),
-            onDeviceSelfDisconnection:
-                this.onDeviceSelfDisconnection.bind(this),
-            onDeviceStateUpdated: this.onDeviceStateUpdated.bind(this),
-            onDeviceRemoved: this.onDeviceRemoved.bind(this),
-            onDeviceTransportData: this.onDeviceTransportData.bind(this),
-            onDeviceTransportError: this.onDeviceTransportError.bind(this),
-        });
-
+    public constructor(private builder: AndroidAutoServerBuilder) {
         this.cryptor = builder.buildCryptor(
             ANDROID_AUTO_CERTIFICATE,
             ANDROID_AUTO_PRIVATE_KEY,
@@ -647,6 +636,19 @@ export abstract class AndroidAutoServer {
 
         this.logger.info('Server starting');
 
+        this.logger.info('Building device handlers');
+        this.deviceHandlers = await this.builder.buildDeviceHandlers({
+            onDeviceAdded: this.onDeviceAdded.bind(this),
+            onDeviceSelfConnection: this.onDeviceSelfConnection.bind(this),
+            onDeviceSelfDisconnection:
+                this.onDeviceSelfDisconnection.bind(this),
+            onDeviceStateUpdated: this.onDeviceStateUpdated.bind(this),
+            onDeviceRemoved: this.onDeviceRemoved.bind(this),
+            onDeviceTransportData: this.onDeviceTransportData.bind(this),
+            onDeviceTransportError: this.onDeviceTransportError.bind(this),
+        });
+        this.logger.info('Built device handlers');
+
         for (const deviceHandler of this.deviceHandlers) {
             try {
                 await deviceHandler.waitForDevices();
@@ -694,6 +696,10 @@ export abstract class AndroidAutoServer {
 
         for (const service of this.services) {
             service.destroy();
+        }
+
+        for (const deviceHandler of this.deviceHandlers) {
+            deviceHandler.destroy();
         }
 
         this.logger.info('Server stopped');

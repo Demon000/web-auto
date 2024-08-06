@@ -69,7 +69,9 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
         return new NodeAndroidAutoServer(this, ipcHandler);
     }
 
-    public buildDeviceHandlers(events: DeviceHandlerEvents): DeviceHandler[] {
+    public async buildDeviceHandlers(
+        events: DeviceHandlerEvents,
+    ): Promise<DeviceHandler[]> {
         const deviceHandlers: DeviceHandler[] = [];
         for (const entry of this.config.deviceHandlers) {
             let deviceHandler;
