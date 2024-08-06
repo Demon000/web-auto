@@ -81,7 +81,10 @@ export class NodeAndroidAutoServerBuilder implements AndroidAutoServerBuilder {
                     deviceHandler = new UsbDeviceHandler(entry, events);
                     break;
                 case 'BluetoothDeviceHandler':
-                    deviceHandler = new BluetoothDeviceHandler(entry, events);
+                    deviceHandler = await BluetoothDeviceHandler.create(
+                        entry,
+                        events,
+                    );
                     break;
                 case 'TcpDeviceHandler':
                     deviceHandler = new TcpDeviceHandler(entry, events);

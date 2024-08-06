@@ -11,6 +11,7 @@ import type {
     INetworkInfo,
     ISocketInfoRequest,
 } from '@web-auto/android-auto-proto/bluetooth_interfaces.js';
+import { getLogger } from '@web-auto/logging';
 import { Adapter, Bluez } from 'bluez';
 import dbus from 'dbus-next';
 
@@ -29,12 +30,11 @@ export interface BluetoothDeviceHandlerConfig extends DeviceHandlerConfig {
 
 export class BluetoothDeviceHandler extends DeviceHandler<string> {
     private androidAutoProfile: AndroidAutoProfile;
-    private bus?: dbus.MessageBus;
-    private bluetooth?: Bluez;
-    private adapter?: Adapter;
-    private tcpServer?: net.Server;
-
     public constructor(
+        private tcpServer: net.Server,
+        private bus: dbus.MessageBus,
+        private bluetooth: Bluez,
+        private adapter: Adapter,
         protected override config: BluetoothDeviceHandlerConfig,
         events: DeviceHandlerEvents,
     ) {
@@ -43,12 +43,72 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
         this.androidAutoProfile = new AndroidAutoProfile();
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
+    public static async create(
+        config: BluetoothDeviceHandlerConfig,
+        events: DeviceHandlerEvents,
+    ): Promise<BluetoothDeviceHandler> {
+        const logger = getLogger(BluetoothDeviceHandler.name);
+
+        logger.info('Creating TCP server');
+        assert(
+            config.socketInfo.port !== undefined &&
+                config.socketInfo.port != null,
+        );
+
+        const tcpServer = net
+            .createServer({
+                noDelay: true,
+            })
+            .listen(config.socketInfo.port, config.socketInfo.ipAddress);
+        logger.info('Created TCP server');
+
+        logger.info('Connecting to DBus');
+        const bus = dbus.systemBus({
+            negotiateUnixFd: true,
+        });
+        logger.info('Connected to DBus');
+
+        const bluetooth = new Bluez({
+            bus,
+        });
+
+        logger.info('Initializing Bluetooth');
+        await bluetooth.init();
+        logger.info('Initialized Bluetooth');
+
+        logger.info('Powering adapter on');
+        let adapter;
+        try {
+            adapter = await bluetooth.getAdapter();
+        } catch (err) {
+            logger.error('Failed to get adapter', err);
+            throw err;
+        }
+
+        await adapter.Powered(true);
+        await adapter.Discoverable(true);
+        await adapter.Pairable(true);
+
+        return new BluetoothDeviceHandler(
+            tcpServer,
+            bus,
+            bluetooth,
+            adapter,
+            config,
+            events,
+        );
+    }
+
+    public override destroy(): void {
+        this.logger.info('Disconnecting from DBus');
+        this.bus.disconnect();
+        this.logger.info('Disconnected from DBus');
+    }
+
     protected override async createDevice(
         data: string,
     ): Promise<Device | undefined> {
-        assert(this.adapter !== undefined);
-        assert(this.tcpServer !== undefined);
-
         const bluezDevice = await this.adapter.getDevice(data);
         const device = await BluetoothDevice.create(
             this.config,
@@ -75,54 +135,12 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
     }
 
     public async waitForDevices(): Promise<void> {
-        this.logger.info('Creating TCP server');
-        assert(
-            this.config.socketInfo.port !== undefined &&
-                this.config.socketInfo.port != null,
-        );
-
-        this.tcpServer = net
-            .createServer({
-                noDelay: true,
-            })
-            .listen(
-                this.config.socketInfo.port,
-                this.config.socketInfo.ipAddress,
-            );
-        this.logger.info('Created TCP server');
-
-        this.logger.info('Connecting to DBus');
-        this.bus = dbus.systemBus({
-            negotiateUnixFd: true,
-        });
-        this.logger.info('Connected to DBus');
-
-        this.bluetooth = new Bluez({
-            bus: this.bus,
-        });
-
-        this.logger.info('Initializing Bluetooth');
-        await this.bluetooth.init();
-        this.logger.info('Initialized Bluetooth');
-
         this.logger.info('Registering Android Auto Bluetooth profile');
         await this.bluetooth.registerProfile(
             this.androidAutoProfile,
             AA_OBJECT_PATH,
         );
         this.logger.info('Registered Android Auto Bluetooth profile');
-
-        this.logger.info('Powering adapter on');
-        try {
-            this.adapter = await this.bluetooth.getAdapter();
-        } catch (err) {
-            this.logger.error('Failed to get adapter', err);
-            return;
-        }
-
-        await this.adapter.Powered(true);
-        await this.adapter.Discoverable(true);
-        await this.adapter.Pairable(true);
 
         this.logger.info('Starting new device discovery');
         await this.adapter.StartDiscovery();
@@ -143,26 +161,16 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
     }
 
     public override async stopWaitingForDevices(): Promise<void> {
-        if (this.adapter !== undefined) {
-            this.logger.info('Stopping new device discovery');
-            this.adapter.off('DeviceAdded', this.addDeviceBound);
-            this.adapter.off('DeviceRemoved', this.removeDeviceBound);
+        this.logger.info('Stopping new device discovery');
+        this.adapter.off('DeviceAdded', this.addDeviceBound);
+        this.adapter.off('DeviceRemoved', this.removeDeviceBound);
 
-            await this.adapter.StopDiscovery();
+        await this.adapter.StopDiscovery();
 
-            this.logger.info('Stopped new device discovery');
-        }
+        this.logger.info('Stopped new device discovery');
 
-        if (this.bluetooth !== undefined) {
-            this.logger.info('Unregistering Android Auto Bluetooth profile');
-            await this.bluetooth.unregisterProfile(AA_OBJECT_PATH);
-            this.logger.info('Unregistered Android Auto Bluetooth profile');
-        }
-
-        if (this.bus !== undefined) {
-            this.logger.info('Disconnecting from DBus');
-            this.bus.disconnect();
-            this.logger.info('Disconnected from DBus');
-        }
+        this.logger.info('Unregistering Android Auto Bluetooth profile');
+        await this.bluetooth.unregisterProfile(AA_OBJECT_PATH);
+        this.logger.info('Unregistered Android Auto Bluetooth profile');
     }
 }
