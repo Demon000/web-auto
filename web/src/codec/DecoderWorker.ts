@@ -49,7 +49,9 @@ const renderPendingFrame = (): void => {
     lastFrame = frame;
     pendingFrame = null;
 
-    renderFrame(frame).finally(() => {});
+    renderFrame(frame)
+        .then(() => {})
+        .catch(() => {});
 };
 
 const renderLastFrame = (renderer: Renderer): void => {
