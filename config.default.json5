@@ -199,12 +199,14 @@
             {
                 name: 'NodeNavigationStatusService',
             },
+            /*
             {
                 name: 'NodeDdcBrightnessService',
                 ipcName: 'brightness-service',
-                /* Can be obtained using ddcutil detect */
+                // Can be obtained using ddcutil detect
                 serialNumber: '9TT0T63',
             },
+            */
         ],
         deviceHandlers: [
             {
