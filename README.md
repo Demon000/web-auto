@@ -4,11 +4,15 @@
 
 ### Ubuntu
 
-`sudo apt install nodejs npm protobuf-compiler`
+`sudo apt install protobuf-compiler`
 
 If using `TcpDeviceHandler`:
 
 `sudo apt install nmap`
+
+#### NVM
+
+To get the latest Node version, use [nvm](https://github.com/nvm-sh/nvm).
 
 ## Installation
 
