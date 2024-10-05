@@ -57,3 +57,13 @@ To get the latest Node version, use [nvm](https://github.com/nvm-sh/nvm).
 -   Picture-in-picture video
 -   Assistant key
 -   Mouse support for interacting with the video
+
+## Troubleshooting
+
+1. `LIBUSB_ERROR_ACCESS` error on server start-up
+
+Add the following lines to `/etc/udev/rules.d/50-usb.rules`:
+
+```
+SUBSYSTEM=="usb", ATTR{idVendor}=="*", ATTR{idProduct}=="*", MODE="0660", GROUP="plugdev"
+```
