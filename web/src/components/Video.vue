@@ -56,9 +56,9 @@ const canvasRef: Ref<HTMLCanvasElement | undefined> = ref(undefined);
 let canvasCookie: bigint | undefined;
 let canvasObserver: ResizeObserver | undefined;
 
-let canvasPosition: { x: number; y: number } = { x: 0, y: 0 };
-let canvasSize: { width: number; height: number } = { width: 0, height: 0 };
-let canvasObjectFit: FitMode = 'contain';
+const canvasPosition: { x: number; y: number } = { x: 0, y: 0 };
+const canvasSize: { width: number; height: number } = { width: 0, height: 0 };
+const canvasObjectFit: FitMode = 'contain';
 let canvasObjectPosition: [string, string] = ['0', '0'];
 
 const onCanvasResized = (entries: ResizeObserverEntry[]) => {
