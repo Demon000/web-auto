@@ -262,11 +262,10 @@ export class BluetoothDevice extends Device {
         }
 
         this.transport = new DuplexTransport(tcpSocket, {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             onData: this.onDataBound,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
             onDisconnected: this.onDisconnectedBound,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
             onError: this.onErrorBound,
         });
     }

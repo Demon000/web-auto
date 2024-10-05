@@ -387,7 +387,7 @@
                     // Index path relative to app root
                     index: 'index.html',
                     // Name of preload script
-                    preload: './electron-ipc/preload-run.mjs',
+                    preload: './electron-ipc-preload/preload-run.mjs',
                     // URL if running it separately (useful for development)
                     // When using url, do not specify path, or index
                     /*

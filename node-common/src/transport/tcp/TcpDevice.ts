@@ -49,11 +49,10 @@ export class TcpDevice extends Device {
                 socket.off('error', onSocketError);
 
                 this.transport = new DuplexTransport(socket, {
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     onData: this.onDataBound,
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
                     onDisconnected: this.onDisconnectedBound,
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
                     onError: this.onErrorBound,
                 });
 

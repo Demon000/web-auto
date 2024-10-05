@@ -43,7 +43,6 @@ export class BluetoothDeviceHandler extends DeviceHandler<string> {
         this.androidAutoProfile = new AndroidAutoProfile();
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
     public static async create(
         config: BluetoothDeviceHandlerConfig,
         events: DeviceHandlerEvents,

@@ -4,12 +4,12 @@
     "packages": [
       "config-loader",
       "eslint-config",
-      "eslint-config-node",
       "prettier-config",
       "logging",
       "android-auto-proto",
       "common-ipc",
       "electron-ipc",
+      "electron-ipc-preload",
       "socket-ipc",
       "android-auto",
       "node-common",
@@ -21,6 +21,7 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "clean": "npm run clean --workspaces",
+    "lint": "npm run lint --workspaces --if-present",
     "start-electron": "npm run start -w electron",
     "start-node": "npm run start -w node",
     "start-web": "npm run start -w web",
@@ -34,14 +35,13 @@
   },
   "devDependencies": {
     "@electron/rebuild": "^3.6.0",
-    "@rushstack/eslint-patch": "^1.8.0",
     "@tsconfig/node20": "^20.1.4",
     "@types/native-duplexpair": "^1.0.0",
     "@types/node": "^20.12.13",
     "@webgpu/types": "^0.1.42",
     "electron": "^30.0.9",
-    "eslint": "^8.57.0",
+    "eslint": "^9.12.0",
     "ts-patch": "^3.2.1",
-    "typescript": "^5.6.2"
+    "typescript": "^5.5.4"
   }
 }

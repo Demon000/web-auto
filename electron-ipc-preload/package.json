@@ -1,0 +1,11 @@
+{
+  "name": "@web-auto/electron-ipc-preload",
+  "version": "1.0.0",
+  "author": "Demon000",
+  "license": "GPL-3.0",
+  "type": "module",
+  "scripts": {
+    "build": "",
+    "lint": "eslint --fix ."
+  }
+}

@@ -9,7 +9,6 @@
     "./main.js": "./dist/esm/main.js",
     "./common.js": "./dist/esm/common.js",
     "./preload.js": "./dist/esm/preload.js",
-    "./preload.mjs": "./preload.mjs",
     "./renderer.js": "./dist/esm/renderer.js"
   },
   "scripts": {

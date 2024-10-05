@@ -3,9 +3,21 @@
   "version": "1.0.0",
   "author": "Demon000",
   "license": "GPL-3.0",
-  "main": "index.cjs",
+  "exports": {
+    "./common-ts": "./common-ts.mjs",
+    "./node-ts": "./node-ts.mjs",
+    "./node-js": "./node-js.mjs"
+  },
   "scripts": {
     "build": "",
     "clean": ""
+  },
+  "devDependencies": {
+    "@stylistic/eslint-plugin": "^2.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.8.0",
+    "@typescript-eslint/parser": "^8.8.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "prettier": "^3.0.1"
   }
 }

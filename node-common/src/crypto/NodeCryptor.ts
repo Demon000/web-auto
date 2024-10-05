@@ -101,7 +101,6 @@ export class NodeCryptor extends Cryptor {
         let chunk;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         while (null !== (chunk = readable.read())) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             buffer.appendBuffer(chunk as Uint8Array);
         }
         return buffer.data;

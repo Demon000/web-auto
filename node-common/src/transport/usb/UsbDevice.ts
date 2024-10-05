@@ -405,11 +405,11 @@ export class UsbDevice extends Device {
         }
 
         inEndpoint.startPoll(3, 16384);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
         inEndpoint.on('data', this.onDataBound);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
         inEndpoint.on('error', this.onErrorBound);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
         inEndpoint.on('end', this.onDisconnectedBound);
     }
 
@@ -423,11 +423,10 @@ export class UsbDevice extends Device {
             return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         inEndpoint.off('data', this.onDataBound);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
         inEndpoint.off('error', this.onErrorBound);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+
         inEndpoint.off('end', this.onDisconnectedBound);
 
         inEndpoint.stopPoll();
