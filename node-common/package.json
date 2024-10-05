@@ -5,8 +5,8 @@
   "license": "GPL-3.0",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "clean": "tsc --build --clean",
+    "build": "tspc",
+    "clean": "tspc --build --clean",
     "lint": "eslint --fix ."
   },
   "types": "./dist/esm/index.d.ts",

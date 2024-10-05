@@ -9,8 +9,8 @@
     "types": "./dist/esm/index.d.ts"
   },
   "scripts": {
-    "build": "tsc",
-    "clean": "tsc --build --clean",
+    "build": "tspc",
+    "clean": "tspc --build --clean",
     "lint": "eslint --fix ."
   },
   "dependencies": {

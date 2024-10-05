@@ -27,8 +27,7 @@
     "dev-web": "npm run dev -w web",
     "prepare-electron": "electron-rebuild -f -m node_modules/bluetooth-socket && electron-rebuild -f -m node_modules/usocket",
     "prepare-node": "npm rebuild",
-    "prepare": "ts-patch install && typia patch",
-    "dev": "tsc -b --watch"
+    "dev": "tspc -b --watch"
   },
   "dependencies": {
     "typia": "^6.10.0"

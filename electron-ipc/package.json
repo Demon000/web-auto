@@ -13,8 +13,8 @@
     "./renderer.js": "./dist/esm/renderer.js"
   },
   "scripts": {
-    "build": "tsc",
-    "clean": "tsc --build --clean",
+    "build": "tspc",
+    "clean": "tspc --build --clean",
     "lint": "eslint --fix ."
   }
 }
