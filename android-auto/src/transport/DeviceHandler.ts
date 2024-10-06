@@ -63,6 +63,10 @@ export abstract class DeviceHandler<T = any> {
     protected addDeviceHook(_data: T, _device: Device): void {}
     protected removeDeviceHook(_device: Device) {}
 
+    protected dataToString(data: T): string {
+        return '' + data;
+    }
+
     protected async addDeviceAsyncLocked(
         data: T,
         existing?: true,
@@ -73,9 +77,9 @@ export abstract class DeviceHandler<T = any> {
             device = await this.createDevice(data);
         } catch (err) {
             if (err instanceof DeviceCreateIgnoredError) {
+                const dataString = this.dataToString(data);
                 this.logger.info(
-                    `Ignored device with data: ${err.message}`,
-                    data,
+                    `Ignored device ${dataString}: ${err.message}`,
                 );
                 return;
             }

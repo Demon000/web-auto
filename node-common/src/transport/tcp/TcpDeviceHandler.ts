@@ -46,6 +46,10 @@ export class TcpDeviceHandler extends DeviceHandler<Host> {
         }
     }
 
+    protected override dataToString(data: Host): string {
+        return data.ip;
+    }
+
     // eslint-disable-next-line @typescript-eslint/require-await
     protected override async createDevice(
         data: Host,

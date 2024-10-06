@@ -1,9 +1,7 @@
 import { annexBSplitNalu, h264ParseConfiguration } from '@yume-chan/scrcpy';
 
+import { toHex } from '../utils.js';
 import type { CodecParsedConfig } from './codec.js';
-
-const toHex = (value: number) =>
-    value.toString(16).padStart(2, '0').toUpperCase();
 
 export const h264HasKeyFrame = (buffer: Uint8Array) => {
     for (const nalu of annexBSplitNalu(buffer)) {
@@ -31,7 +29,7 @@ export const parseH264CodecConfig = (buffer: Uint8Array): CodecParsedConfig => {
     } = h264ParseConfiguration(buffer);
 
     const codec = `avc1.${[profileIndex, constraintSet, levelIndex]
-        .map(toHex)
+        .map((num) => toHex(num, 2))
         .join('')}`;
 
     return {

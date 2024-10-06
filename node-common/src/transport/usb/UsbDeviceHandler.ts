@@ -7,6 +7,7 @@ import {
 import { Device as UsbDeviceImpl, usb } from 'usb';
 
 import { UsbDevice } from './UsbDevice.js';
+import { toHex } from '../../utils.js';
 
 export interface UsbDeviceHandlerConfig extends DeviceHandlerConfig {}
 
@@ -21,6 +22,13 @@ export class UsbDeviceHandler extends DeviceHandler<UsbDeviceImpl> {
         super(config, events);
 
         this.removeDeviceImplBound = this.removeDeviceImpl.bind(this);
+    }
+
+    protected override dataToString(data: UsbDeviceImpl): string {
+        const toHexString = (num: number) => toHex(num, 4).toLowerCase();
+        const vendorId = toHexString(data.deviceDescriptor.idVendor);
+        const productId = toHexString(data.deviceDescriptor.idProduct);
+        return `${vendorId}:${productId}`;
     }
 
     protected override createDevice(
