@@ -109,12 +109,11 @@ export abstract class AndroidAutoServer {
     }
 
     private async onSendFrameData(frameData: FrameData): Promise<void> {
-        await this.encryptFrameData(frameData);
-
         if (this.connectedDevice === undefined) {
-            this.logger.error('Cannot send frame without a connected device');
             return;
         }
+
+        await this.encryptFrameData(frameData);
 
         const buffer = this.frameCodec.encodeFrameData(frameData);
 
