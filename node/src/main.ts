@@ -10,6 +10,7 @@ import {
 } from '@web-auto/node-common';
 import { MessagePackIpcSerializer } from '@web-auto/socket-ipc/common.js';
 import { SocketIpcServiceRegistrySocketHandler } from '@web-auto/socket-ipc/main.js';
+import SegfaultHandler from 'segfault-handler';
 import { createAssert } from 'typia';
 
 export type NodeAndroidAutoConfig = {
@@ -30,6 +31,14 @@ setConfig(config.logging);
 const logger = getLogger('node');
 
 logger.info('Config', config);
+
+SegfaultHandler.registerHandler('crash.log', function (signal, address, stack) {
+    logger.error('Segafault', {
+        signal,
+        address,
+        stack,
+    });
+});
 
 const startAndroidAuto = async (server: Server): Promise<void> => {
     if (config.androidAuto === undefined) {

@@ -13,5 +13,8 @@
   "exports": {
     "import": "./dist/esm/index.js",
     "types": "./dist/esm/index.d.ts"
+  },
+  "dependencies": {
+    "segfault-handler": "^1.3.0"
   }
 }
